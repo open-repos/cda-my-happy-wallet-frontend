@@ -6,6 +6,9 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 } */
+/* Change filter to colo */
+/* https://codepen.io/sosuke/pen/Pjoqqp */
+
 :root {
   /* Colors */
   --black: #000;
@@ -16,11 +19,18 @@
   --grey: #a4b2bc;
   --white: #fff;
   --orange:#EA7C69;
-  --background: #F4F9F0;
+  --orange-light:#F09D65;
+  --background: #43553A;
+  --filter-img-orange: invert(63%) sepia(20%) saturate(1956%) hue-rotate(318deg) brightness(100%) contrast(84%);
+  --filter-img-orange-light:invert(76%) sepia(89%) saturate(827%) hue-rotate(313deg) brightness(98%) contrast(92%);
+
+
 }
 
 html {
   overflow: hidden;
+  background-color: var(--background);
+  color:var(--light-main-color);
 }
 
 *,
@@ -42,3 +52,9 @@ code {
     monospace;
 }
 
+a {
+  color: var(--light-main-color);
+}
+a:hover {
+   color:var(--orange-light);
+}

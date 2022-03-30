@@ -3,11 +3,9 @@ import React, { useState } from "react";
 import Icon from "./../assets/icons/index"
 import logo from "./../assets/icons/logo.svg";
 import Home from "./../assets/icons/dashboard.svg";
-// import Team from "../assets/icons/social.svg";
 import Calendar from "./../assets/icons/calendar.svg";
 import Projects from "./../assets/icons/target.svg";
 import List from "./../assets/icons/list.svg";
-// import Documents from "../assets/icons/draft.svg";
 import PowerOff from "./../assets/icons/power-off.svg";
 import styled from "styled-components";
 import { NavLink } from "react-router-dom";
@@ -15,13 +13,15 @@ import  "../css/Icon.css"
 
 const Container = styled.div`
   position: fixed;
-
+  font-size:1.2rem;
   .active {
-    border-right: 4px solid var(--orange);
+    border-right: 4px solid var(--orange-light);
+    ;
+    color: var(--orange-light);
+    ;
 
     img {
-      filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(93deg)
-        brightness(103%) contrast(103%);
+      filter: var(--filter-img-orange-light)
     }
   }
 `;
@@ -108,26 +108,26 @@ const SlickBar = styled.ul`
 
 
 const Item = styled(NavLink)`
+  color: : var(--white);
   text-decoration: none;
-  color: var(--white);
   width: 100%;
-  padding: 1rem 0;
+  padding: 2rem 0;
   cursor: pointer;
 
   display: flex;
   padding-left: 1rem;
 
   &:hover {
-    border-right: 4px solid var(--white);
-
+    border-right: 4px solid var(--orange-light);
+    color:var(--orange-light);
     img {
-      filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(93deg)
-        brightness(103%) contrast(103%);
+      filter: var(--filter-img-orange-light)
     }
   }
 
   img {
-    width: 1.2rem;
+    width: 1.8rem;
+    padding-right:2px;
     height: auto;
     filter: invert(92%) sepia(4%) saturate(1033%) hue-rotate(169deg)
       brightness(78%) contrast(85%);
@@ -221,7 +221,12 @@ const Logout = styled.button`
     }
   }
 `;
-
+const HomeIcon = ({ success }) => (
+  <img
+    style={success ? { fill: 'var(--orange) !important'} : { fill: 'var(--white)'}}
+   src={Home}
+  />
+);
 const Sidebar = () => {
   const [click, setClick] = useState(false);
   const handleClick = () => setClick(!click);
@@ -243,8 +248,9 @@ const Sidebar = () => {
             className={(navData) => (navData.isActive ? 'active' : '')}
             to="/"
           >
+            {/* {(navData) => (navData.isActive ?  <img src={Home} alt="Home" style="color: orange"/> :  <img src={Home} alt="Home" style="color: white"/>)} */}
             {/* <Icon.Dashboard className={(navData) => (navData.isActive ? 'active' : '')}/> */}
-            <img src={Home} alt="Home"/>
+            <HomeIcon succes={(navData) => (navData.isActive)} />
             <Text clicked={click}>Home</Text>
           </Item>
 
@@ -259,15 +265,15 @@ const Sidebar = () => {
           <Item
             onClick={() => setClick(false)}
             className={(navData) => (navData.isActive ? 'active' : '')}
-            to="/projects"
+            to="/objectifs-evenements"
           >
-            <img src={Projects} alt="Projects" />
+            <img src={Projects} alt="Objectifs-Evenements" />
             <Text clicked={click}>Projects</Text>
           </Item>
           <Item
             onClick={() => setClick(false)}
             className={(navData) => (navData.isActive ? 'active' : '')}
-            to="/liste-operation"
+            to="/operations"
           >
             <img src={List} alt="Liste Operations" />
             <Text clicked={click}>Liste Opérations</Text>
