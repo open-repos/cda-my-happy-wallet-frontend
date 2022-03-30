@@ -109,7 +109,7 @@ const SlickBar = styled.ul`
 
 const Item = styled(NavLink)`
   text-decoration: none;
-  color:  ${(props) => (props.clicked ? "var(--orange)" : "var(--white)")};
+  color: var(--white);
   width: 100%;
   padding: 1rem 0;
   cursor: pointer;
@@ -247,14 +247,7 @@ const Sidebar = () => {
             <img src={Home} alt="Home"/>
             <Text clicked={click}>Home</Text>
           </Item>
-          {/* <Item
-            onClick={() => setClick(false)}
-            className={(navData) => (navData.isActive ? 'active' : '')}
-            to="/team"
-          >
-            <img src={Team} alt="Team" />
-            <Text clicked={click}>Team</Text>
-          </Item> */}
+
           <Item
             onClick={() => setClick(false)}
             className={(navData) => (navData.isActive ? 'active' : '')}
