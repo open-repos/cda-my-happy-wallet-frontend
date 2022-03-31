@@ -16,12 +16,13 @@ import Login from "./pages/Login"
 import Register from "./pages/Register"
 import ForgotPassword from "./pages/ForgotPassword"
 import { Routes, Route, Navigate,useLocation } from "react-router-dom";
+import NewPassword from './pages/NewPassword';
 
 
 function ShowSideBar() {
   let location = useLocation();
   console.log(location)
-  if (location.pathname == "/login" ||location.pathname == "/register" ||location.pathname == "/forgot-password" ){
+  if (location.pathname == "/login" ||location.pathname == "/register" ||location.pathname == "/forgot-password"||location.pathname == "/new-password" ){
     return null;
   }
   return<Sidebar />;
@@ -38,6 +39,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/new-password" element={<NewPassword />} />
           <Route path="/" element={<Home />} />
           <Route path="/" element={<Navigate replace to="/dashboard" />} />
           {/* <Route path="enter-nickname" element={<NicknamePage />}></Route> */}

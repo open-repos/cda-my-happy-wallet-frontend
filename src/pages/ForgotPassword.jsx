@@ -7,7 +7,7 @@ import forgotPassword from "../assets/icons/ForgotPassword.svg";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { faChevronCircleLeft } from "@fortawesome/free-solid-svg-icons";
-const forgotpassword = () => {
+const Forgotpassword = () => {
   let navigate = useNavigate();
   let location = useLocation();
   let from = location.state?.from?.pathname || "/";
@@ -102,4 +102,4 @@ const forgotpassword = () => {
   return <>{send ? <Confirmationforgotpassword /> : <FormForgotPassword />}</>;
 };
 
-export default forgotpassword;
+export default Forgotpassword;
