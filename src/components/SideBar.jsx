@@ -221,12 +221,12 @@ const Logout = styled.button`
     }
   }
 `;
-const HomeIcon = ({ success }) => (
-  <img
-    style={success ? { fill: 'var(--orange) !important'} : { fill: 'var(--white)'}}
-   src={Home}
-  />
-);
+// const IconC = ({ success, src }) => (
+//   <img
+//     style={success ? { fill: 'var(--orange) !important'} : { fill: 'var(--white)'}}
+//    src={src}
+//   />
+// );
 const Sidebar = () => {
   const [click, setClick] = useState(false);
   const handleClick = () => setClick(!click);
@@ -250,7 +250,8 @@ const Sidebar = () => {
           >
             {/* {(navData) => (navData.isActive ?  <img src={Home} alt="Home" style="color: orange"/> :  <img src={Home} alt="Home" style="color: white"/>)} */}
             {/* <Icon.Dashboard className={(navData) => (navData.isActive ? 'active' : '')}/> */}
-            <HomeIcon succes={(navData) => (navData.isActive)} />
+            {/* <HomeIcon succes={(navData) => (navData.isActive)} /> */}
+            <img src={Home} alt="Home" />
             <Text clicked={click}>Home</Text>
           </Item>
 
