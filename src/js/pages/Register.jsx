@@ -13,12 +13,6 @@ const Register = () => {
   let location = useLocation();
   let from = location.state?.from?.pathname || "/";
 
-  //body
-  const [firstname, setFirstname] = useState("");
-  const [lastname, setLastname] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [send, setSend] = useState(false);
   //Logic
   const [formError, setFormError] = useState(null);
@@ -26,9 +20,50 @@ const Register = () => {
   //Api Logic
   // const [register, { isLoading, isUpdating }] = useRegisterMutation();
 
+
+  const ConfirmationRegister = () => {
+    return (
+      <div className="confirm-register">
+        <div className="goback">  <Link to="/login"><FontAwesomeIcon icon={faChevronCircleLeft} /> Retourner à la page de login</Link></div>
+        <h1>
+          <span style={{ color: "var(--orange-light)" }}>
+            Merci pour votre incription !{" "}
+          </span>{" "}
+          Vous allez recevoir un mail de confirmation
+        </h1>{" "}
+        <img src={mailSent} height="auto" width="40%" />
+      </div>
+    );
+  };
+
+  const FormRegister = () => {
+     //body
+  // const [firstname, setFirstname] = useState("");
+  // const [lastname, setLastname] = useState("");
+  // const [confirmPassword, setConfirmPassword] = useState("");
+  // const [email, setEmail] = useState("");
+  // const [password, setPassword] = useState("");
+
+    const [formData, setFormData] = useState({
+    firstname:"",
+    lastname:"",
+    email:'',
+    password:'',
+    confirmpassword:''
+  })
+  const {firstname,lastname,email,password,confirmpassword} = formData;
+
+
+  const onChange = (e) => {
+    setFormData((prevState)=>({
+      ...prevState,
+      [e.target.name]: e.target.value
+    }))
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const body = { firstname, lastname, password, confirmPassword, email };
+    const body = { firstname, lastname, password, confirmpassword, email };
 
     //input validation
     let errorFlag = false;
@@ -54,22 +89,6 @@ const Register = () => {
     //   }
   };
 
-  const ConfirmationRegister = () => {
-    return (
-      <div className="confirm-register">
-        <div className="goback">  <Link to="/login"><FontAwesomeIcon icon={faChevronCircleLeft} /> Retourner à la page de login</Link></div>
-        <h1>
-          <span style={{ color: "var(--orange-light)" }}>
-            Merci pour votre incription !{" "}
-          </span>{" "}
-          Vous allez recevoir un mail de confirmation
-        </h1>{" "}
-        <img src={mailSent} height="auto" width="40%" />
-      </div>
-    );
-  };
-
-  const FormRegister = () => {
     return (
       <div className="register">
         <form className="register_form" onSubmit={(e) => handleSubmit(e)}>
@@ -84,7 +103,7 @@ const Register = () => {
             name="firstname"
             placeholder="Entrez prénom"
             value={firstname}
-            onChange={(e) => setFirstname(e.target.value)}
+            onChange={onChange}
           />
           <input
             type="text"
@@ -92,7 +111,7 @@ const Register = () => {
             placeholder="Entrez votre nom"
             value={lastname}
             autoComplete="on"
-            onChange={(e) => setLastname(e.target.value)}
+            onChange={onChange}
           />
           <input
             type="email"
@@ -100,21 +119,21 @@ const Register = () => {
             placeholder="Entrez votre email"
             value={email}
             autoComplete="on"
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={onChange}
           />
           <input
             type="password"
             name="password"
             placeholder="Entrez mot de passe"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={onChange}
           />
           <input
             type="password"
             name="confirmpassword"
             placeholder="Confirmez votre mot de passe"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            value={confirmpassword}
+            onChange={onChange}
           />
           <button type="submit" className="submit_btn">
             S'enregistrer
@@ -126,8 +145,14 @@ const Register = () => {
       </div>
     );
   };
-
-  return <>{send ? <ConfirmationRegister /> : <FormRegister />}</>;
+  {
+    if(send){
+      return <ConfirmationRegister />
+    } else{
+      return <FormRegister />
+    }
+  }
+  // return <>{send ? <ConfirmationRegister /> : <FormRegister />}</>;
 };
 
 export default Register;

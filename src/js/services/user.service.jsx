@@ -1,4 +1,5 @@
 import api from "../utils/api";
+import { setLocalStorageItem } from "../utils/localstorage";
 class UserService {
   getAll() {
     return api.get("/users");
@@ -6,25 +7,36 @@ class UserService {
 //   get(id) {
 //     return api.get(`/users/${id}`);
 //   }
-  register(data) {
-    return api.post("/users/register/", data);
+  async register(data) {
+     const response =await  api.post("/users/register/", data);
+     console.log(response)
+     if (response.data){
+        //  setLocalStorageItem(response.data,"message")
+        console.log(data)
+     }
+     return response.data
+    } 
+  
+  async login(data) {
+    const response =await  api.post(`/users/authenticate/`, data);
+    if (response.data){
+        setLocalStorageItem(response.data,"user")
+    }
+    return response.data
   }
-  login(data) {
-    return api.post(`/users/authenticate/`, data);
-  }
-  delete(data) {
+  async delete(data) {
     return api.delete(`/users/delete`,data);
   }
-  verifyAccount(id,token) {
+  async verifyAccount(id,token) {
     return api.get(`/users/verify/${id}/${token}`);
   }
-  resetPassword(token) {
+  async resetPassword(token) {
     return api.get(`/users/reset-password/${token}`);
   }
-  newPassword(data) {
+  async newPassword(data) {
     return api.post(`/users/new-password/`,data);
   }
-  renewAccessToken(data){
+  async renewAccessToken(data){
       return api.post(`/token`,data)
   }
 }

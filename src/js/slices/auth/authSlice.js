@@ -4,10 +4,13 @@ import { createSlice } from "@reduxjs/toolkit";
 import {
   setLocalStorageItem,
   removeLocalStorageItem,
-} from "../utils/localstorage";
+  getLocalStorageItem
+} from "../../utils/localstorage";
 
+
+const user = getLocalStorageItem("user")
 const initialState = {
-  user: null,
+  user: user ? user : null ,
   isAuthenticated: false,
   isLoading: false,
 };
@@ -27,6 +30,9 @@ export const authSlice = createSlice({
       // console.log("state.isAuthenticated",state.isAuthenticated)
     },
   },
+  extraReducers:()=>{
+    
+  }
 });
 
 // Action creators are generated for each case reducer function

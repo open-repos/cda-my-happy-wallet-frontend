@@ -35,6 +35,7 @@ html {
 body {
   background-color: var(--background);
   font-family: "Oswald", sans-serif;
+  text-align: center;
 }
 
 

@@ -4,12 +4,12 @@ import { configureStore } from "@reduxjs/toolkit";
 // //Services
 // import { gameApi } from "../services/gameApi";
 //Features
-import auth from "../slices/authSlice";
+import authReducer from "../slices/auth/authSlice";
 
 
 const reducer = {
   // [gameApi.reducerPath]: gameApi.reducer,
-  auth:auth,
+  auth:authReducer,
 }
 
 export const store = configureStore({
