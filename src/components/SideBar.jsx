@@ -65,11 +65,10 @@ const Button = styled.button`
 const SidebarContainer = styled.div`
   background-color: var(--dark-secondary-color);
   width: 3.5rem;
-  height: 80vh;
+  height: 90vh;
   margin-top: 1rem;
   border-radius: 0 30px 30px 0;
   padding: 1rem 0;
-
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -111,7 +110,7 @@ const Item = styled(NavLink)`
   color: : var(--white);
   text-decoration: none;
   width: 100%;
-  padding: 2rem 0;
+  padding: 1.5rem 0;
   cursor: pointer;
 
   display: flex;
@@ -269,7 +268,7 @@ const Sidebar = () => {
             to="/objectifs-evenements"
           >
             <img src={Projects} alt="Objectifs-Evenements" />
-            <Text clicked={click}>Projects</Text>
+            <Text clicked={click}>Objectifs-Évènements</Text>
           </Item>
           <Item
             onClick={() => setClick(false)}

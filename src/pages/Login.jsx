@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import "./../css/Login.css";
 import logo from "./../assets/Logo_Login.png"
+import favIcon from "./../assets/icons/logo.svg"
 // import { useLoginMutation } from "../services/authService";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { RequireAuth } from "../features/auth/requireAuth";
+
 
 const Login = () => {
   let navigate = useNavigate();
@@ -42,7 +44,7 @@ const Login = () => {
       <img src={logo} width="300px" height="auto"/>
       <form className="login_form" onSubmit={(e) => handleSubmit(e)}>
         <h1>
-          Bienvenue  <br /> sur MyHappyWallet
+          Bienvenue  <br /> sur MyHappyWallet <img src={favIcon} height='20rem' width="20rem"/>
         </h1>
         <p style={{ color: "red" }}>{formError && formError}</p>
         {/* {isLoading && <p>Loading...</p>} */}
