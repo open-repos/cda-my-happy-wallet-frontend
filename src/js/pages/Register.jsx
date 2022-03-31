@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import "../css/Register.css";
-import mailSent from "../assets/icons/Mail-sent.svg";
+import "./../../css/Register.css";
+import mailSent from "./../../assets/icons/Mail-sent.svg";
+import favIcon from "./../../assets/icons/favIcon.svg"
 // import { useRegisterMutation } from "../services/authService";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { faChevronCircleLeft } from "@fortawesome/free-solid-svg-icons";
+
 const Register = () => {
   let navigate = useNavigate();
   let location = useLocation();
@@ -73,7 +75,7 @@ const Register = () => {
         <form className="register_form" onSubmit={(e) => handleSubmit(e)}>
           <h1>
             Pas encore inscrit ? <br /> Créer un compte pour utiliser
-            MyHappyWallet
+            MyHappyWallet <img src={favIcon} height='20rem' width="20rem"/>
           </h1>
           {/* <p style={{ color: "red" }}>{formError && formError}</p> */}
           {/* {isLoading && <p>Loading...</p>} */}

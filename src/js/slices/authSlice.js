@@ -4,7 +4,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import {
   setLocalStorageItem,
   removeLocalStorageItem,
-} from "../../utils/localstorage";
+} from "../utils/localstorage";
 
 const initialState = {
   user: null,

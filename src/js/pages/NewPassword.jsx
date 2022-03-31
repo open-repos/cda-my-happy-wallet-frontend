@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import "./../css/Newpassword.css";
-import Ok from "../assets/icons/Ok.svg";
-import newpassword from "../assets/icons/Newpassword.svg";
+import "./../../css/Newpassword.css";
+import Ok from "../../assets/icons/Ok.svg";
+import newpassword from "../../assets/icons/Newpassword.svg";
 // import { usenewpasswordMutation } from "../services/authService";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";

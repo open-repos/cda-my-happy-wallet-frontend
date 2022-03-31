@@ -4,8 +4,8 @@ import { useDispatch,useSelector} from "react-redux";
 import { useLocation, Navigate } from "react-router-dom";
 
 //Services
-import { login } from "./authSlice";
-import { getLocalStorageItem } from "../../utils/localstorage";
+import { login } from "../slices/authSlice";
+import { getLocalStorageItem } from "../utils/localstorage";
 
 export const RequireAuth = ({ children }) => {
   let location = useLocation();

@@ -1,7 +1,7 @@
 import React from 'react';
-import './App.css'
+import './../css/App.css'
 //auth
-import { RequireAuth } from "./features/auth/requireAuth";
+import { RequireAuth } from "./components/requireAuth";
 
 //Components
 import Sidebar from './components/SideBar'

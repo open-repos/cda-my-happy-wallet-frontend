@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 //All the svg files
-import Icon from "./../assets/icons/index"
-import logo from "./../assets/icons/logo.svg";
-import Home from "./../assets/icons/dashboard.svg";
-import Calendar from "./../assets/icons/calendar.svg";
-import Projects from "./../assets/icons/target.svg";
-import List from "./../assets/icons/list.svg";
-import PowerOff from "./../assets/icons/power-off.svg";
+import Icon from "./../../assets/icons/index"
+import logo from "./../../assets/icons/logo.svg";
+import Home from "./../../assets/icons/dashboard.svg";
+import Calendar from "./../../assets/icons/calendar.svg";
+import Projects from "./../../assets/icons/target.svg";
+import List from "./../../assets/icons/list.svg";
+import PowerOff from "./../../assets/icons/power-off.svg";
 import styled from "styled-components";
 import { NavLink } from "react-router-dom";
-import  "../css/Icon.css"
+import  "../../css/Icon.css"
 
 const Container = styled.div`
   position: fixed;
