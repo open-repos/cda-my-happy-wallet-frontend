@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from 'react-redux'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./../../css/Register.css";
 import mailSent from "./../../assets/icons/Mail-sent.svg";
@@ -7,11 +8,16 @@ import favIcon from "./../../assets/icons/favIcon.svg"
 import { useLocation, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { faChevronCircleLeft } from "@fortawesome/free-solid-svg-icons";
+import Spinner from '../components/Spinner'
+import { register, reset } from './../slices/auth/authSlice'
+import { toast } from 'react-toastify'
+
+
 
 const Register = () => {
-  let navigate = useNavigate();
+  // let navigate = useNavigate();
   let location = useLocation();
-  let from = location.state?.from?.pathname || "/";
+  // let from = location.state?.from?.pathname || "/";
 
   const [send, setSend] = useState(false);
   //Logic
@@ -38,11 +44,6 @@ const Register = () => {
 
   const FormRegister = () => {
      //body
-  // const [firstname, setFirstname] = useState("");
-  // const [lastname, setLastname] = useState("");
-  // const [confirmPassword, setConfirmPassword] = useState("");
-  // const [email, setEmail] = useState("");
-  // const [password, setPassword] = useState("");
 
     const [formData, setFormData] = useState({
     firstname:"",
@@ -53,6 +54,24 @@ const Register = () => {
   })
   const {firstname,lastname,email,password,confirmpassword} = formData;
 
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+
+  const { user, isLoading, isError, isSuccess, message } = useSelector(
+    (state) => state.auth
+  )
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(message)
+    }
+
+    if (isSuccess || user) {
+      navigate('/')
+    }
+
+    dispatch(reset())
+  }, [user, isError, isSuccess, message, navigate, dispatch])
 
   const onChange = (e) => {
     setFormData((prevState)=>({
@@ -67,7 +86,30 @@ const Register = () => {
 
     //input validation
     let errorFlag = false;
-    setSend(true);
+
+    if (password !== confirmpassword) {
+      toast.error('Passwords do not match', {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        })
+    } else {
+      const userData = {
+        firstname,
+        lastname,
+        email,
+        password,
+        confirmpassword
+      }
+
+    dispatch(register(userData))
+    
+    // setSend(true);
+  }
     //   if (password.length < 6 || password.length > 15) {
     //     errorFlag = true;
 
@@ -89,6 +131,9 @@ const Register = () => {
     //   }
   };
 
+  if (isLoading) {
+    return <Spinner />
+  }
     return (
       <div className="register">
         <form className="register_form" onSubmit={(e) => handleSubmit(e)}>

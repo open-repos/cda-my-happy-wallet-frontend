@@ -1,10 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./../../css/Login.css";
 import logo from "./../../assets/Logo_Login.png"
 import favIcon from "./../../assets/icons/logo.svg"
 // import { useLoginMutation } from "../services/authService";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate,useSearchParams } from "react-router-dom";
 import { Link } from "react-router-dom";
+import { useSelector, useDispatch } from 'react-redux'
+import { toast } from 'react-toastify'
+// import {  reset } from './../slices/auth/authSlice'
 // import { RequireAuth } from "../../features/auth/requireAuth";
 
 
@@ -12,6 +15,9 @@ const Login = () => {
   let navigate = useNavigate();
   let location = useLocation();
   let from = location.state?.from?.pathname || "/";
+  const search = useLocation().search;
+  const success = new URLSearchParams(search).get('success');
+  const confirmationRegistration = new URLSearchParams(search).get('message');
 
   //body
   const [email, setEmail] = useState("");
@@ -20,24 +26,27 @@ const Login = () => {
   //Logic
   const [formError, setFormError] = useState(null);
 
+  const dispatch = useDispatch();
   // //Api Logic
   // const [login, { isLoading, isUpdating }] = useLoginMutation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const body = { email, password };
-    // try {
-    //   const result = await login(body);
-    //   console.log("result", result);
-    //   if (result.error) {
-    //     return setFormError(result.error.data.message);
-    //   }
-
-    //   navigate("/home", { redirect: true });
-    // } catch (err) {
-    //   console.log("Something went wrong", err);
-    // }
+    const body = { email, password }
   };
+
+  const { user, isLoading, isError, isSuccess, message } = useSelector(
+    (state) => state.auth
+  )
+
+  useEffect(() => {
+    // console.log("One")
+    if (confirmationRegistration=="registrationok") {
+      toast.success("Votre compte a bien été créée !")
+      navigate("/login")
+    }
+  })
+
 
   return (
     <div className="login">

@@ -5,7 +5,7 @@ import { useLocation, Navigate } from "react-router-dom";
 
 //Services
 import { login } from "../slices/auth/authSlice";
-import { getLocalStorageItem } from "../utils/localstorage";
+import { getLocalStorageItem } from "../../utils/localstorage";
 
 export const RequireAuth = ({ children }) => {
   let location = useLocation();
