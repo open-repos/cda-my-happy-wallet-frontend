@@ -54,6 +54,6 @@ deploy_main:
     - ls -la ./
     - /sbin/ip route|awk '/default/ { print $3 }'
     - ls ./dist/
-    - /usr/bin/rsync -r ./dist/ $SERVER_USER@$SERVER_IP:$PATH_DOMAIN. --exclude-from="exclude.build"
+    - /usr/bin/rsync -r ./dist/ $SERVER_USER@$SERVER_IP:$PATH_DOMAIN.
   tags:
     - server_runner_2
