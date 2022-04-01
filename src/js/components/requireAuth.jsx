@@ -5,8 +5,7 @@ import { useLocation, Navigate,useNavigate } from "react-router-dom";
 
 //Services
 import { login, logout } from "../slices/auth/authSlice";
-import { getLocalStorageItem } from "../../utils/localstorage";
-import { removeLocalStorageItem } from "../../../../../Projet-08-Hackaton-13_17_Dec-Front/Hackathon-Quiz-App/src/js/utils/localstorage";
+import { getLocalStorageItem,removeLocalStorageItem } from "../../utils/localstorage";
 
 export const RequireAuth = ({ children }) => {
   let location = useLocation();
