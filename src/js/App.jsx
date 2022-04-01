@@ -35,7 +35,7 @@ function ShowSideBar() {
 function App() {
   return (
     <>
-      <ShowSideBar />
+      {/* <ShowSideBar /> */}
       <div className="App">
         <header></header>
         <main>
@@ -55,18 +55,22 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/new-password" element={<NewPassword />} />
-            <Route path="/" element={<Home />} />
-            <Route path="/" element={<Navigate replace to="/dashboard" />} />
+            
+            <Route path="home" element={<RequireAuth><Sidebar /><Home /> </RequireAuth>} />
+            <Route path="/" element={ <Navigate replace to="/home" />} />
+            {/* <Route path="/" element={<Navigate to="/home" replace />} /> */}
+            
             {/* <Route path="enter-nickname" element={<NicknamePage />}></Route> */}
             {/* <Route
             path="/games"
             element={<Navigate replace to="/games/nickname" />}
           > */}
-            <Route path="/calendrier" element={<Calendrier />}></Route>
+            <Route path="/calendrier" element={<RequireAuth><Sidebar /><Calendrier /></RequireAuth>}></Route>
             <Route
               path="/objectifs-evenements"
               element={
                 <RequireAuth>
+                  <Sidebar />
                   <Objectifs />
                 </RequireAuth>
               }
@@ -75,6 +79,7 @@ function App() {
               path="/operations"
               element={
                 <RequireAuth>
+                  <Sidebar />
                   <ListeOperations />
                 </RequireAuth>
               }
@@ -83,6 +88,7 @@ function App() {
               path="/profil"
               element={
                 <RequireAuth>
+                  <Sidebar />
                   <Profil />
                 </RequireAuth>
               }

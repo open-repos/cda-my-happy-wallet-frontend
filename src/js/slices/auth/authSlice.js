@@ -33,6 +33,22 @@ export const register = createAsyncThunk(
   }
 )
 
+// Login user
+export const loginApi = createAsyncThunk(
+  'auth/login',
+  async (user, thunkAPI) => {
+    try {
+      const response = await userService.login(user)
+      console.log(response)
+      return response
+    } catch (error) {
+      console.log("error",error.response.data)
+      const message = error.response.data.error.message
+      return thunkAPI.rejectWithValue(message)
+    }
+  }
+)
+
 
 export const authSlice = createSlice({
   name: "auth",
@@ -46,7 +62,7 @@ export const authSlice = createSlice({
       state.message = ''
     },
     logout: () => {
-      removeLocalStorageItem("user"),
+      // removeLocalStorageItem("user"),
       initialState;
     },
     login: (state,action) => {
@@ -73,11 +89,27 @@ export const authSlice = createSlice({
         state.message = action.payload
         state.user = null
       })
+      .addCase(loginApi.pending, (state) => {
+        state.isLoading = true
+      })
+      .addCase(loginApi.fulfilled, (state, action) => {
+        state.isLoading = false
+        state.isSuccess = true
+        state.isAuthenticated= true,
+        state.user = action.payload
+      })
+      .addCase(loginApi.rejected, (state, action) => {
+        state.isLoading = false
+        state.isError = true
+        state.isAuthenticated= false,
+        state.message = action.payload
+        state.user = null
+      })
     
   }
 });
 
 // Action creators are generated for each case reducer function
-export const { logout, login, reset } = authSlice.actions;
+export const { logout,login, reset } = authSlice.actions;
 
 export default authSlice.reducer;

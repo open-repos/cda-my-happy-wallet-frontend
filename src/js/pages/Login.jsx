@@ -7,18 +7,19 @@ import { useLocation, useNavigate,useSearchParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
-// import {  reset } from './../slices/auth/authSlice'
+import { loginApi,reset } from "../slices/auth/authSlice";
 // import { RequireAuth } from "../../features/auth/requireAuth";
-
+import Spinner from '../components/Spinner'
 
 const Login = () => {
   let navigate = useNavigate();
   let location = useLocation();
-  let from = location.state?.from?.pathname || "/";
+  console.log(location)
+  let from = location.state?.from?.pathname || location.state?.pathname  || "/";
   const search = useLocation().search;
   const success = new URLSearchParams(search).get('success');
   const confirmationRegistration = new URLSearchParams(search).get('message');
-
+  const toastId = React.useRef(null);
   //body
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,24 +31,50 @@ const Login = () => {
   // //Api Logic
   // const [login, { isLoading, isUpdating }] = useLoginMutation();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const body = { email, password }
-  };
-
-  const { user, isLoading, isError, isSuccess, message } = useSelector(
+  const { user, isLoading, isError, isSuccess, isAuthenticated, message } = useSelector(
     (state) => state.auth
   )
 
+  // useEffect(() => {
+   
+  // },[])
   useEffect(() => {
-    // console.log("One")
     if (confirmationRegistration=="registrationok") {
-      toast.success("Votre compte a bien été créée !")
+      if(! toast.isActive(toastId.current)) {
+        toastId.current = toast.success("Votre compte a bien été créée !")
+      }
+      
       navigate("/login")
     }
-  })
+    if (isError) {
+      if(! toast.isActive(toastId.current)) {
+        toastId.current =  toast.error(message)
+      }
+     
+    }
+    console.log("from",from)
+    console.log("isSuccess",isSuccess)
+    console.log("user",user)
+    if (isSuccess || isAuthenticated) {
+      navigate(from)
+      console.log("isSuccess",isSuccess)
+      console.log("user",user)
+    }
+
+    dispatch(reset())
+  }, [user, isError, isSuccess, isAuthenticated,message,navigate, dispatch])
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const body = { email, password }
+    dispatch(loginApi(body))
+  };
 
 
+
+  if (isLoading) {
+    return <Spinner />
+  }
   return (
     <div className="login">
       <img src={logo} width="300px" height="auto"/>
@@ -55,7 +82,7 @@ const Login = () => {
         <h1>
           Bienvenue  <br /> sur MyHappyWallet <img src={favIcon} height='20rem' width="20rem"/>
         </h1>
-        <p style={{ color: "red" }}>{formError && formError}</p>
+        {/* <p style={{ color: "red" }}>{formError && formError}</p> */}
         {/* {isLoading && <p>Loading...</p>} */}
         <input
           type="email"

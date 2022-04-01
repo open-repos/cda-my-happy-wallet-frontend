@@ -21,8 +21,8 @@ const Register = () => {
 
   const [send, setSend] = useState(false);
   //Logic
-  const [formError, setFormError] = useState(null);
-
+  // const [formError, setFormError] = useState(null);
+  const toastId = React.useRef(null);
   //Api Logic
   // const [register, { isLoading, isUpdating }] = useRegisterMutation();
 
@@ -63,7 +63,9 @@ const Register = () => {
 
   useEffect(() => {
     if (isError) {
-      toast.error(message)
+      if(! toast.isActive(toastId.current)) {
+        toastId.current =  toast.error(message)
+      }
     }
 
     if (isSuccess || user) {
@@ -108,29 +110,8 @@ const Register = () => {
       }
 
     dispatch(register(userData))
-    
-    // setSend(true);
-  }
-    //   if (password.length < 6 || password.length > 15) {
-    //     errorFlag = true;
 
-    //     setFormError(
-    //       "Password doit être d'une longueur minimale de 6 char et maximale de 15 char"
-    //     );
-    //   }
-
-    //   try {
-    //     const result = await register(body);
-    //     console.log("result", result);
-    //     if (result.error) {
-    //       return setFormError(result.error.data.message);
-    //     }
-
-    //     navigate("/register", { redirect: true });
-    //   } catch (err) {
-    //     console.log("Something went wrong", err);
-    //   }
-  };
+  };}
 
   if (isLoading) {
     return <Spinner />

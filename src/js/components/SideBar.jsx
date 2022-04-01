@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 //All the svg files
 import Icon from "./../../assets/icons/index"
 import logo from "./../../assets/icons/logo.svg";
@@ -7,10 +7,14 @@ import Calendar from "./../../assets/icons/calendar.svg";
 import Projects from "./../../assets/icons/target.svg";
 import List from "./../../assets/icons/list.svg";
 import PowerOff from "./../../assets/icons/power-off.svg";
+import Profil from "./../../assets/icons/user.svg"
 import styled from "styled-components";
-import { NavLink } from "react-router-dom";
+import { Navigate, NavLink, useNavigate,Link, useLocation } from "react-router-dom";
 import  "../../css/Icon.css"
-
+import {logout,reset} from "../slices/auth/authSlice"
+import {useSelector, useDispatch } from "react-redux";
+import { removeLocalStorageItem } from "../../../../../Projet-08-Hackaton-13_17_Dec-Front/Hackathon-Quiz-App/src/js/utils/localstorage";
+import { getLocalStorageItem } from "../../utils/localstorage";
 const Container = styled.div`
   position: fixed;
   font-size:1.2rem;
@@ -22,6 +26,22 @@ const Container = styled.div`
 
     img {
       filter: var(--filter-img-orange-light)
+    }
+  }
+  .active-profile {
+    color: var(--orange-light);
+    ;
+    &:hover {
+      color: var(--orange-light);
+    }
+    text-decoration:none;
+
+    img.profile {
+      filter: var(--filter-img-orange-light)
+    }
+    }
+    .default-profile{
+      text-decoration:none;
     }
   }
 `;
@@ -162,12 +182,14 @@ const Profile = styled.div`
   img {
     width: 2.5rem;
     height: 2.5rem;
-    border-radius: 50%;
+    border-radius: 70%;
     cursor: pointer;
+    filter: ${(props) => (props.path.includes("/profil") ? "var(--filter-img-orange-light)" : "invert(92%) sepia(4%) saturate(1033%) hue-rotate(169deg) brightness(78%) contrast(85%)")};
 
     &:hover {
-      border: 2px solid var(--grey);
+      border: 2px solid var(--white);
       padding: 2px;
+      filter: var(--filter-img-orange-light)
     }
   }
 `;
@@ -212,11 +234,11 @@ const Logout = styled.button`
     height: auto;
     filter: invert(15%) sepia(70%) saturate(6573%) hue-rotate(2deg)
       brightness(100%) contrast(126%);
-    transition: all 0.3s ease;
+    // transition: all 0.3s ease;
     &:hover {
       border: none;
       padding: 0;
-      opacity: 0.5;
+      // opacity: 0.5;
     }
   }
 `;
@@ -229,9 +251,35 @@ const Logout = styled.button`
 const Sidebar = () => {
   const [click, setClick] = useState(false);
   const handleClick = () => setClick(!click);
-
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
   const [profileClick, setprofileClick] = useState(false);
   const handleProfileClick = () => setprofileClick(!profileClick);
+
+  const location= useLocation()
+
+  const userStorage = getLocalStorageItem("user")
+  const { user, isLoading, isError, isSuccess,isAuthenticaded, message } = useSelector(
+    (state) => state.auth
+  )
+  const [isLoggedIn, setLoggedIn]=useState(isAuthenticaded)
+
+  useEffect(()=>{
+  const loggedInUser = getLocalStorageItem("user");
+    if (loggedInUser) {
+      return
+    }  else{
+      dispatch(logout())
+      navigate('/login',{state:location})
+      // return <Navigate to="/login" state={{ from: location }} />;
+    }
+    dispatch(reset())
+  },[isLoggedIn,dispatch])
+
+  const handleLogout =  () =>{
+    removeLocalStorageItem("user") 
+    setLoggedIn(false)
+  } 
 
   return (
     <Container>
@@ -245,7 +293,7 @@ const Sidebar = () => {
           <Item
             onClick={() => setClick(false)}
             className={(navData) => (navData.isActive ? 'active' : '')}
-            to="/"
+            to="/home"
           >
             {/* {(navData) => (navData.isActive ?  <img src={Home} alt="Home" style="color: orange"/> :  <img src={Home} alt="Home" style="color: white"/>)} */}
             {/* <Icon.Dashboard className={(navData) => (navData.isActive ? 'active' : '')}/> */}
@@ -279,24 +327,34 @@ const Sidebar = () => {
             <Text clicked={click}>Liste Opérations</Text>
           </Item>
         </SlickBar>
-
-        <Profile clicked={profileClick}>
+        <Profile clicked={profileClick} path={location.pathname}
+        to="/profil">
           <img
+            className={(navData) => (navData.isActive ? 'active-profile' : '')}
             onClick={() => handleProfileClick()}
-            src="https://picsum.photos/200"
+            src={Profil} //"https://picsum.photos/200"
             alt="Profile"
           />
           <Details clicked={profileClick}>
+          <NavLink
+            to="/profil"
+            className={(navData) => (navData.isActive ? 'active-profile' : 'default-profile')}
+          >
             <Name>
-              <h4>Jhon&nbsp;Doe</h4>
-              <a href="/#">view&nbsp;profile</a>
+              <h4>{userStorage?.payload.user.firstname}&nbsp;{userStorage?.payload.user.lastname}</h4>
+              {/* <a href="/profil">voir&nbsp;profil</a> */}
+              <Link to="/profil">voir&nbsp;profil</Link>
             </Name>
-
+            </NavLink>
             <Logout>
-              <img src={PowerOff} alt="logout" />
+              <img 
+              className="logout"
+              onClick={() => handleLogout()}
+              src={PowerOff} alt="logout" />
             </Logout>
           </Details>
         </Profile>
+
       </SidebarContainer>
     </Container>
   );
