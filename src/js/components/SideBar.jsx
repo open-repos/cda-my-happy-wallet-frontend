@@ -1,19 +1,28 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 //All the svg files
-import Icon from "./../../assets/icons/index"
+import Icon from "./../../assets/icons/index";
 import logo from "./../../assets/icons/logo.svg";
 import Home from "./../../assets/icons/dashboard.svg";
 import Calendar from "./../../assets/icons/calendar.svg";
 import Projects from "./../../assets/icons/target.svg";
 import List from "./../../assets/icons/list.svg";
 import PowerOff from "./../../assets/icons/power-off.svg";
-import Profil from "./../../assets/icons/user.svg"
+import Profil from "./../../assets/icons/user.svg";
 import styled from "styled-components";
-import { Navigate, NavLink, useNavigate,Link, useLocation } from "react-router-dom";
-import  "../../css/Icon.css"
-import {logout,reset} from "../slices/auth/authSlice"
-import {useSelector, useDispatch } from "react-redux";
-import { getLocalStorageItem,removeLocalStorageItem } from "../../utils/localstorage";
+import {
+  Navigate,
+  NavLink,
+  useNavigate,
+  Link,
+  useLocation,
+} from "react-router-dom";
+import "../../css/Icon.css";
+import { logout, reset } from "../slices/auth/authSlice";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  getLocalStorageItem,
+  removeLocalStorageItem,
+} from "../../utils/localstorage";
 const Container = styled.div`
   position: fixed;
   font-size:1.2rem;
@@ -124,7 +133,6 @@ const SlickBar = styled.ul`
   border-radius: 0 30px 30px 0;
 `;
 
-
 const Item = styled(NavLink)`
   color: : var(--white);
   text-decoration: none;
@@ -183,12 +191,15 @@ const Profile = styled.div`
     height: 2.5rem;
     border-radius: 70%;
     cursor: pointer;
-    filter: ${(props) => (props.path.includes("/profil") ? "var(--filter-img-orange-light)" : "invert(92%) sepia(4%) saturate(1033%) hue-rotate(169deg) brightness(78%) contrast(85%)")};
+    filter: ${(props) =>
+      props.path.includes("/profil")
+        ? "var(--filter-img-orange-light)"
+        : "invert(92%) sepia(4%) saturate(1033%) hue-rotate(169deg) brightness(78%) contrast(85%)"};
 
     &:hover {
       border: 2px solid var(--white);
       padding: 2px;
-      filter: var(--filter-img-orange-light)
+      filter: var(--filter-img-orange-light);
     }
   }
 `;
@@ -250,40 +261,55 @@ const Logout = styled.button`
 const Sidebar = () => {
   const [click, setClick] = useState(false);
   const handleClick = () => setClick(!click);
-  const navigate = useNavigate()
-  const dispatch = useDispatch()
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [profileClick, setprofileClick] = useState(false);
   const handleProfileClick = () => setprofileClick(!profileClick);
 
-  const location= useLocation()
+  const location = useLocation();
 
-  const userStorage = getLocalStorageItem("user")
-  const { user, isLoading, isError, isSuccess,isAuthenticaded, message } = useSelector(
-    (state) => state.auth
-  )
-  const [isLoggedIn, setLoggedIn]=useState(isAuthenticaded)
+  const userStorage = getLocalStorageItem("user");
+  const { user } = useSelector((state) => state.auth);
+  // const [isLoggedIn, setLoggedIn]=useState(isAuthenticaded)
 
-  useEffect(()=>{
-  const loggedInUser = getLocalStorageItem("user");
-    if (loggedInUser) {
-      return
-    }  else{
-      dispatch(logout())
-      navigate('/login',{state:location})
-      // return <Navigate to="/login" state={{ from: location }} />;
-    }
+  // useEffect(()=>{
+  // const loggedInUser = getLocalStorageItem("user");
+  //   if (loggedInUser) {
+  //     return
+  //   }  else{
+  //     dispatch(logout())
+  //     navigate('/login',{state:location})
+  //     // return <Navigate to="/login" state={{ from: location }} />;
+  //   }
+  //   dispatch(reset())
+  // },[isLoggedIn,dispatch])
+
+  // const handleLogout =  () =>{
+  //   removeLocalStorageItem("user")
+  //   setLoggedIn(false)
+  // }
+
+
+  // useEffect(()=>{
+  //   if (user) {
+  //     return
+  //   }  else{
+  //     dispatch(logout())
+  //     navigate('/login',{state:location})
+  //     // return <Navigate to="/login" state={{ from: location }} />;
+  //   }
+  //   dispatch(reset())
+  // },[user,dispatch])
+
+  const onLogout = ()=>{
+    dispatch(logout())
     dispatch(reset())
-  },[isLoggedIn,dispatch])
-
-  const handleLogout =  () =>{
-    removeLocalStorageItem("user") 
-    setLoggedIn(false)
-  } 
+    navigate('/login',{state:location})
+  }
 
   return (
     <Container>
-      <Button clicked={click} onClick={() => handleClick()}>
-      </Button>
+      <Button clicked={click} onClick={() => handleClick()}></Button>
       <SidebarContainer>
         <Logo>
           <img src={logo} alt="logo" />
@@ -291,7 +317,7 @@ const Sidebar = () => {
         <SlickBar clicked={click}>
           <Item
             onClick={() => setClick(false)}
-            className={(navData) => (navData.isActive ? 'active' : '')}
+            className={(navData) => (navData.isActive ? "active" : "")}
             to="/home"
           >
             {/* {(navData) => (navData.isActive ?  <img src={Home} alt="Home" style="color: orange"/> :  <img src={Home} alt="Home" style="color: white"/>)} */}
@@ -303,7 +329,7 @@ const Sidebar = () => {
 
           <Item
             onClick={() => setClick(false)}
-            className={(navData) => (navData.isActive ? 'active' : '')}
+            className={(navData) => (navData.isActive ? "active" : "")}
             to="/calendrier"
           >
             <img src={Calendar} alt="Calender" />
@@ -311,7 +337,7 @@ const Sidebar = () => {
           </Item>
           <Item
             onClick={() => setClick(false)}
-            className={(navData) => (navData.isActive ? 'active' : '')}
+            className={(navData) => (navData.isActive ? "active" : "")}
             to="/objectifs-evenements"
           >
             <img src={Projects} alt="Objectifs-Evenements" />
@@ -319,41 +345,53 @@ const Sidebar = () => {
           </Item>
           <Item
             onClick={() => setClick(false)}
-            className={(navData) => (navData.isActive ? 'active' : '')}
+            className={(navData) => (navData.isActive ? "active" : "")}
             to="/operations"
           >
             <img src={List} alt="Liste Operations" />
             <Text clicked={click}>Liste Opérations</Text>
           </Item>
         </SlickBar>
-        <Profile clicked={profileClick} path={location.pathname}
-        to="/profil">
+        <Profile clicked={profileClick} path={location.pathname} to="/profil" className={(navData) => (navData.isActive ? "active-profile" : "")}>
           <img
-            className={(navData) => (navData.isActive ? 'active-profile' : '')}
             onClick={() => handleProfileClick()}
             src={Profil} //"https://picsum.photos/200"
             alt="Profile"
           />
           <Details clicked={profileClick}>
-          <NavLink
-            to="/profil"
-            className={(navData) => (navData.isActive ? 'active-profile' : 'default-profile')}
-          >
-            <Name>
-              <h4>{userStorage?.payload.user.firstname}&nbsp;{userStorage?.payload.user.lastname}</h4>
-              {/* <a href="/profil">voir&nbsp;profil</a> */}
-              <Link to="/profil">voir&nbsp;profil</Link>
-            </Name>
-            </NavLink>
+            {/* <NavLink
+              to="/profil"
+              className={(navData) =>
+                navData.isActive ? "active-profile" : "default-profile"
+              }
+            > */}
+              <Name>
+              <NavLink to="/profil" className={(navData) =>
+                navData.isActive ? "active-profile" : "default-profile"
+              } >
+                <h4>
+                  {/* {userStorage?.payload.user.firstname}&nbsp;
+                  {userStorage?.payload.user.lastname} */}
+                  {user?.payload.user.firstname}&nbsp;
+                  {user?.payload.user.lastname}
+                </h4>
+                </NavLink>
+                {/* <a href="/profil">voir&nbsp;profil</a> */}
+                {/* <span>voir&nbsp;profil</span> */}
+                <Link to="/profil">voir&nbsp;profil</Link>
+              </Name>
+            {/* </NavLink> */}
             <Logout>
-              <img 
-              className="logout"
-              onClick={() => handleLogout()}
-              src={PowerOff} alt="logout" />
+              <img
+                // className="logout"
+                // onClick={() => handleLogout()}
+                onClick={onLogout}
+                src={PowerOff}
+                alt="logout"
+              />
             </Logout>
           </Details>
         </Profile>
-
       </SidebarContainer>
     </Container>
   );

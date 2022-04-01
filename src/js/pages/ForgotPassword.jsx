@@ -11,16 +11,10 @@ const Forgotpassword = () => {
   let navigate = useNavigate();
   let location = useLocation();
   let from = location.state?.from?.pathname || "/";
-
-  //body
-  const [firstname, setFirstname] = useState("");
-  const [lastname, setLastname] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [send, setSend] = useState(false);
+
   //Logic
-  const [formError, setFormError] = useState(null);
+  // const [formError, setFormError] = useState(null);
 
   //Api Logic
   // const [forgotpassword, { isLoading, isUpdating }] = useforgotpasswordMutation();
@@ -32,25 +26,7 @@ const Forgotpassword = () => {
     //input validation
     let errorFlag = false;
     setSend(true);
-    //   if (password.length < 6 || password.length > 15) {
-    //     errorFlag = true;
 
-    //     setFormError(
-    //       "Password doit être d'une longueur minimale de 6 char et maximale de 15 char"
-    //     );
-    //   }
-
-    //   try {
-    //     const result = await forgotpassword(body);
-    //     console.log("result", result);
-    //     if (result.error) {
-    //       return setFormError(result.error.data.message);
-    //     }
-
-    //     navigate("/forgotpassword", { redirect: true });
-    //   } catch (err) {
-    //     console.log("Something went wrong", err);
-    //   }
   };
 
   const Confirmationforgotpassword = () => {
@@ -71,6 +47,8 @@ const Forgotpassword = () => {
   };
 
   const FormForgotPassword = () => {
+      //body
+  const [email, setEmail] = useState("");
     return (
       <div className="forgotpassword">
         <form className="forgotpassword_form" onSubmit={(e) => handleSubmit(e)}>
@@ -99,7 +77,14 @@ const Forgotpassword = () => {
     );
   };
 
-  return <>{send ? <Confirmationforgotpassword /> : <FormForgotPassword />}</>;
+  {
+    if(send){
+      return <Confirmationforgotpassword /> 
+    } else{
+      return <FormForgotPassword />
+    }
+  }
+
 };
 
 export default Forgotpassword;
