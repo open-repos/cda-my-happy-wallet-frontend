@@ -19,14 +19,15 @@ class UserService {
 //     return api.get(`/users/${id}`);
 //   }
   async register(data) {
-    try {
+    // try {
       const response =await  api.post("/users/register/", data);
-      console.log(response)
-    }catch (e){
-      console.log("error",e)
-      console.log('ERROR::', e.response.data);
-      return e.response.data.error.message
-    }
+      // return response
+      // console.log(response)
+    // }catch (e){
+    //   console.log("error",e)
+    //   console.log('ERROR::', e.response.data);
+    //   return e.response.data
+    // }
 
     //  if (response.data){
     //     //  setLocalStorageItem(response.data,"message")

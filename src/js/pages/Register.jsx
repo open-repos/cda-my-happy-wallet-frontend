@@ -67,7 +67,8 @@ const Register = () => {
     }
 
     if (isSuccess || user) {
-      navigate('/')
+      setSend(true)
+      // navigate('/')
     }
 
     dispatch(reset())

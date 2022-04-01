@@ -25,17 +25,9 @@ export const register = createAsyncThunk(
   'auth/register',
   async (user, thunkAPI) => {
     try {
-      const message = await userService.register(user)
-      console.log("outside userService",message)
-      return thunkAPI.rejectWithValue(message)
+       await userService.register(user)
     } catch (error) {
-      console.log("outside userService",error)
-      const message =
-        (error.response &&
-          error.response.data &&
-          error.response.data.message) ||
-        error.message ||
-        error.toString()
+      const message = error.response.data.error.message
       return thunkAPI.rejectWithValue(message)
     }
   }
