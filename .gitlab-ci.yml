@@ -51,7 +51,6 @@ deploy_main:
   script:
     - which rsync || ( apt update -y && apt install rsync -y )
     - ls -la
-    - ls -la ./
     - /sbin/ip route|awk '/default/ { print $3 }'
     - ls ./dist/
     - /usr/bin/rsync -r ./dist/ $SERVER_USER@$SERVER_IP:$PATH_DOMAIN.
