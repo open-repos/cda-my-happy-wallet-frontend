@@ -13,8 +13,7 @@ import { Navigate, NavLink, useNavigate,Link, useLocation } from "react-router-d
 import  "../../css/Icon.css"
 import {logout,reset} from "../slices/auth/authSlice"
 import {useSelector, useDispatch } from "react-redux";
-import { removeLocalStorageItem } from "../../../../../Projet-08-Hackaton-13_17_Dec-Front/Hackathon-Quiz-App/src/js/utils/localstorage";
-import { getLocalStorageItem } from "../../utils/localstorage";
+import { getLocalStorageItem,removeLocalStorageItem } from "../../utils/localstorage";
 const Container = styled.div`
   position: fixed;
   font-size:1.2rem;
