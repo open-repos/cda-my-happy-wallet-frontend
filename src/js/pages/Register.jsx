@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./../../css/Register.css";
 import mailSent from "./../../assets/icons/Mail-sent.svg";
-import favIcon from "./../../assets/icons/favIcon.svg"
+import favIcon from "./../../assets/icons/favicon.svg"
 // import { useRegisterMutation } from "../services/authService";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
