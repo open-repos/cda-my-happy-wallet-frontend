@@ -1,5 +1,5 @@
 import api from "../../utils/api";
-import { getLocalStorageItem, setLocalStorageItem } from "../../utils/localstorage";
+import { getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem } from "../../utils/localstorage";
 
 function authHeader() {
   const user = getLocalStorageItem("user");
@@ -35,7 +35,10 @@ class UserService {
     //  }
     //  return response.data
     } 
-  
+    async logout() {
+          removeLocalStorageItem("user")
+    }
+
   async login(data) {
     const response =await  api.post(`/users/authenticate/`, data, {withCredentials: true });
     if (response.data){

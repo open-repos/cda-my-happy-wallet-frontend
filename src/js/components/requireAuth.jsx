@@ -4,29 +4,27 @@ import { useDispatch,useSelector} from "react-redux";
 import { useLocation, Navigate,useNavigate } from "react-router-dom";
 
 //Services
-import { login, logout } from "../slices/auth/authSlice";
+import { logout,reset } from "../slices/auth/authSlice";
 import { getLocalStorageItem,removeLocalStorageItem } from "../../utils/localstorage";
 
 export const RequireAuth = ({ children }) => {
   let location = useLocation();
-  const dispatch = useDispatch()
+  // const dispatch = useDispatch()
   const user = getLocalStorageItem("user");
   // const auth = useSelector((state) => state.auth);
-  useEffect(() => {
-    const user = getLocalStorageItem("user");
-    // console.log(" auth.isAuthenticated", auth.isAuthenticated)
-    console.log(typeof(user));
-    if (typeof(user) === "object" && user!=null) {
-      // setIsLoggedIn(true)
-      console.log("user", user);
-      dispatch(login(user));
-    } else {
-      // setIsLoggedIn(false)
-      removeLocalStorageItem("user")
-      dispatch(logout());
-      console.log("user (Not String)", user);
-    }
-  }, []);
+  // useEffect(() => {
+  //   // console.log(" auth.isAuthenticated", auth.isAuthenticated)
+  //   console.log(typeof(user));
+  //   if (typeof(user) === "object" && user!=null) {
+  //     // setIsLoggedIn(true)
+  //     console.log("user", user);
+  //     // dispatch(login(user));
+  //   } else {
+  //     // setIsLoggedIn(false)
+  //     dispatch(logout());
+  //     // dispatch(reset());
+  //   }
+  // }, []);
 
 
   if (typeof(user) === "object" && user==null) {

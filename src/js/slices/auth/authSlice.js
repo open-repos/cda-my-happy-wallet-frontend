@@ -49,6 +49,12 @@ export const loginApi = createAsyncThunk(
   }
 )
 
+export const logout = createAsyncThunk(
+  'auth/logout',
+  async () => {  await userService.logout()
+  }
+)
+
 
 export const authSlice = createSlice({
   name: "auth",
@@ -56,21 +62,9 @@ export const authSlice = createSlice({
   reducers: {
     reset: (state) => {
       state.isLoading = false
-      state.isAuthenticated= false,
       state.isSuccess = false
       state.isError = false
       state.message = ''
-    },
-    logout: () => {
-      // removeLocalStorageItem("user"),
-      initialState;
-    },
-    login: (state,action) => {
-      // console.log("action.payload",action)
-      state.user = action.payload;
-      state.isAuthenticated = true;
-      setLocalStorageItem(state.user , "user");
-      // console.log("state.isAuthenticated",state.isAuthenticated)
     },
   },
   extraReducers:(builder)=>{
@@ -99,10 +93,13 @@ export const authSlice = createSlice({
         state.user = action.payload
       })
       .addCase(loginApi.rejected, (state, action) => {
-        state.isLoading = false
-        state.isError = true
+        state.isLoading = false,
+        state.isError = true,
         state.isAuthenticated= false,
         state.message = action.payload
+        state.user = null
+      })
+      .addCase(logout.fulfilled, (state) => {
         state.user = null
       })
     
@@ -110,6 +107,6 @@ export const authSlice = createSlice({
 });
 
 // Action creators are generated for each case reducer function
-export const { logout,login, reset } = authSlice.actions;
+export const {reset } = authSlice.actions;
 
 export default authSlice.reducer;

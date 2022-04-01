@@ -14,7 +14,7 @@ import Spinner from '../components/Spinner'
 const Login = () => {
   let navigate = useNavigate();
   let location = useLocation();
-  console.log(location)
+
   let from = location.state?.from?.pathname || location.state?.pathname  || "/";
   const search = useLocation().search;
   const success = new URLSearchParams(search).get('success');
@@ -25,7 +25,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
 
   //Logic
-  const [formError, setFormError] = useState(null);
+  // const [formError, setFormError] = useState(null);
 
   const dispatch = useDispatch();
   // //Api Logic
@@ -35,9 +35,7 @@ const Login = () => {
     (state) => state.auth
   )
 
-  // useEffect(() => {
-   
-  // },[])
+
   useEffect(() => {
     if (confirmationRegistration=="registrationok") {
       if(! toast.isActive(toastId.current)) {
@@ -52,13 +50,13 @@ const Login = () => {
       }
      
     }
-    console.log("from",from)
-    console.log("isSuccess",isSuccess)
-    console.log("user",user)
-    if (isSuccess || isAuthenticated) {
+    // console.log("from",from)
+    // console.log("isSuccess",isSuccess)
+    // console.log("user",user)
+    if (isSuccess || user) {
       navigate(from)
-      console.log("isSuccess",isSuccess)
-      console.log("user",user)
+      // console.log("isSuccess",isSuccess)
+      // console.log("user",user)
     }
 
     dispatch(reset())
