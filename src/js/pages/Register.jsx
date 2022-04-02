@@ -85,10 +85,8 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const body = { firstname, lastname, password, confirmpassword, email };
-
     //input validation
-    let errorFlag = false;
+    // let errorFlag = false;
 
     if (password !== confirmpassword) {
       toast.error('Passwords do not match', {

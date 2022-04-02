@@ -60,7 +60,7 @@ const Login = () => {
     }
 
     dispatch(reset())
-  }, [user, isError, isSuccess, isAuthenticated,message,navigate, dispatch])
+  }, [user, isError, isSuccess, isAuthenticated,message, dispatch])
 
   const handleSubmit = async (e) => {
     e.preventDefault();
