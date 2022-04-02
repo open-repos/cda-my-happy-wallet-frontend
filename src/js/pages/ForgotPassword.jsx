@@ -7,29 +7,46 @@ import forgotPassword from "./../../assets/icons/ForgotPassword.svg";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { faChevronCircleLeft } from "@fortawesome/free-solid-svg-icons";
+import Spinner from '../components/Spinner'
+import { forgotPsswdApi, reset } from './../slices/auth/authSlice'
+import { toast } from 'react-toastify'
+import { useDispatch,useSelector } from "react-redux";
+
 const Forgotpassword = () => {
   let navigate = useNavigate();
+  let dispatch = useDispatch();
   let location = useLocation();
-  let from = location.state?.from?.pathname || "/";
   const [send, setSend] = useState(false);
-
-  //Logic
-  // const [formError, setFormError] = useState(null);
+  const toastId = React.useRef(null);
 
   //Api Logic
   // const [forgotpassword, { isLoading, isUpdating }] = useforgotpasswordMutation();
+  const { isLoading, isError, isEmailSent, message } = useSelector(
+    (state) => state.auth
+  )
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const body = { firstname, lastname, password, confirmPassword, email };
+  useEffect(() => {
+    if (isError) {
+      if(! toast.isActive(toastId.current)) {
+        toastId.current =  toast.error(message)
+      }
+    }
 
-    //input validation
-    let errorFlag = false;
-    setSend(true);
+    if(isEmailSent){
+      setSend(true)
+    }
 
-  };
+    dispatch(reset())
+  }, [message,isError,isEmailSent, dispatch])
+
+
 
   const Confirmationforgotpassword = () => {
+
+
+    // if (isLoading) {
+    //   return <Spinner />
+    // }
     return (
       <div className="confirm-forgotpassword">
         <div className="goback">  <Link to="/login"><FontAwesomeIcon icon={faChevronCircleLeft} /> Retourner à la page de login</Link></div>
@@ -49,6 +66,19 @@ const Forgotpassword = () => {
   const FormForgotPassword = () => {
       //body
   const [email, setEmail] = useState("");
+
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const body = { email };
+
+    dispatch(forgotPsswdApi(body))
+
+  };
+
+  if (isLoading) {
+    return <Spinner />
+  }
     return (
       <div className="forgotpassword">
         <form className="forgotpassword_form" onSubmit={(e) => handleSubmit(e)}>
@@ -66,7 +96,7 @@ const Forgotpassword = () => {
             onChange={(e) => setEmail(e.target.value)}
           />
           <button type="submit" className="submit_btn">
-            Changer de mot de passe
+          Changer de mot de passe
           </button>
           <div className="link-div">
             <Link to="/login">Je connais mon mot de passe ? Connectez vous ici</Link>

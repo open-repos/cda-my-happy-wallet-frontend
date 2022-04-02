@@ -1,16 +1,16 @@
-.loadingSpinnerContainer {
+ /* .loadingSpinnerContainer {
     position: fixed;
     top: 0;
     right: 0;
     bottom: 0;
     left: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.5); 
     z-index: 5000;
     display: flex;
     justify-content: center;
     align-items: center;
-  }
-  
+  } */
+  /*
   .loadingSpinner {
     width: 64px;
     height: 64px;
@@ -18,4 +18,52 @@
     border-color: #000 transparent #555 transparent;
     border-radius: 50%;
     animation: spin 1.2s linear infinite;
+  } */
+
+  /* @keyframes spinner {
+    0% {
+      transform: translate3d(-50%, -50%, 0) rotate(0deg);
+    }
+    100% {
+      transform: translate3d(-50%, -50%, 0) rotate(360deg);
+    }
+  }
+  .spin::before {
+    animation: 1.5s linear infinite spinner;
+    animation-play-state: inherit;
+    border: solid 5px #cfd0d1;
+    border-bottom-color: #c9a11c;
+    border-radius: 50%;
+    content: "";
+    height: 40px;
+    width: 40px;
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    transform: translate3d(-50%, -50%, 0);
+    will-change: transform;
+  } */
+
+  @keyframes spinner {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  .loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 10px solid #f3f3f3; /* Light grey */
+    border-top: 10px solid var(--orange-light); /* Blue */
+    border-radius: 50%;
+    animation: spinner 1.5s linear infinite;
+  }
+  
+  .spinner-container {
+    display: grid;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
   }
