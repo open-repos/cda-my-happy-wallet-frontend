@@ -5,11 +5,13 @@ import { configureStore } from "@reduxjs/toolkit";
 // import { gameApi } from "../services/gameApi";
 //Features
 import authReducer from "../slices/auth/authSlice";
+import operationsReducer from "../slices/operationsFixes/operationsFixesSlice";
 
 
 const reducer = {
   // [gameApi.reducerPath]: gameApi.reducer,
   auth:authReducer,
+  operationsFixes:operationsReducer
 }
 
 export const store = configureStore({

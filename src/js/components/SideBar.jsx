@@ -268,8 +268,8 @@ const Sidebar = () => {
 
   const location = useLocation();
 
-  const userStorage = getLocalStorageItem("user");
-  const { user } = useSelector((state) => state.auth);
+  const userStorage = getLocalStorageItem("auth");
+  const { auth } = useSelector((state) => state.auth);
   // const [isLoggedIn, setLoggedIn]=useState(isAuthenticaded)
 
   // useEffect(()=>{
@@ -372,8 +372,8 @@ const Sidebar = () => {
                 <h4>
                   {/* {userStorage?.payload.user.firstname}&nbsp;
                   {userStorage?.payload.user.lastname} */}
-                  {user?.payload.user.firstname}&nbsp;
-                  {user?.payload.user.lastname}
+                  {auth?.payload.user.firstname}&nbsp;
+                  {auth?.payload.user.lastname}
                 </h4>
                 </NavLink>
                 {/* <a href="/profil">voir&nbsp;profil</a> */}
