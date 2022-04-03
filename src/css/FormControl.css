@@ -1,0 +1,139 @@
+.operation-container{
+  /* display: block;  */
+  width:fit-content;
+
+}
+
+.operation-container>img{
+  width:10vw;
+  height:auto;
+}
+
+.title-add-operationfixe{
+  padding-bottom: 10px;
+}
+
+.form-container{
+display: flex;
+flex-direction: row;
+/* align-content: space-around; */
+justify-content: space-around;
+align-items: baseline;
+background-color: var(--dark-secondary-color);
+box-shadow: 3.91188px 3.8238px 5.7356px 1.8238px rgba(191, 224, 165, 0.4);
+border-radius: 40px;
+padding:10px 10px 50px 10px;
+align-items: center;
+}
+
+.btn-input{
+  display:flex;
+  flex-direction: row;
+}
+
+label {
+  font-weight: bold;
+  display: flex;
+  margin-bottom: 5px;
+  color:var(--orange-light)
+}
+
+input + label {
+  font-weight: bold;
+  display: inline-flex;
+  /* margin-right: 20px; */
+}
+
+input[type='text'],
+input[type='email'],
+input[type='password'],
+textarea{
+  display: block;
+  width: 200px;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.42857143;
+  color: #555;
+  background-color: #fff;
+  background-image: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  /* margin-bottom: 20px; */
+}
+
+input:focus{
+outline: 2px solid var(--orange-light);
+}
+
+input[type='number']{
+  display: block;
+  width: 90px;
+  padding: 6px 12px;
+  font-size: 14px;
+  min-height: 34px;
+  line-height: 1.42857143;
+  color: #555;
+  background-color: #fff;
+  background-image: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  /* margin-bottom: 20px; */
+}
+
+select {
+  display: block;
+  width: 70px;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.42857143;
+  color: #555;
+  background-color: #fff;
+  background-image: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  /* margin-bottom: 20px; */
+}
+
+.form-container>button{
+  color: white;
+  background: var(--dark-secondary-color);
+  min-width: 50px;
+  height: 3em;
+  border-radius: 10px;
+  border-color: var(--orange-light);
+  font-size: 14px;
+  padding: 5px;
+  margin-top: 1rem;
+  width:auto;
+  align-self: center;
+}
+
+.bnt-cardOperationFixe:hover {
+  border-color: var(--white);
+  background: var(--orange-light);
+}
+
+
+.form-control {
+  position:relative;
+  /* display: flex;
+  flex-direction: column;
+  align-items: flex-start; */
+  /* margin-bottom: 20px; */
+  margin: 10px 10px 20px;
+  /* margin-left: 20vw; */
+}
+
+.error-container{
+  background: var(--warning-bg);
+  border-radius: 10px;
+}
+.error {
+  color: var(--warning-col);
+  padding:5px;
+  background: var(--warning-bg);
+  border-radius: 6px;
+  /* align-self: flex-end; */
+  position:absolute
+  
+}

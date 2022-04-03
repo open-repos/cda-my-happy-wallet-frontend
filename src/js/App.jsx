@@ -18,6 +18,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import { Routes, Route, Navigate } from "react-router-dom";
 import NewPassword from "./pages/NewPassword";
 import 'react-toastify/dist/ReactToastify.css';
+import OperationsFixes from "./pages/OperationsFixes";
 
 function App() {
   return (
@@ -42,7 +43,12 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/new-password" element={<NewPassword />} />
             
-            <Route path="home" element={<RequireAuth><Sidebar /><Home /> </RequireAuth>} />
+            {/* <Route path="/home" element={<RequireAuth><Sidebar /><Home /> </RequireAuth>}>
+              <Route path="operations-fixes" element={<OperationsFixes/>}/>
+              </Route> */}
+                        
+              <Route path="home" element={<RequireAuth><Sidebar /><Home /> </RequireAuth>}/>
+              <Route path="home/operations-fixes" element={<RequireAuth><Sidebar /><OperationsFixes/> </RequireAuth>}/>
             <Route path="/" element={ <Navigate replace to="/home" />} />
 
             <Route path="/calendrier" element={<RequireAuth><Sidebar /><Calendrier /></RequireAuth>}></Route>

@@ -22,6 +22,7 @@ import { useSelector, useDispatch } from "react-redux";
 
 const Container = styled.div`
   position: fixed;
+  z-index:1;
   font-size:1.2rem;
   .active {
     border-right: 4px solid var(--orange-light);
@@ -183,6 +184,14 @@ const Profile = styled.div`
 
   transition: all 0.3s ease;
 
+  h4{
+    color:var(--white);
+  }
+
+  a:hover{
+    color:var(--orange-light);
+  }
+
   img {
     width: 2.5rem;
     height: 2.5rem;
@@ -249,6 +258,10 @@ const Logout = styled.button`
     }
   }
 `;
+
+const divStyle = {
+  marginRight: "20px"
+};
 // const IconC = ({ success, src }) => (
 //   <img
 //     style={success ? { fill: 'var(--orange) !important'} : { fill: 'var(--white)'}}
@@ -275,7 +288,7 @@ const Sidebar = () => {
   }
 
   return (
-    <Container>
+    <Container style={divStyle}>
       <Button clicked={click} onClick={() => handleClick()}></Button>
       <SidebarContainer>
         <Logo>
@@ -345,7 +358,7 @@ const Sidebar = () => {
                 </NavLink>
                 {/* <a href="/profil">voir&nbsp;profil</a> */}
                 {/* <span>voir&nbsp;profil</span> */}
-                <Link to="/profil">voir&nbsp;profil</Link>
+                <Link className="link-profil" to="/profil">voir&nbsp;profil</Link>
               </Name>
             {/* </NavLink> */}
             <Logout>

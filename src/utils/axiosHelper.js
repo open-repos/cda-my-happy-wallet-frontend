@@ -41,10 +41,16 @@ const setUpInterceptors = (store) => {
       };
       // const response = await userService.renewAccessToken(body,accessToken)
       await store.dispatch(newRefreshToken({ body, accessToken }));
+      
       console.log("juste apres dispatch newrefresh interceptor")
       console.log("store",store)
       console.log("store?.getState()?.auth",store?.getState().auth)
-      console.log("store?.getState().auth.user",store?.getState().auth.user)
+      if(store?.getState().auth.user == null){
+        let user = getLocalStorageItem("user")
+      console.log('userStorage',user)
+      return req
+      }
+      // console.log("store?.getState().auth.user",store?.getState().auth.user)
 
       let newAccessToken = store?.getState()?.auth?.user.payload.accessToken;
       console.log("APRES REHRESH : user.payload.accessToken", newAccessToken);

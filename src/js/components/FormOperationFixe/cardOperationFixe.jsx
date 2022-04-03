@@ -1,10 +1,15 @@
 import React from 'react'
+import "../../../css/FormControl.css"
+import { FormCardOperationFixe } from './FormCardOperationFixe'
 
-
-const cardOperationFixe = () => {
+export const CardOperationFixe = (props) => {
+  const {name, src} = props
   return (
-    <div>cardOperationFixe</div>
+    <div className='operation-container'>
+    <img src={src}/>
+    <h3 className='title-add-operationfixe'>{name}</h3>
+    <FormCardOperationFixe/>
+    </div>
+
   )
 }
-
-export default cardOperationFixe
