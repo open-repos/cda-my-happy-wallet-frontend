@@ -1,13 +1,10 @@
 import React ,{useState, useEffect} from 'react'
-import { chargesApi, revenusApi, reset } from '../slices/operationsFixes/operationsFixesSlice';
+import { chargesApi, revenusApi } from '../slices/operationsFixes/operationsFixesSlice';
 import { useDispatch,useSelector } from "react-redux";
-import { toast } from 'react-toastify'
-import {CardOperationFixe} from '../components/FormOperationFixe/CardOperationFixe';
 import "../../css/Home.css"
-import imgCharges from "../../assets/icons/Charges.png";
-import imgRevenus from "../../assets/icons/Revenus.png";
 import CaseOpFixeEmpty from '../components/CaseOpFixeEmpty';
-import { Outlet } from 'react-router-dom';
+
+
 
 function Home() {
 
