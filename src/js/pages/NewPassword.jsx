@@ -1,9 +1,8 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./../../css/Newpassword.css";
 import Ok from "../../assets/icons/Ok.svg";
 import newpassword from "../../assets/icons/Newpassword.svg";
-// import { usenewpasswordMutation } from "../services/authService";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { faChevronCircleLeft } from "@fortawesome/free-solid-svg-icons";
@@ -14,17 +13,13 @@ import { toast } from 'react-toastify'
 
 const NewPassword = () => {
   let navigate = useNavigate();
-  let location = useLocation();
   let dispatch = useDispatch();
 
-  let from = location.state?.from?.pathname || "/";
   const [send, setSend] = useState(false);
   const [isconfirmPasswordPage, setIsconfirmPasswordPage] = useState(false);
   const toastId = React.useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
-  // const resetToken = new URLSearchParams(search).get('resetToken');
-  // console.log("search params",URLSearchParams(search))
-  //body
+
   console.log(send)
   const { isError, message } = useSelector(
     (state) => state.auth
@@ -57,14 +52,10 @@ const NewPassword = () => {
 
   }, [isError, dispatch])
 
-  //Api Logic
-  // const [newpassword, { isLoading, isUpdating }] = usenewpasswordMutation();
 
   const Confirmationnewpassword =  () => {
 
     useEffect(() => {
-        // You need to restrict it at some point
-        // This is just dummy code and should be replaced by actual
         console.log(send)
         if(send){
           timeout(5000);
@@ -98,7 +89,7 @@ const NewPassword = () => {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [password, setPassword] = useState("");
     // const toastId2 = React.useRef(null);
-    const { isError,isSuccessConfirmNewPassword, message } = useSelector(
+    const {isSuccessConfirmNewPassword } = useSelector(
       (state) => state.auth
     )
     useEffect(()=>{

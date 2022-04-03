@@ -1,10 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./../../css/Forgotpassword.css";
 import mailSent from "../../assets/icons/Mail-sent.svg";
 import forgotPassword from "./../../assets/icons/ForgotPassword.svg";
 // import { useforgotpasswordMutation } from "../services/authService";
-import { useLocation, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { faChevronCircleLeft } from "@fortawesome/free-solid-svg-icons";
 import Spinner from '../components/Spinner'
@@ -13,9 +12,7 @@ import { toast } from 'react-toastify'
 import { useDispatch,useSelector } from "react-redux";
 
 const Forgotpassword = () => {
-  let navigate = useNavigate();
   let dispatch = useDispatch();
-  let location = useLocation();
   const [send, setSend] = useState(false);
   const toastId = React.useRef(null);
 
@@ -44,9 +41,9 @@ const Forgotpassword = () => {
   const Confirmationforgotpassword = () => {
 
 
-    // if (isLoading) {
-    //   return <Spinner />
-    // }
+    if (isLoading) {
+      return <Spinner />
+    }
     return (
       <div className="confirm-forgotpassword">
         <div className="goback">  <Link to="/login"><FontAwesomeIcon icon={faChevronCircleLeft} /> Retourner à la page de login</Link></div>

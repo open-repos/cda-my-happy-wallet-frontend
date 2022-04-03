@@ -3,7 +3,7 @@ import "./../../css/Login.css";
 import logo from "./../../assets/Logo_Login.png"
 import favIcon from "./../../assets/icons/logo.svg"
 // import { useLoginMutation } from "../services/authService";
-import { useLocation, useNavigate,useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
@@ -17,7 +17,7 @@ const Login = () => {
 
   let from = location.state?.from?.pathname || location.state?.pathname  || "/";
   const search = useLocation().search;
-  const success = new URLSearchParams(search).get('success');
+  // const success = new URLSearchParams(search).get('success');
   const confirmationRegistration = new URLSearchParams(search).get('message');
   const toastId = React.useRef(null);
   //body
@@ -31,7 +31,7 @@ const Login = () => {
   // //Api Logic
   // const [login, { isLoading, isUpdating }] = useLoginMutation();
 
-  const { auth, isLoading, isError, isSuccess, isAuthenticated, message } = useSelector(
+  const { user, isLoading, isError, isSuccess, isAuthenticated, message } = useSelector(
     (state) => state.auth
   )
 
@@ -50,17 +50,14 @@ const Login = () => {
       }
      
     }
-    // console.log("from",from)
-    // console.log("isSuccess",isSuccess)
-    // console.log("user",user)
+
     if (isSuccess) {
       navigate(from)
-      // console.log("isSuccess",isSuccess)
-      // console.log("user",user)
+
     }
 
     dispatch(reset())
-  }, [auth, isError, isSuccess, isAuthenticated,message, dispatch])
+  }, [user, isError, isSuccess, isAuthenticated,message, dispatch])
 
   const handleSubmit = async (e) => {
     e.preventDefault();

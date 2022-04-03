@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 //All the svg files
-import Icon from "./../../assets/icons/index";
 import logo from "./../../assets/icons/logo.svg";
 import Home from "./../../assets/icons/dashboard.svg";
 import Calendar from "./../../assets/icons/calendar.svg";
@@ -10,7 +9,6 @@ import PowerOff from "./../../assets/icons/power-off.svg";
 import Profil from "./../../assets/icons/user.svg";
 import styled from "styled-components";
 import {
-  Navigate,
   NavLink,
   useNavigate,
   Link,
@@ -19,10 +17,9 @@ import {
 import "../../css/Icon.css";
 import { logout, reset } from "../slices/auth/authSlice";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  getLocalStorageItem,
-  removeLocalStorageItem,
-} from "../../utils/localstorage";
+
+
+
 const Container = styled.div`
   position: fixed;
   font-size:1.2rem;
@@ -268,39 +265,9 @@ const Sidebar = () => {
 
   const location = useLocation();
 
-  const userStorage = getLocalStorageItem("auth");
-  const { auth } = useSelector((state) => state.auth);
-  // const [isLoggedIn, setLoggedIn]=useState(isAuthenticaded)
-
-  // useEffect(()=>{
-  // const loggedInUser = getLocalStorageItem("user");
-  //   if (loggedInUser) {
-  //     return
-  //   }  else{
-  //     dispatch(logout())
-  //     navigate('/login',{state:location})
-  //     // return <Navigate to="/login" state={{ from: location }} />;
-  //   }
-  //   dispatch(reset())
-  // },[isLoggedIn,dispatch])
-
-  // const handleLogout =  () =>{
-  //   removeLocalStorageItem("user")
-  //   setLoggedIn(false)
-  // }
-
-
-  // useEffect(()=>{
-  //   if (user) {
-  //     return
-  //   }  else{
-  //     dispatch(logout())
-  //     navigate('/login',{state:location})
-  //     // return <Navigate to="/login" state={{ from: location }} />;
-  //   }
-  //   dispatch(reset())
-  // },[user,dispatch])
-
+  // const userStorage = getLocalStorageItem("user");
+  const { user } = useSelector((state) => state.auth);
+  
   const onLogout = ()=>{
     dispatch(logout())
     dispatch(reset())
@@ -372,8 +339,8 @@ const Sidebar = () => {
                 <h4>
                   {/* {userStorage?.payload.user.firstname}&nbsp;
                   {userStorage?.payload.user.lastname} */}
-                  {auth?.payload.user.firstname}&nbsp;
-                  {auth?.payload.user.lastname}
+                  {user?.payload.user.firstname}&nbsp;
+                  {user?.payload.user.lastname}
                 </h4>
                 </NavLink>
                 {/* <a href="/profil">voir&nbsp;profil</a> */}

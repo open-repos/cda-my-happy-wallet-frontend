@@ -1,11 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-// import { gameApi } from "../../services/gameApi";
 import operationsFixesService from "../../services/operationsFixesService";
 import { handleExceptionPayload } from "../../services/handleExceptionPayload";
-// import {
-//   getLocalStorageItem
-// } from "../../../utils/localstorage";
-
 
 
 const initialState = {

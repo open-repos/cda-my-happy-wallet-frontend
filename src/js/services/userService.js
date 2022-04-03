@@ -5,29 +5,13 @@ import {
   removeLocalStorageItem,
 } from "../../utils/localstorage";
 
-// function authHeader() {
-//   const auth = getLocalStorageItem("auth");
-//   console.log("user inside authHeader",auth)
-//   if (auth && auth?.payload.accessToken) {
-//     return { Authorization: 'Bearer ' + auth?.payload.accessToken };
-//   } else {
-//     return {};
-//   }
-// }
-
 class UserService {
-  // getAll() {
-  //   return api.get("/users");
-  // }
-  //   get(id) {
-  //     return api.get(`/users/${id}`);
-  //   }
+
   async register(data) {
-    // try {
-    const response = await api.post("/users/register/", data);
+    await api.post("/users/register/", data);
   }
   async logout() {
-   removeLocalStorageItem("auth");
+   removeLocalStorageItem("user");
   }
 
   async login(data) {
@@ -36,7 +20,7 @@ class UserService {
     });
     console.log("response inside login", response);
     if (response.data) {
-      await setLocalStorageItem(response.data, "auth");
+      await setLocalStorageItem(response.data, "user");
     }
     console.log("inside axios'", response);
     return response.data;
