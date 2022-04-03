@@ -1,14 +1,14 @@
-import React from 'react'
-import "../../../css/FormControl.css"
-import { FormCardOperationFixe } from './FormCardOperationFixe'
+import React from "react";
+import "../../../css/FormControl.css";
+import { FormCardOperationFixe } from "./FormCardOperationFixe";
 
 export const CardOperationFixe = (props) => {
-  const {name, src} = props
+  const { name, src } = props;
   return (
-    <div className='operation-container'>
-    <img src={src}/>
-    <h3 className='title-add-operationfixe'>{name}</h3>
-    <FormCardOperationFixe/>
+    <div className="operation-container">
+      <img src={src} />
+      <h3 className="title-add-operationfixe">{name}</h3>
+      <FormCardOperationFixe />
     </div>
-  )
-}
+  );
+};
