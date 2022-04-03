@@ -5,7 +5,7 @@ import "./../../css/Register.css";
 import mailSent from "./../../assets/icons/Mail-sent.svg";
 import favIcon from "./../../assets/icons/favicon.svg"
 // import { useRegisterMutation } from "../services/authService";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { faChevronCircleLeft } from "@fortawesome/free-solid-svg-icons";
 import Spinner from '../components/Spinner'
@@ -15,16 +15,11 @@ import { toast } from 'react-toastify'
 
 
 const Register = () => {
-  // let navigate = useNavigate();
-  let location = useLocation();
-  // let from = location.state?.from?.pathname || "/";
 
   const [send, setSend] = useState(false);
-  //Logic
-  // const [formError, setFormError] = useState(null);
+
   const toastId = React.useRef(null);
-  //Api Logic
-  // const [register, { isLoading, isUpdating }] = useRegisterMutation();
+
 
 
   const ConfirmationRegister = () => {
@@ -57,7 +52,7 @@ const Register = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
-  const { auth, isLoading, isError, isSuccess, message } = useSelector(
+  const { user, isLoading, isError, isSuccess, message } = useSelector(
     (state) => state.auth
   )
 
@@ -68,13 +63,13 @@ const Register = () => {
       }
     }
 
-    if (isSuccess || auth) {
+    if (isSuccess || user) {
       setSend(true)
       // navigate('/')
     }
 
     dispatch(reset())
-  }, [auth, isError, isSuccess, message, navigate, dispatch])
+  }, [user, isError, isSuccess, message, navigate, dispatch])
 
   const onChange = (e) => {
     setFormData((prevState)=>({

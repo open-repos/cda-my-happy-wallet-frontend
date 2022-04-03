@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import userService from "../../services/userService";
-import { useDispatch } from "react-redux";
 import {
   getLocalStorageItem, removeLocalStorageItem
 } from "../../../utils/localstorage";
@@ -10,9 +9,9 @@ import { handleExceptionPayload } from "../../services/handleExceptionPayload";
 
 // const dispatch = useDispatch()
 
-const auth = getLocalStorageItem("auth")
+const user = getLocalStorageItem("user")
 const initialState = {
-  auth: auth ? auth : null ,
+  user: user ? user : null ,
   isAuthenticated: false,
   isError: false,
   isSuccess: false,
@@ -142,13 +141,13 @@ export const authSlice = createSlice({
       .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false
         state.isSuccess = true
-        state.auth = action.payload
+        state.user = action.payload
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false
         state.isError = true
         state.message = action.payload
-        state.auth = null
+        state.user = null
       })
       .addCase(loginApi.pending, (state) => {
         state.isLoading = true
@@ -157,14 +156,14 @@ export const authSlice = createSlice({
         state.isLoading = false
         state.isSuccess = true
         state.isAuthenticated= true,
-        state.auth = action.payload
+        state.user = action.payload
       })
       .addCase(loginApi.rejected, (state, action) => {
         state.isLoading = false,
         state.isError = true,
         state.isAuthenticated= false,
         state.message = action.payload
-        state.auth = null
+        state.user = null
       })
       .addCase(forgotPsswdApi.pending, (state) => {
         state.isLoading = true
@@ -211,19 +210,18 @@ export const authSlice = createSlice({
         state.isLoading = false
         state.isSuccess = true
         state.isAuthenticated= true,
-        state.auth = action.payload
+        state.user = action.payload
       })
       .addCase(newRefreshToken.rejected, (state, action) => {
-        removeLocalStorageItem("auth")
+        removeLocalStorageItem("user")
         state.isLoading = false,
         state.isError = true,
         state.isAuthenticated= false,
         state.message = action.payload
-        state.auth = null
+        state.user = null
       })
       .addCase(logout.fulfilled, (state) => {
-        removeLocalStorageItem("auth")
-        state.auth = null
+        state.user = null
         state.isAuthenticated= false
       })
     

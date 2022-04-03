@@ -1,10 +1,9 @@
 import axios from "axios";
 import { API_BASE_URL } from "./constants";
 import jwt_decode from "jwt-decode";
-// import dayjs from 'dayjs'
 
 import { newRefreshToken } from "../js/slices/auth/authSlice";
-import { setLocalStorageItem, getLocalStorageItem } from "./localstorage";
+import { getLocalStorageItem } from "./localstorage";
 
 
 const apiPrivate = axios.create({
@@ -17,19 +16,19 @@ const apiPrivate = axios.create({
 const setUpInterceptors = (store) => {
   apiPrivate.interceptors.request.use(async (req) => {
     console.log("Inside interceptor AXIOS");
-    const auth = store?.getState()?.auth?.auth;
-    const authStorage = getLocalStorageItem("auth");
+    const user = store?.getState()?.auth?.user;
+    const authStorage = getLocalStorageItem("user");
     let currentDate = new Date();
-    console.log("State auth inteceptor ",auth)
+    console.log("State auth inteceptor ",user)
     console.log("Storage auth inteceptor ",authStorage)
-    if (auth && auth?.payload.accessToken) {
+    if (user && user?.payload.accessToken) {
       console.log(
-        "AVANT REHRESH : auth.payload.accessToken",
-        auth.payload.accessToken
+        "AVANT REHRESH : user.payload.accessToken",
+        user.payload.accessToken
       );
-      let accessToken = auth.payload.accessToken;
+      let accessToken = user.payload.accessToken;
       req.headers.Authorization = `Bearer ${accessToken}`;
-      const email = auth.payload.user.email;
+      const email = user.payload.user.email;
       const decodedToken = jwt_decode(accessToken);
       // const isExpired = dayjs.unix(user.exp).diff(dayjs()) < 1;
       const isExpired = decodedToken.exp * 1000 < currentDate.getTime();
@@ -45,20 +44,16 @@ const setUpInterceptors = (store) => {
       console.log("juste apres dispatch newrefresh interceptor")
       console.log("store",store)
       console.log("store?.getState()?.auth",store?.getState().auth)
-      console.log("store?.getState().auth.auth",store?.getState().auth.auth)
-      // console.log("response",response)
-      // setLocalStorageItem(response.data,"auth")
-      // req.headers.Authorization = `Bearer ${response.data.payload.accessToken}`
-      let newAccessToken = store?.getState()?.auth?.auth.payload.accessToken;
-      console.log("APRES REHRESH : auth.payload.accessToken", newAccessToken);
+      console.log("store?.getState().auth.user",store?.getState().auth.user)
+
+      let newAccessToken = store?.getState()?.auth?.user.payload.accessToken;
+      console.log("APRES REHRESH : user.payload.accessToken", newAccessToken);
       req.headers.Authorization = `Bearer ${newAccessToken}`;
       req.withCredentials = true;
       console.log("req", req);
       return req;
     }
 
-    //   }
-    // }
 
     return req;
   }, (error) => {

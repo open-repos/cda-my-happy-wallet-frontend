@@ -15,27 +15,13 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import NewPassword from "./pages/NewPassword";
 import 'react-toastify/dist/ReactToastify.css';
 
-// function ShowSideBar() {
-//   let location = useLocation();
-//   // console.log(location);
-//   if (
-//     location.pathname == "/login" ||
-//     location.pathname == "/register" ||
-//     location.pathname == "/forgot-password" ||
-//     location.pathname == "/new-password"
-//   ) {
-//     return null;
-//   }
-//   return <Sidebar />;
-// }
 function App() {
   return (
     <>
-      {/* <ShowSideBar /> */}
       <div className="App">
         <header></header>
         <main>
@@ -58,13 +44,7 @@ function App() {
             
             <Route path="home" element={<RequireAuth><Sidebar /><Home /> </RequireAuth>} />
             <Route path="/" element={ <Navigate replace to="/home" />} />
-            {/* <Route path="/" element={<Navigate to="/home" replace />} /> */}
-            
-            {/* <Route path="enter-nickname" element={<NicknamePage />}></Route> */}
-            {/* <Route
-            path="/games"
-            element={<Navigate replace to="/games/nickname" />}
-          > */}
+
             <Route path="/calendrier" element={<RequireAuth><Sidebar /><Calendrier /></RequireAuth>}></Route>
             <Route
               path="/objectifs-evenements"

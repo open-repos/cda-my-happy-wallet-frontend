@@ -4,11 +4,6 @@ export const InternalError = {
     code: 500
 }
 
-// export const Error = {
-//     message: '',
-//     code: 400
-// }
-
 
 export const handleExceptionPayload = async (err) =>{
     if (typeof err !== "object" || !err){
