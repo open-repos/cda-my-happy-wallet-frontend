@@ -19,19 +19,19 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import NewPassword from "./pages/NewPassword";
 import 'react-toastify/dist/ReactToastify.css';
 
-function ShowSideBar() {
-  let location = useLocation();
-  // console.log(location);
-  if (
-    location.pathname == "/login" ||
-    location.pathname == "/register" ||
-    location.pathname == "/forgot-password" ||
-    location.pathname == "/new-password"
-  ) {
-    return null;
-  }
-  return <Sidebar />;
-}
+// function ShowSideBar() {
+//   let location = useLocation();
+//   // console.log(location);
+//   if (
+//     location.pathname == "/login" ||
+//     location.pathname == "/register" ||
+//     location.pathname == "/forgot-password" ||
+//     location.pathname == "/new-password"
+//   ) {
+//     return null;
+//   }
+//   return <Sidebar />;
+// }
 function App() {
   return (
     <>

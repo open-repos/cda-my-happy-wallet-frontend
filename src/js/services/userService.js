@@ -1,4 +1,5 @@
-import api, { apiPrivate } from "../../utils/api";
+import api from "../../utils/api";
+import { apiPrivate } from "../../utils/axiosHelper";
 import {
   setLocalStorageItem,
   removeLocalStorageItem,

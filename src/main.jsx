@@ -6,6 +6,10 @@ import { BrowserRouter } from "react-router-dom";
 import { store } from "./js/store/store";
 import { Provider } from "react-redux";
 import './assets/icons/fontawesome';
+import {setUpInterceptors} from './utils/axiosHelper.js'
+
+setUpInterceptors(store);
+
 ReactDOM.render(
 
   <React.StrictMode>

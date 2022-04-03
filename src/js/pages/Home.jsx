@@ -35,7 +35,7 @@ function Home() {
     }
 
     // dispatch(reset())
-  }, [])
+  }, [charges.isError])
 
   useEffect(() => {
    
@@ -52,7 +52,7 @@ function Home() {
     }
 
     // dispatch(reset())
-  }, [])
+  }, [revenus.isError])
 
 
   return (
