@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import userService from "../../services/userService";
 import { useDispatch } from "react-redux";
 import {
-  getLocalStorageItem
+  getLocalStorageItem, removeLocalStorageItem
 } from "../../../utils/localstorage";
 import { handleExceptionPayload } from "../../services/handleExceptionPayload";
 
@@ -101,14 +101,13 @@ export const newRefreshToken = createAsyncThunk(
   'auth/renewAccessToken',
   async (bodyAccessToken, thunkAPI) => {
     try {
-
       const {body, accessToken} = bodyAccessToken
       const response = await userService.renewAccessToken(body,accessToken)
-      console.log(response)
+      console.log("renewAccesToken response",response)
       return response.data
     } catch (error) {
+      console.log("renewAccesToken error",error)
       const ErrorObjet = await handleExceptionPayload(error)
-      // await userService.logout()
       return thunkAPI.rejectWithValue(ErrorObjet.message)
     }
   }
@@ -215,6 +214,7 @@ export const authSlice = createSlice({
         state.auth = action.payload
       })
       .addCase(newRefreshToken.rejected, (state, action) => {
+        removeLocalStorageItem("auth")
         state.isLoading = false,
         state.isError = true,
         state.isAuthenticated= false,
@@ -222,6 +222,7 @@ export const authSlice = createSlice({
         state.auth = null
       })
       .addCase(logout.fulfilled, (state) => {
+        removeLocalStorageItem("auth")
         state.auth = null
         state.isAuthenticated= false
       })

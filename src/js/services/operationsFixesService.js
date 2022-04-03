@@ -1,4 +1,4 @@
-import {apiPrivate} from "../../utils/api";
+import {apiPrivate} from "../../utils/axiosHelper";
 
 class OperationsFixesService {
   async getAllRevenus() {
