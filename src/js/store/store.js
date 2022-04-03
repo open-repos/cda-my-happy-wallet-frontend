@@ -1,19 +1,25 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { configureStore,  
+  combineReducers,
+  getDefaultMiddleware } from "@reduxjs/toolkit";
 
 import authReducer from "../slices/auth/authSlice";
 import operationsReducer from "../slices/operationsFixes/operationsFixesSlice";
 
 
-const reducer = {
+const combinedReducer = combineReducers({
   auth:authReducer,
   operationsFixes:operationsReducer
-}
+});
 
-export const store = configureStore({
-  reducer,
-  // middleware: (getDefaultMiddleware) =>
-  //   getDefaultMiddleware().concat(
-  //     gameApi.middleware,
-  //     logger
-  //   ), // A ajouter peopleApi.middleware
+const rootReducer = (state, action) => {
+  console.log("action.type",action.type)
+  if (action.type === 'auth/logout/fulfilled') {
+    state = undefined;
+  }
+  return combinedReducer(state, action);
+};
+
+export default configureStore({
+  reducer: rootReducer,
+  middleware: [...getDefaultMiddleware()]
 });

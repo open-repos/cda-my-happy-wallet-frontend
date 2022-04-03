@@ -5,13 +5,13 @@ import { handleExceptionPayload } from "../../services/handleExceptionPayload";
 
 const initialState = {
   charges: {
-      data:null,
+      data:[],
       isError:false,
       isSuccess:false,
       message: '',
   },
   revenus: {
-    data:null,
+    data:[],
     isError:false,
     isSuccess:false,
     message: '',
