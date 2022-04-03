@@ -57,7 +57,7 @@ const Register = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
-  const { user, isLoading, isError, isSuccess, message } = useSelector(
+  const { auth, isLoading, isError, isSuccess, message } = useSelector(
     (state) => state.auth
   )
 
@@ -68,13 +68,13 @@ const Register = () => {
       }
     }
 
-    if (isSuccess || user) {
+    if (isSuccess || auth) {
       setSend(true)
       // navigate('/')
     }
 
     dispatch(reset())
-  }, [user, isError, isSuccess, message, navigate, dispatch])
+  }, [auth, isError, isSuccess, message, navigate, dispatch])
 
   const onChange = (e) => {
     setFormData((prevState)=>({

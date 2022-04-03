@@ -1,16 +1,18 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-// import { gameApi } from "../../services/gameApi";
 import userService from "../../services/userService";
-
+import { useDispatch } from "react-redux";
 import {
   getLocalStorageItem
 } from "../../../utils/localstorage";
 import { handleExceptionPayload } from "../../services/handleExceptionPayload";
 
 
-const user = getLocalStorageItem("user")
+
+// const dispatch = useDispatch()
+
+const auth = getLocalStorageItem("auth")
 const initialState = {
-  user: user ? user : null ,
+  auth: auth ? auth : null ,
   isAuthenticated: false,
   isError: false,
   isSuccess: false,
@@ -93,6 +95,25 @@ export const newPsswdApi = createAsyncThunk(
     }
   }
 )
+
+//New Refresh Token
+export const newRefreshToken = createAsyncThunk(
+  'auth/renewAccessToken',
+  async (bodyAccessToken, thunkAPI) => {
+    try {
+
+      const {body, accessToken} = bodyAccessToken
+      const response = await userService.renewAccessToken(body,accessToken)
+      console.log(response)
+      return response.data
+    } catch (error) {
+      const ErrorObjet = await handleExceptionPayload(error)
+      // await userService.logout()
+      return thunkAPI.rejectWithValue(ErrorObjet.message)
+    }
+  }
+)
+
 // Logout
 export const logout = createAsyncThunk(
   'auth/logout',
@@ -122,13 +143,13 @@ export const authSlice = createSlice({
       .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false
         state.isSuccess = true
-        state.user = action.payload
+        state.auth = action.payload
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false
         state.isError = true
         state.message = action.payload
-        state.user = null
+        state.auth = null
       })
       .addCase(loginApi.pending, (state) => {
         state.isLoading = true
@@ -137,14 +158,14 @@ export const authSlice = createSlice({
         state.isLoading = false
         state.isSuccess = true
         state.isAuthenticated= true,
-        state.user = action.payload
+        state.auth = action.payload
       })
       .addCase(loginApi.rejected, (state, action) => {
         state.isLoading = false,
         state.isError = true,
         state.isAuthenticated= false,
         state.message = action.payload
-        state.user = null
+        state.auth = null
       })
       .addCase(forgotPsswdApi.pending, (state) => {
         state.isLoading = true
@@ -184,8 +205,24 @@ export const authSlice = createSlice({
         state.isError = true,
         state.message = action.payload
       })
+      .addCase(newRefreshToken.pending, (state) => {
+        state.isLoading = true
+      })
+      .addCase(newRefreshToken.fulfilled, (state, action) => {
+        state.isLoading = false
+        state.isSuccess = true
+        state.isAuthenticated= true,
+        state.auth = action.payload
+      })
+      .addCase(newRefreshToken.rejected, (state, action) => {
+        state.isLoading = false,
+        state.isError = true,
+        state.isAuthenticated= false,
+        state.message = action.payload
+        state.auth = null
+      })
       .addCase(logout.fulfilled, (state) => {
-        state.user = null
+        state.auth = null
         state.isAuthenticated= false
       })
     

@@ -119,6 +119,7 @@ const NewPassword = () => {
     };
     return (
       <div className="newpassword">
+         <div className="goback">  <Link to="/login"><FontAwesomeIcon icon={faChevronCircleLeft} /> Annuler et revenir à la page de login</Link></div>
         <form className="newpassword_form" onSubmit={handleSubmit}>
           <div className="title">
           <h1>
@@ -142,7 +143,7 @@ const NewPassword = () => {
             Confirmation du nouveau mot de passe
           </button>
         </form>
-        <img src={newpassword} height="auto" width="20%" />
+        <img src={newpassword}/>
       </div>
     );
   };

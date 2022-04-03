@@ -31,7 +31,7 @@ const Login = () => {
   // //Api Logic
   // const [login, { isLoading, isUpdating }] = useLoginMutation();
 
-  const { user, isLoading, isError, isSuccess, isAuthenticated, message } = useSelector(
+  const { auth, isLoading, isError, isSuccess, isAuthenticated, message } = useSelector(
     (state) => state.auth
   )
 
@@ -53,14 +53,14 @@ const Login = () => {
     // console.log("from",from)
     // console.log("isSuccess",isSuccess)
     // console.log("user",user)
-    if (isSuccess || user) {
+    if (isSuccess) {
       navigate(from)
       // console.log("isSuccess",isSuccess)
       // console.log("user",user)
     }
 
     dispatch(reset())
-  }, [user, isError, isSuccess, isAuthenticated,message, dispatch])
+  }, [auth, isError, isSuccess, isAuthenticated,message, dispatch])
 
   const handleSubmit = async (e) => {
     e.preventDefault();

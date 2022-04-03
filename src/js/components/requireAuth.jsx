@@ -10,24 +10,9 @@ import { getLocalStorageItem,removeLocalStorageItem } from "../../utils/localsto
 export const RequireAuth = ({ children }) => {
   let location = useLocation();
   // const dispatch = useDispatch()
-  const user = getLocalStorageItem("user");
-  // const auth = useSelector((state) => state.auth);
-  // useEffect(() => {
-  //   // console.log(" auth.isAuthenticated", auth.isAuthenticated)
-  //   console.log(typeof(user));
-  //   if (typeof(user) === "object" && user!=null) {
-  //     // setIsLoggedIn(true)
-  //     console.log("user", user);
-  //     // dispatch(login(user));
-  //   } else {
-  //     // setIsLoggedIn(false)
-  //     dispatch(logout());
-  //     // dispatch(reset());
-  //   }
-  // }, []);
+  const auth = getLocalStorageItem("auth");
 
-
-  if (typeof(user) === "object" && user==null) {
+  if (typeof(auth) === "object" && auth==null) {
     // Redirect them to the /login page, but save the current location they were
     // trying to go to when they were redirected. This allows us to send them
     // along to that page after they login, which is a nicer user experience

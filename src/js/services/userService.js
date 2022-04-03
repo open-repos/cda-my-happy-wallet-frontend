@@ -1,58 +1,68 @@
-import api from "../../utils/api";
-import { getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem } from "../../utils/localstorage";
+import api, { apiPrivate } from "../../utils/api";
+import {
+  setLocalStorageItem,
+  removeLocalStorageItem,
+} from "../../utils/localstorage";
 
-function authHeader() {
-  const user = getLocalStorageItem("user");
-  if (user && user.accessToken) {
-    return { Authorization: 'Bearer ' + user.accessToken };
-  } else {
-    return {};
-  }
-}
-
+// function authHeader() {
+//   const auth = getLocalStorageItem("auth");
+//   console.log("user inside authHeader",auth)
+//   if (auth && auth?.payload.accessToken) {
+//     return { Authorization: 'Bearer ' + auth?.payload.accessToken };
+//   } else {
+//     return {};
+//   }
+// }
 
 class UserService {
-  getAll() {
-    return api.get("/users");
-  }
-//   get(id) {
-//     return api.get(`/users/${id}`);
-//   }
+  // getAll() {
+  //   return api.get("/users");
+  // }
+  //   get(id) {
+  //     return api.get(`/users/${id}`);
+  //   }
   async register(data) {
     // try {
-      const response =await  api.post("/users/register/", data);
-
-    } 
-    async logout() {
-          removeLocalStorageItem("user")
-    }
+    const response = await api.post("/users/register/", data);
+  }
+  async logout() {
+   removeLocalStorageItem("auth");
+  }
 
   async login(data) {
-    const response =await  api.post(`/users/authenticate/`, data, {withCredentials: true });
-    if (response.data){
-        setLocalStorageItem(response.data,"user")
+    const response = await api.post(`/users/authenticate/`, data, {
+      withCredentials: true,
+    });
+    console.log("response inside login", response);
+    if (response.data) {
+      await setLocalStorageItem(response.data, "auth");
     }
-    console.log("inside axios'",response)
-    return response.data
+    console.log("inside axios'", response);
+    return response.data;
   }
   async delete(data) {
-    return api.delete(`/users/delete`,data,{ headers: authHeader()});
+    return await apiPrivate.delete(`/users/delete`, data);
   }
-  async verifyAccount(id,token) {
-    return api.get(`/users/verify/${id}/${token}`);
+  async verifyAccount(id, token) {
+    return await api.get(`/users/verify/${id}/${token}`);
   }
   async resetPasswordPost(data) {
-    return api.post(`/users/reset-password`,data);
+    return await api.post(`/users/reset-password`, data);
   }
 
   async resetPasswordGet(token) {
-    return api.get(`/users/reset-password/${token}`, {withCredentials: true });
+    return await api.get(`/users/reset-password/${token}`, {
+      withCredentials: true,
+    });
   }
   async newPassword(data) {
-    return api.post(`/users/new-password/`,data,{ headers: authHeader()});
+    return await apiPrivate.post(`/users/new-password/`, data);
   }
-  async renewAccessToken(data){
-      return api.post(`/token`,data,{ headers: authHeader(),  withCredentials: true })
+  async renewAccessToken(data, token) {
+    return await api.post(`/token`, data, {
+      headers: { Authorization: "Bearer " + token },
+      withCredentials: true,
+    });
   }
 }
 export default new UserService();
