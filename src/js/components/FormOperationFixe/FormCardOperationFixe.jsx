@@ -9,7 +9,6 @@ import FormikControl from "./FormikControl"
 export const FormCardOperationFixe = () => {
 
   const array=[{value:'EUR',key:"EUR"},{value:'USD',key:"USD"}]
-
   const validate = Yup.object({
     titre: Yup.string()
       .min(2, 'Au moins 2 caractères requis')
