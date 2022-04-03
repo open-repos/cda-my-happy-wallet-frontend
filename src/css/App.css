@@ -12,6 +12,8 @@
   --orange:#EA7C69;
   --orange-light:#F09D65;
   --background: #43553A;
+  --warning-bg: rgba(255, 124, 163, 0.2);
+  --warning-col: #FF7CA3;
   --filter-img-orange: invert(63%) sepia(20%) saturate(1956%) hue-rotate(318deg) brightness(100%) contrast(84%);
   --filter-img-orange-light:invert(76%) sepia(89%) saturate(827%) hue-rotate(313deg) brightness(98%) contrast(92%);
 
@@ -55,7 +57,9 @@ a:hover {
 
 button {
   font-size: calc(10px + 2vmin);
+  cursor: pointer;
 }
+
 
 
 /* .App {

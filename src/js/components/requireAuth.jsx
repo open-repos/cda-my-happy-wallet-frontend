@@ -5,6 +5,15 @@ import { useLocation, Navigate } from "react-router-dom";
 //Services
 import { getLocalStorageItem } from "../../utils/localstorage";
 
+const sideBarChildren={
+  display: "flex",
+  flexDirection:"row",
+  alignItems:"space-around",
+  // display: "inline-flex",
+  // flexWrap: "wrap",
+  // gap: "1px" 
+  // justifyContent:"center"
+}
 export const RequireAuth = ({ children }) => {
   let location = useLocation();
   // const dispatch = useDispatch()
@@ -25,5 +34,5 @@ export const RequireAuth = ({ children }) => {
     return <Navigate to="/login" state={{ from: location }} />;
   }
 
-  return children;
+  return <div style={sideBarChildren}> {children} </div>;
 };
