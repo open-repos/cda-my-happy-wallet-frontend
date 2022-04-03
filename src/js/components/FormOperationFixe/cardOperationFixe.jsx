@@ -10,6 +10,5 @@ export const CardOperationFixe = (props) => {
     <h3 className='title-add-operationfixe'>{name}</h3>
     <FormCardOperationFixe/>
     </div>
-
   )
 }
