@@ -1,11 +1,11 @@
 import React from 'react'
-import {CardOperationFixe} from '../components/FormOperationFixe/CardOperationFixe';
 import "../../css/Home.css"
 import imgCharges from "../../assets/icons/Charges.png";
 import imgRevenus from "../../assets/icons/Revenus.png";
 import { Link } from "react-router-dom";
 import { faChevronCircleLeft } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import CardOperationFixe from '../components/FormOperationFixe/CardOperationFixe';
 
 const OperationsFixes = () => {
     console.log("INSIDE OPERATIONS FIXE")

@@ -2,7 +2,7 @@ import React from "react";
 import "../../../css/FormControl.css";
 import { FormCardOperationFixe } from "./FormCardOperationFixe";
 
-export const CardOperationFixe = (props) => {
+const CardOperationFixe = (props) => {
   const { name, src } = props;
   return (
     <div className="operation-container">
@@ -12,3 +12,5 @@ export const CardOperationFixe = (props) => {
     </div>
   );
 };
+
+export default CardOperationFixe
