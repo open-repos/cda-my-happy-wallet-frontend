@@ -1,6 +1,7 @@
 import React from "react";
-import "../../../css/FormControl.css";
-import { FormCardOperationFixe } from "./FormCardOperationFixe";
+import "./../../css/FormControl.css";
+import { FormCardOperationFixe } from "./FormOperationFixe/FormCardOperationFixe";
+
 
 const CardOperationFixe = (props) => {
   const { name, src } = props;
