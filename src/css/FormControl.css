@@ -38,15 +38,18 @@ label {
   color:var(--orange-light)
 }
 
-input + label {
+.form-container >input + label {
   font-weight: bold;
   display: inline-flex;
   /* margin-right: 20px; */
 }
-
+.form-container >
 input[type='text'],
+.form-container >
 input[type='email'],
+.form-container >
 input[type='password'],
+.form-container >
 textarea{
   display: block;
   width: 200px;
