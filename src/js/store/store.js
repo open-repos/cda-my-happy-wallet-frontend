@@ -19,7 +19,9 @@ const rootReducer = (state, action) => {
   return combinedReducer(state, action);
 };
 
+console.log(import.meta.env.VITE_ENV)
 export default configureStore({
   reducer: rootReducer,
-  middleware: [...getDefaultMiddleware()]
+  middleware: [...getDefaultMiddleware()],
+  devTools: import.meta.env.VITE_ENV !== "development"
 });
