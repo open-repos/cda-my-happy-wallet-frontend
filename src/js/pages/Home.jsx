@@ -5,8 +5,8 @@ import {
 } from "../slices/operationsFixes/operationsFixesSlice";
 import { useDispatch, useSelector } from "react-redux";
 import "../../css/Home.css";
-import CaseOpFixeEmpty from "../components/CaseOpFixeEmpty";
-import CaseShowRaV from "../components/CaseShowRaV";
+import CaseOpFixeEmpty from "../components/HomeComponents/CaseOpFixeEmpty";
+import CaseShowRaV from "../components/HomeComponents/CaseShowRaV";
 function Home() {
   // let navigate = useNavigate();
   // let location = useLocation();
@@ -46,35 +46,7 @@ function Home() {
       }
     }
 
-    // dispatch(reset())
   }, [charges.isError, charges.isSuccess]);
-
-  // useEffect(() => {
-  //   dispatch(revenusApi());
-  //   if (revenus.isError) {
-  //     console.log("ERROR INSIDE HOME");
-  //     // toastId.current = revenus.message
-  //     // toast.error(revenus.message)
-  //     // toastId.current == null
-  //   }
-
-  //   if (revenus.isSuccess) {
-  //     console.log("Success revenus loaded");
-  //     if (charges.hasOwnProperty("data") && revenus.hasOwnProperty("data")) {
-  //       console.log("charges.data", charges.data);
-  //       console.log("revenus.data", revenus.data);
-  //       if (revenus.data == null) {
-  //         setEmptyOpFixe(true);
-  //       } else if (revenus.data.length == 0) {
-  //         setEmptyOpFixe(true);
-  //       } else {
-  //         setEmptyOpFixe(false);
-  //       }
-  //     }
-  //   }
-
-  //   // dispatch(reset())
-  // }, [revenus.isError, revenus.isSuccess]);
 
   return (
     <>

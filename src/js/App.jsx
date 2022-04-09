@@ -19,6 +19,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import NewPassword from "./pages/NewPassword";
 import 'react-toastify/dist/ReactToastify.css';
 import OperationsFixes from "./pages/OperationsFixes";
+import CalculRaV from "./components/CalculRaV";
 
 function App() {
   return (
@@ -44,7 +45,9 @@ function App() {
             <Route path="/new-password" element={<NewPassword />} />
             
             {/* <Route path="/home" element={<RequireAuth><Sidebar /><Home /> </RequireAuth>}>
-              <Route path="operations-fixes" element={<OperationsFixes/>}/>
+              <Route path="rav-mois" element={<CalculRaV period={"mois"} />}/>
+              <Route path="rav-semaine" element={<CalculRaV period={"semaine"} />}/>
+              <Route path="rav-jour" element={<CalculRaV period={"jour"} />}/>
               </Route> */}
                         
               <Route path="home" element={<RequireAuth><Sidebar /><Home /> </RequireAuth>}/>
