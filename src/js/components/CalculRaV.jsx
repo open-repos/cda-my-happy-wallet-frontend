@@ -1,18 +1,27 @@
+import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEuroSign } from "@fortawesome/free-solid-svg-icons";
+import { setLocalStorageItem } from "../../utils/localstorage";
 export  const getDaysInMonth = (month,year)=> {
     return new Date(year, month, 0).getDate();
    };
 
 
 const CalculRaV = (props) => {
+    // const [rav , setRav] = useState(0)
+    const [updateRav , setUpdateRav] = useState(false)
     const {calculRaV,period}=props
     console.log("INSIDE calculRav");
     const { charges, revenus, isLoading } = useSelector(
       (state) => state.operationsFixes
     );
   
+    // useEffect(() => {
+    //   if (updateRav) {
+    //     calculRaV(rav);
+    //   }
+    // }, [])
     let rav = 0;
     if (charges.hasOwnProperty("data") && revenus.hasOwnProperty("data")) {
       if (charges.data != null && revenus.data != null) {
@@ -29,6 +38,8 @@ const CalculRaV = (props) => {
         switch (period) {
             case 'mois':
                 rav = totalRevenus - totalCharges;
+                // setRav(totalRevenus - totalCharges)
+                // setUpdateRav(true)
               break;
             case 'jour':
                 const currentMonth = now.getMonth()
@@ -44,6 +55,7 @@ const CalculRaV = (props) => {
             default:
               console.log(`Sorry, we are out of ${period}.`);
           }
+        
         calculRaV(rav);
       }
     }

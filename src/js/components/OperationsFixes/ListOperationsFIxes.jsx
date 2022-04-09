@@ -4,10 +4,10 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   chargesApi,
   revenusApi,
-} from "../slices/operationsFixes/operationsFixesSlice";
+} from "../../slices/operationsFixes/operationsFixesSlice";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEuroSign,faEdit } from "@fortawesome/free-solid-svg-icons";
-import "./../../css/FormControl.css";
+import "./../../../css/FormControl.css";
 
 const ListOperationsFIxes = (props) => {
   const dispatch = useDispatch();

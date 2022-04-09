@@ -4,8 +4,8 @@
     flex-direction: column;
     text-align:center;
     width: calc(100vw - 100px);
-    height:90vh;
-    justify-content:space-around;
+    height:85vh;
+    justify-content:space-between;
     align-items: center;
 }
 
@@ -42,4 +42,9 @@
 
 .btn-text:hover{
     color:var(--orange-light)
+}
+
+.rav-home{
+    min-height:70vh;
+    min-width:calc(90vw - 100px);
 }

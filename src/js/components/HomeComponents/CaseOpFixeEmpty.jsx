@@ -1,8 +1,8 @@
 import React from "react";
-import imgCharges from "../../assets/icons/Charges.png";
-import imgRevenus from "../../assets/icons/Revenus.png";
+import imgCharges from "../../../assets/icons/Charges.png";
+import imgRevenus from "../../../assets/icons/Revenus.png";
 import { useNavigate } from "react-router-dom";
-import "../../css/Home.css";
+import "../../../css/Home.css";
 
 const CaseOpFixeEmpty = () => {
   const navigate = useNavigate();

@@ -1,6 +1,6 @@
 import React, {useState} from "react";
-import "./../../css/FormControl.css";
-import { FormCardOperationFixe } from "./FormOperationFixe/FormCardOperationFixe";
+import "./../../../css/FormControl.css";
+import { FormCardOperationFixe } from "../FormOperationFixe/FormCardOperationFixe";
 import ListOperationsFIxes from "./ListOperationsFIxes";
 
 const CardOperationFixe = (props) => {
