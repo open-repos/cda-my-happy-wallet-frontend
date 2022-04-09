@@ -1,11 +1,13 @@
 import React from "react";
-import { Formik, Form, Field } from "formik";
+import { Formik, Form, Field ,ErrorMessage} from "formik";
 // import { TextField } from './TextField';
 import * as Yup from "yup";
 import "../../../css/FormControl.css";
 import FormikControl from "./FormikControl";
 import { addChargesApi, addRevenusApi } from "../../slices/operationsFixes/operationsFixesSlice";
 import { useDispatch } from "react-redux";
+import TextError from './TextError'
+import "../../../css/FormControl.css"
 export const FormCardOperationFixe = (props) => {
  const {typeOpFixe} = props
   const dispatch = useDispatch();
@@ -19,7 +21,7 @@ export const FormCardOperationFixe = (props) => {
       .max(50, "Ne peux pas dépasser 50 caractères")
       .required("Requis"),
     montant: Yup.number().min(1, "Doit être > 0").required("Requis"),
-    devise: Yup.string().min(3, "Devise").max(3, "Devise max 3"),
+    devise: Yup.string().required('Requis'),
   });
 
   const onSubmit = (values) => {
@@ -69,14 +71,17 @@ export const FormCardOperationFixe = (props) => {
                 name="devise"
                 options={array}
               /> */}
+                  <div className='form-control'>
+      <label htmlFor="devise">Devise</label>
               <Field
                 as="select"
                 name="devise"
               >
-                <option>Devise</option>
-                <option value="EUR" selected="selected">EUR</option>
+                <option value="EUR" defaultValue="EUR">EUR</option>
                 <option value="USD">USD</option>
               </Field>
+              <ErrorMessage component={TextError} name={"devise"} />
+              </div>
               <button
                 className="bnt-cardOperationFixe"
                 type="submit"

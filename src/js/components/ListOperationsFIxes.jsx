@@ -5,7 +5,7 @@ import {
   chargesApi,
   revenusApi,
 } from "../slices/operationsFixes/operationsFixesSlice";
-
+import "./../../css/FormControl.css";
 
 const ListOperationsFIxes = (props) => {
   const dispatch = useDispatch();
@@ -24,16 +24,76 @@ const ListOperationsFIxes = (props) => {
 
   useEffect(() => {
     console.log(charges);
-    dispatch(chargesApi());
-    dispatch(revenusApi());
-  }, []);
+    if (charges.data != null) {
+      if (charges.data.length == 0) {
+        dispatch(chargesApi());
+      }
+    }
+
+    if (revenus.data != null) {
+      if (revenus.data.length == 0) {
+        dispatch(revenusApi());
+      }
+    }
+    // dispatch(chargesApi());
+    // dispatch(revenusApi());
+  }, [charges.isError, charges.isSuccess]);
 
   return (
     <>
-      {isLoading ? <p style={{color:"orange"}}> {typeOpFixe} en cours de chargement ... </p> : null}
-      {typeChosen.data.length != 0 && (
-        <div>
-          <Table>
+      {isLoading ? (
+        <p style={{ color: "orange" }}>
+          {" "}
+          {typeOpFixe} en cours de chargement ...{" "}
+        </p>
+      ) : null}
+      {typeChosen.data != null && (
+        <div className="liste-opfixe">
+          <Table className="table" singleLine>
+            <Table.Header className="header-table">
+              <Table.Row>
+                {/* <Table.HeaderCell>Id</Table.HeaderCell> */}
+                <Table.HeaderCell>Titre</Table.HeaderCell>
+                <Table.HeaderCell>Montant</Table.HeaderCell>
+                <Table.HeaderCell>Devise</Table.HeaderCell>
+                <Table.HeaderCell> </Table.HeaderCell>
+              </Table.Row>
+            </Table.Header>
+
+            <Table.Body>
+              {typeChosen.data.map((operationFixe) => (
+                <Table.Row
+                  id={operationFixe.idOperationFixe}
+                  key={operationFixe.idOperationFixe}
+                >
+                  {/* <Table.Cell>{operationFixe.idOperationFixe}</Table.Cell> */}
+                  <Table.Cell>{operationFixe.titre}</Table.Cell>
+                  <Table.Cell>{operationFixe.montant}</Table.Cell>
+                  <Table.Cell>{operationFixe.devise}</Table.Cell>
+                  <Table.Cell>Modifier</Table.Cell>
+                </Table.Row>
+              ))}
+              {/* <Table.Row>
+        <Table.Cell>John Lilki</Table.Cell>
+        <Table.Cell>September 14, 2013</Table.Cell>
+        <Table.Cell>jhlilk22@yahoo.com</Table.Cell>
+        <Table.Cell>No</Table.Cell>
+      </Table.Row>
+      <Table.Row>
+        <Table.Cell>Jamie Harington</Table.Cell>
+        <Table.Cell>January 11, 2014</Table.Cell>
+        <Table.Cell>jamieharingonton@yahoo.com</Table.Cell>
+        <Table.Cell>Yes</Table.Cell>
+      </Table.Row>
+      <Table.Row>
+        <Table.Cell>Jill Lewis</Table.Cell>
+        <Table.Cell>May 11, 2014</Table.Cell>
+        <Table.Cell>jilsewris22@yahoo.com</Table.Cell>
+        <Table.Cell>Yes</Table.Cell>
+      </Table.Row> */}
+            </Table.Body>
+          </Table>
+          {/* <Table>
             <thead>
               <tr>
                 <th>Id</th>
@@ -57,7 +117,7 @@ const ListOperationsFIxes = (props) => {
                 </tr>
               ))}
             </tbody>
-          </Table>
+          </Table> */}
         </div>
       )}
     </>

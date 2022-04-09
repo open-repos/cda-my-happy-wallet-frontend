@@ -17,6 +17,9 @@ class OperationsFixesService {
     return  await apiPrivate.post("/operations-fixes/revenus",data, {withCredentials: true });
   }
   
+  // async calculRaV(charges,revenus) {
+  //   return  await "ok"
+  // }
   
 
 }

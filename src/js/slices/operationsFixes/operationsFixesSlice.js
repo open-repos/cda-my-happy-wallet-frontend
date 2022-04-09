@@ -4,6 +4,11 @@ import { handleExceptionPayload } from "../../services/handleExceptionPayload";
 
 
 const initialState = {
+  restAVivre:{
+    mois:0,
+    semaine:0,
+    jour:0
+  },
   charges: {
       data:[],
       isError:false,
@@ -83,6 +88,14 @@ async (data,thunkAPI) => {
 }
 )
 
+// RaV
+// export const calculRaV = createAsyncThunk(
+//   'operationsFixes/RaV',
+//   async (charges,revenus,_) => {  const res = await operationsFixesService.calculRaV(charges,revenus)
+//     console.log("res RavCalcul",res)
+//   }
+ 
+// )
 
 export const operationsFixesSlice = createSlice({
   name: "operationsFixes",
@@ -96,6 +109,7 @@ export const operationsFixesSlice = createSlice({
       state.revenus.isSuccess = false
       state.revenus.message = ''
       state.isLoading=false
+      state.restAVivre=initialState.restAVivre
     },
   },
   extraReducers:(builder)=>{
@@ -164,6 +178,9 @@ export const operationsFixesSlice = createSlice({
         state.revenus.isError = true
         state.revenus.message = action.payload
       })  
+      // .addCase(calculRaV.fulfilled, (state, action) => {
+      //   state.restAVivre=action.date
+      // })
   }
 });
 
