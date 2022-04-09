@@ -55,7 +55,7 @@ const CalculRaV = (props) => {
             default:
               console.log(`Sorry, we are out of ${period}.`);
           }
-        
+        // setUpdateRav(true)
         calculRaV(rav);
       }
     }
