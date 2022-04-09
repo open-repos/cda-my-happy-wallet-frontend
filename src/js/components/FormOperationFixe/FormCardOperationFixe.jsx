@@ -1,11 +1,14 @@
 import React from "react";
-import { Formik, Form } from "formik";
+import { Formik, Form, Field } from "formik";
 // import { TextField } from './TextField';
 import * as Yup from "yup";
 import "../../../css/FormControl.css";
 import FormikControl from "./FormikControl";
-
-export const FormCardOperationFixe = () => {
+import { addChargesApi, addRevenusApi } from "../../slices/operationsFixes/operationsFixesSlice";
+import { useDispatch } from "react-redux";
+export const FormCardOperationFixe = (props) => {
+ const {typeOpFixe} = props
+  const dispatch = useDispatch();
   const array = [
     { value: "EUR", key: "EUR" },
     { value: "USD", key: "USD" },
@@ -21,13 +24,19 @@ export const FormCardOperationFixe = () => {
 
   const onSubmit = (values) => {
     console.log("Form data", values);
+    if (typeOpFixe=="charges"){
+      dispatch(addChargesApi(values));
+    } else{
+      dispatch(addRevenusApi(values));
+    }
+
   };
   return (
     <Formik
       initialValues={{
         titre: "",
         montant: "",
-        devise: "",
+        devise: "EUR",
       }}
       validationSchema={validate}
       onSubmit={onSubmit}
@@ -54,12 +63,20 @@ export const FormCardOperationFixe = () => {
                 label="Montant"
                 name="montant"
               />
-              <FormikControl
+              {/* <FormikControl
                 control="select"
                 label="Devise"
                 name="devise"
                 options={array}
-              />
+              /> */}
+              <Field
+                as="select"
+                name="devise"
+              >
+                <option>Devise</option>
+                <option value="EUR" selected="selected">EUR</option>
+                <option value="USD">USD</option>
+              </Field>
               <button
                 className="bnt-cardOperationFixe"
                 type="submit"
