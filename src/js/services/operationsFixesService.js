@@ -9,5 +9,15 @@ class OperationsFixesService {
     return  await apiPrivate.get("/operations-fixes/charges", {withCredentials: true });
   }
 
+  async postCharges(data) {
+    return  await apiPrivate.post("/operations-fixes/charges",data, {withCredentials: true });
+  }
+
+  async postRevenus(data) {
+    return  await apiPrivate.post("/operations-fixes/revenus",data, {withCredentials: true });
+  }
+  
+  
+
 }
 export default new OperationsFixesService();

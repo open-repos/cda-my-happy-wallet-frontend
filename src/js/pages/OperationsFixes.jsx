@@ -14,8 +14,8 @@ const OperationsFixes = () => {
     <div className="goback">  <Link to="/home"><FontAwesomeIcon icon={faChevronCircleLeft} /> Annuler et revenir à la page d'accueil </Link></div>
     <h1>Home - Operations Fixes</h1>
     <div className="charge-revenu-container">
-    <CardOperationFixe name={"Mes charges"} src={imgCharges}/>
-    <CardOperationFixe name={"Mes revenus"} src={imgRevenus}/>
+    <CardOperationFixe name={"Mes charges"} src={imgCharges} typeOpFixe={"charges"}/>
+    <CardOperationFixe name={"Mes revenus"} src={imgRevenus} typeOpFixe={"revenus"}/>
     </div>
     </div>
   )

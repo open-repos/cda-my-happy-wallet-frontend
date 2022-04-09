@@ -35,11 +35,22 @@ function Home() {
 
     if (charges.isSuccess) {
      console.log("Success charges loaded")
-     if(charges.data.length==0 && revenus.data.length==0){
-      setEmptyOpFixe(true)
-    }else{
-     setEmptyOpFixe(false)
-    }
+     if(charges.hasOwnProperty("data") &&revenus.hasOwnProperty("data")){
+      console.log("charges.data",charges.data)
+      console.log("revenus.data",revenus.data)
+      if(charges.data.length==0 || revenus.data.length==0){
+        setEmptyOpFixe(true)
+        return
+      }else{
+       setEmptyOpFixe(false)
+      }
+      if (charges.data ==null || revenus.data ==null ){
+        setEmptyOpFixe(true)
+      }else{
+       setEmptyOpFixe(false)
+       return
+      }
+     }
     }
 
     // dispatch(reset())
@@ -57,11 +68,27 @@ function Home() {
 
     if (revenus.isSuccess) {
      console.log("Success revenus loaded")
-     if(charges.data.length==0 && revenus.data.length==0){
-       setEmptyOpFixe(true)
-     }else{
-      setEmptyOpFixe(false)
+     if(charges.hasOwnProperty("data") &&revenus.hasOwnProperty("data")){
+      console.log("charges.data",charges.data)
+      console.log("revenus.data",revenus.data)
+      if(charges.data.length==0 || revenus.data.length==0){
+        setEmptyOpFixe(true)
+        return
+      }else{
+       setEmptyOpFixe(false)
+      }
+      if (charges.data ==null || revenus.data ==null ){
+        
+        setEmptyOpFixe(true)
+      }else{
+       setEmptyOpFixe(false)
+       return
+      }
+
      }
+
+     
+    
     }
 
     // dispatch(reset())

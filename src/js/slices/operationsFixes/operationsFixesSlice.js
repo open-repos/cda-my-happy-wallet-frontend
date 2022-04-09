@@ -35,6 +35,21 @@ export const revenusApi = createAsyncThunk(
     }
   }
 )
+// Add Revenus
+export const addRevenusApi = createAsyncThunk(
+  'operationsFixes/addRevenus',
+async (data,thunkAPI) => {
+  try {
+    const response = await operationsFixesService.postRevenus(data)
+    console.log(response)
+    return response.data
+  } catch (error) {
+    const ErrorObjet = await handleExceptionPayload(error)
+    console.log(ErrorObjet)
+    return thunkAPI.rejectWithValue(ErrorObjet.message)
+  }
+}
+)
 
 // Charges
 export const chargesApi = createAsyncThunk(
@@ -42,7 +57,7 @@ export const chargesApi = createAsyncThunk(
   async (thunkAPI) => {
     try {
       const response = await operationsFixesService.getAllCharges()
-      console.log(response)
+      console.log("LoadCharges",response)
       return response.data
     } catch (error) {
       const ErrorObjet = await handleExceptionPayload(error)
@@ -50,6 +65,22 @@ export const chargesApi = createAsyncThunk(
       return thunkAPI.rejectWithValue(ErrorObjet.message)
     }
   }
+)
+
+// Add Charges
+export const addChargesApi = createAsyncThunk(
+  'operationsFixes/addCharges',
+async (data,thunkAPI) => {
+  try {
+    const response = await operationsFixesService.postCharges(data)
+    console.log(response)
+    return response.data
+  } catch (error) {
+    const ErrorObjet = await handleExceptionPayload(error)
+    console.log(ErrorObjet)
+    return thunkAPI.rejectWithValue(ErrorObjet.message)
+  }
+}
 )
 
 
@@ -99,6 +130,40 @@ export const operationsFixesSlice = createSlice({
         state.charges.message = action.payload
         state.charges.data = null
       })   
+      .addCase(addChargesApi.pending, (state) => {
+        state.isLoading = true
+      })
+      .addCase(addChargesApi.fulfilled, (state, action) => {
+        console.log(action)
+        console.log(action.payload.data)
+        console.log(state.charges.data)
+        state.isLoading = false
+        state.charges.isSuccess = true
+        state.charges.data.push(action.payload.data)
+        state.charges.message = action.payload.message
+      })
+      .addCase(addChargesApi.rejected, (state, action) => {
+        state.isLoading = false
+        state.charges.isError = true
+        state.charges.message = action.payload
+      })   
+      .addCase(addRevenusApi.pending, (state) => {
+        state.isLoading = true
+      })
+      .addCase(addRevenusApi.fulfilled, (state, action) => {
+        console.log(action)
+        console.log(action.payload.data)
+        console.log(state.revenus.data)
+        state.isLoading = false
+        state.revenus.isSuccess = true
+        state.revenus.data.push(action.payload.data)
+        state.revenus.message = action.payload.message
+      })
+      .addCase(addRevenusApi.rejected, (state, action) => {
+        state.isLoading = false
+        state.revenus.isError = true
+        state.revenus.message = action.payload
+      })  
   }
 });
 
