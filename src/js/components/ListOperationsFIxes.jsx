@@ -1,10 +1,12 @@
 import React, { useEffect } from "react";
-import { Header, Message, Table } from "semantic-ui-react";
+import { Table } from "semantic-ui-react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   chargesApi,
   revenusApi,
 } from "../slices/operationsFixes/operationsFixesSlice";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEuroSign,faEdit } from "@fortawesome/free-solid-svg-icons";
 import "./../../css/FormControl.css";
 
 const ListOperationsFIxes = (props) => {
@@ -24,16 +26,20 @@ const ListOperationsFIxes = (props) => {
 
   useEffect(() => {
     console.log(charges);
-    if (charges.data != null) {
-      if (charges.data.length == 0) {
+   if (charges.data == null ) {
+    //   if (charges.data.length == 0) {
         dispatch(chargesApi());
-      }
-    }
+    //   }
+   }else if(charges.data.length == 0){
+    dispatch(chargesApi())
+   }
 
-    if (revenus.data != null) {
-      if (revenus.data.length == 0) {
+    if (revenus.data == null) {
+    //   if (revenus.data.length == 0) {
         dispatch(revenusApi());
-      }
+    //   }
+    }else if(revenus.data.length == 0){
+        dispatch(revenusApi());
     }
     // dispatch(chargesApi());
     // dispatch(revenusApi());
@@ -48,8 +54,8 @@ const ListOperationsFIxes = (props) => {
         </p>
       ) : null}
       {typeChosen.data != null && (
-        <div className="liste-opfixe">
-          <Table className="table" singleLine>
+        <div class="liste-opfixe">
+          <Table className="table-opfixe" singleLine>
             <Table.Header className="header-table">
               <Table.Row>
                 {/* <Table.HeaderCell>Id</Table.HeaderCell> */}
@@ -69,8 +75,8 @@ const ListOperationsFIxes = (props) => {
                   {/* <Table.Cell>{operationFixe.idOperationFixe}</Table.Cell> */}
                   <Table.Cell>{operationFixe.titre}</Table.Cell>
                   <Table.Cell>{operationFixe.montant}</Table.Cell>
-                  <Table.Cell>{operationFixe.devise}</Table.Cell>
-                  <Table.Cell>Modifier</Table.Cell>
+                  <Table.Cell>{operationFixe.devise}<FontAwesomeIcon icon={faEuroSign} /></Table.Cell>
+                  <Table.Cell><FontAwesomeIcon icon={faEdit} /></Table.Cell>
                 </Table.Row>
               ))}
               {/* <Table.Row>
