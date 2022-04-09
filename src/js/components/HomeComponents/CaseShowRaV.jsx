@@ -13,9 +13,9 @@ const CaseShowRaV = () => {
   const [selectedPeriod, setselectedPeriod] = useState("mois");
   
   
-  const calculRaV = (childdata) => {
-    setRaVConfirmed(childdata);
-  };
+  // const calculRaV = (childdata) => {
+  //   setRaVConfirmed(childdata);
+  // };
   return (
     <>
       <div className="container-home-all">
@@ -49,7 +49,7 @@ const CaseShowRaV = () => {
         </div>
         <div className="rav-home">
           <img src={Wallet} height="5%" width="20%" />
-          <CalculRaV calculRaV={calculRaV} period={selectedPeriod} />
+          <CalculRaV calculRaV={setRaVConfirmed} period={selectedPeriod} />
           {/* <Outlet/> */}
           <Link to="/home/operations-fixes">
             Modifier vos charges/Revenus <FontAwesomeIcon icon={faEdit} />
