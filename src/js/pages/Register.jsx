@@ -61,8 +61,13 @@ const Register = () => {
     console.log(message)
     if (isError) {
       "inside error block"
-      toastId.current = message
-      toast.error("User already exists")
+      if (message == undefined || message==""){
+        toastId.current =  "User already exists"
+        toast.error("User already exists")
+      }else{
+        toast.error(message)
+      }
+
       toastId.current == null
     }
 
