@@ -57,10 +57,13 @@ const Register = () => {
   )
 
   useEffect(() => {
+    console.log("isError",isError)
+    console.log(message)
     if (isError) {
-      if(! toast.isActive(toastId.current)) {
-        toastId.current =  toast.error(message)
-      }
+      "inside error block"
+      toastId.current = message
+      toast.error("User already exists")
+      toastId.current == null
     }
 
     if (isSuccess || user) {
