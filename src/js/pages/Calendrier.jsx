@@ -1,8 +1,8 @@
 import React from 'react'
-
+import "../../css/Calendrier.css";
 function Calendrier() {
   return (
-    <div>Calendrier</div>
+    <div className='calendrier-container'>Calendrier</div>
   )
 }
 

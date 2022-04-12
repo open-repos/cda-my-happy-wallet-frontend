@@ -2,7 +2,7 @@ import React from 'react'
 
 function ListeOperations() {
   return (
-    <div>ListeOperations</div>
+    <div className="operations-container">ListeOperations</div>
   )
 }
 

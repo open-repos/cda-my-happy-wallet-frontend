@@ -1,8 +1,8 @@
 import React from 'react'
-
+import "../../css/ObjectifEvents.css";
 function Objectifs() {
   return (
-    <div>Objectifs</div>
+    <div className='objEv-container'>Objectifs</div>
   )
 }
 
