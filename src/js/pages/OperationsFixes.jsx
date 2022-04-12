@@ -7,6 +7,7 @@ import { faChevronCircleLeft } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import CardOperationFixe from "../components/OperationsFixes/CardOperationFixe";
 import CalculRaV from "../components/CalculRaV";
+import "../../css/Operations.css";
 
 const OperationsFixes = () => {
   console.log("INSIDE OPERATIONS FIXE");
