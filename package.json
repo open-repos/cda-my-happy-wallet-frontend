@@ -8,6 +8,7 @@
     "type-check": "vite build",
     "lint": "eslint \"src/**/*.{js,jsx}\"",
     "format": "prettier --check package.json .eslintrc.json vite.config.js",
+    "test:rav": "node test/resteAVivreCalculator.test.mjs",
     "test": "npm run type-check",
     "preview": "vite preview"
   },
