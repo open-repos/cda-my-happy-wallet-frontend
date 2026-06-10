@@ -4,6 +4,7 @@ import {
   getLocalStorageItem, removeLocalStorageItem
 } from "../../../utils/localstorage";
 import { handleExceptionPayload } from "../../services/handleExceptionPayload";
+import { getPayloadMessage, toApiPayload } from "../../services/apiResponse.mjs";
 
 
 
@@ -57,7 +58,7 @@ export const forgotPsswdApi = createAsyncThunk(
     try {
       const response = await userService.resetPasswordPost(user)
       console.log(response)
-      return response.data
+      return toApiPayload(response)
     } catch (error) {
       const ErrorObjet = await handleExceptionPayload(error)
       return thunkAPI.rejectWithValue(ErrorObjet.message)
@@ -72,7 +73,7 @@ export const resetPsswdApi = createAsyncThunk(
     try {
       const response = await userService.resetPasswordGet(token)
       console.log(response)
-      return response.data
+      return toApiPayload(response)
     } catch (error) {
       const ErrorObjet = await handleExceptionPayload(error)
       return thunkAPI.rejectWithValue(ErrorObjet.message)
@@ -87,7 +88,7 @@ export const newPsswdApi = createAsyncThunk(
     try {
       const response = await userService.newPassword(body)
       console.log(response)
-      return response.data
+      return toApiPayload(response)
     } catch (error) {
       const ErrorObjet = await handleExceptionPayload(error)
       return thunkAPI.rejectWithValue(ErrorObjet.message)
@@ -103,7 +104,7 @@ export const newRefreshToken = createAsyncThunk(
       const {body, accessToken} = bodyAccessToken
       const response = await userService.renewAccessToken(body,accessToken)
       console.log("renewAccesToken response",response)
-      return response.data
+      return toApiPayload(response)
     } catch (error) {
       console.log("renewAccesToken error",error)
       const ErrorObjet = await handleExceptionPayload(error)
@@ -171,7 +172,7 @@ export const authSlice = createSlice({
       .addCase(forgotPsswdApi.fulfilled, (state,action) => {
         state.isLoading = false
         state.isEmailSent= true
-        state.message = action.payload.message
+        state.message = getPayloadMessage(action.payload)
       })
       .addCase(forgotPsswdApi.rejected, (state, action) => {
         state.isLoading = false,
@@ -183,7 +184,7 @@ export const authSlice = createSlice({
       })
       .addCase(resetPsswdApi.fulfilled, (state,action) => {
         state.isLoading = false
-        state.message = action.payload.message
+        state.message = getPayloadMessage(action.payload)
       })
       .addCase(resetPsswdApi.rejected, (state, action) => {
         state.isLoading = false,
@@ -196,7 +197,7 @@ export const authSlice = createSlice({
       .addCase(newPsswdApi.fulfilled, (state,action) => {
         state.isLoading = false
         state.isSuccessConfirmNewPassword=true
-        state.message = action.payload.message
+        state.message = getPayloadMessage(action.payload)
       })
       .addCase(newPsswdApi.rejected, (state, action) => {
         state.isLoading = false,

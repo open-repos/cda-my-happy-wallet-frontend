@@ -1,6 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import operationsFixesService from "../../services/operationsFixesService";
 import { handleExceptionPayload } from "../../services/handleExceptionPayload";
+import {
+  getPayloadData,
+  getPayloadMessage,
+  toApiPayload,
+} from "../../services/apiResponse.mjs";
 
 
 const initialState = {
@@ -32,7 +37,7 @@ export const revenusApi = createAsyncThunk(
     try {
        const response = await  operationsFixesService.getAllRevenus()
        console.log(response)
-       return response.data
+       return toApiPayload(response)
     } catch (err) {
       const ErrorObjet = await handleExceptionPayload(error)
       console.log(ErrorObjet)
@@ -47,7 +52,7 @@ async (data,thunkAPI) => {
   try {
     const response = await operationsFixesService.postRevenus(data)
     console.log(response)
-    return response.data
+    return toApiPayload(response)
   } catch (error) {
     const ErrorObjet = await handleExceptionPayload(error)
     console.log(ErrorObjet)
@@ -63,7 +68,7 @@ export const chargesApi = createAsyncThunk(
     try {
       const response = await operationsFixesService.getAllCharges()
       console.log("LoadCharges",response)
-      return response.data
+      return toApiPayload(response)
     } catch (error) {
       const ErrorObjet = await handleExceptionPayload(error)
       console.log(ErrorObjet)
@@ -79,7 +84,7 @@ async (data,thunkAPI) => {
   try {
     const response = await operationsFixesService.postCharges(data)
     console.log(response)
-    return response.data
+    return toApiPayload(response)
   } catch (error) {
     const ErrorObjet = await handleExceptionPayload(error)
     console.log(ErrorObjet)
@@ -120,8 +125,8 @@ export const operationsFixesSlice = createSlice({
       .addCase(revenusApi.fulfilled, (state, action) => {
         state.isLoading = false
         state.revenus.isSuccess = true
-        state.revenus.data = action.payload.data
-        state.revenus.message = action.payload.message
+        state.revenus.data = getPayloadData(action.payload)
+        state.revenus.message = getPayloadMessage(action.payload)
       })
       .addCase(revenusApi.rejected, (state, action) => {
         state.isLoading = false
@@ -135,8 +140,8 @@ export const operationsFixesSlice = createSlice({
       .addCase(chargesApi.fulfilled, (state, action) => {
         state.isLoading = false
         state.charges.isSuccess = true
-        state.charges.data = action.payload.data
-        state.charges.message = action.payload.message
+        state.charges.data = getPayloadData(action.payload)
+        state.charges.message = getPayloadMessage(action.payload)
       })
       .addCase(chargesApi.rejected, (state, action) => {
         state.isLoading = false
@@ -149,12 +154,12 @@ export const operationsFixesSlice = createSlice({
       })
       .addCase(addChargesApi.fulfilled, (state, action) => {
         console.log(action)
-        console.log(action.payload.data)
+        console.log(getPayloadData(action.payload))
         console.log(state.charges.data)
         state.isLoading = false
         state.charges.isSuccess = true
-        state.charges.data.push(action.payload.data)
-        state.charges.message = action.payload.message
+        state.charges.data.push(getPayloadData(action.payload))
+        state.charges.message = getPayloadMessage(action.payload)
       })
       .addCase(addChargesApi.rejected, (state, action) => {
         state.isLoading = false
@@ -166,12 +171,12 @@ export const operationsFixesSlice = createSlice({
       })
       .addCase(addRevenusApi.fulfilled, (state, action) => {
         console.log(action)
-        console.log(action.payload.data)
+        console.log(getPayloadData(action.payload))
         console.log(state.revenus.data)
         state.isLoading = false
         state.revenus.isSuccess = true
-        state.revenus.data.push(action.payload.data)
-        state.revenus.message = action.payload.message
+        state.revenus.data.push(getPayloadData(action.payload))
+        state.revenus.message = getPayloadMessage(action.payload)
       })
       .addCase(addRevenusApi.rejected, (state, action) => {
         state.isLoading = false
