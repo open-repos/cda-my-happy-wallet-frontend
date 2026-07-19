@@ -33,11 +33,11 @@ const initialState = {
 // Revenus
 export const revenusApi = createAsyncThunk(
   'operationsFixes/revenus',
-  async (thunkAPI) => {
+  async (_, thunkAPI) => {
     try {
        const response = await  operationsFixesService.getAllRevenus()
        return toApiPayload(response)
-    } catch (err) {
+    } catch (error) {
       const ErrorObjet = await handleExceptionPayload(error)
       return thunkAPI.rejectWithValue(ErrorObjet.message)
     }

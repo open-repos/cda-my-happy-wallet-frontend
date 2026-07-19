@@ -11,6 +11,7 @@
     "test:api-response": "node test/apiResponse.test.mjs",
     "test:rav": "node test/resteAVivreCalculator.test.mjs",
     "test:refresh-token": "node test/refreshTokenHandler.test.mjs",
+    "test:revenus-api": "node test/revenusApi.test.mjs",
     "test": "npm run type-check",
     "preview": "vite preview"
   },
