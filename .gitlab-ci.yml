@@ -1,58 +1,91 @@
-image: node:16.8.0
+image: node:22-bookworm
 
-before_script:
-  - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
-  - mkdir -p ~/.ssh
-  - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-  - chmod 700 ~/.ssh/id_rsa
-  - eval "$(ssh-agent -s)"
-  - ssh-add ~/.ssh/id_rsa
-  - ssh-keyscan -t rsa "$DEPLOY_HOST" > ~/.ssh/known_hosts
-  - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
-  - chmod 644 ~/.ssh/known_hosts
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS'
+      when: never
+    - if: '$CI_COMMIT_BRANCH'
 
-cache:
-  key: ${CI_COMMIT_REF_SLUG}
-  paths:
-    - node_modules/
+default:
+  interruptible: true
+  tags:
+    - server_runner_2
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - .npm/
 
 stages:
+  - validate
+  - test
   - build
   - deploy
 
+.branch_or_merge_request:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+
+quality:
+  stage: validate
+  extends: .branch_or_merge_request
+  before_script:
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - npm run format
+    - npm run lint
+
+tests:
+  stage: test
+  extends: .branch_or_merge_request
+  needs:
+    - quality
+  before_script:
+    - npm ci --cache .npm --prefer-offline
+  script:
+    - npm run test:api-response
+    - npm run test:api-thunk
+    - npm run test:rav
+    - npm run test:refresh-token
+    - npm run type-check
+    - npm test
+
 build:
   stage: build
-  rules: 
-    - if: '$CI_COMMIT_BRANCH == "main"' 
-      when: always
-    - if: '$CI_COMMIT_BRANCH != "main"' 
-      when: never
-    - when: on_success
+  extends: .branch_or_merge_request
+  needs:
+    - quality
+    - tests
+  before_script:
+    - npm ci --cache .npm --prefer-offline
   script:
-    - ls -a
-    - npm install
-    - node -v
     - npm run build
   artifacts:
-    expire_in: 20 mins
+    expire_in: 1 day
     paths:
-      - ./dist
-  tags:
-    - server_runner_2
+      - dist/
 
-deploy_main:
+deploy_production:
   stage: deploy
-  rules: 
-    - if: '$CI_COMMIT_BRANCH == "main"' 
-      when: always
-    - if: '$CI_COMMIT_BRANCH != "main"' 
-      when: never
-    - when: on_success
+  image: debian:bookworm-slim
+  interruptible: false
+  needs:
+    - job: build
+      artifacts: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
+  environment:
+    name: production
+    url: https://myhappywallet.andriacapai.com
+  before_script:
+    - apt-get update && apt-get install --yes openssh-client rsync
+    - install -d -m 700 ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan -H "$SERVER_IP" > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
   script:
-    - which rsync || ( apt update -y && apt install rsync -y )
-    - ls -la
-    - /sbin/ip route|awk '/default/ { print $3 }'
-    - ls ./dist/
-    - /usr/bin/rsync -r ./dist/ $SERVER_USER@$SERVER_IP:$PATH_DOMAIN.
-  tags:
-    - server_runner_2
+    - rsync --archive dist/ "$SERVER_USER@$SERVER_IP:$PATH_DOMAIN."
