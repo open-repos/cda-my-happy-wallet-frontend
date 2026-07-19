@@ -9,8 +9,6 @@ workflow:
 
 default:
   interruptible: true
-  tags:
-    - server_runner_2
   cache:
     key:
       files:
@@ -72,6 +70,8 @@ deploy_production:
   stage: deploy
   image: debian:bookworm-slim
   interruptible: false
+  tags:
+    - server_runner_2
   needs:
     - job: build
       artifacts: true
