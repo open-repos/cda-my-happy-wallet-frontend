@@ -1,10 +1,21 @@
 {
   "name": "projet-00-myhappywallet-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "type-check": "vite build",
+    "lint": "eslint \"src/**/*.{js,jsx}\"",
+    "format": "prettier --check package.json .eslintrc.json vite.config.js vitest.config.js",
+    "test:api-response": "node test/apiResponse.test.mjs",
+    "test:rav": "node test/resteAVivreCalculator.test.mjs",
+    "test:refresh-token": "node test/refreshTokenHandler.test.mjs",
+    "test:api-thunk": "node test/apiPayloadCreator.test.mjs",
+    "test:revenus-api": "npm run test:api-thunk",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -24,11 +35,18 @@
     "react-toastify": "^8.2.0",
     "semantic-ui-react": "^2.1.2",
     "styled-components": "^5.3.5",
-    "vite-plugin-svgr": "^1.1.0",
     "yup": "^0.32.11"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^1.0.7",
-    "vite": "^2.8.0"
+    "@playwright/test": "1.61.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^12.1.5",
+    "@vitejs/plugin-react": "^4.7.0",
+    "eslint": "^8.57.1",
+    "jsdom": "^26.1.0",
+    "prettier": "^2.8.8",
+    "vite": "^6.4.3",
+    "vite-plugin-svgr": "^4.5.0",
+    "vitest": "^4.1.10"
   }
 }

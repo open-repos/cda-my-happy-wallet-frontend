@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import "../../css/Home.css";
 import imgCharges from "../../assets/icons/Charges.png";
 import imgRevenus from "../../assets/icons/Revenus.png";
@@ -10,17 +10,6 @@ import CalculRaV from "../components/CalculRaV";
 import "../../css/Operations.css";
 
 const OperationsFixes = () => {
-  console.log("INSIDE OPERATIONS FIXE");
-  const [RaVConfirmed, setRaVConfirmed] = useState(0);
-
-  const calculRaV = (childdata) => {
-    setRaVConfirmed(childdata);
-  };
-
-  const onSubmit = () => {
-    console.log("rav", RaVConfirmed);
-  };
-
   return (
     <div className="home-container">
       <div className="goback">
@@ -44,8 +33,8 @@ const OperationsFixes = () => {
         />
       </div>
       {/* {calculRaV()} */}
-      <CalculRaV calculRaV={calculRaV} period={"mois"} />
-      <button type="button" className="btn-save" onClick={onSubmit}>
+      <CalculRaV period={"mois"} />
+      <button type="button" className="btn-save">
         Sauvegarder
       </button>
     </div>
@@ -53,4 +42,3 @@ const OperationsFixes = () => {
 };
 
 export default OperationsFixes;
-

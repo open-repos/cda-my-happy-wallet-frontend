@@ -1,10 +1,9 @@
 .objEv-container{
-    margin-left:100px;
     display:flex;
     flex-direction: column;
     text-align:center;
     justify-content:flex-start;
     align-items: center;
     height:95vh;
-    width: calc(100vw - 100px);
+    width: 100%;
 }

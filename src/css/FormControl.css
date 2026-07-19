@@ -1,27 +1,29 @@
-.operation-container{
+.operation-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-
+  flex: 1 1 24rem;
+  min-width: 0;
 }
-.list-opfixe{
-  width:100%;
+.list-opfixe {
+  width: 100%;
   text-align: center;
 }
-.table-opfixe{
+.table-opfixe {
   /* background-color: var(--dark-secondary-color); */
   /* border: solid var(--white); */
-  filter: drop-shadow(0px 2px 0px  rgba(191, 224, 165, 0.4));
+  filter: drop-shadow(0px 2px 0px rgba(191, 224, 165, 0.4));
   border-radius: 10px;
   margin-bottom: 10px;
   padding: 3px 5px 5px 0px;
-  max-width: 60%;
-  margin-left: 20%;
-
+  width: 100%;
+  max-width: 36rem;
+  margin-inline: auto;
 }
 
-
-thead, tbody, tr {
+thead,
+tbody,
+tr {
   display: table;
   width: 100%;
   table-layout: fixed;
@@ -37,15 +39,16 @@ tbody {
   border-bottom-right-radius: 6px;
 }
 
+th {
+  padding: 10px;
+}
+td {
+  padding: 10px;
+}
 
-
-th { padding: 10px; }
-td { padding: 10px; }
-
-
-.header-table{
-  color:var(--orange-light);
-  width:100%;
+.header-table {
+  color: var(--orange-light);
+  width: 100%;
   /* background-color: var(--dark-main-color); */
   background-color: var(--dark-secondary-color);
   border-bottom: 1px solid;
@@ -53,31 +56,33 @@ td { padding: 10px; }
   border-top-right-radius: 6px;
 }
 
-.operation-container>img{
-  width:10vw;
-  height:auto;
+.operation-container > img {
+  width: min(10rem, 30vw);
+  height: auto;
 }
 
-.title-add-operationfixe{
+.title-add-operationfixe {
   padding-bottom: 10px;
 }
 
-.form-container{
-display: flex;
-flex-direction: row;
-/* align-content: space-around; */
-justify-content: space-around;
-/* align-items: baseline; */
-background-color: var(--dark-secondary-color);
-box-shadow: 3.91188px 3.8238px 5.7356px 1.8238px rgba(191, 224, 165, 0.4);
-border-radius: 10px;
-padding:0px 10px 0px 0px;
-align-items: center;
-height:auto;
+.form-container {
+  display: flex;
+  flex-direction: row;
+  /* align-content: space-around; */
+  justify-content: space-around;
+  /* align-items: baseline; */
+  background-color: var(--dark-secondary-color);
+  box-shadow: 3.91188px 3.8238px 5.7356px 1.8238px rgba(191, 224, 165, 0.4);
+  border-radius: 10px;
+  padding: 0px 10px 0px 0px;
+  align-items: center;
+  height: auto;
+  width: 100%;
+  flex-wrap: wrap;
 }
 
-.btn-input{
-  display:flex;
+.btn-input {
+  display: flex;
   flex-direction: row;
 }
 
@@ -85,22 +90,18 @@ label {
   font-weight: bold;
   display: flex;
   margin-bottom: 5px;
-  color:var(--orange-light)
+  color: var(--orange-light);
 }
 
-.form-container >input + label {
+.form-container > input + label {
   font-weight: bold;
   display: inline-flex;
   /* margin-right: 20px; */
 }
-.form-container >
-input[type='text'],
-.form-container >
-input[type='email'],
-.form-container >
-input[type='password'],
-.form-container >
-textarea{
+.form-container > input[type="text"],
+.form-container > input[type="email"],
+.form-container > input[type="password"],
+.form-container > textarea {
   display: block;
   width: 200px;
   padding: 6px 12px;
@@ -114,11 +115,11 @@ textarea{
   /* margin-bottom: 20px; */
 }
 
-input:focus{
-outline: 2px solid var(--orange-light);
+input:focus {
+  outline: 2px solid var(--orange-light);
 }
 
-input[type='number']{
+input[type="number"] {
   display: block;
   width: 90px;
   padding: 6px 12px;
@@ -147,7 +148,7 @@ select {
   /* margin-bottom: 20px; */
 }
 
-.form-container>button{
+.form-container > button {
   color: white;
   background: var(--dark-secondary-color);
   min-width: 50px;
@@ -157,7 +158,7 @@ select {
   font-size: 14px;
   padding: 5px;
   margin-top: 1rem;
-  width:auto;
+  width: auto;
   align-self: center;
 }
 
@@ -166,11 +167,11 @@ select {
   background: var(--orange-light);
 }
 
-
 .form-control {
-  position:relative;
+  position: relative;
   margin: 10px 10px 20px;
-  
+  flex: 1 1 9rem;
+
   /* display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -180,9 +181,38 @@ select {
   /* margin-left: 20vw; */
 }
 
-.error-container{
+.form-container .form-control input,
+.form-container .form-control select {
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .form-container {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+  }
+
+  .form-control {
+    flex-basis: auto;
+    width: 100%;
+    margin: 0 0 1.5rem;
+  }
+
+  .form-container > button {
+    width: 100%;
+    margin-top: 0;
+  }
+
+  th,
+  td {
+    padding: 0.5rem 0.25rem;
+  }
+}
+
+.error-container {
   border-radius: 10px;
-  padding-top:0px;
+  padding-top: 0px;
 }
 .error {
   color: var(--warning-col);
@@ -190,6 +220,5 @@ select {
   border-radius: 6px;
 
   /* align-self: flex-end; */
-  position:absolute
-  
+  position: absolute;
 }
