@@ -36,6 +36,8 @@
     "yup": "^0.32.11"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^12.1.5",
     "@vitejs/plugin-react": "^4.7.0",
     "eslint": "^8.57.1",
     "jsdom": "^26.1.0",
