@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./../../css/Register.css";
+import "./../../css/Auth.css";
 import mailSent from "./../../assets/icons/Mail-sent.svg";
 import favIcon from "./../../assets/icons/favicon.svg";
 import { Link } from "react-router-dom";

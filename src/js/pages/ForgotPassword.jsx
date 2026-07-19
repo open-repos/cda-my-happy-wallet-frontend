@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./../../css/Forgotpassword.css";
+import "./../../css/Auth.css";
 import mailSent from "../../assets/icons/Mail-sent.svg";
 import forgotPassword from "./../../assets/icons/ForgotPassword.svg";
 // import { useforgotpasswordMutation } from "../services/authService";

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./../../css/Newpassword.css";
+import "./../../css/Auth.css";
 import Ok from "../../assets/icons/Ok.svg";
 import newpassword from "../../assets/icons/Newpassword.svg";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";

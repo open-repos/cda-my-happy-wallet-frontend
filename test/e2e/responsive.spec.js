@@ -17,6 +17,16 @@ const pages = [
     heading: /Créer un compte pour utiliser MyHappyWallet/i,
     action: "S'enregistrer",
   },
+  {
+    path: "/forgot-password",
+    heading: /Vous avez oublié votre mot de passe/i,
+    action: "Changer de mot de passe",
+  },
+  {
+    path: "/new-password",
+    heading: /Choisissez votre nouveau mot de passe/i,
+    action: "Confirmation du nouveau mot de passe",
+  },
 ];
 
 const storedUser = {
