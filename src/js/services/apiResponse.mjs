@@ -1,6 +1,17 @@
 export const InternalError = {
+  type: "UnknownError",
   message: "Internal error during request",
   code: 500,
+  path: null,
+  details: null,
+};
+
+export const NetworkError = {
+  type: "NetworkError",
+  message: "Unable to reach the server",
+  code: 0,
+  path: null,
+  details: null,
 };
 
 export const toApiPayload = (response) => {
@@ -20,11 +31,20 @@ export const toApiErrorPayload = (err) => {
     return InternalError;
   }
 
-  if (err.hasOwnProperty("response") && err.response?.hasOwnProperty("data")) {
+  const apiError = err.response?.data?.error;
+
+  if (apiError && typeof apiError === "object") {
     return {
-      message: err.response.data.error.message,
-      code: err.response.status,
+      type: apiError.type || "HttpError",
+      message: apiError.message || InternalError.message,
+      code: apiError.statusCode || err.response.status || 500,
+      path: apiError.path || null,
+      details: apiError.details || null,
     };
+  }
+
+  if (err.request && !err.response) {
+    return NetworkError;
   }
 
   return InternalError;

@@ -3,8 +3,8 @@ import userService from "../../services/userService";
 import {
   getLocalStorageItem, removeLocalStorageItem
 } from "../../../utils/localstorage";
-import { handleExceptionPayload } from "../../services/handleExceptionPayload";
-import { getPayloadMessage, toApiPayload } from "../../services/apiResponse.mjs";
+import { getPayloadMessage } from "../../services/apiResponse.mjs";
+import { createApiPayloadCreator } from "../../services/apiPayloadCreator.mjs";
 
 
 
@@ -20,91 +20,52 @@ const initialState = {
   isEmailSent: false,
   isLoading: false,
   message: '',
+  error: null,
 };
 
 
 // Register user
 export const register = createAsyncThunk(
   'auth/register',
-  async (user, thunkAPI) => {
-    try {
-       await userService.register(user)
-    } catch (err) {
-      const ErrorObjet = await handleExceptionPayload(error)
-      return thunkAPI.rejectWithValue(ErrorObjet.message)
-    }
-  }
+  createApiPayloadCreator({ request: (user) => userService.register(user) })
 )
 
 // Login user
 export const loginApi = createAsyncThunk(
   'auth/login',
-  async (user, thunkAPI) => {
-    try {
-      const response = await userService.login(user)
-      return response
-    } catch (error) {
-      const ErrorObjet = await handleExceptionPayload(error)
-      return thunkAPI.rejectWithValue(ErrorObjet.message)
-    }
-  }
+  createApiPayloadCreator({
+    request: (user) => userService.login(user),
+    mapResponse: (response) => response,
+  })
 )
 
 // ForgotPassword
 export const forgotPsswdApi = createAsyncThunk(
   'auth/forgotPassword',
-  async (user, thunkAPI) => {
-    try {
-      const response = await userService.resetPasswordPost(user)
-      return toApiPayload(response)
-    } catch (error) {
-      const ErrorObjet = await handleExceptionPayload(error)
-      return thunkAPI.rejectWithValue(ErrorObjet.message)
-    }
-  }
+  createApiPayloadCreator({ request: (user) => userService.resetPasswordPost(user) })
 )
 
 // Forgot user
 export const resetPsswdApi = createAsyncThunk(
   'auth/resetPassword',
-  async (token, thunkAPI) => {
-    try {
-      const response = await userService.resetPasswordGet(token)
-      return toApiPayload(response)
-    } catch (error) {
-      const ErrorObjet = await handleExceptionPayload(error)
-      return thunkAPI.rejectWithValue(ErrorObjet.message)
-    }
-  }
+  createApiPayloadCreator({ request: (token) => userService.resetPasswordGet(token) })
 )
 
 //New Password
 export const newPsswdApi = createAsyncThunk(
   'auth/newPassword',
-  async (body, thunkAPI) => {
-    try {
-      const response = await userService.newPassword(body)
-      return toApiPayload(response)
-    } catch (error) {
-      const ErrorObjet = await handleExceptionPayload(error)
-      return thunkAPI.rejectWithValue(ErrorObjet.message)
-    }
-  }
+  createApiPayloadCreator({ request: (body) => userService.newPassword(body) })
 )
 
 //New Refresh Token
 export const newRefreshToken = createAsyncThunk(
   'auth/renewAccessToken',
-  async (bodyAccessToken, thunkAPI) => {
-    try {
+  createApiPayloadCreator({
+    request: (bodyAccessToken) => {
       const {body, accessToken} = bodyAccessToken
-      const response = await userService.renewAccessToken(body,accessToken)
-      return toApiPayload(response)
-    } catch (error) {
-      const ErrorObjet = await handleExceptionPayload(error)
-      return thunkAPI.rejectWithValue(ErrorObjet.message)
-    }
-  }
+      return userService.renewAccessToken(body,accessToken)
+    },
+  })
 )
 
 // Logout
@@ -126,12 +87,14 @@ export const authSlice = createSlice({
       state.isEmailSent= false,
       state.isSuccessConfirmNewPassword=false
       state.message = ''
+      state.error = null
     },
   },
   extraReducers:(builder)=>{
     builder
       .addCase(register.pending, (state) => {
         state.isLoading = true
+        state.error = null
       })
       .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false
@@ -141,11 +104,13 @@ export const authSlice = createSlice({
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false
         state.isError = true
-        state.message = action.payload
+        state.error = action.payload
+        state.message = action.payload?.message || "Registration failed"
         state.user = null
       })
       .addCase(loginApi.pending, (state) => {
         state.isLoading = true
+        state.error = null
       })
       .addCase(loginApi.fulfilled, (state, action) => {
         state.isLoading = false
@@ -157,11 +122,13 @@ export const authSlice = createSlice({
         state.isLoading = false,
         state.isError = true,
         state.isAuthenticated= false,
-        state.message = action.payload
+        state.error = action.payload
+        state.message = action.payload?.message || "Login failed"
         state.user = null
       })
       .addCase(forgotPsswdApi.pending, (state) => {
         state.isLoading = true
+        state.error = null
       })
       .addCase(forgotPsswdApi.fulfilled, (state,action) => {
         state.isLoading = false
@@ -171,10 +138,12 @@ export const authSlice = createSlice({
       .addCase(forgotPsswdApi.rejected, (state, action) => {
         state.isLoading = false,
         state.isError = true,
-        state.message = action.payload
+        state.error = action.payload
+        state.message = action.payload?.message || "Password reset request failed"
       })
       .addCase(resetPsswdApi.pending, (state) => {
         state.isLoading = true
+        state.error = null
       })
       .addCase(resetPsswdApi.fulfilled, (state,action) => {
         state.isLoading = false
@@ -183,10 +152,12 @@ export const authSlice = createSlice({
       .addCase(resetPsswdApi.rejected, (state, action) => {
         state.isLoading = false,
         state.isError = true,
-        state.message = action.payload
+        state.error = action.payload
+        state.message = action.payload?.message || "Password reset failed"
       })
       .addCase(newPsswdApi.pending, (state) => {
         state.isLoading = true
+        state.error = null
       })
       .addCase(newPsswdApi.fulfilled, (state,action) => {
         state.isLoading = false
@@ -196,10 +167,12 @@ export const authSlice = createSlice({
       .addCase(newPsswdApi.rejected, (state, action) => {
         state.isLoading = false,
         state.isError = true,
-        state.message = action.payload
+        state.error = action.payload
+        state.message = action.payload?.message || "Password update failed"
       })
       .addCase(newRefreshToken.pending, (state) => {
         state.isLoading = true
+        state.error = null
       })
       .addCase(newRefreshToken.fulfilled, (state, action) => {
         state.isLoading = false
@@ -212,7 +185,8 @@ export const authSlice = createSlice({
         state.isLoading = false,
         state.isError = true,
         state.isAuthenticated= false,
-        state.message = action.payload
+        state.error = action.payload
+        state.message = action.payload?.message || "Session renewal failed"
         state.user = null
       })
       .addCase(logout.fulfilled, (state) => {

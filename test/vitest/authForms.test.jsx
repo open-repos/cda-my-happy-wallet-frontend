@@ -72,6 +72,21 @@ afterEach(() => {
 });
 
 describe("authentication forms", () => {
+  it("shows the registration error returned by the API", () => {
+    mocks.authState = {
+      ...mocks.authState,
+      isError: true,
+      message: "Validators error: password is invalid",
+    };
+
+    renderForm(<Register />);
+
+    expect(mocks.toastError).toHaveBeenCalledWith(
+      "Validators error: password is invalid"
+    );
+    expect(mocks.toastError).not.toHaveBeenCalledWith("User already exists");
+  });
+
   it("dispatches login credentials", () => {
     renderForm(<Login />);
 

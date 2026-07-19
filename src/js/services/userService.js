@@ -9,7 +9,7 @@ import { toApiPayload } from "./apiResponse.mjs";
 class UserService {
 
   async register(data) {
-    await api.post("/users/register/", data);
+    return await api.post("/users/register/", data);
   }
   async logout() {
    removeLocalStorageItem("user");

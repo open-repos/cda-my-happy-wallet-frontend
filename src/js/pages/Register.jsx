@@ -49,8 +49,8 @@ const FormRegister = ({ onRegistered }) => {
   useEffect(() => {
     if (isError) {
       if (message == undefined || message == "") {
-        toastId.current = "User already exists";
-        toast.error("User already exists");
+        toastId.current = "Registration failed";
+        toast.error("Registration failed");
       } else {
         toast.error(message);
       }

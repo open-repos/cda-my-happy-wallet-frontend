@@ -3,6 +3,7 @@ import {
   getPayloadData,
   getPayloadMessage,
   InternalError,
+  NetworkError,
   toApiErrorPayload,
   toApiPayload,
 } from "../src/js/services/apiResponse.mjs";
@@ -33,10 +34,18 @@ assert.deepStrictEqual(
     },
   }),
   {
+    type: "HttpError",
     message: "Unauthorized",
     code: 401,
+    path: null,
+    details: null,
   }
 );
 
 assert.deepStrictEqual(toApiErrorPayload(null), InternalError);
+assert.deepStrictEqual(toApiErrorPayload({ request: {} }), NetworkError);
+assert.deepStrictEqual(
+  toApiErrorPayload({ response: { status: 502, data: {} } }),
+  InternalError
+);
 assert.strictEqual(toApiPayload(undefined), undefined);
