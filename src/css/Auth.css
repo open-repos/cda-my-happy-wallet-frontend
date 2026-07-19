@@ -1,0 +1,51 @@
+:is(.login, .register, .forgotpassword, .newpassword) {
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: auto;
+  padding: 2rem var(--layout-page-padding);
+  gap: 1.5rem;
+}
+
+:is(.login_form, .register_form, .forgotpassword_form, .newpassword_form) {
+  width: min(100%, 48rem);
+}
+
+:is(.login_form, .register_form, .forgotpassword_form, .newpassword_form) h1 {
+  font-size: 2.1875rem;
+  letter-spacing: 0;
+}
+
+:is(.login_form, .register_form, .forgotpassword_form, .newpassword_form)
+  > input {
+  width: min(100%, 36rem);
+  min-width: 0;
+  padding: 1rem;
+}
+
+:is(.login_form, .register_form, .forgotpassword_form, .newpassword_form)
+  > .submit_btn {
+  width: min(100%, 36rem);
+}
+
+:is(.login, .register, .forgotpassword, .newpassword) > img {
+  width: auto;
+  max-width: min(18.75rem, 70vw);
+  max-height: 35vh;
+  margin-left: 0;
+}
+
+@media (max-width: 767px) {
+  :is(.login, .register, .forgotpassword, .newpassword) {
+    justify-content: flex-start;
+    padding-top: 1.5rem;
+  }
+
+  :is(.login_form, .register_form, .forgotpassword_form, .newpassword_form) h1 {
+    font-size: 1.75rem;
+    padding-bottom: 1rem;
+  }
+
+  :is(.login, .register, .forgotpassword, .newpassword) .link-div {
+    text-align: center !important;
+  }
+}
