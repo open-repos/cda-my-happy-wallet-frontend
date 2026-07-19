@@ -31,9 +31,37 @@ const pages = [
 
 const storedUser = {
   payload: {
-    accessToken: "fake-token",
-    user: { firstname: "Happy", lastname: "Wallet" },
+    accessToken:
+      "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJleHAiOjQxMDI0NDQ4MDAsInN1YiI6InRlc3QifQ.",
+    user: {
+      email: "happy@example.test",
+      firstname: "Happy",
+      lastname: "Wallet",
+    },
   },
+};
+
+const prepareProtectedPage = async (page) => {
+  await page.addInitScript((user) => {
+    window.localStorage.setItem(JSON.stringify("user"), JSON.stringify(user));
+  }, storedUser);
+  await page.route("**/v1/operations-fixes/**", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      json: {
+        data: [
+          {
+            devise: "EUR",
+            idOperationFixe: 1,
+            montant: 100,
+            titre: "Test",
+          },
+        ],
+        message: "Test data",
+        success: true,
+      },
+    })
+  );
 };
 
 for (const viewport of viewports) {
@@ -62,9 +90,7 @@ for (const viewport of viewports) {
     page,
   }) => {
     await page.setViewportSize(viewport);
-    await page.addInitScript((user) => {
-      window.localStorage.setItem(JSON.stringify("user"), JSON.stringify(user));
-    }, storedUser);
+    await prepareProtectedPage(page);
     await page.goto("/calendrier");
 
     await expect(page.locator(".calendrier-container")).toHaveText(
@@ -78,6 +104,26 @@ for (const viewport of viewports) {
     expect(contentBounds.x + contentBounds.width).toBeLessThanOrEqual(
       viewport.width
     );
+  });
+
+  test(`operations fixes fit the ${viewport.name} viewport`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await prepareProtectedPage(page);
+    await page.goto("/home/operations-fixes");
+
+    await expect(
+      page.getByRole("heading", { name: "Home - Operations Fixes" })
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Sauvegarder" })
+    ).toBeVisible();
+
+    const hasHorizontalOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth
+    );
+    expect(hasHorizontalOverflow).toBe(false);
   });
 }
 
