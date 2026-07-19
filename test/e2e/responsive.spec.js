@@ -19,6 +19,13 @@ const pages = [
   },
 ];
 
+const storedUser = {
+  payload: {
+    accessToken: "fake-token",
+    user: { firstname: "Happy", lastname: "Wallet" },
+  },
+};
+
 for (const viewport of viewports) {
   for (const pageDefinition of pages) {
     test(`${pageDefinition.path} fits the ${viewport.name} viewport`, async ({
@@ -40,4 +47,26 @@ for (const viewport of viewports) {
       expect(hasHorizontalOverflow).toBe(false);
     });
   }
+
+  test(`protected shell fits the ${viewport.name} viewport`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await page.addInitScript((user) => {
+      window.localStorage.setItem(JSON.stringify("user"), JSON.stringify(user));
+    }, storedUser);
+    await page.goto("/calendrier");
+
+    await expect(page.locator(".calendrier-container")).toHaveText(
+      "Calendrier"
+    );
+
+    const contentBounds = await page
+      .locator(".protected-layout__content")
+      .boundingBox();
+    expect(contentBounds.x).toBeGreaterThanOrEqual(0);
+    expect(contentBounds.x + contentBounds.width).toBeLessThanOrEqual(
+      viewport.width
+    );
+  });
 }

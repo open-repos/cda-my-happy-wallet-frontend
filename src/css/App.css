@@ -32,7 +32,9 @@
 .protected-layout__content {
   min-height: 100vh;
   min-height: 100dvh;
-  width: 100%;
+  width: calc(100% - var(--layout-sidebar-offset));
+  margin-left: var(--layout-sidebar-offset);
+  padding: var(--layout-top-offset) var(--layout-page-padding) 0;
 }
 
 @media (max-width: 1023px) {
