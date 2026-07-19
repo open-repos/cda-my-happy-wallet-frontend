@@ -70,3 +70,23 @@ for (const viewport of viewports) {
     );
   });
 }
+
+test("allows vertical scrolling on a compact mobile viewport", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 480 });
+  await page.goto("/register");
+
+  const scrollMetrics = await page.evaluate(() => ({
+    clientHeight: document.documentElement.clientHeight,
+    scrollHeight: document.documentElement.scrollHeight,
+  }));
+  expect(scrollMetrics.scrollHeight).toBeGreaterThan(
+    scrollMetrics.clientHeight
+  );
+
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBeGreaterThan(0);
+});
