@@ -9,7 +9,6 @@ export { getDaysInMonth } from "../hooks/useResteAVivre";
 const CalculRaV = (props) => {
     // const [rav , setRav] = useState(0)
     const {calculRaV,period}=props
-    console.log("INSIDE calculRav");
     const rav = useResteAVivre(period);
   
     // useEffect(() => {

@@ -31,7 +31,6 @@ export const calculateResteAVivre = ({
     case "semaine":
       return Math.round((monthlyResteAVivre / 4) * 100) / 100;
     default:
-      console.log(`Sorry, we are out of ${period}.`);
       return 0;
   }
 };

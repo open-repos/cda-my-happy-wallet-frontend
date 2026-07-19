@@ -57,8 +57,6 @@ const Register = () => {
   )
 
   useEffect(() => {
-    console.log("isError",isError)
-    console.log(message)
     if (isError) {
       "inside error block"
       if (message == undefined || message==""){

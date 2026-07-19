@@ -23,20 +23,12 @@ const setUpInterceptors = (store) => {
   });
 
   apiPrivate.interceptors.request.use(handleRefreshToken, (error) => {
-    console.log("INSIDE ERROR REQUEST INTERCEPTOR")
-      console.log(Promise.reject(error))
     return Promise.reject(error);
   });
 
   apiPrivate.interceptors.response.use(
-    async (res) => {
-      console.log("res.status", res.status);
-      return res;
-    },
+    async (res) => res,
     async (err) => {
-      console.log("INSIDE ERROR RESPONSE INTERCEPTOR")
-    //   console.log(Promise.resolve(err))
-      console.log(Promise.reject(err))
       return Promise.reject(err);
     }
   );

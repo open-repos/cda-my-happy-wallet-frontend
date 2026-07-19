@@ -16,16 +16,8 @@ export const useOperationsFixes = () => {
     dispatch(chargesApi());
     dispatch(revenusApi());
 
-    if (charges.isError || revenus.isError) {
-      console.log("ERROR INSIDE HOME");
-    }
-
     if (charges.isSuccess || revenus.isSuccess) {
-      console.log("Success charges loaded");
       if (charges.hasOwnProperty("data") && revenus.hasOwnProperty("data")) {
-        console.log("charges.data", charges.data);
-        console.log("revenus.data", revenus.data);
-
         if (charges.data == null && revenus.data == null) {
           setEmptyOpFixe(true);
         } else if (charges.data.length == 0 && revenus.data == 0) {

@@ -25,7 +25,6 @@ export const FormCardOperationFixe = (props) => {
   });
 
   const onSubmit = (values) => {
-    console.log("Form data", values);
     if (typeOpFixe=="charges"){
       dispatch(addChargesApi(values));
     } else{

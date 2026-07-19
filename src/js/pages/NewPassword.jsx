@@ -20,7 +20,6 @@ const NewPassword = () => {
   const toastId = React.useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
-  console.log(send)
   const { isError, message } = useSelector(
     (state) => state.auth
   )
@@ -30,14 +29,11 @@ const NewPassword = () => {
       const resetToken = searchParams.get("resetToken");
       if (resetToken) {
         searchParams.delete("resetToken");
-        console.log("setting params:", { searchParams: searchParams.toString() });
-        console.dir(searchParams.toString());
         setSearchParams(searchParams);
         dispatch(resetPsswdApi(resetToken))
       }
     }
 
-    console.log('toastId',toastId.current)
     if (isError) {
       toastId.current = message
       toast.error(message)
@@ -56,7 +52,6 @@ const NewPassword = () => {
   const Confirmationnewpassword =  () => {
 
     useEffect(() => {
-        console.log(send)
         if(send){
           timeout(5000);
         }
@@ -94,7 +89,6 @@ const NewPassword = () => {
     )
     useEffect(()=>{
 
-      console.log("isSuccessConfirmNewPassword",isSuccessConfirmNewPassword)
       if (isSuccessConfirmNewPassword==true) {
         setSend(true);
        }

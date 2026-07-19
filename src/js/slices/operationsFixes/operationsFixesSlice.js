@@ -36,11 +36,9 @@ export const revenusApi = createAsyncThunk(
   async (thunkAPI) => {
     try {
        const response = await  operationsFixesService.getAllRevenus()
-       console.log(response)
        return toApiPayload(response)
     } catch (err) {
       const ErrorObjet = await handleExceptionPayload(error)
-      console.log(ErrorObjet)
       return thunkAPI.rejectWithValue(ErrorObjet.message)
     }
   }
@@ -51,11 +49,9 @@ export const addRevenusApi = createAsyncThunk(
 async (data,thunkAPI) => {
   try {
     const response = await operationsFixesService.postRevenus(data)
-    console.log(response)
     return toApiPayload(response)
   } catch (error) {
     const ErrorObjet = await handleExceptionPayload(error)
-    console.log(ErrorObjet)
     return thunkAPI.rejectWithValue(ErrorObjet.message)
   }
 }
@@ -67,11 +63,9 @@ export const chargesApi = createAsyncThunk(
   async (thunkAPI) => {
     try {
       const response = await operationsFixesService.getAllCharges()
-      console.log("LoadCharges",response)
       return toApiPayload(response)
     } catch (error) {
       const ErrorObjet = await handleExceptionPayload(error)
-      console.log(ErrorObjet)
       return thunkAPI.rejectWithValue(ErrorObjet.message)
     }
   }
@@ -83,11 +77,9 @@ export const addChargesApi = createAsyncThunk(
 async (data,thunkAPI) => {
   try {
     const response = await operationsFixesService.postCharges(data)
-    console.log(response)
     return toApiPayload(response)
   } catch (error) {
     const ErrorObjet = await handleExceptionPayload(error)
-    console.log(ErrorObjet)
     return thunkAPI.rejectWithValue(ErrorObjet.message)
   }
 }
@@ -97,7 +89,6 @@ async (data,thunkAPI) => {
 // export const calculRaV = createAsyncThunk(
 //   'operationsFixes/RaV',
 //   async (charges,revenus,_) => {  const res = await operationsFixesService.calculRaV(charges,revenus)
-//     console.log("res RavCalcul",res)
 //   }
  
 // )
@@ -153,9 +144,6 @@ export const operationsFixesSlice = createSlice({
         state.isLoading = true
       })
       .addCase(addChargesApi.fulfilled, (state, action) => {
-        console.log(action)
-        console.log(getPayloadData(action.payload))
-        console.log(state.charges.data)
         state.isLoading = false
         state.charges.isSuccess = true
         state.charges.data.push(getPayloadData(action.payload))
@@ -170,9 +158,6 @@ export const operationsFixesSlice = createSlice({
         state.isLoading = true
       })
       .addCase(addRevenusApi.fulfilled, (state, action) => {
-        console.log(action)
-        console.log(getPayloadData(action.payload))
-        console.log(state.revenus.data)
         state.isLoading = false
         state.revenus.isSuccess = true
         state.revenus.data.push(getPayloadData(action.payload))

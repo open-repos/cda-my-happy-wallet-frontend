@@ -42,7 +42,6 @@ export const loginApi = createAsyncThunk(
   async (user, thunkAPI) => {
     try {
       const response = await userService.login(user)
-      console.log(response)
       return response
     } catch (error) {
       const ErrorObjet = await handleExceptionPayload(error)
@@ -57,7 +56,6 @@ export const forgotPsswdApi = createAsyncThunk(
   async (user, thunkAPI) => {
     try {
       const response = await userService.resetPasswordPost(user)
-      console.log(response)
       return toApiPayload(response)
     } catch (error) {
       const ErrorObjet = await handleExceptionPayload(error)
@@ -72,7 +70,6 @@ export const resetPsswdApi = createAsyncThunk(
   async (token, thunkAPI) => {
     try {
       const response = await userService.resetPasswordGet(token)
-      console.log(response)
       return toApiPayload(response)
     } catch (error) {
       const ErrorObjet = await handleExceptionPayload(error)
@@ -87,7 +84,6 @@ export const newPsswdApi = createAsyncThunk(
   async (body, thunkAPI) => {
     try {
       const response = await userService.newPassword(body)
-      console.log(response)
       return toApiPayload(response)
     } catch (error) {
       const ErrorObjet = await handleExceptionPayload(error)
@@ -103,10 +99,8 @@ export const newRefreshToken = createAsyncThunk(
     try {
       const {body, accessToken} = bodyAccessToken
       const response = await userService.renewAccessToken(body,accessToken)
-      console.log("renewAccesToken response",response)
       return toApiPayload(response)
     } catch (error) {
-      console.log("renewAccesToken error",error)
       const ErrorObjet = await handleExceptionPayload(error)
       return thunkAPI.rejectWithValue(ErrorObjet.message)
     }

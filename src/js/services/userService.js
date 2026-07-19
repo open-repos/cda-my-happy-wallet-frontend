@@ -19,12 +19,10 @@ class UserService {
     const response = await api.post(`/users/authenticate/`, data, {
       withCredentials: true,
     });
-    console.log("response inside login", response);
     const payload = toApiPayload(response);
     if (payload) {
       await setLocalStorageItem(payload, "user");
     }
-    console.log("inside axios'", response);
     return payload;
   }
   async delete(data) {

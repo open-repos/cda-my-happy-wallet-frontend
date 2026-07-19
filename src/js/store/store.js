@@ -12,14 +12,12 @@ const combinedReducer = combineReducers({
 });
 
 const rootReducer = (state, action) => {
-  console.log("action.type",action.type)
   if (action.type === 'auth/logout/fulfilled') {
     state = undefined;
   }
   return combinedReducer(state, action);
 };
 
-console.log(import.meta.env.VITE_ENV)
 export default configureStore({
   reducer: rootReducer,
   middleware: [...getDefaultMiddleware()],
