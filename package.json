@@ -7,12 +7,13 @@
     "build": "vite build",
     "type-check": "vite build",
     "lint": "eslint \"src/**/*.{js,jsx}\"",
-    "format": "prettier --check package.json .eslintrc.json vite.config.js",
+    "format": "prettier --check package.json .eslintrc.json vite.config.js vitest.config.js",
     "test:api-response": "node test/apiResponse.test.mjs",
     "test:rav": "node test/resteAVivreCalculator.test.mjs",
     "test:refresh-token": "node test/refreshTokenHandler.test.mjs",
     "test:revenus-api": "node test/revenusApi.test.mjs",
-    "test": "npm run type-check",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -37,8 +38,10 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^4.7.0",
     "eslint": "^8.57.1",
+    "jsdom": "^26.1.0",
     "prettier": "^2.8.8",
     "vite": "^6.4.3",
-    "vite-plugin-svgr": "^4.5.0"
+    "vite-plugin-svgr": "^4.5.0",
+    "vitest": "^4.1.10"
   }
 }
