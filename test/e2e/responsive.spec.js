@@ -64,6 +64,14 @@ const prepareProtectedPage = async (page) => {
   );
 };
 
+const protectedPages = [
+  { path: "/home", selector: ".container-home-all" },
+  { path: "/calendrier", selector: ".calendrier-container" },
+  { path: "/objectifs-evenements", selector: ".objEv-container" },
+  { path: "/operations", selector: ".operations-container" },
+  { path: "/profil", selector: ".profil-container" },
+];
+
 for (const viewport of viewports) {
   for (const pageDefinition of pages) {
     test(`${pageDefinition.path} fits the ${viewport.name} viewport`, async ({
@@ -125,6 +133,22 @@ for (const viewport of viewports) {
     );
     expect(hasHorizontalOverflow).toBe(false);
   });
+
+  for (const protectedPage of protectedPages) {
+    test(`${protectedPage.path} fits the protected ${viewport.name} viewport`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await prepareProtectedPage(page);
+      await page.goto(protectedPage.path);
+
+      await expect(page.locator(protectedPage.selector)).toBeVisible();
+      const hasHorizontalOverflow = await page.evaluate(
+        () => document.documentElement.scrollWidth > window.innerWidth
+      );
+      expect(hasHorizontalOverflow).toBe(false);
+    });
+  }
 }
 
 test("allows vertical scrolling on a compact mobile viewport", async ({
