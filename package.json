@@ -10,6 +10,7 @@
     "format": "prettier --check package.json .eslintrc.json vite.config.js",
     "test:api-response": "node test/apiResponse.test.mjs",
     "test:rav": "node test/resteAVivreCalculator.test.mjs",
+    "test:refresh-token": "node test/refreshTokenHandler.test.mjs",
     "test": "npm run type-check",
     "preview": "vite preview"
   },
