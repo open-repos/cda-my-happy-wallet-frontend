@@ -14,10 +14,40 @@
   --background: #43553A;
   --warning-bg: rgba(255, 124, 163, 0.2);
   --warning-col: #FF7CA3;
+  --layout-sidebar-offset: 6.25rem;
+  --layout-page-padding: 2rem;
+  --layout-top-offset: 0rem;
   --filter-img-orange: invert(63%) sepia(20%) saturate(1956%) hue-rotate(318deg) brightness(100%) contrast(84%);
   --filter-img-orange-light:invert(76%) sepia(89%) saturate(827%) hue-rotate(313deg) brightness(98%) contrast(92%);
 
 
+}
+
+.protected-layout {
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+}
+
+.protected-layout__content {
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+}
+
+@media (max-width: 1023px) {
+  :root {
+    --layout-sidebar-offset: 4.5rem;
+    --layout-page-padding: 1.5rem;
+  }
+}
+
+@media (max-width: 767px) {
+  :root {
+    --layout-sidebar-offset: 0rem;
+    --layout-page-padding: 1rem;
+    --layout-top-offset: 4rem;
+  }
 }
 
 html {

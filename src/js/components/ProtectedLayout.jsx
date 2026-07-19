@@ -5,8 +5,10 @@ import Sidebar from "./SideBar";
 export const ProtectedLayout = ({ children }) => {
   return (
     <RequireAuth>
-      <Sidebar />
-      {children}
+      <div className="protected-layout">
+        <Sidebar />
+        <div className="protected-layout__content">{children}</div>
+      </div>
     </RequireAuth>
   );
 };
