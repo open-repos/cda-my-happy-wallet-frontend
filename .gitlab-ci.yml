@@ -3,9 +3,9 @@ image: node:22-bookworm
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS'
+    - if: "$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS"
       when: never
-    - if: '$CI_COMMIT_BRANCH'
+    - if: "$CI_COMMIT_BRANCH"
 
 default:
   interruptible: true
@@ -25,7 +25,7 @@ stages:
 .branch_or_merge_request:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH'
+    - if: "$CI_COMMIT_BRANCH"
 
 quality:
   stage: validate
@@ -62,7 +62,7 @@ build:
   script:
     - npm run build
   artifacts:
-    expire_in: 1 day
+    expire_in: 7 days
     paths:
       - dist/
 
@@ -70,6 +70,8 @@ deploy_production:
   stage: deploy
   image: debian:bookworm-slim
   interruptible: false
+  timeout: 10m
+  resource_group: frontend-production
   tags:
     - server_runner_2
   needs:
@@ -77,15 +79,24 @@ deploy_production:
       artifacts: true
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
+      when: manual
+      allow_failure: false
   environment:
     name: production
     url: https://myhappywallet.andriacapai.com
+    deployment_tier: production
   before_script:
-    - apt-get update && apt-get install --yes openssh-client rsync
+    - test -s "$SSH_PRIVATE_KEY"
+    - test -s "$SSH_KNOWN_HOSTS"
+    - test -n "$SERVER_IP"
+    - test -n "$SERVER_USER"
+    - test -n "$DEPLOY_PATH"
+    - apt-get update && apt-get install --yes --no-install-recommends openssh-client rsync
     - install -d -m 700 ~/.ssh
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
-    - ssh-keyscan -H "$SERVER_IP" > ~/.ssh/known_hosts
-    - chmod 644 ~/.ssh/known_hosts
+    - chmod 400 "$SSH_PRIVATE_KEY"
+    - install -m 644 "$SSH_KNOWN_HOSTS" ~/.ssh/known_hosts
+    - eval "$(ssh-agent -s)"
+    - ssh-add "$SSH_PRIVATE_KEY"
   script:
-    - rsync --archive dist/ "$SERVER_USER@$SERVER_IP:$PATH_DOMAIN."
+    - ssh "$SERVER_USER@$SERVER_IP" "install -d -- '$DEPLOY_PATH'"
+    - rsync --archive --compress --delete --delay-updates dist/ "$SERVER_USER@$SERVER_IP:$DEPLOY_PATH/"
