@@ -6,6 +6,7 @@ import {
   getPayloadMessage,
   toApiPayload,
 } from "../../services/apiResponse.mjs";
+import { createRevenusApiPayloadCreator } from "../../services/revenusApiPayloadCreator.mjs";
 
 
 const initialState = {
@@ -33,15 +34,11 @@ const initialState = {
 // Revenus
 export const revenusApi = createAsyncThunk(
   'operationsFixes/revenus',
-  async (_, thunkAPI) => {
-    try {
-       const response = await  operationsFixesService.getAllRevenus()
-       return toApiPayload(response)
-    } catch (error) {
-      const ErrorObjet = await handleExceptionPayload(error)
-      return thunkAPI.rejectWithValue(ErrorObjet.message)
-    }
-  }
+  createRevenusApiPayloadCreator({
+    operationsFixesService,
+    handleExceptionPayload,
+    toApiPayload,
+  })
 )
 // Add Revenus
 export const addRevenusApi = createAsyncThunk(

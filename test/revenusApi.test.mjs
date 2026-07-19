@@ -1,51 +1,51 @@
 import assert from "assert";
-import toolkit from "@reduxjs/toolkit";
-import { createServer } from "vite";
+import { createRevenusApiPayloadCreator } from "../src/js/services/revenusApiPayloadCreator.mjs";
 
-const { configureStore } = toolkit;
-const storage = new Map();
-
-globalThis.window = {
-  localStorage: {
-    getItem: (key) => storage.get(key) ?? null,
-    setItem: (key, value) => storage.set(key, value),
-    removeItem: (key) => storage.delete(key),
+const apiResponse = {
+  data: {
+    success: true,
+    message: "Revenus loaded",
+    data: [{ id: 1 }],
   },
 };
 
-const vite = await createServer({
-  configFile: false,
-  logLevel: "silent",
-  server: { middlewareMode: true },
+const successfulPayloadCreator = createRevenusApiPayloadCreator({
+  operationsFixesService: {
+    getAllRevenus: async () => apiResponse,
+  },
+  handleExceptionPayload: async () => {
+    throw new Error("Error mapper must not run on success");
+  },
+  toApiPayload: (response) => response.data,
 });
 
-try {
-  const serviceModule = await vite.ssrLoadModule(
-    "/src/js/services/operationsFixesService.js"
-  );
-  const sliceModule = await vite.ssrLoadModule(
-    "/src/js/slices/operationsFixes/operationsFixesSlice.js"
-  );
+assert.deepStrictEqual(
+  await successfulPayloadCreator(undefined, {}),
+  apiResponse.data
+);
 
-  serviceModule.default.getAllRevenus = async () => {
-    throw {
-      response: {
-        status: 503,
-        data: { error: { message: "Revenue service unavailable" } },
-      },
-    };
-  };
+const serviceError = new Error("Revenue service unavailable");
+let mappedError;
+const rejectedPayloadCreator = createRevenusApiPayloadCreator({
+  operationsFixesService: {
+    getAllRevenus: async () => {
+      throw serviceError;
+    },
+  },
+  handleExceptionPayload: async (error) => {
+    mappedError = error;
+    return { message: "Revenue service unavailable" };
+  },
+  toApiPayload: () => {
+    throw new Error("Payload mapper must not run on failure");
+  },
+});
 
-  const store = configureStore({ reducer: sliceModule.default });
-  const action = await store.dispatch(sliceModule.revenusApi());
+const rejection = await rejectedPayloadCreator(undefined, {
+  rejectWithValue: (message) => ({ rejectedWith: message }),
+});
 
-  assert.strictEqual(action.type, "operationsFixes/revenus/rejected");
-  assert.strictEqual(action.payload, "Revenue service unavailable");
-  assert.strictEqual(store.getState().revenus.isError, true);
-  assert.strictEqual(
-    store.getState().revenus.message,
-    "Revenue service unavailable"
-  );
-} finally {
-  await vite.close();
-}
+assert.strictEqual(mappedError, serviceError);
+assert.deepStrictEqual(rejection, {
+  rejectedWith: "Revenue service unavailable",
+});
