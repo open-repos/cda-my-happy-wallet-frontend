@@ -27,6 +27,17 @@ stages:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: "$CI_COMMIT_BRANCH"
 
+.mobile_changes:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - .gitlab-ci.yml
+        - mobile/**/*
+    - if: "$CI_COMMIT_BRANCH"
+      changes:
+        - .gitlab-ci.yml
+        - mobile/**/*
+
 quality:
   stage: validate
   extends: .branch_or_merge_request
@@ -35,6 +46,25 @@ quality:
   script:
     - npm run format
     - npm run lint
+
+mobile_quality:
+  stage: validate
+  extends: .mobile_changes
+  cache:
+    key:
+      files:
+        - mobile/package-lock.json
+    paths:
+      - .npm-mobile/
+  before_script:
+    - cd mobile
+    - npm ci --cache ../.npm-mobile --prefer-offline
+  script:
+    - npm run format
+    - npm run lint
+    - npm run type-check
+    - npm test
+    - npm run doctor
 
 tests:
   stage: test
@@ -65,6 +95,27 @@ build:
     expire_in: 7 days
     paths:
       - dist/
+
+mobile_build:
+  stage: build
+  extends: .mobile_changes
+  needs:
+    - mobile_quality
+  cache:
+    key:
+      files:
+        - mobile/package-lock.json
+    paths:
+      - .npm-mobile/
+  before_script:
+    - cd mobile
+    - npm ci --cache ../.npm-mobile --prefer-offline
+  script:
+    - npm run build:web
+  artifacts:
+    expire_in: 3 days
+    paths:
+      - mobile/dist/
 
 deploy_production:
   stage: deploy
