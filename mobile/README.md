@@ -25,6 +25,12 @@ Le serveur Expo peut ensuite etre demarre avec `npm start`. Le spike utilise
 Expo SDK 57. Pendant sa phase de transition, privilegier un development build
 pour les essais sur appareil physique.
 
+## Stockage De Session
+
+Le port `SessionVault` isole le refresh token du reste de l'application.
+L'adapter natif utilise `expo-secure-store` avec une cle dediee a l'appareil ;
+l'access token et le profil utilisateur ne sont pas persistants dans ce coffre.
+
 Documentation officielle : https://docs.expo.dev/
 
 Strategie de build et de publication : [`docs/ci-cd.md`](docs/ci-cd.md).
