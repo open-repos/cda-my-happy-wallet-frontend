@@ -26,3 +26,5 @@ Expo SDK 57. Pendant sa phase de transition, privilegier un development build
 pour les essais sur appareil physique.
 
 Documentation officielle : https://docs.expo.dev/
+
+Strategie de build et de publication : [`docs/ci-cd.md`](docs/ci-cd.md).

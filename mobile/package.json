@@ -7,7 +7,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "format": "prettier --check app src *.json *.js *.mts *.md",
+    "format": "prettier --check app src docs *.json *.js *.mts *.md",
     "lint": "eslint app src",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
