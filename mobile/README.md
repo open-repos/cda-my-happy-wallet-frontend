@@ -18,7 +18,7 @@ docker compose -f docker-compose.agent.yml exec agent-frontend-node \
   bash -lc 'cd my-happy-wallet-frontend/mobile && npm ci'
 
 docker compose -f docker-compose.agent.yml exec agent-frontend-node \
-  bash -lc 'cd my-happy-wallet-frontend/mobile && npm run format && npm run lint && npm run type-check && npm test && npm run build:web'
+  bash -lc 'cd my-happy-wallet-frontend/mobile && npm run format && npm run lint && npm run type-check && npm test && npm run doctor && npm run build:web'
 ```
 
 Le serveur Expo peut ensuite etre demarre avec `npm start`. Le spike utilise

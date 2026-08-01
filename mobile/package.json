@@ -11,6 +11,7 @@
     "lint": "eslint app src",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
+    "doctor": "expo-doctor",
     "build:web": "expo export --platform web"
   },
   "dependencies": {
@@ -44,6 +45,7 @@
     "@types/react": "~19.2.4",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~57.0.1",
+    "expo-doctor": "1.20.1",
     "prettier": "3.6.2",
     "typescript": "~6.0.3",
     "vitest": "^4.1.10"
