@@ -54,10 +54,17 @@ demarrer Metro en mode development client avec une origine API joignable depuis
 l'iPhone :
 
 ```bash
-docker compose -f docker-compose.agent.yml exec \
+docker run --rm -it \
+  --network host \
+  --user "$(id -u):$(id -g)" \
+  -e HOME=/tmp \
+  -e npm_config_cache=/tmp/npm-cache \
+  -e EXPO_UNSTABLE_HEADLESS=1 \
   -e EXPO_PUBLIC_API_ORIGIN=http://ADRESSE_IP_DU_PC:4200 \
-  agent-frontend-node bash -lc \
-  'cd my-happy-wallet-frontend/mobile && npm run start:dev-client -- --lan --port 8081'
+  -v "$PWD/my-happy-wallet-frontend/mobile:/app" \
+  -w /app \
+  node:22-bookworm \
+  bash -lc 'npm ci && npm run start:dev-client -- --lan --port 8081'
 ```
 
 Scanner le QR avec l'appareil photo iOS. Le lien ouvre l'application My Happy
