@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "scripts": {
     "start": "expo start",
+    "start:dev-client": "expo start --dev-client",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
@@ -21,6 +22,7 @@
     "@react-navigation/native": "^7.1.8",
     "expo": "^57.0.9",
     "expo-constants": "~57.0.8",
+    "expo-dev-client": "~57.0.10",
     "expo-font": "~57.0.1",
     "expo-haptics": "~57.0.1",
     "expo-image": "~57.0.1",
