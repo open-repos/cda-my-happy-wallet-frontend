@@ -94,3 +94,90 @@ Les références visuelles restent les wireframes et le moodboard recensés dans
 [`ux-design-references.md`](ux-design-references.md). Elles orientent les valeurs
 et composants, mais l'accessibilité et les critères d'acceptation restent
 prioritaires.
+
+## Implémentation versionnée
+
+La source de vérité est `design-tokens/tokens.json`. Elle distingue :
+
+- `primitive` pour les valeurs brutes de palette, typographie, grille,
+  dimensions, bordures, rayons, ombres, mouvement et superposition ;
+- `shared` pour les rôles non colorés communs aux plateformes ;
+- `themes.light.color` et `themes.dark.color` pour les rôles sémantiques ;
+- `contrastPairs` pour les couples texte/fond contrôlés à la génération ;
+- `platform.web.legacyAliases` pour la compatibilité temporaire du Web.
+
+Le script `scripts/generate-design-tokens.mjs` valide les rôles obligatoires,
+résout les alias, vérifie les contrastes déclarés, puis génère de façon
+déterministe :
+
+- `src/css/design-tokens.css`, adaptateur Web en propriétés personnalisées ;
+- `mobile/src/design/tokens.ts`, adaptateur React Native typé et sans unités CSS.
+
+Les fichiers générés portent un avertissement et ne doivent jamais être édités
+directement. Ils ne contiennent aucun asset ni URL temporaire Figma.
+
+```bash
+# Générer après une modification du contrat
+docker compose -f docker-compose.agent.yml exec agent-frontend-node \
+  bash -lc 'cd my-happy-wallet-frontend && npm run tokens:generate'
+
+# Vérifier sans écrire
+docker compose -f docker-compose.agent.yml exec agent-frontend-node \
+  bash -lc 'cd my-happy-wallet-frontend && npm run tokens:check'
+```
+
+## Consommation
+
+Le Web importe l'adaptateur depuis `App.css`. Un composant doit utiliser un rôle,
+par exemple `var(--ds-color-text-primary)`, `var(--ds-space-card)` ou
+`var(--ds-radius-control)`. Les anciens noms comme `--orange` restent seulement
+des alias de transition : aucun nouveau composant ne doit les employer.
+
+React Native importe les valeurs numériques et thèmes depuis
+`mobile/src/design/tokens.ts` :
+
+```ts
+import { semantic, themes, type ThemeName } from "@/src/design/tokens";
+
+const themeName: ThemeName = "light";
+const backgroundColor = themes[themeName].color.backgroundCanvas;
+const padding = semantic.space.card;
+```
+
+Les breakpoints ne figurent pas dans les variables CSS. Les seuils documentés
+restent tablette `< 1024px` et mobile `< 768px`, utilisables directement dans
+les media queries Web ; React Native conserve ses règles de layout propres.
+
+## Thèmes, typographies et pilote
+
+La préférence par défaut est `system`. Le module `src/js/design/theme.js` lit le
+contrat, applique `data-theme="light|dark"` pour un choix explicite et persiste
+`system`, `light` ou `dark` sous la clé `mhw-theme`. Sans attribut, la media query
+`prefers-color-scheme` suit immédiatement le système.
+
+Le sélecteur accessible de la page Profil est le composant pilote. Lui seul et
+les fondations globales compatibles consomment les nouveaux rôles ; les écrans
+historiques conservent leurs alias pour éviter une migration globale. Les tests
+automatisés couvrent le défaut système, la persistance et les deux thèmes.
+
+Barlow est la famille de titre et Open Sans la famille de contenu/action, avec
+Arial puis une famille générique en repli. Les fichiers de polices ne sont pas
+encore embarqués : leur livraison durable devra accompagner la migration des
+écrans, sans dépendre d'un import réseau implicite.
+
+## Évolution et retrait
+
+1. rechercher les consommateurs du token et confirmer qu'il exprime une
+   décision répétée ;
+2. ajouter d'abord primitive et rôle sémantique dans le contrat ;
+3. générer les adaptateurs et ajouter un test de rôle ou de contraste ;
+4. migrer les consommateurs dans un lot limité ;
+5. pour un renommage, conserver temporairement un alias documenté ;
+6. supprimer l'alias seulement lorsqu'une recherche ne trouve plus de
+   consommateur et après une version de dépréciation.
+
+Une valeur locale calculée ne devient pas un token. Un changement incompatible
+de sens exige un nouveau nom plutôt qu'une réutilisation silencieuse. Pour
+revenir en arrière, restaurer ensemble le contrat, le générateur et ses deux
+sorties depuis le commit précédent, puis relancer `tokens:check`, les tests et
+les builds Web/mobile. Ne jamais restaurer un seul fichier généré isolément.

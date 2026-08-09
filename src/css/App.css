@@ -1,26 +1,13 @@
-
+@import "./design-tokens.css";
 
 :root {
-  /* Colors */
-  --black: #000;
-  --light-main-color:#F4F9F0;
-  --light-secondary-color:#BFE0A5;
-  --dark-main-color:#43553A;
-  --dark-secondary-color:#343625;
-  --grey: #a4b2bc;
-  --white: #fff;
-  --orange:#EA7C69;
-  --orange-light:#F09D65;
-  --background: #43553A;
-  --warning-bg: rgba(255, 124, 163, 0.2);
-  --warning-col: #FF7CA3;
   --layout-sidebar-offset: 6.25rem;
   --layout-page-padding: 2rem;
   --layout-top-offset: 0rem;
-  --filter-img-orange: invert(63%) sepia(20%) saturate(1956%) hue-rotate(318deg) brightness(100%) contrast(84%);
-  --filter-img-orange-light:invert(76%) sepia(89%) saturate(827%) hue-rotate(313deg) brightness(98%) contrast(92%);
-
-
+  --filter-img-orange: invert(63%) sepia(20%) saturate(1956%) hue-rotate(318deg)
+    brightness(100%) contrast(84%);
+  --filter-img-orange-light: invert(76%) sepia(89%) saturate(827%)
+    hue-rotate(313deg) brightness(98%) contrast(92%);
 }
 
 .protected-layout {
@@ -57,7 +44,7 @@ html {
   overflow-x: hidden;
   overflow-y: auto;
   background-color: var(--background);
-  color:var(--light-main-color);
+  color: var(--light-main-color);
 }
 
 *,
@@ -72,8 +59,21 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   background-color: var(--background);
-  font-family: "Oswald", sans-serif;
+  color: var(--light-main-color);
+  font-family: var(--ds-typography-body-family);
+  font-size: var(--ds-typography-body-size);
+  line-height: var(--ds-typography-body-line-height);
   text-align: center;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--ds-typography-heading-family);
+  font-weight: var(--ds-typography-heading-weight);
 }
 
 #root {
@@ -81,9 +81,8 @@ body {
   min-height: 100dvh;
 }
 
-
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
 
@@ -91,17 +90,18 @@ a {
   color: var(--light-main-color);
 }
 a:hover {
-   color:var(--orange-light);
+  color: var(--orange-light);
 }
 
-
+:focus-visible {
+  outline: var(--ds-border-width-focus) solid var(--ds-color-focus-ring);
+  outline-offset: var(--ds-primitive-space-1);
+}
 
 button {
   font-size: calc(10px + 2vmin);
   cursor: pointer;
 }
-
-
 
 /* .App {
   text-align: center;

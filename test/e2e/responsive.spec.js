@@ -151,6 +151,32 @@ for (const viewport of viewports) {
   }
 }
 
+for (const theme of ["light", "dark"]) {
+  for (const viewport of viewports) {
+    test(`profile theme ${theme} fits the ${viewport.name} viewport`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await prepareProtectedPage(page);
+      await page.addInitScript((preference) => {
+        window.localStorage.setItem("mhw-theme", preference);
+      }, theme);
+      await page.goto("/profil");
+
+      await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+      await expect(page.getByRole("combobox", { name: "Thème" })).toHaveValue(
+        theme
+      );
+      await expect(page.locator(".theme-selector")).toBeVisible();
+
+      const hasHorizontalOverflow = await page.evaluate(
+        () => document.documentElement.scrollWidth > window.innerWidth
+      );
+      expect(hasHorizontalOverflow).toBe(false);
+    });
+  }
+}
+
 test("allows vertical scrolling on a compact mobile viewport", async ({
   page,
 }) => {
