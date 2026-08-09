@@ -64,6 +64,10 @@ Le mobile possède une palette différente et plusieurs valeurs en dur. La
 convergence des tokens et polices relève donc de `M02-01` puis `M02-02` et ne
 doit pas être réalisée implicitement dans une fonctionnalité métier.
 
+La taxonomie, les adaptateurs Web/mobile, la stratégie de thèmes et la migration
+progressive attendus sont définis dans
+[`design-system-foundations.md`](design-system-foundations.md).
+
 ## Correspondance avec les Work Items UX
 
 La cartographie détaillée et les blocs de description réutilisables sont
