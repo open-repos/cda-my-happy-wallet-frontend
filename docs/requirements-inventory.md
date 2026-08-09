@@ -26,8 +26,8 @@ que le propriétaire du produit fournisse ou référence une copie versionnée.
 | SRC-07 | [`../mobile/README.md`](../mobile/README.md)           | Configuration et session mobile                          | Versionné dans ce dépôt                      |
 | SRC-08 | [`../mobile/docs/ci-cd.md`](../mobile/docs/ci-cd.md)   | Qualité, signatures et publication mobile                | Versionné dans ce dépôt                      |
 | SRC-09 | Cahier des charges primaire historique                 | Autorité produit d'origine                               | Non localisé (`GAP-SRC-01`)                  |
-| SRC-10 | [Wireframes Figma](https://www.figma.com/design/H3SgTwXZrsAh9nlp0SsGgV/CDA-Chef-d-oeuvre?node-id=403-33767&m=dev) | Parcours, navigation et hiérarchie de l'information | Externe ; contexte MCP à auditer après accès |
-| SRC-11 | [Moodboard Figma](https://www.figma.com/design/H3SgTwXZrsAh9nlp0SsGgV/CDA-Chef-d-oeuvre?node-id=353-27068&m=dev) | Direction et cohérence visuelles | Externe ; contexte MCP à auditer après accès |
+| SRC-10 | [Wireframes Figma](https://www.figma.com/design/H3SgTwXZrsAh9nlp0SsGgV/CDA-Chef-d-oeuvre?node-id=403-33767&m=dev) | Parcours, navigation et hiérarchie de l'information | Contexte vérifié par MCP le 9 août 2026 |
+| SRC-11 | [Moodboard Figma](https://www.figma.com/design/H3SgTwXZrsAh9nlp0SsGgV/CDA-Chef-d-oeuvre?node-id=353-27068&m=dev) | Direction et cohérence visuelles | Contexte vérifié par MCP le 9 août 2026 |
 
 Les chemins `agent-workspace/...` sont relatifs à la racine du workspace My
 Happy Wallet et non à ce dépôt Git. Les exigences ci-dessous en conservent une
