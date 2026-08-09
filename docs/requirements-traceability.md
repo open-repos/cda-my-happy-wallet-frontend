@@ -15,8 +15,10 @@ réservé à `M00-03`.
 
 ## Règles de lecture
 
-- `PV` signifie « priorité à valider » lors de la décision produit `M00-04`.
-  Aucune priorité n'est inventée en l'absence du cahier des charges primaire.
+- `PV` est le marqueur historique « priorité à valider » utilisé lors de la
+  construction de la matrice. La décision `M00-04` l'a remplacé par le registre
+  P0/P1/P2 de [`mvp-scope-decision.md`](mvp-scope-decision.md), qui fait
+  autorité sans dupliquer la qualification dans 60 lignes de preuves.
 - `NM` signifie « aucune preuve cartographiée dans le périmètre analysé ». Cela
   ne signifie pas encore « exigence absente ».
 - Une cellule contient un ou plusieurs identifiants du catalogue de preuves
@@ -166,8 +168,9 @@ Ces observations servent d'entrée à `M00-03`. Elles ne ferment aucune Work Ite
 et ne valident pas le périmètre MVP, décision réservée à `M00-04`.
 
 La classification technique issue de cette matrice est disponible dans
-[`requirements-coverage.md`](requirements-coverage.md). Elle conserve la
-séparation entre preuves observées, statut de couverture et décision produit.
+[`requirements-coverage.md`](requirements-coverage.md) et la décision produit
+dans [`mvp-scope-decision.md`](mvp-scope-decision.md). Ces documents conservent
+la séparation entre preuves observées, statut de couverture et périmètre.
 
 ## Procédure de maintenance et de vérification
 

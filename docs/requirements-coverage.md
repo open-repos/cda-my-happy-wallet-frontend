@@ -12,6 +12,10 @@ Le classement reste technique et conservateur. Il ne décide ni de la priorité,
 ni de l'appartenance au MVP, ni de l'abandon d'un besoin. Ces arbitrages sont
 réservés à la validation humaine `M00-04`.
 
+La décision humaine est désormais consignée dans
+[`mvp-scope-decision.md`](mvp-scope-decision.md). Le présent document conserve
+le statut technique indépendamment du périmètre produit retenu.
+
 ## Règles de classement
 
 | Statut           | Règle utilisée                                                                                                              |
