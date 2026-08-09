@@ -4,8 +4,8 @@
 
 Ce document trace la migration suivie par la Work Item `M00-05`. Le nouveau
 backlog multi-projets est déjà publié dans GitLab ; cette procédure vérifie que
-son import est complet et rejouable, puis archive de manière réversible le
-dernier élément frontend de la roadmap historique.
+son import est complet et rejouable, puis confirme que le catalogue publié et
+versionné remplace la roadmap historique comme source opérationnelle.
 
 La source versionnée du backlog est le dépôt de gestion
 `gitlab_gestion_project`. Aucun token, reçu local `*.published.json` ou contenu
@@ -25,8 +25,9 @@ du trousseau de secrets n'est copié dans le frontend.
 - le composant correspondant existe dans `src/js/components/SideBar.jsx` et ne
   nécessite pas une deuxième implémentation.
 
-La nouvelle roadmap est donc importée. L'issue `#2` est un reliquat historique,
-pas une dépendance de la roadmap normalisée.
+La nouvelle roadmap est donc importée. L'issue `#2` est une référence historique,
+pas une dépendance de la roadmap normalisée. Elle reste consultable et ne doit
+pas être rattachée artificiellement à la milestone `M00`.
 
 ## Vérification reproductible et sans mutation
 
@@ -53,40 +54,20 @@ Cette sortie vide démontre l'idempotence opérationnelle : relancer le plan
 d'import après la publication des 92 éléments ne propose aucune création
 supplémentaire. Ne jamais ajouter `--apply` lorsque le dry-run est vide.
 
-## Archivage réversible de l'ancienne issue frontend
+## Conservation des anciennes issues
 
-L'archivage consiste à ajouter une note explicative puis à fermer l'issue `#2`.
-Elle n'est ni supprimée ni réécrite et conserve son historique complet.
+La décision de cadrage impose de conserver les anciennes issues comme références
+historiques. L'issue `#2` reste donc ouverte et inchangée : elle n'appartient pas
+à `M00` et sa fermeture n'est pas un critère de cette migration.
 
-Les règles du dépôt de gestion interdisent à un agent d'exécuter une mutation
-GitLab. Le propriétaire du projet doit donc lancer manuellement :
+L'archivage visé par `M00-05` est l'enregistrement versionné des 92 spécifications
+dans les dossiers `published/`, matérialisé dans le dépôt de gestion au commit
+`744aabb`. Ce mécanisme préserve le contenu proposé et rend le nouveau catalogue
+auditable sans supprimer les anciennes références GitLab.
 
-```bash
-glab-perso issue note 2 \
-  --repo formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend \
-  --message "Roadmap historique archivée par M00-05. Le composant Sidebar est intégré ; le suivi actif est remplacé par le backlog normalisé à partir de #3."
-
-glab-perso issue close 2 \
-  --repo formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend
-```
-
-Résultat attendu : la note retourne son URL et la commande de fermeture confirme
-`Closed issue #2`. Aucun secret ne doit apparaître dans la sortie ou dans la
-note.
-
-## Rollback testé par conception
-
-La fermeture GitLab est réversible et ne détruit aucune donnée. Si l'issue `#2`
-doit redevenir active :
-
-```bash
-glab-perso issue reopen 2 \
-  --repo formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend
-```
-
-Vérifier ensuite avec `glab-perso issue view 2 --output json` que `state` vaut
-`opened`. Le rollback ne republie aucun brouillon et ne modifie pas les 92 Work
-Items normalisées.
+Le rollback consiste à continuer d'utiliser les anciennes issues comme références
+et à ne pas appliquer un nouveau lot si le dry-run propose des créations
+inattendues. Aucune mutation de `#2` n'est nécessaire pour ce retour arrière.
 
 ## Diagnostic et garde-fous
 
@@ -104,5 +85,6 @@ Items normalisées.
 
 ## Critère de fin
 
-`M00-05` peut être fermée après le commit de ce document, les validations Web
-dans Docker et la fermeture manuelle vérifiée de l'issue historique `#2`.
+`M00-05` peut être fermée après le commit de ce document et les validations Web
+dans Docker. Les anciennes issues restent consultables mais ne pilotent plus
+l'ordre de livraison.
