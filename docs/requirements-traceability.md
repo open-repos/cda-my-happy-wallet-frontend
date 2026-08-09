@@ -165,6 +165,10 @@ Sans attribuer encore de statut final, la cartographie distingue trois cas :
 Ces observations servent d'entrée à `M00-03`. Elles ne ferment aucune Work Item
 et ne valident pas le périmètre MVP, décision réservée à `M00-04`.
 
+La classification technique issue de cette matrice est disponible dans
+[`requirements-coverage.md`](requirements-coverage.md). Elle conserve la
+séparation entre preuves observées, statut de couverture et décision produit.
+
 ## Procédure de maintenance et de vérification
 
 ### Prérequis
