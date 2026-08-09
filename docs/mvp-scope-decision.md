@@ -27,6 +27,12 @@ s'appuie donc sur l'inventaire versionné, la matrice de preuves, la
 classification technique et les réponses explicites du propriétaire du
 produit.
 
+La conception des écrans peut aussi s'appuyer sur les wireframes et le
+moodboard Figma recensés dans
+[`ux-design-references.md`](ux-design-references.md). Les wireframes orientent
+les parcours du MVP Web et le moodboard sa cohérence visuelle, sans remplacer
+les règles métier, l'accessibilité ni les critères d'acceptation versionnés.
+
 ## Options examinées
 
 1. **MVP Web minimal** : compte, revenus, charges et reste à vivre. Cette option

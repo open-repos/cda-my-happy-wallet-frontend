@@ -26,11 +26,18 @@ que le propriétaire du produit fournisse ou référence une copie versionnée.
 | SRC-07 | [`../mobile/README.md`](../mobile/README.md)           | Configuration et session mobile                          | Versionné dans ce dépôt                      |
 | SRC-08 | [`../mobile/docs/ci-cd.md`](../mobile/docs/ci-cd.md)   | Qualité, signatures et publication mobile                | Versionné dans ce dépôt                      |
 | SRC-09 | Cahier des charges primaire historique                 | Autorité produit d'origine                               | Non localisé (`GAP-SRC-01`)                  |
+| SRC-10 | [Wireframes Figma](https://www.figma.com/design/H3SgTwXZrsAh9nlp0SsGgV/CDA-Chef-d-oeuvre?node-id=403-33767&m=dev) | Parcours, navigation et hiérarchie de l'information | Externe ; contexte MCP à auditer après accès |
+| SRC-11 | [Moodboard Figma](https://www.figma.com/design/H3SgTwXZrsAh9nlp0SsGgV/CDA-Chef-d-oeuvre?node-id=353-27068&m=dev) | Direction et cohérence visuelles | Externe ; contexte MCP à auditer après accès |
 
 Les chemins `agent-workspace/...` sont relatifs à la racine du workspace My
 Happy Wallet et non à ce dépôt Git. Les exigences ci-dessous en conservent une
 copie textuelle autonome afin que le registre reste lisible depuis un clone du
 frontend seul.
+
+Le statut et les règles d'usage des sources Figma sont détaillés dans
+[`ux-design-references.md`](ux-design-references.md). Elles orientent la
+conception, mais ne remplacent ni les exigences versionnées ni les critères
+d'acceptation d'une Work Item.
 
 ## Règles d'identification
 
@@ -80,13 +87,13 @@ frontend seul.
 | PLAT-03 | Une PWA Web est installable sur Safari iPhone, Chrome Android et ordinateur.                            | SRC-02                 |
 | PLAT-04 | L'application Android/iOS durable est une application React Native avec Expo distincte du frontend Web. | SRC-03, SRC-04, SRC-07 |
 | PLAT-05 | La parité de chaque capacité doit être qualifiée séparément pour le Web, la PWA et le mobile natif.     | SRC-02                 |
-| UX-01   | La navigation s'adapte à la largeur et au mode d'interaction de l'écran.                                | SRC-02                 |
-| UX-02   | Les états de chargement, d'erreur et de succès sont explicites et cohérents.                            | SRC-02                 |
-| UX-03   | Les messages utilisateur emploient une terminologie cohérente.                                          | SRC-02                 |
-| UX-04   | Les formulaires sont compacts, utilisables au clavier et accessibles.                                   | SRC-02                 |
-| UX-05   | Une suppression exige une confirmation claire avant l'action irréversible.                              | SRC-02                 |
-| UX-06   | Les vues mensuelle, hebdomadaire et journalière du reste à vivre restent lisibles.                      | SRC-02                 |
-| UX-07   | L'absence de charges ou de revenus produit un état vide non ambigu.                                     | SRC-02                 |
+| UX-01   | La navigation s'adapte à la largeur et au mode d'interaction de l'écran.                                | SRC-02, SRC-10         |
+| UX-02   | Les états de chargement, d'erreur et de succès sont explicites et cohérents.                            | SRC-02, SRC-10         |
+| UX-03   | Les messages utilisateur emploient une terminologie cohérente.                                          | SRC-02, SRC-10, SRC-11 |
+| UX-04   | Les formulaires sont compacts, utilisables au clavier et accessibles.                                   | SRC-02, SRC-10         |
+| UX-05   | Une suppression exige une confirmation claire avant l'action irréversible.                              | SRC-02, SRC-10         |
+| UX-06   | Les vues mensuelle, hebdomadaire et journalière du reste à vivre restent lisibles.                      | SRC-02, SRC-10         |
+| UX-07   | L'absence de charges ou de revenus produit un état vide non ambigu.                                     | SRC-02, SRC-10         |
 
 ## Exigences de sécurité et de confidentialité
 

@@ -13,6 +13,11 @@ partiel ou un contrat backend sans interface restent des preuves utiles, mais
 peuvent conduire à un classement `partielle` ou `absente`. Ce classement est
 réservé à `M00-03`.
 
+Les sources de conception Figma `SRC-10` et `SRC-11` sont gouvernées par
+[`ux-design-references.md`](ux-design-references.md). Elles servent de références
+UX et visuelles ; elles ne prouvent pas à elles seules qu'une exigence est
+implémentée.
+
 ## Règles de lecture
 
 - `PV` est le marqueur historique « priorité à valider » utilisé lors de la
@@ -68,6 +73,7 @@ réservé à `M00-03`.
 | `T-MOB-AUTH`   | 31 tests mobiles autour des sessions, du coffre, du HTTP et de la présentation |
 | `T-CI`         | `.gitlab-ci.yml` : qualité, tests et builds Web/mobile                         |
 | `DOC-REQ`      | `docs/requirements-inventory.md` et le présent document                        |
+| `DOC-DESIGN`   | `docs/ux-design-references.md`, wireframes `403:33767` et moodboard `353:27068` |
 | `DOC-WEB`      | `docs/testing-strategy.md` et `docs/ci-cd.md`                                  |
 | `DOC-MOB`      | `mobile/README.md` et `mobile/docs/ci-cd.md`                                   |
 | `DOC-ARCH`     | `agent-workspace/docs/agent/ARCHITECTURE.md` et ADR cross-platform             |
