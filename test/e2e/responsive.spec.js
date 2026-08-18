@@ -62,6 +62,60 @@ const prepareProtectedPage = async (page) => {
       },
     })
   );
+  await page.route(/\/v1\/operation-categories(?:\?.*)?$/, (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      json: {
+        data: [{ id: 4, name: "Alimentation", color: "#55AA22" }],
+        meta: { limit: 100, hasNext: false, nextCursor: null },
+      },
+    })
+  );
+  await page.route(/\/v1\/operations(?:\?.*)?$/, (route) => {
+    const isNextPage = new URL(route.request().url()).searchParams.has(
+      "cursor"
+    );
+    return route.fulfill({
+      contentType: "application/json",
+      json: {
+        data: isNextPage
+          ? [
+              {
+                id: 1,
+                title: "Courses",
+                amount: "42.50",
+                currency: "EUR",
+                type: "DEPENSE",
+                operationDate: "2026-08-18",
+                categoryId: 4,
+              },
+              {
+                id: 2,
+                title: "Prime",
+                amount: "125.00",
+                currency: "EUR",
+                type: "ENTREE",
+                operationDate: "2026-08-17",
+                categoryId: 4,
+              },
+            ]
+          : [
+              {
+                id: 1,
+                title: "Courses",
+                amount: "42.50",
+                currency: "EUR",
+                type: "DEPENSE",
+                operationDate: "2026-08-18",
+                categoryId: 4,
+              },
+            ],
+        meta: isNextPage
+          ? { limit: 20, hasNext: false, nextCursor: null }
+          : { limit: 20, hasNext: true, nextCursor: "v1.opaque" },
+      },
+    });
+  });
 };
 
 const protectedPages = [
@@ -195,4 +249,43 @@ test("allows vertical scrolling on a compact mobile viewport", async ({
   await expect
     .poll(() => page.evaluate(() => window.scrollY))
     .toBeGreaterThan(0);
+});
+
+test("loads the next operation page without duplicating rows", async ({
+  page,
+}) => {
+  await page.setViewportSize(viewports[2]);
+  await prepareProtectedPage(page);
+  await page.goto("/operations");
+
+  await expect(page.getByRole("row", { name: /Courses/ })).toHaveCount(1);
+  await page.getByRole("button", { name: "Afficher la suite" }).click();
+  await expect(page.getByRole("row", { name: /Prime/ })).toBeVisible();
+  await expect(page.getByRole("row", { name: /Courses/ })).toHaveCount(1);
+  await expect(
+    page.getByRole("button", { name: "Afficher la suite" })
+  ).toHaveCount(0);
+});
+
+test("keeps the operation actions and local icons at their design sizes", async ({
+  page,
+}) => {
+  await page.setViewportSize(viewports[2]);
+  await prepareProtectedPage(page);
+  await page.goto("/operations");
+
+  const addButton = page.getByRole("button", {
+    name: "Ajouter une opération",
+  });
+  const editButton = page.getByRole("button", { name: "Modifier Courses" });
+  const addIcon = addButton.locator("img");
+  const editIcon = editButton.locator("img");
+
+  await expect(addButton).toHaveCSS("min-height", "48px");
+  await expect(editButton).toHaveCSS("width", "44px");
+  await expect(editButton).toHaveCSS("height", "44px");
+  await expect(addIcon).toHaveCSS("width", "16px");
+  await expect(addIcon).toHaveCSS("height", "16px");
+  await expect(editIcon).toHaveCSS("width", "20px");
+  await expect(editIcon).toHaveCSS("height", "20px");
 });
