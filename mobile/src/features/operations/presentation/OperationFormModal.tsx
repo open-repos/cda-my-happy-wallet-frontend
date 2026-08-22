@@ -21,6 +21,8 @@ import {
   OperationDraftErrors,
   validateOperationDraft,
 } from "@/src/features/operations/domain/oneOffOperation";
+import { formatCalendarDate } from "@/src/features/operations/presentation/calendarDate";
+import { OperationDatePicker } from "@/src/features/operations/presentation/OperationDatePicker";
 
 interface OperationFormModalProps {
   categories: OperationCategory[];
@@ -38,7 +40,7 @@ const semibold = `${primitives.fontWeight.semibold}` as "600";
 const createDraft = (operation: OneOffOperation | null): OperationDraft => ({
   title: operation?.title ?? "",
   amount: operation?.amount ?? "",
-  operationDate: operation?.operationDate ?? "",
+  operationDate: operation?.operationDate ?? formatCalendarDate(new Date()),
   categoryId: operation?.categoryId ?? null,
   kind: operation?.type ?? "DEPENSE",
 });
@@ -127,14 +129,10 @@ export const OperationFormModal = ({
           ) : null}
 
           <Text style={styles.label}>Date</Text>
-          <TextInput
-            accessibilityLabel="Date au format année mois jour"
-            autoCapitalize="none"
-            editable={!isSaving}
-            maxLength={10}
-            onChangeText={(value) => update("operationDate", value)}
-            placeholder="AAAA-MM-JJ"
-            style={[styles.input, errors.operationDate && styles.invalid]}
+          <OperationDatePicker
+            disabled={isSaving}
+            invalid={errors.operationDate != null}
+            onChange={(value) => update("operationDate", value)}
             value={draft.operationDate}
           />
           {errors.operationDate ? (
