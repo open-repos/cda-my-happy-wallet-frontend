@@ -29,6 +29,49 @@ test -f "$PATH_TO_APP/docker-compose.dev.yml" && echo "Workspace trouve"
 La variable n'est valable que dans le terminal courant. La redefinir dans tout
 nouveau terminal utilise pour les commandes de ce guide.
 
+## Lancement automatise recommande
+
+Apres avoir defini `PATH_TO_APP`, le script versionne regroupe les controles et
+commandes des sections suivantes :
+
+```bash
+cd "$PATH_TO_APP"
+./my-happy-wallet-frontend/mobile/scripts/start-android-dev.sh
+```
+
+Il reutilise par defaut l'emulateur et le development build deja installes,
+demarre la stack Docker, applique les migrations, configure les ports ADB,
+lance Metro dans Docker puis ouvre l'application. Garder le terminal ouvert et
+utiliser `Ctrl+C` pour arreter uniquement Metro.
+
+Si aucun emulateur n'est actif, le demarrer dans Android Studio ou fournir le
+nom exact d'un AVD existant :
+
+```bash
+./my-happy-wallet-frontend/mobile/scripts/start-android-dev.sh \
+  --avd Pixel_5_API_35_Light
+```
+
+Les operations lentes restent explicites :
+
+```bash
+# Reconstruire la stack Docker
+./my-happy-wallet-frontend/mobile/scripts/start-android-dev.sh --build-stack
+
+# Recompiler et reinstaller aussi l'APK natif
+./my-happy-wallet-frontend/mobile/scripts/start-android-dev.sh --install
+
+# Tout reconstruire
+./my-happy-wallet-frontend/mobile/scripts/start-android-dev.sh \
+  --build-stack --install
+```
+
+Afficher toutes les options sans rien demarrer :
+
+```bash
+./my-happy-wallet-frontend/mobile/scripts/start-android-dev.sh --help
+```
+
 ## Ce qui doit tourner
 
 Le parcours local relie quatre elements :

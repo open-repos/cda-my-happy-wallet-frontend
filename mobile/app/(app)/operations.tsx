@@ -1,11 +1,5 @@
-import { DestinationScreen } from "@/src/navigation/DestinationScreen";
+import { OperationsScreen as OperationsFeatureScreen } from "@/src/features/operations/presentation/OperationsScreen";
 
 export default function OperationsScreen() {
-  return (
-    <DestinationScreen
-      description="La consultation et la gestion de vos opérations ponctuelles seront disponibles dans le prochain parcours mobile."
-      icon="list-outline"
-      title="Opérations ponctuelles"
-    />
-  );
+  return <OperationsFeatureScreen />;
 }
