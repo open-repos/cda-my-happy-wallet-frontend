@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   parseFixedOperationPage,
   summarizeFixedBudget,
+  toFixedOperationPayload,
+  validateFixedOperationDraft,
 } from "@/src/features/dashboard/domain/fixedBudget";
 
 describe("fixed budget", () => {
@@ -54,5 +56,34 @@ describe("fixed budget", () => {
         },
       ]),
     ).toEqual({ expenses: 800.2, income: 2000.1, remaining: 1199.9 });
+  });
+
+  it("validates and normalizes a fixed operation draft", () => {
+    const draft = {
+      title: " Salaire ",
+      amount: "2200,5",
+      type: "REVENU",
+    } as const;
+
+    expect(validateFixedOperationDraft(draft)).toEqual({});
+    expect(toFixedOperationPayload(draft)).toEqual({
+      titre: "Salaire",
+      montant: "2200.50",
+      devise: "EUR",
+    });
+  });
+
+  it("rejects a short label and an amount below the backend minimum", () => {
+    expect(
+      validateFixedOperationDraft({
+        title: "A",
+        amount: "0,50",
+        type: "CHARGE",
+      }),
+    ).toEqual({
+      title: "Le libellé doit contenir entre 2 et 50 caractères.",
+      amount:
+        "Saisissez un montant d’au moins 1 € avec deux décimales maximum.",
+    });
   });
 });

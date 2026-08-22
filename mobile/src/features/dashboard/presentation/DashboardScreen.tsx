@@ -166,8 +166,8 @@ export const DashboardScreen = () => {
             </View>
             <Text style={styles.stateTitle}>Commencez votre budget</Text>
             <Text style={styles.centered}>
-              Ajoutez vos revenus et charges fixes depuis l’application Web pour
-              calculer votre reste à vivre mensuel.
+              Ajoutez vos revenus et charges fixes pour calculer votre reste à
+              vivre mensuel.
             </Text>
           </View>
         ) : null}
@@ -214,6 +214,12 @@ export const DashboardScreen = () => {
 
         <View style={styles.actions}>
           <Text style={styles.sectionTitle}>Continuez votre suivi</Text>
+          <ActionCard
+            description="Ajoutez ou corrigez vos revenus et charges mensuels."
+            icon="calculator-outline"
+            label="Budget fixe"
+            onPress={() => router.push("/(app)/fixed-budget")}
+          />
           <ActionCard
             description="Consultez, ajoutez ou modifiez vos mouvements."
             icon="list-outline"

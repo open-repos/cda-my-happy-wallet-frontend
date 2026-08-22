@@ -50,6 +50,7 @@ export default function AppLayout() {
           options={createTabOptions(destination)}
         />
       ))}
+      <Tabs.Screen name="fixed-budget" options={{ href: null }} />
     </Tabs>
   );
 }

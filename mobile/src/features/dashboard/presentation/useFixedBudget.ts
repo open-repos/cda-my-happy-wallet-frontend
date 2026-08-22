@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 
 import {
   BudgetSummary,
@@ -31,20 +32,22 @@ export const useFixedBudget = (gateway: FixedBudgetGateway) => {
     }
   }, [applyOperations, gateway]);
 
-  useEffect(() => {
-    let isActive = true;
-    void gateway
-      .listAll()
-      .then((operations) => {
-        if (isActive) applyOperations(operations);
-      })
-      .catch(() => {
-        if (isActive) setStatus("error");
-      });
-    return () => {
-      isActive = false;
-    };
-  }, [applyOperations, gateway]);
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+      void gateway
+        .listAll()
+        .then((operations) => {
+          if (isActive) applyOperations(operations);
+        })
+        .catch(() => {
+          if (isActive) setStatus("error");
+        });
+      return () => {
+        isActive = false;
+      };
+    }, [applyOperations, gateway]),
+  );
 
   return { operationCount, retry: load, status, summary };
 };
