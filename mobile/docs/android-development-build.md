@@ -293,6 +293,25 @@ Verifier que chaque onglet est ouvrable, que le bouton Retour Android suit
 l'historique des onglets et que la deconnexion du profil renvoie vers la
 connexion. Sans session, les onglets proteges ne doivent pas apparaitre.
 
+### Parcours d'authentification
+
+Depuis la connexion, verifier aussi les parcours publics suivants :
+
+1. ouvrir **Creer un compte**, faire defiler les cinq champs et soumettre un
+   formulaire vide pour controler le message accessible ;
+2. creer un compte avec une adresse locale, puis ouvrir Mailpit sur
+   `http://localhost:8025` et suivre son lien de confirmation ;
+3. revenir a la connexion, ouvrir **Reinitialiser**, envoyer une adresse et
+   verifier la confirmation generique qui ne revele pas si le compte existe ;
+4. couper temporairement le reverse API avec
+   `adb reverse --remove tcp:4200`, soumettre une demande et verifier l'erreur
+   reseau, puis retablir le tunnel avec `adb reverse tcp:4200 tcp:4200` ;
+5. se connecter, redemarrer l'application et verifier la restauration de la
+   session avant de tester la deconnexion.
+
+Utiliser uniquement des comptes de test locaux. Aucun mot de passe, token ou
+lien de confirmation ne doit etre copie dans Git.
+
 ## Diagnostic rapide
 
 ### `adb: no devices/emulators found`
