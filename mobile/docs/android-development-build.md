@@ -312,6 +312,27 @@ Depuis la connexion, verifier aussi les parcours publics suivants :
 Utiliser uniquement des comptes de test locaux. Aucun mot de passe, token ou
 lien de confirmation ne doit etre copie dans Git.
 
+### Tableau de bord mobile
+
+Avec une session de test verifiee, controler successivement :
+
+1. sans charge ni revenu fixe, l'accueil affiche l'etat initial et indique que
+   la saisie du budget fixe reste disponible dans l'application Web ;
+2. apres ajout d'au moins un revenu et une charge fixes, le reste a vivre
+   mensuel correspond a `total des revenus - total des charges` et les deux
+   totaux affiches correspondent aux donnees du compte ;
+3. la page se fait defiler sans masquer les cartes **Operations** et
+   **Objectifs**, et chaque carte ouvre l'onglet attendu ;
+4. le titre, le montant et les actions ne passent ni sous la barre d'etat ni
+   sous la navigation inferieure ;
+5. apres `adb reverse --remove tcp:4200` et un redemarrage de l'application,
+   la restauration de session affiche un etat d'erreur accessible ; retablir
+   `adb reverse tcp:4200 tcp:4200`, puis appuyer sur **Reessayer** et verifier
+   que le tableau de bord reapparait sans nouvelle connexion.
+
+Les projections semaine/jour, graphiques et objectifs alimentes sont traites
+par les Work Items M05 et ne doivent pas etre simules avec des donnees locales.
+
 ## Diagnostic rapide
 
 ### `adb: no devices/emulators found`
