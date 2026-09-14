@@ -25,9 +25,9 @@ Le serveur Expo peut ensuite etre demarre avec `npm start`. Le spike utilise
 Expo SDK 57. Pendant sa phase de transition, privilegier un development build
 pour les essais sur appareil physique.
 
-Le guide Android local detaille le demarrage de l'emulateur, la selection du
-bon ADB, l'installation de l'APK, la connexion de Metro et du backend, ainsi
-que le diagnostic des etats `offline` et `Service indisponible` :
+Le guide Android local couvre la premiere installation SDK/AVD, les dependances
+Docker, la generation du dossier Android absent d'un clone neuf, les prerequis
+du build natif humain, ADB, Metro, le backend et les retours arriere :
 [`docs/android-development-build.md`](docs/android-development-build.md).
 
 ## Development Build Sur iPhone
