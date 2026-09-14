@@ -53,7 +53,9 @@ GitHub Actions and Codex Cloud may run these commands directly in their isolated
 ## Changes and pull requests
 
 - Add a Markdown fragment under `changes/unreleased/` for every user-visible change. Follow `changes/README.md`.
-- Link the pull request to its GitHub Issue with `Closes #<number>` when it completes the issue.
+- Link every pull request to its GitHub Issue with `Refs #<number>`. Use additional `Refs #<number>` lines for related issues that the pull request does not complete.
+- GitHub only applies `Closes #<number>` automatically when a pull request reaches the default branch, currently `main`. Pull requests normally target `develop`, so after one is merged and validated, explicitly close every completed issue with a comment linking the pull request. Leave incomplete issues open.
+- Use `Closes #<number>` in a pull request only when it targets the default branch and directly completes that issue.
 - Describe the result, user impact, validation performed, configuration or migration needs, and known risks in the pull request.
 - Never commit credentials, tokens, production data, or populated environment files. Document new variables in an example environment file.
 - Production deployment remains a manual GitLab CI action performed by the project owner.
