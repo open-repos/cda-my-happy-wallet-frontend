@@ -5,14 +5,10 @@ on:
     branches:
       - develop
       - main
-    paths-ignore:
-      - "mobile/**"
   push:
     branches:
       - develop
       - main
-    paths-ignore:
-      - "mobile/**"
 
 permissions:
   contents: read
@@ -23,7 +19,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Format, lint, test and build
+    name: Web format, lint, test and build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
