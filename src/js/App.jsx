@@ -1,10 +1,8 @@
 import React from "react";
 import "./../css/App.css";
-//auth
-import { RequireAuth } from "./components/requireAuth";
 import { ToastContainer } from "react-toastify";
 //Components
-import Sidebar from "./components/SideBar";
+import { ProtectedLayout } from "./components/ProtectedLayout";
 //Pages
 import Calendrier from "./pages/Calendrier";
 import ListeOperations from "./pages/ListeOperations";
@@ -50,36 +48,33 @@ function App() {
               <Route path="rav-jour" element={<CalculRaV period={"jour"} />}/>
               </Route> */}
                         
-              <Route path="home" element={<RequireAuth><Sidebar /><Home /> </RequireAuth>}/>
-              <Route path="home/operations-fixes" element={<RequireAuth><Sidebar /><OperationsFixes/> </RequireAuth>}/>
+              <Route path="home" element={<ProtectedLayout><Home /> </ProtectedLayout>}/>
+              <Route path="home/operations-fixes" element={<ProtectedLayout><OperationsFixes/> </ProtectedLayout>}/>
             <Route path="/" element={ <Navigate replace to="/home" />} />
 
-            <Route path="/calendrier" element={<RequireAuth><Sidebar /><Calendrier /></RequireAuth>}></Route>
+            <Route path="/calendrier" element={<ProtectedLayout><Calendrier /></ProtectedLayout>}></Route>
             <Route
               path="/objectifs-evenements"
               element={
-                <RequireAuth>
-                  <Sidebar />
+                <ProtectedLayout>
                   <Objectifs />
-                </RequireAuth>
+                </ProtectedLayout>
               }
             ></Route>
             <Route
               path="/operations"
               element={
-                <RequireAuth>
-                  <Sidebar />
+                <ProtectedLayout>
                   <ListeOperations />
-                </RequireAuth>
+                </ProtectedLayout>
               }
             ></Route>
             <Route
               path="/profil"
               element={
-                <RequireAuth>
-                  <Sidebar />
+                <ProtectedLayout>
                   <Profil />
-                </RequireAuth>
+                </ProtectedLayout>
               }
             ></Route>
             {/* </Route> */}

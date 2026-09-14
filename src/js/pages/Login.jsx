@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./../../css/Login.css";
+import "./../../css/Auth.css";
 import logo from "./../../assets/Logo_Login.png"
 import favIcon from "./../../assets/icons/logo.svg"
 // import { useLoginMutation } from "../services/authService";

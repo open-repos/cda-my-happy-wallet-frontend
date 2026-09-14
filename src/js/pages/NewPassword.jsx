@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./../../css/Newpassword.css";
+import "./../../css/Auth.css";
 import Ok from "../../assets/icons/Ok.svg";
 import newpassword from "../../assets/icons/Newpassword.svg";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -20,7 +21,6 @@ const NewPassword = () => {
   const toastId = React.useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
-  console.log(send)
   const { isError, message } = useSelector(
     (state) => state.auth
   )
@@ -30,14 +30,11 @@ const NewPassword = () => {
       const resetToken = searchParams.get("resetToken");
       if (resetToken) {
         searchParams.delete("resetToken");
-        console.log("setting params:", { searchParams: searchParams.toString() });
-        console.dir(searchParams.toString());
         setSearchParams(searchParams);
         dispatch(resetPsswdApi(resetToken))
       }
     }
 
-    console.log('toastId',toastId.current)
     if (isError) {
       toastId.current = message
       toast.error(message)
@@ -56,7 +53,6 @@ const NewPassword = () => {
   const Confirmationnewpassword =  () => {
 
     useEffect(() => {
-        console.log(send)
         if(send){
           timeout(5000);
         }
@@ -94,7 +90,6 @@ const NewPassword = () => {
     )
     useEffect(()=>{
 
-      console.log("isSuccessConfirmNewPassword",isSuccessConfirmNewPassword)
       if (isSuccessConfirmNewPassword==true) {
         setSend(true);
        }

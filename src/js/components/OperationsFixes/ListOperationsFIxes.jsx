@@ -25,7 +25,6 @@ const ListOperationsFIxes = (props) => {
   }
 
   useEffect(() => {
-    console.log(charges);
    if (charges.data == null ) {
     //   if (charges.data.length == 0) {
         dispatch(chargesApi());

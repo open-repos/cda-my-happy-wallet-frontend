@@ -4,11 +4,12 @@ import {
   setLocalStorageItem,
   removeLocalStorageItem,
 } from "../../utils/localstorage";
+import { toApiPayload } from "./apiResponse.mjs";
 
 class UserService {
 
   async register(data) {
-    await api.post("/users/register/", data);
+    return await api.post("/users/register/", data);
   }
   async logout() {
    removeLocalStorageItem("user");
@@ -18,12 +19,11 @@ class UserService {
     const response = await api.post(`/users/authenticate/`, data, {
       withCredentials: true,
     });
-    console.log("response inside login", response);
-    if (response.data) {
-      await setLocalStorageItem(response.data, "user");
+    const payload = toApiPayload(response);
+    if (payload) {
+      await setLocalStorageItem(payload, "user");
     }
-    console.log("inside axios'", response);
-    return response.data;
+    return payload;
   }
   async delete(data) {
     return await apiPrivate.delete(`/users/delete`, data);

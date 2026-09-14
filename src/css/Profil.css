@@ -1,10 +1,11 @@
-.profil-container{
-    margin-left:100px;
-    display:flex;
-    flex-direction: column;
-    text-align:center;
-    justify-content:flex-start;
-    align-items: center;
-    height:95vh;
-    width: calc(100vw - 100px);
+.profil-container {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  justify-content: flex-start;
+  align-items: center;
+  height: 95vh;
+  width: 100%;
+  gap: var(--ds-space-section);
+  padding: var(--ds-space-section) var(--ds-space-card);
 }
