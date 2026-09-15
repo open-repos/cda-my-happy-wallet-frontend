@@ -165,6 +165,19 @@ demarre la stack Docker, applique les migrations, configure les ports ADB,
 lance Metro dans Docker puis ouvre l'application. Garder le terminal ouvert et
 utiliser `Ctrl+C` pour arreter uniquement Metro.
 
+Metro est defini dans `mobile/compose.dev-client.yml`. Le lanceur recree ce
+service, attend la reponse exacte `packager-status:running`, ouvre le
+development build puis suit ses journaux. A l'arret, il supprime uniquement ce
+conteneur Compose ; les donnees applicatives de l'emulateur et la session
+restent intactes.
+
+Pour consulter les journaux Metro depuis un autre terminal :
+
+```bash
+docker compose -f my-happy-wallet-frontend/mobile/compose.dev-client.yml \
+  logs --follow metro
+```
+
 Si aucun emulateur n'est actif, le demarrer dans Android Studio ou fournir le
 nom exact d'un AVD existant :
 

@@ -6,6 +6,7 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 workspace_root="$(cd -- "$script_dir/../../.." && pwd)"
 mobile_dir="$workspace_root/my-happy-wallet-frontend/mobile"
 compose_file="$workspace_root/docker-compose.dev.yml"
+metro_compose_file="$mobile_dir/compose.dev-client.yml"
 
 config_home="${XDG_CONFIG_HOME:-${HOME}/.config}"
 android_sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$config_home/android-sdk}}"
@@ -15,7 +16,6 @@ emulator_bin="$android_sdk_root/emulator/emulator"
 avd_name=""
 build_stack=false
 install_app=false
-metro_container="my-happy-wallet-mobile-metro-$$"
 metro_status_url="http://localhost:8081/status"
 
 usage() {
@@ -102,6 +102,15 @@ wait_for_device() {
   echo "Erreur: workspace My Happy Wallet introuvable depuis $script_dir" >&2
   exit 1
 }
+[[ -f "$metro_compose_file" ]] || {
+  echo "Erreur: configuration Metro introuvable: $metro_compose_file" >&2
+  exit 1
+}
+[[ -d "$mobile_dir/node_modules/expo" ]] || {
+  echo "Erreur: dependances mobiles absentes." >&2
+  echo "Execute d'abord npm ci dans le service agent-frontend-node." >&2
+  exit 1
+}
 
 require_command docker
 require_command curl
@@ -168,47 +177,40 @@ fi
 echo "Ports ADB inverses:"
 "$adb_bin" reverse --list
 
-if curl --silent --fail --max-time 1 "$metro_status_url" >/dev/null 2>&1; then
+if [[ "$(curl --silent --fail --max-time 1 "$metro_status_url" 2>/dev/null || true)" == "packager-status:running" ]]; then
   echo "Erreur: un serveur Metro utilise deja le port 8081." >&2
   echo "Reutilise son terminal ou arrete uniquement son conteneur identifie." >&2
   exit 1
 fi
 
 echo "Demarrage de Metro dans Docker..."
-docker run --rm --init \
-  --name "$metro_container" \
-  --network host \
-  --user "$(id -u):$(id -g)" \
-  -e HOME=/tmp \
-  -e npm_config_cache=/tmp/npm-cache \
-  -e EXPO_UNSTABLE_HEADLESS=1 \
-  -e EXPO_PUBLIC_API_ORIGIN=http://127.0.0.1:4200 \
-  -v "$mobile_dir:/app" \
-  -w /app \
-  node:22-bookworm \
-  bash -lc 'npm run start:dev-client -- --localhost --port 8081' &
-metro_pid=$!
+export MHW_HOST_UID="$(id -u)"
+export MHW_HOST_GID="$(id -g)"
+export EXPO_PUBLIC_API_ORIGIN="http://127.0.0.1:4200"
+metro_compose=(docker compose -f "$metro_compose_file")
+"${metro_compose[@]}" up -d --force-recreate metro
 
 stop_metro() {
-  docker stop --time 10 "$metro_container" >/dev/null 2>&1 || true
-  wait "$metro_pid" 2>/dev/null || true
+  "${metro_compose[@]}" down --remove-orphans >/dev/null 2>&1 || true
 }
 trap stop_metro EXIT INT TERM
 
 for _ in {1..90}; do
-  if curl --silent --fail --max-time 1 "$metro_status_url" >/dev/null 2>&1; then
+  metro_status="$(curl --silent --fail --max-time 1 "$metro_status_url" 2>/dev/null || true)"
+  if [[ "$metro_status" == "packager-status:running" ]]; then
     break
   fi
-  if ! kill -0 "$metro_pid" >/dev/null 2>&1; then
+  if ! "${metro_compose[@]}" ps --status running --services | grep -Fxq metro; then
     echo "Erreur: Metro s'est arrete avant de devenir disponible." >&2
-    wait "$metro_pid"
+    "${metro_compose[@]}" logs --no-color metro >&2
     exit 1
   fi
   sleep 1
 done
 
-if ! curl --silent --fail --max-time 1 "$metro_status_url" >/dev/null 2>&1; then
+if [[ "$(curl --silent --fail --max-time 1 "$metro_status_url" 2>/dev/null || true)" != "packager-status:running" ]]; then
   echo "Erreur: Metro n'est pas disponible apres 90 secondes." >&2
+  "${metro_compose[@]}" logs --no-color metro >&2
   exit 1
 fi
 
@@ -222,4 +224,4 @@ echo
 echo "My Happy Wallet est lance. Garde ce terminal ouvert pour Metro."
 echo "API: http://localhost:4200/v1/ - Mailpit: http://localhost:8025"
 echo "Utilise Ctrl+C pour arreter uniquement Metro."
-wait "$metro_pid"
+"${metro_compose[@]}" logs --follow --no-color metro
