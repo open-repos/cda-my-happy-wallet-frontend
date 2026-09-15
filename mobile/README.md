@@ -30,6 +30,15 @@ Docker, la generation du dossier Android absent d'un clone neuf, les prerequis
 du build natif humain, ADB, Metro, le backend et les retours arriere :
 [`docs/android-development-build.md`](docs/android-development-build.md).
 
+Avant le premier lancement, executer le diagnostic automatise sur le poste
+Linux. L'option stricte verifie aussi qu'un appareil est en ligne et que le
+development build est installe :
+
+```bash
+./mobile/scripts/diagnose-android-host.sh
+./mobile/scripts/diagnose-android-host.sh --require-device
+```
+
 ## Development Build Sur iPhone
 
 Expo Go sur iPhone ne permet pas de choisir une version compatible avec chaque
