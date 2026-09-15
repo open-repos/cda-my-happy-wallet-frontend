@@ -236,6 +236,31 @@ Le parcours local relie quatre elements :
 l'emulateur sous l'adresse `127.0.0.1`. Il n'est donc pas necessaire de chercher
 l'adresse IP du PC pour un emulateur Android local.
 
+## Choisir l'origine API Android
+
+Le lanceur utilise par defaut `http://127.0.0.1:4200`. Cette origine fonctionne
+sur un emulateur et sur un appareil Android relie a ADB, car le script configure
+`adb reverse tcp:4200 tcp:4200` avant d'ouvrir l'application.
+
+Pour tester un appareil reel par le reseau local, fournir une origine que le
+telephone peut joindre :
+
+```bash
+./my-happy-wallet-frontend/mobile/scripts/start-android-dev.sh \
+  --api-origin http://192.168.1.42:4200
+```
+
+Remplacer l'adresse d'exemple par l'adresse IPv4 du poste sur le meme reseau
+que le telephone. Le port `4200` doit etre accessible depuis ce reseau. Utiliser
+un reseau de confiance et refermer toute regle de pare-feu temporaire apres le
+test.
+
+`--api-origin` attend uniquement une origine HTTP ou HTTPS : ne pas ajouter
+`/v1`, d'identifiants, de query ou de fragment. Le lanceur transmet cette valeur
+a Metro via `EXPO_PUBLIC_API_ORIGIN`; l'application ajoute elle-meme `/v1` pour
+les routes metier et utilise l'origine nue pour `/health/ready`. Cette variable
+est publique et ne doit jamais contenir de secret.
+
 ## 1. Verifier ADB
 
 Choisir le chemin releve dans Android Studio. Exemple pour l'installation
