@@ -30,12 +30,25 @@ test("captures the sign-in screen", async ({ page }) => {
   await expect(page).toHaveScreenshot("sign-in.png", { fullPage: true });
 });
 
-test("captures the populated dashboard and navigation", async ({ page }) => {
+test("captures the populated dashboard and navigation", async ({
+  page,
+}, testInfo) => {
   await signIn(page);
   await expect(page.getByText("1 500,00 €", { exact: true })).toBeVisible();
-  await expect(
-    page.getByRole("tab", { name: "Opérations ponctuelles" }),
-  ).toBeVisible();
+  const operationsTab = page.getByRole("tab", {
+    name: "Opérations ponctuelles",
+  });
+  await expect(operationsTab).toBeVisible();
+
+  const navigationBounds = await page.getByRole("tablist").boundingBox();
+  expect(navigationBounds).not.toBeNull();
+  if (testInfo.project.name === "desktop") {
+    expect(navigationBounds?.x).toBeLessThan(120);
+    expect(navigationBounds?.height).toBeGreaterThan(400);
+  } else {
+    expect(navigationBounds?.y).toBeGreaterThan(500);
+    expect(navigationBounds?.width).toBeGreaterThan(300);
+  }
   await expectNoHorizontalOverflow(page);
   await expect(page).toHaveScreenshot("dashboard.png", { fullPage: true });
 });
