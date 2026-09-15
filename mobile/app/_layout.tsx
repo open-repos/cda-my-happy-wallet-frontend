@@ -1,14 +1,10 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { StyleSheet, View } from "react-native";
 import "react-native-reanimated";
 
+import { FeedbackState } from "@/src/design/FeedbackState";
+import { primitives, themes } from "@/src/design/tokens";
 import {
   AuthProvider,
   useAuth,
@@ -20,8 +16,11 @@ const SessionNavigator = () => {
   if (state.status === "restoring") {
     return (
       <View style={styles.feedbackScreen}>
-        <ActivityIndicator color="#275DAD" size="large" />
-        <Text style={styles.feedbackTitle}>Restauration de la session</Text>
+        <FeedbackState
+          description="Votre session sécurisée est en cours de vérification."
+          kind="loading"
+          title="Restauration de la session"
+        />
       </View>
     );
   }
@@ -29,21 +28,17 @@ const SessionNavigator = () => {
   if (state.status === "unavailable") {
     return (
       <View style={styles.feedbackScreen}>
-        <Text style={styles.feedbackTitle}>Service indisponible</Text>
-        <Text style={styles.feedbackMessage}>
-          La session n&apos;a pas pu etre restauree. Vos donnees locales sont
-          conservees.
-        </Text>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => void restore().catch(() => undefined)}
-          style={({ pressed }) => [
-            styles.retryButton,
-            pressed && styles.buttonPressed,
+        <FeedbackState
+          actions={[
+            {
+              label: "Réessayer",
+              onPress: () => void restore().catch(() => undefined),
+            },
           ]}
-        >
-          <Text style={styles.retryButtonLabel}>Reessayer</Text>
-        </Pressable>
+          description="La session n’a pas pu être restaurée. Vos données locales sont conservées."
+          kind="error"
+          title="Service indisponible"
+        />
       </View>
     );
   }
@@ -74,42 +69,9 @@ export default function RootLayout() {
 
 const styles = StyleSheet.create({
   feedbackScreen: {
-    alignItems: "center",
-    backgroundColor: "#F5F7FA",
+    backgroundColor: themes.light.color.backgroundCanvas,
     flex: 1,
     justifyContent: "center",
-    paddingHorizontal: 28,
-  },
-  feedbackTitle: {
-    color: "#17202A",
-    fontSize: 20,
-    fontWeight: "700",
-    marginTop: 18,
-    textAlign: "center",
-  },
-  feedbackMessage: {
-    color: "#4D5866",
-    fontSize: 15,
-    lineHeight: 22,
-    marginTop: 10,
-    maxWidth: 420,
-    textAlign: "center",
-  },
-  retryButton: {
-    alignItems: "center",
-    backgroundColor: "#275DAD",
-    borderRadius: 6,
-    justifyContent: "center",
-    marginTop: 24,
-    minHeight: 46,
-    paddingHorizontal: 22,
-  },
-  retryButtonLabel: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  buttonPressed: {
-    opacity: 0.8,
+    paddingHorizontal: primitives.space["6"],
   },
 });

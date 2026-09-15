@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { primitives, semantic, themes } from "@/src/design/tokens";
+import { FeedbackBanner, FeedbackState } from "@/src/design/FeedbackState";
 import {
   FixedOperation,
   FixedOperationDraft,
@@ -99,15 +100,37 @@ export const FixedBudgetScreen = () => {
   };
 
   if (state.status === "loading") {
-    return <CenteredState label="Chargement de votre budget fixe…" loading />;
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.centeredState}>
+          <FeedbackState
+            description="Vos revenus et charges récurrents sont en cours de chargement."
+            kind="loading"
+            title="Chargement du budget fixe"
+          />
+        </View>
+      </SafeAreaView>
+    );
   }
   if (state.status === "error") {
     return (
-      <CenteredState
-        label="Votre budget fixe est momentanément indisponible."
-        onBack={() => router.back()}
-        onRetry={() => void state.retry()}
-      />
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.centeredState}>
+          <FeedbackState
+            actions={[
+              {
+                label: "Retour",
+                onPress: () => router.back(),
+                variant: "secondary",
+              },
+              { label: "Réessayer", onPress: () => void state.retry() },
+            ]}
+            description="Vérifiez votre connexion puis relancez le chargement."
+            kind="error"
+            title="Budget fixe indisponible"
+          />
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -184,33 +207,38 @@ export const FixedBudgetScreen = () => {
               </Pressable>
             </View>
             {state.message != null ? (
-              <Text
-                accessibilityLiveRegion="polite"
-                style={[
-                  styles.message,
+              <FeedbackBanner
+                kind={
                   state.mutationStatus === "error" ||
                   state.pageStatus === "error"
-                    ? styles.errorMessage
-                    : styles.successMessage,
-                ]}
+                    ? "error"
+                    : "success"
+                }
               >
                 {state.message}
-              </Text>
+              </FeedbackBanner>
             ) : null}
           </View>
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Ionicons
-              color={colors.textSecondary}
-              name="calculator-outline"
-              size={42}
+            <FeedbackState
+              actions={[
+                {
+                  label: "Ajouter un revenu",
+                  onPress: () => openCreate("REVENU"),
+                },
+                {
+                  label: "Ajouter une charge",
+                  onPress: () => openCreate("CHARGE"),
+                  variant: "secondary",
+                },
+              ]}
+              description="Ajoutez au moins un revenu et une charge pour obtenir un reste à vivre utile."
+              icon="calculator-outline"
+              kind="empty"
+              title="Votre budget fixe est vide"
             />
-            <Text style={styles.emptyTitle}>Votre budget fixe est vide</Text>
-            <Text style={styles.emptyText}>
-              Ajoutez au moins un revenu et une charge pour obtenir un reste à
-              vivre utile.
-            </Text>
           </View>
         }
         ListFooterComponent={
@@ -262,57 +290,6 @@ export const FixedBudgetScreen = () => {
     </SafeAreaView>
   );
 };
-
-interface CenteredStateProps {
-  label: string;
-  loading?: boolean;
-  onBack?: () => void;
-  onRetry?: () => void;
-}
-
-const CenteredState = ({
-  label,
-  loading = false,
-  onBack,
-  onRetry,
-}: CenteredStateProps) => (
-  <SafeAreaView style={styles.safeArea}>
-    <View style={styles.centeredState}>
-      {loading ? (
-        <ActivityIndicator color={colors.statusInfoText} size="large" />
-      ) : (
-        <Ionicons
-          color={colors.statusErrorText}
-          name="cloud-offline-outline"
-          size={42}
-        />
-      )}
-      <Text accessibilityLiveRegion="polite" style={styles.centeredLabel}>
-        {label}
-      </Text>
-      <View style={styles.centeredActions}>
-        {onBack ? (
-          <Pressable
-            accessibilityRole="button"
-            onPress={onBack}
-            style={styles.secondaryAction}
-          >
-            <Text style={styles.secondaryActionLabel}>Retour</Text>
-          </Pressable>
-        ) : null}
-        {onRetry ? (
-          <Pressable
-            accessibilityRole="button"
-            onPress={onRetry}
-            style={styles.primaryAction}
-          >
-            <Text style={styles.primaryActionLabel}>Réessayer</Text>
-          </Pressable>
-        ) : null}
-      </View>
-    </View>
-  </SafeAreaView>
-);
 
 const styles = StyleSheet.create({
   safeArea: { backgroundColor: colors.backgroundCanvas, flex: 1 },
@@ -381,20 +358,6 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.75 },
   disabled: { opacity: 0.65 },
-  message: {
-    borderRadius: semantic.radius.control,
-    fontSize: primitives.fontSize.sm,
-    marginBottom: primitives.space["4"],
-    padding: primitives.space["3"],
-  },
-  successMessage: {
-    backgroundColor: colors.statusSuccessSurface,
-    color: colors.statusSuccessText,
-  },
-  errorMessage: {
-    backgroundColor: colors.statusErrorSurface,
-    color: colors.statusErrorText,
-  },
   sectionTitle: {
     backgroundColor: colors.backgroundCanvas,
     color: colors.textPrimary,
@@ -406,26 +369,7 @@ const styles = StyleSheet.create({
   separator: { height: primitives.space["2"] },
   sectionSeparator: { height: primitives.space["3"] },
   emptyState: {
-    alignItems: "center",
-    backgroundColor: colors.backgroundSurface,
-    borderColor: colors.borderSubtle,
-    borderRadius: semantic.radius.card,
-    borderWidth: semantic.borderWidth.default,
     marginTop: primitives.space["6"],
-    padding: semantic.space.card,
-  },
-  emptyTitle: {
-    color: colors.textPrimary,
-    fontSize: primitives.fontSize.lg,
-    fontWeight: semibold,
-    marginTop: primitives.space["3"],
-  },
-  emptyText: {
-    color: colors.textSecondary,
-    fontSize: primitives.fontSize.md,
-    lineHeight: 24,
-    marginTop: primitives.space["2"],
-    textAlign: "center",
   },
   footer: { alignItems: "center", paddingTop: primitives.space["6"] },
   loadMoreButton: {
@@ -442,46 +386,8 @@ const styles = StyleSheet.create({
     fontWeight: semibold,
   },
   centeredState: {
-    alignItems: "center",
     flex: 1,
     justifyContent: "center",
     padding: primitives.space["6"],
-  },
-  centeredLabel: {
-    color: colors.textSecondary,
-    fontSize: primitives.fontSize.md,
-    lineHeight: 24,
-    marginTop: primitives.space["4"],
-    maxWidth: primitives.size.contentSm,
-    textAlign: "center",
-  },
-  centeredActions: {
-    flexDirection: "row",
-    gap: primitives.space["2"],
-    marginTop: primitives.space["5"],
-  },
-  primaryAction: {
-    backgroundColor: colors.actionPrimaryBackground,
-    borderRadius: semantic.radius.control,
-    justifyContent: "center",
-    minHeight: semantic.size.controlMinHeight,
-    paddingHorizontal: semantic.space.controlInline,
-  },
-  primaryActionLabel: {
-    color: colors.actionPrimaryText,
-    fontSize: primitives.fontSize.md,
-    fontWeight: semibold,
-  },
-  secondaryAction: {
-    backgroundColor: colors.actionSecondaryBackground,
-    borderRadius: semantic.radius.control,
-    justifyContent: "center",
-    minHeight: semantic.size.controlMinHeight,
-    paddingHorizontal: semantic.space.controlInline,
-  },
-  secondaryActionLabel: {
-    color: colors.actionSecondaryText,
-    fontSize: primitives.fontSize.md,
-    fontWeight: semibold,
   },
 });
