@@ -48,3 +48,7 @@ jobs:
         run: npm run doctor
       - name: Build Expo Web bundle
         run: npm run build:web
+      - name: Install visual test browser
+        run: npx playwright install --with-deps chromium
+      - name: Run visual regression tests
+        run: npm run test:visual
