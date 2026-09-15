@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router";
-import type { ColorValue } from "react-native";
+import { Platform, useWindowDimensions, type ColorValue } from "react-native";
 
 import {
   APP_DESTINATIONS,
@@ -9,6 +9,7 @@ import {
 import { primitives, semantic, themes } from "@/src/design/tokens";
 
 const colors = themes.light.color;
+const desktopNavigationBreakpoint = 1024;
 const semiboldFontWeight = `${primitives.fontWeight.semibold}` as "600";
 
 const createTabOptions = (destination: AppDestination) => ({
@@ -30,6 +31,10 @@ type TabIconProps = {
 };
 
 export default function AppLayout() {
+  const { width } = useWindowDimensions();
+  const usesDesktopNavigation =
+    Platform.OS === "web" && width >= desktopNavigationBreakpoint;
+
   return (
     <Tabs
       backBehavior="history"
@@ -38,9 +43,17 @@ export default function AppLayout() {
         tabBarActiveTintColor: colors.navigationActive,
         tabBarInactiveTintColor: colors.navigationText,
         tabBarHideOnKeyboard: true,
-        tabBarItemStyle: styles.tabItem,
+        tabBarItemStyle: usesDesktopNavigation
+          ? styles.desktopTabItem
+          : styles.tabItem,
+        tabBarLabelPosition: usesDesktopNavigation ? "below-icon" : undefined,
         tabBarLabelStyle: styles.tabLabel,
-        tabBarStyle: styles.tabBar,
+        tabBarPosition: usesDesktopNavigation ? "left" : "bottom",
+        tabBarShowLabel: !usesDesktopNavigation,
+        tabBarStyle: usesDesktopNavigation
+          ? styles.desktopTabBar
+          : styles.tabBar,
+        tabBarVariant: usesDesktopNavigation ? "material" : "uikit",
       }}
     >
       {APP_DESTINATIONS.map((destination) => (
@@ -56,6 +69,17 @@ export default function AppLayout() {
 }
 
 const styles = {
+  desktopTabBar: {
+    backgroundColor: colors.navigationBackground,
+    borderRightColor: colors.borderStrong,
+    borderRightWidth: semantic.borderWidth.default,
+    paddingHorizontal: primitives.space["2"],
+    paddingTop: primitives.space["4"],
+    width: primitives.space["16"] + primitives.space["6"],
+  },
+  desktopTabItem: {
+    minHeight: primitives.space["16"],
+  },
   tabBar: {
     backgroundColor: colors.navigationBackground,
     borderTopColor: colors.borderStrong,
