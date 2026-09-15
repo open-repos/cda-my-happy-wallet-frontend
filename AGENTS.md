@@ -35,6 +35,14 @@ These instructions apply to the whole frontend repository.
 - Keep Web and mobile changes separate when they do not depend on each other.
 - Reuse existing domain, infrastructure, and presentation boundaries.
 
+## Cross-repository features
+
+- Represent a feature spanning frontend and backend with one planning parent and one executable child Issue in each repository. Link the child Issues and record the blocking direction in their dependency sections and in `open-repos/2`.
+- Run the backend child in the backend Codex Cloud environment and the frontend child in the frontend environment. Never modify or commit the other repository from the same cloud task.
+- When the frontend depends on a new API contract, complete and merge the backend contract first. The frontend may prepare typed contracts, fixtures, or mocks in parallel only when the shared contract is already explicit.
+- Open one pull request per child Issue. After both are merged into `develop`, run the cross-repository integration or staging validation required by the planning parent.
+- If a selected frontend Issue unexpectedly requires backend changes that are not covered by a linked Issue, stop and create or request the backend child Issue instead of widening the current pull request.
+
 ## Validation
 
 For Web changes, run:
