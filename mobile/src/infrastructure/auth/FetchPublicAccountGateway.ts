@@ -12,7 +12,8 @@ export class FetchPublicAccountGateway implements PublicAccountGateway {
 
   public constructor(
     apiBaseUrl: string,
-    private readonly fetchImplementation: FetchImplementation = fetch,
+    private readonly fetchImplementation: FetchImplementation = (...args) =>
+      fetch(...args),
   ) {
     this.apiBaseUrl = apiBaseUrl.replace(/\/+$/, "");
   }

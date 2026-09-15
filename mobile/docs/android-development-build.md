@@ -151,6 +151,23 @@ Play ni declenchement EAS.
 
 ## Lancement automatise recommande
 
+Depuis la racine du depot frontend, verifier d'abord le poste sans demarrer la
+stack ni modifier l'emulateur :
+
+```bash
+./mobile/scripts/diagnose-android-host.sh
+```
+
+Le diagnostic controle Linux, les variables et outils Android, Java 17,
+Docker Compose, l'acces au daemon, KVM, les AVD et les appareils ADB. Les
+prerequis manquants sont des echecs avec un code de sortie `1`; les composants
+optionnels absents sont des avertissements. Pour preparer un lancement
+immediat, exiger aussi un appareil en ligne avec le development build installe :
+
+```bash
+./mobile/scripts/diagnose-android-host.sh --require-device
+```
+
 Apres la premiere installation ci-dessus, le script versionne regroupe les
 commandes des sections suivantes pour le lancement humain. Il appelle Gradle
 sur le poste si l'APK manque, meme sans `--install` :

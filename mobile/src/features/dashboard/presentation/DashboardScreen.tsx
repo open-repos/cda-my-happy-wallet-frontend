@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { semantic, themes } from "@/src/design/tokens";
+import { FeedbackState } from "@/src/design/FeedbackState";
 import { useAuth } from "@/src/features/auth/presentation/AuthProvider";
 import { HttpFixedBudgetGateway } from "@/src/features/dashboard/infrastructure/HttpFixedBudgetGateway";
 import { useFixedBudget } from "@/src/features/dashboard/presentation/useFixedBudget";
@@ -115,61 +116,35 @@ export const DashboardScreen = () => {
         </View>
 
         {status === "loading" ? (
-          <View accessibilityLiveRegion="polite" style={styles.stateCard}>
-            <ActivityIndicator color={colors.focusRing} size="large" />
-            <Text style={styles.stateTitle}>Calcul de votre budget</Text>
-            <Text style={styles.centered}>
-              Vos charges et revenus sont en cours de chargement.
-            </Text>
-          </View>
+          <FeedbackState
+            description="Vos charges et revenus sont en cours de chargement."
+            kind="loading"
+            title="Calcul de votre budget"
+          />
         ) : null}
 
         {status === "error" ? (
-          <View accessibilityLiveRegion="assertive" style={styles.stateCard}>
-            <View style={[styles.stateIcon, styles.errorIcon]}>
-              <Ionicons
-                color={colors.statusErrorText}
-                name="cloud-offline-outline"
-                size={28}
-              />
-            </View>
-            <Text style={styles.stateTitle}>Budget indisponible</Text>
-            <Text style={styles.centered}>
-              Vérifiez votre connexion puis relancez le chargement.
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => void retry()}
-              style={({ pressed }) => [
-                styles.primaryButton,
-                pressed && styles.pressed,
-              ]}
-            >
-              <Ionicons
-                color={colors.actionPrimaryText}
-                name="refresh"
-                size={18}
-              />
-              <Text style={styles.primaryButtonText}>Réessayer</Text>
-            </Pressable>
-          </View>
+          <FeedbackState
+            actions={[{ label: "Réessayer", onPress: () => void retry() }]}
+            description="Vérifiez votre connexion puis relancez le chargement."
+            kind="error"
+            title="Budget indisponible"
+          />
         ) : null}
 
         {status === "success" && operationCount === 0 ? (
-          <View accessibilityLiveRegion="polite" style={styles.stateCard}>
-            <View style={styles.stateIcon}>
-              <Ionicons
-                color={colors.actionPrimaryBackground}
-                name="calculator-outline"
-                size={28}
-              />
-            </View>
-            <Text style={styles.stateTitle}>Commencez votre budget</Text>
-            <Text style={styles.centered}>
-              Ajoutez vos revenus et charges fixes pour calculer votre reste à
-              vivre mensuel.
-            </Text>
-          </View>
+          <FeedbackState
+            actions={[
+              {
+                label: "Configurer mon budget",
+                onPress: () => router.push("/(app)/fixed-budget"),
+              },
+            ]}
+            description="Ajoutez vos revenus et charges fixes pour calculer votre reste à vivre mensuel."
+            icon="calculator-outline"
+            kind="empty"
+            title="Commencez votre budget"
+          />
         ) : null}
 
         {status === "success" && operationCount > 0 ? (
@@ -279,50 +254,6 @@ const styles = StyleSheet.create({
     lineHeight: 37,
   },
   subtitle: { color: colors.textSecondary, fontSize: 16, lineHeight: 24 },
-  stateCard: {
-    alignItems: "center",
-    backgroundColor: colors.backgroundSurface,
-    borderColor: colors.borderSubtle,
-    borderRadius: semantic.radius.card,
-    borderWidth: 1,
-    gap: 12,
-    padding: 24,
-  },
-  stateIcon: {
-    alignItems: "center",
-    backgroundColor: colors.actionSecondaryBackground,
-    borderRadius: 999,
-    height: 52,
-    justifyContent: "center",
-    width: 52,
-  },
-  errorIcon: { backgroundColor: colors.statusErrorSurface },
-  stateTitle: {
-    color: colors.textPrimary,
-    fontSize: 20,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  centered: {
-    color: colors.textSecondary,
-    fontSize: 16,
-    lineHeight: 24,
-    textAlign: "center",
-  },
-  primaryButton: {
-    alignItems: "center",
-    backgroundColor: colors.actionPrimaryBackground,
-    borderRadius: semantic.radius.control,
-    flexDirection: "row",
-    gap: 8,
-    minHeight: 48,
-    paddingHorizontal: 16,
-  },
-  primaryButtonText: {
-    color: colors.actionPrimaryText,
-    fontSize: 16,
-    fontWeight: "600",
-  },
   budgetCard: {
     alignItems: "center",
     backgroundColor: colors.backgroundSurface,
