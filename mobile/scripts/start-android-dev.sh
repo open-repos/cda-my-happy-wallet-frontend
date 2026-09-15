@@ -16,6 +16,7 @@ emulator_bin="$android_sdk_root/emulator/emulator"
 avd_name=""
 build_stack=false
 install_app=false
+api_origin="${EXPO_PUBLIC_API_ORIGIN:-http://127.0.0.1:4200}"
 metro_status_url="http://localhost:8081/status"
 
 usage() {
@@ -24,6 +25,7 @@ Usage: start-android-dev.sh [options]
 
 Options:
   --avd NAME       Demarre cet AVD si aucun appareil n'est connecte.
+  --api-origin URL Origine API joignable depuis Android.
   --build-stack    Reconstruit les images de la stack Docker locale.
   --install        Recompile et reinstalle le development build Android.
   -h, --help       Affiche cette aide.
@@ -31,6 +33,7 @@ Options:
 Exemples:
   ./mobile/scripts/start-android-dev.sh
   ./mobile/scripts/start-android-dev.sh --avd Pixel_5_API_35_Light
+  ./mobile/scripts/start-android-dev.sh --api-origin http://192.168.1.42:4200
   ./mobile/scripts/start-android-dev.sh --build-stack --install
 EOF
 }
@@ -43,6 +46,14 @@ while (($# > 0)); do
         exit 2
       }
       avd_name="$2"
+      shift 2
+      ;;
+    --api-origin)
+      [[ $# -ge 2 ]] || {
+        echo "Erreur: --api-origin attend une URL." >&2
+        exit 2
+      }
+      api_origin="$2"
       shift 2
       ;;
     --build-stack)
@@ -64,6 +75,12 @@ while (($# > 0)); do
       ;;
   esac
 done
+
+if [[ ! "$api_origin" =~ ^https?://[^/?#[:space:]@]+/?$ ]]; then
+  echo "Erreur: l'origine API doit etre une URL HTTP(S) sans identifiants, chemin, query ou fragment." >&2
+  exit 2
+fi
+api_origin="${api_origin%/}"
 
 require_command() {
   command -v "$1" >/dev/null 2>&1 || {
@@ -186,7 +203,7 @@ fi
 echo "Demarrage de Metro dans Docker..."
 export MHW_HOST_UID="$(id -u)"
 export MHW_HOST_GID="$(id -g)"
-export EXPO_PUBLIC_API_ORIGIN="http://127.0.0.1:4200"
+export EXPO_PUBLIC_API_ORIGIN="$api_origin"
 metro_compose=(docker compose -f "$metro_compose_file")
 "${metro_compose[@]}" up -d --force-recreate metro
 
@@ -222,6 +239,7 @@ echo "Ouverture du development build..."
 
 echo
 echo "My Happy Wallet est lance. Garde ce terminal ouvert pour Metro."
-echo "API: http://localhost:4200/v1/ - Mailpit: http://localhost:8025"
+echo "API utilisee par Android: $api_origin/v1"
+echo "API locale: http://localhost:4200/v1/ - Mailpit: http://localhost:8025"
 echo "Utilise Ctrl+C pour arreter uniquement Metro."
 "${metro_compose[@]}" logs --follow --no-color metro
