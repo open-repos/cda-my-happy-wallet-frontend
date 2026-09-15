@@ -29,6 +29,8 @@ Le guide Android local couvre la premiere installation SDK/AVD, les dependances
 Docker, la generation du dossier Android absent d'un clone neuf, les prerequis
 du build natif humain, ADB, Metro, le backend et les retours arriere :
 [`docs/android-development-build.md`](docs/android-development-build.md).
+Il documente aussi `--api-origin` pour choisir entre l'origine locale exposee
+par `adb reverse` et l'adresse LAN du poste utilisee par un appareil reel.
 
 Avant le premier lancement, executer le diagnostic automatise sur le poste
 Linux. L'option stricte verifie aussi qu'un appareil est en ligne et que le
