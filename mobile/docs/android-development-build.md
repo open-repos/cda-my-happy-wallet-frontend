@@ -473,19 +473,42 @@ connexion. Sans session, les onglets proteges ne doivent pas apparaitre.
 
 ### Parcours d'authentification
 
+Le test d'integration `AuthFlow.integration.test.ts` couvre sans service externe
+le parcours inscription, refus avant confirmation, lien a usage unique,
+connexion, renouvellement apres un `401` et deconnexion avec revocation. Les
+tests de session couvrent aussi la restauration apres redemarrage, les appels
+concurrents, le refresh refuse, le reseau indisponible et la suppression locale
+de la session lorsque la revocation distante echoue.
+
+Depuis la racine du workspace, rejouer cette couverture dans Docker avec :
+
+```bash
+docker compose -f docker-compose.agent.yml exec agent-frontend-node \
+  bash -lc 'cd my-happy-wallet-frontend/mobile && npm test -- AuthFlow.integration.test.ts AuthSessionManager.test.ts'
+```
+
+Cette couverture protege les contrats mobiles mais ne remplace pas la recette
+du development build, qui verifie clavier, navigation, Mailpit, stockage natif
+et redemarrage reel de l'application.
+
 Depuis la connexion, verifier aussi les parcours publics suivants :
 
 1. ouvrir **Creer un compte**, faire defiler les cinq champs et soumettre un
    formulaire vide pour controler le message accessible ;
 2. creer un compte avec une adresse locale, puis ouvrir Mailpit sur
-   `http://localhost:8025` et suivre son lien de confirmation ;
-3. revenir a la connexion, ouvrir **Reinitialiser**, envoyer une adresse et
+   `http://localhost:8025` ; verifier que la connexion est refusee avant de
+   suivre le lien de confirmation, puis qu'elle reussit apres confirmation ;
+3. ouvrir une seconde fois le meme lien et verifier qu'il est refuse sans
+   modifier le compte deja confirme ;
+4. revenir a la connexion, ouvrir **Reinitialiser**, envoyer une adresse et
    verifier la confirmation generique qui ne revele pas si le compte existe ;
-4. couper temporairement le reverse API avec
+5. couper temporairement le reverse API avec
    `adb reverse --remove tcp:4200`, soumettre une demande et verifier l'erreur
    reseau, puis retablir le tunnel avec `adb reverse tcp:4200 tcp:4200` ;
-5. se connecter, redemarrer l'application et verifier la restauration de la
-   session avant de tester la deconnexion.
+6. se connecter, fermer completement puis relancer l'application et verifier la
+   restauration de la session ;
+7. se deconnecter depuis le profil, relancer l'application et verifier que la
+   session n'est pas restauree.
 
 Utiliser uniquement des comptes de test locaux. Aucun mot de passe, token ou
 lien de confirmation ne doit etre copie dans Git.
