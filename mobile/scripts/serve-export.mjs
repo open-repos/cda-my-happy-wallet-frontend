@@ -94,7 +94,15 @@ const findExportedFile = (pathname) => {
 
 createServer((request, response) => {
   const pathname = new URL(request.url ?? "/", "http://localhost").pathname;
-  if (pathname.startsWith("/test-api/v1/")) {
+  if (pathname === "/health/ready") {
+    response.writeHead(200, {
+      "Cache-Control": "no-store",
+      "Content-Type": "application/json; charset=utf-8",
+    });
+    response.end(JSON.stringify({ status: "ok" }));
+    return;
+  }
+  if (pathname.startsWith("/v1/")) {
     const payload = testApiResponse(pathname);
     response.writeHead(payload == null ? 404 : 200, {
       "Cache-Control": "no-store",

@@ -25,7 +25,7 @@ export default defineConfig({
   },
   webServer: {
     command:
-      "EXPO_PUBLIC_API_ORIGIN=http://127.0.0.1:4174/test-api npx expo export --platform web --clear && npm run serve:test",
+      "EXPO_PUBLIC_API_ORIGIN=http://127.0.0.1:4174 npx expo export --platform web --clear && npm run serve:test",
     reuseExistingServer: false,
     timeout: 120_000,
     url: "http://127.0.0.1:4174/sign-in",
