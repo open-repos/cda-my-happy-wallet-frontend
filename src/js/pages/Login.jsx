@@ -1,98 +1,136 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
 import "./../../css/Login.css";
 import "./../../css/Auth.css";
-import logo from "./../../assets/Logo_Login.png"
-import favIcon from "./../../assets/icons/logo.svg"
-// import { useLoginMutation } from "../services/authService";
-import { useLocation, useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
-import { useSelector, useDispatch } from 'react-redux'
-import { toast } from 'react-toastify'
-import { loginApi,reset } from "../slices/auth/authSlice";
-// import { RequireAuth } from "../../features/auth/requireAuth";
-import Spinner from '../components/Spinner'
+import logo from "./../../assets/Logo_Login.png";
+import favIcon from "./../../assets/icons/logo.svg";
+import { loginApi, reset } from "../slices/auth/authSlice";
+import Spinner from "../components/Spinner";
+
+const confirmationMessages = {
+  "already-used":
+    "Ce lien de confirmation a déjà été utilisé. Vous pouvez vous connecter.",
+  "invalid-or-expired":
+    "Ce lien de confirmation est invalide ou a expiré. Recommencez l’inscription pour recevoir un nouveau lien.",
+};
+
+export const getConfirmationMessage = (code) => {
+  return confirmationMessages[code] ?? null;
+};
 
 const Login = () => {
-  let navigate = useNavigate();
-  let location = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const dispatch = useDispatch();
+  const toastId = useRef(null);
+  const initialQuery = useRef({
+    confirmation: searchParams.get("confirmation"),
+    legacyMessage: searchParams.get("message"),
+  }).current;
+  const confirmationMessage = getConfirmationMessage(initialQuery.confirmation);
 
-  let from = location.state?.from?.pathname || location.state?.pathname  || "/";
-  const search = useLocation().search;
-  // const success = new URLSearchParams(search).get('success');
-  const confirmationRegistration = new URLSearchParams(search).get('message');
-  const toastId = React.useRef(null);
-  //body
+  const from =
+    location.state?.from?.pathname || location.state?.pathname || "/";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  //Logic
-  // const [formError, setFormError] = useState(null);
-
-  const dispatch = useDispatch();
-  // //Api Logic
-  // const [login, { isLoading, isUpdating }] = useLoginMutation();
-
-  const { user, isLoading, isError, isSuccess, isAuthenticated, message } = useSelector(
-    (state) => state.auth
-  )
-
+  const { user, isLoading, isError, isSuccess, isAuthenticated, message } =
+    useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (confirmationRegistration=="registrationok") {
-      if(! toast.isActive(toastId.current)) {
-        toastId.current = toast.success("Votre compte a bien été créée !")
-      }
-      
-      navigate("/login")
+    const cleanedSearchParams = new URLSearchParams(searchParams);
+    let shouldCleanUrl = false;
+
+    if (cleanedSearchParams.has("confirmation")) {
+      cleanedSearchParams.delete("confirmation");
+      shouldCleanUrl = true;
     }
-    if (isError) {
-      if(! toast.isActive(toastId.current)) {
-        toastId.current =  toast.error(message)
+
+    if (initialQuery.legacyMessage === "registrationok") {
+      if (!toast.isActive(toastId.current)) {
+        toastId.current = toast.success("Votre compte a bien été créé !");
       }
-     
+
+      if (
+        cleanedSearchParams.has("message") ||
+        cleanedSearchParams.has("success")
+      ) {
+        cleanedSearchParams.delete("message");
+        cleanedSearchParams.delete("success");
+        shouldCleanUrl = true;
+      }
+    }
+
+    if (shouldCleanUrl) {
+      setSearchParams(cleanedSearchParams, { replace: true });
+    }
+  }, [initialQuery, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    if (isError && !toast.isActive(toastId.current)) {
+      toastId.current = toast.error(message);
     }
 
     if (isSuccess) {
-      navigate(from)
-
+      navigate(from);
     }
 
-    dispatch(reset())
-  }, [user, isError, isSuccess, isAuthenticated,message, dispatch])
+    dispatch(reset());
+  }, [
+    user,
+    isError,
+    isSuccess,
+    isAuthenticated,
+    message,
+    dispatch,
+    from,
+    navigate,
+  ]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const body = { email, password }
-    dispatch(loginApi(body))
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    dispatch(loginApi({ email, password }));
   };
 
-
-
   if (isLoading) {
-    return <Spinner />
+    return <Spinner />;
   }
+
   return (
     <div className="login">
-      <img src={logo} width="300px" height="auto"/>
-      <form className="login_form" onSubmit={(e) => handleSubmit(e)}>
+      <img src={logo} width="300px" height="auto" alt="My Happy Wallet" />
+      <form className="login_form" onSubmit={handleSubmit}>
         <h1>
-          Bienvenue  <br /> sur MyHappyWallet <img src={favIcon} height='20rem' width="20rem"/>
+          Bienvenue <br /> sur MyHappyWallet{" "}
+          <img src={favIcon} height="20rem" width="20rem" alt="" />
         </h1>
-        {/* <p style={{ color: "red" }}>{formError && formError}</p> */}
-        {/* {isLoading && <p>Loading...</p>} */}
+
+        {confirmationMessage ? (
+          <div className="login-confirmation-message" role="alert">
+            {confirmationMessage}
+          </div>
+        ) : null}
+
         <input
           type="email"
           name="email"
           placeholder="Entrez votre email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(event) => setEmail(event.target.value)}
         />
         <input
           type="password"
           name="password"
           placeholder="Entrez mot de passe"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(event) => setPassword(event.target.value)}
         />
         <div className="link-div">
           <Link className="link" to="/forgot-password">

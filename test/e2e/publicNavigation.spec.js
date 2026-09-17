@@ -13,3 +13,25 @@ test("navigates from login to registration", async ({ page }) => {
     page.getByRole("button", { name: "S'enregistrer" })
   ).toBeVisible();
 });
+
+for (const result of [
+  {
+    code: "already-used",
+    message:
+      "Ce lien de confirmation a déjà été utilisé. Vous pouvez vous connecter.",
+  },
+  {
+    code: "invalid-or-expired",
+    message:
+      "Ce lien de confirmation est invalide ou a expiré. Recommencez l’inscription pour recevoir un nouveau lien.",
+  },
+]) {
+  test(`shows a safe ${result.code} confirmation message once`, async ({
+    page,
+  }) => {
+    await page.goto(`/login?confirmation=${result.code}`);
+
+    await expect(page.getByRole("alert")).toHaveText(result.message);
+    await expect(page).toHaveURL(/\/login$/);
+  });
+}
