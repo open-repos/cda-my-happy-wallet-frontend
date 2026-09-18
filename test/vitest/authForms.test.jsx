@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   authState: {},
   dispatch: vi.fn(),
   navigate: vi.fn(),
+  searchParams: new URLSearchParams(),
   setSearchParams: vi.fn(),
   toastError: vi.fn(),
   toastSuccess: vi.fn(),
@@ -26,9 +27,12 @@ vi.mock("react-router-dom", async (importOriginal) => {
 
   return {
     ...actual,
-    useLocation: () => ({ search: "", state: null }),
+    useLocation: () => ({
+      search: mocks.searchParams.toString(),
+      state: null,
+    }),
     useNavigate: () => mocks.navigate,
-    useSearchParams: () => [new URLSearchParams(), mocks.setSearchParams],
+    useSearchParams: () => [mocks.searchParams, mocks.setSearchParams],
   };
 });
 
@@ -54,6 +58,7 @@ const renderForm = (component) => {
 };
 
 beforeEach(() => {
+  mocks.searchParams = new URLSearchParams();
   mocks.authState = {
     isAuthenticated: false,
     isEmailSent: false,
@@ -102,6 +107,62 @@ describe("authentication forms", () => {
       type: "auth/login",
       payload: { email: "user@example.com", password: "secret" },
     });
+  });
+
+  it.each([
+    [
+      "already-used",
+      "Ce lien de confirmation a déjà été utilisé. Vous pouvez vous connecter.",
+    ],
+    [
+      "invalid-or-expired",
+      "Ce lien de confirmation est invalide ou a expiré. Recommencez l’inscription pour recevoir un nouveau lien.",
+    ],
+  ])(
+    "shows and consumes the %s confirmation result",
+    (code, expectedMessage) => {
+      mocks.searchParams = new URLSearchParams({
+        confirmation: code,
+        source: "email",
+      });
+
+      renderForm(<Login />);
+
+      expect(screen.getByRole("alert")).toHaveTextContent(expectedMessage);
+      expect(mocks.setSearchParams).toHaveBeenCalledTimes(1);
+      const [cleanedSearchParams, options] =
+        mocks.setSearchParams.mock.calls[0];
+      expect(cleanedSearchParams.get("confirmation")).toBeNull();
+      expect(cleanedSearchParams.get("source")).toBe("email");
+      expect(options).toEqual({ replace: true });
+    }
+  );
+
+  it("ignores an unknown confirmation result while cleaning the URL", () => {
+    mocks.searchParams = new URLSearchParams({ confirmation: "unexpected" });
+
+    renderForm(<Login />);
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    const [cleanedSearchParams] = mocks.setSearchParams.mock.calls[0];
+    expect(cleanedSearchParams.has("confirmation")).toBe(false);
+  });
+
+  it("keeps the existing registration success feedback and cleans its query", () => {
+    mocks.searchParams = new URLSearchParams({
+      success: "true",
+      message: "registrationok",
+    });
+
+    renderForm(<Login />);
+
+    expect(mocks.toastSuccess).toHaveBeenCalledWith(
+      "Votre compte a bien été créé !"
+    );
+    const [cleanedSearchParams, options] = mocks.setSearchParams.mock.calls[0];
+    expect(cleanedSearchParams.has("success")).toBe(false);
+    expect(cleanedSearchParams.has("message")).toBe(false);
+    expect(options).toEqual({ replace: true });
   });
 
   it("dispatches matching registration data", () => {
