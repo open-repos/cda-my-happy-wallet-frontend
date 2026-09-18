@@ -1,3 +1,5 @@
+import { API_COMPATIBILITY } from "./versioning";
+
 const DEFAULT_API_ORIGIN = "https://api.myhappywallet.andriacapai.com";
 
 const normalizeApiOrigin = (rawValue: string | undefined): string => {
@@ -28,7 +30,7 @@ export const createEnvironment = (apiOriginValue?: string) => {
 
   return {
     apiOrigin,
-    apiBaseUrl: `${apiOrigin}/v1`,
+    apiBaseUrl: `${apiOrigin}${API_COMPATIBILITY.pathPrefix}`,
   };
 };
 

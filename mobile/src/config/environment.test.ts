@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { createEnvironment } from "./environment";
+import { API_COMPATIBILITY } from "./versioning";
 
 describe("createEnvironment", () => {
   it("uses the production API when no override is configured", () => {
+    expect(API_COMPATIBILITY).toEqual({ major: 1, pathPrefix: "/v1" });
     expect(createEnvironment()).toEqual({
       apiOrigin: "https://api.myhappywallet.andriacapai.com",
       apiBaseUrl: "https://api.myhappywallet.andriacapai.com/v1",
