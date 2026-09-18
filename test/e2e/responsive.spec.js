@@ -116,6 +116,48 @@ const prepareProtectedPage = async (page) => {
       },
     });
   });
+  await page.route(/\/v1\/events(?:\?.*)?$/, (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      json: {
+        data: [
+          {
+            id: 8,
+            title: "Assurance",
+            amount: "120.00",
+            currency: "EUR",
+            kind: "DEPENSE",
+            startDate: "2026-09-20",
+            recurrence: "MENSUELLE",
+            endDate: null,
+          },
+        ],
+        meta: { limit: 100, hasNext: false, nextCursor: null },
+      },
+    })
+  );
+  await page.route(/\/v1\/event-occurrences(?:\?.*)?$/, (route) => {
+    const month = new URL(route.request().url()).searchParams.get("month");
+    return route.fulfill({
+      contentType: "application/json",
+      json: {
+        data: [
+          {
+            id: 8,
+            title: "Assurance",
+            amount: "120.00",
+            currency: "EUR",
+            kind: "DEPENSE",
+            startDate: "2026-09-20",
+            recurrence: "MENSUELLE",
+            endDate: null,
+            occurrenceDate: `${month}-20`,
+          },
+        ],
+        meta: { limit: 100, hasNext: false, nextCursor: null },
+      },
+    });
+  });
 };
 
 const protectedPages = [
@@ -155,9 +197,9 @@ for (const viewport of viewports) {
     await prepareProtectedPage(page);
     await page.goto("/calendrier");
 
-    await expect(page.locator(".calendrier-container")).toHaveText(
-      "Calendrier"
-    );
+    await expect(
+      page.getByRole("heading", { name: "Calendrier" })
+    ).toBeVisible();
 
     const contentBounds = await page
       .locator(".protected-layout__content")
