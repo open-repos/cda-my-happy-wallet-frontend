@@ -126,9 +126,20 @@ describe("authentication forms", () => {
         source: "email",
       });
 
-      renderForm(<Login />);
+      const view = renderForm(<Login />);
 
-      expect(screen.getByRole("alert")).toHaveTextContent(expectedMessage);
+      mocks.searchParams = new URLSearchParams({ source: "email" });
+      view.rerender(
+        <MemoryRouter>
+          <Login />
+        </MemoryRouter>
+      );
+
+      expect(mocks.toastError).toHaveBeenCalledTimes(1);
+      expect(mocks.toastError).toHaveBeenCalledWith(expectedMessage, {
+        toastId: `registration-confirmation-${code}`,
+      });
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
       expect(mocks.setSearchParams).toHaveBeenCalledTimes(1);
       const [cleanedSearchParams, options] =
         mocks.setSearchParams.mock.calls[0];
@@ -154,10 +165,19 @@ describe("authentication forms", () => {
       message: "registrationok",
     });
 
-    renderForm(<Login />);
+    const view = renderForm(<Login />);
 
+    mocks.searchParams = new URLSearchParams();
+    view.rerender(
+      <MemoryRouter>
+        <Login />
+      </MemoryRouter>
+    );
+
+    expect(mocks.toastSuccess).toHaveBeenCalledTimes(1);
     expect(mocks.toastSuccess).toHaveBeenCalledWith(
-      "Votre compte a bien été créé !"
+      "Votre compte a bien été créé !",
+      { toastId: "registration-confirmation-success" }
     );
     const [cleanedSearchParams, options] = mocks.setSearchParams.mock.calls[0];
     expect(cleanedSearchParams.has("success")).toBe(false);

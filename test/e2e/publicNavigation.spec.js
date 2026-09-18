@@ -32,6 +32,18 @@ for (const result of [
     await page.goto(`/login?confirmation=${result.code}`);
 
     await expect(page.getByRole("alert")).toHaveText(result.message);
+    await expect(page.getByRole("alert")).toHaveCount(1);
     await expect(page).toHaveURL(/\/login$/);
   });
 }
+
+test("shows one registration confirmation success toast", async ({ page }) => {
+  await page.goto("/login?success=true&message=registrationok");
+
+  const successToast = page.getByRole("alert").filter({
+    hasText: "Votre compte a bien été créé !",
+  });
+  await expect(successToast).toHaveCount(1);
+  await expect(successToast).toBeVisible();
+  await expect(page).toHaveURL(/\/login$/);
+});
