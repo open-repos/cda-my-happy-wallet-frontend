@@ -21,6 +21,13 @@ const confirmationMessages = {
     "Ce lien de confirmation est invalide ou a expiré. Recommencez l’inscription pour recevoir un nouveau lien.",
 };
 
+const confirmationToastIds = {
+  "already-used": "registration-confirmation-already-used",
+  "invalid-or-expired": "registration-confirmation-invalid-or-expired",
+};
+
+const registrationSuccessToastId = "registration-confirmation-success";
+
 export const getConfirmationMessage = (code) => {
   return confirmationMessages[code] ?? null;
 };
@@ -31,12 +38,11 @@ const Login = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useDispatch();
   const toastId = useRef(null);
+  const queryFeedbackHandled = useRef(false);
   const initialQuery = useRef({
     confirmation: searchParams.get("confirmation"),
     legacyMessage: searchParams.get("message"),
   }).current;
-  const confirmationMessage = getConfirmationMessage(initialQuery.confirmation);
-
   const from =
     location.state?.from?.pathname || location.state?.pathname || "/";
   const [email, setEmail] = useState("");
@@ -45,18 +51,33 @@ const Login = () => {
     useSelector((state) => state.auth);
 
   useEffect(() => {
+    if (queryFeedbackHandled.current) {
+      return;
+    }
+    queryFeedbackHandled.current = true;
+
     const cleanedSearchParams = new URLSearchParams(searchParams);
     let shouldCleanUrl = false;
 
     if (cleanedSearchParams.has("confirmation")) {
+      const confirmationMessage = getConfirmationMessage(
+        initialQuery.confirmation
+      );
+
+      if (confirmationMessage) {
+        toast.error(confirmationMessage, {
+          toastId: confirmationToastIds[initialQuery.confirmation],
+        });
+      }
+
       cleanedSearchParams.delete("confirmation");
       shouldCleanUrl = true;
     }
 
     if (initialQuery.legacyMessage === "registrationok") {
-      if (!toast.isActive(toastId.current)) {
-        toastId.current = toast.success("Votre compte a bien été créé !");
-      }
+      toast.success("Votre compte a bien été créé !", {
+        toastId: registrationSuccessToastId,
+      });
 
       if (
         cleanedSearchParams.has("message") ||
@@ -111,12 +132,6 @@ const Login = () => {
           Bienvenue <br /> sur MyHappyWallet{" "}
           <img src={favIcon} height="20rem" width="20rem" alt="" />
         </h1>
-
-        {confirmationMessage ? (
-          <div className="login-confirmation-message" role="alert">
-            {confirmationMessage}
-          </div>
-        ) : null}
 
         <input
           type="email"
