@@ -215,6 +215,36 @@ describe("authentication forms", () => {
     });
   });
 
+  it("keeps accepted registration feedback generic", () => {
+    mocks.authState = {
+      ...mocks.authState,
+      isSuccess: true,
+    };
+
+    renderForm(<Register />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Demande d’inscription prise en compte",
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Si cette adresse peut être utilisée pour une inscription, vous recevrez un email de confirmation."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Vous allez recevoir/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "connecter" })).toHaveAttribute(
+      "href",
+      "/login"
+    );
+    expect(
+      screen.getByRole("link", {
+        name: "réinitialiser votre mot de passe",
+      })
+    ).toHaveAttribute("href", "/forgot-password");
+  });
+
   it("dispatches a password reset request", () => {
     renderForm(<ForgotPassword />);
 
