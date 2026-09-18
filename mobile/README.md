@@ -95,3 +95,6 @@ l'access token et le profil utilisateur ne sont pas persistants dans ce coffre.
 Documentation officielle : https://docs.expo.dev/
 
 Strategie de build et de publication : [`docs/ci-cd.md`](docs/ci-cd.md).
+
+Politique SemVer, numeros de build EAS et compatibilite `/v1` :
+[`docs/versioning-and-api-compatibility.md`](docs/versioning-and-api-compatibility.md).

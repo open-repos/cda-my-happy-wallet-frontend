@@ -69,10 +69,15 @@ Expo et la validation du proprietaire des credentials.
 ## Versionnement
 
 - `expo.version` suit SemVer et reste versionne dans Git.
+- `package.json.version` reprend la meme valeur et `npm run version:check`
+  controle les deux manifests avant les tests.
 - EAS utilise `cli.appVersionSource: remote` pour les versions techniques.
 - Le profil `production` utilise `autoIncrement: true` pour eviter les doublons
   de `versionCode` Android et `buildNumber` iOS.
 - Un tag mobile ne doit etre cree qu'apres pipeline verte sur `main`.
+
+La politique complete, la compatibilite `/v1` et la recette de release sont
+decrites dans [versioning-and-api-compatibility.md](versioning-and-api-compatibility.md).
 
 ## Prerequis Stores
 
