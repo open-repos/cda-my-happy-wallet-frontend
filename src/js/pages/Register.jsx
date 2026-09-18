@@ -1,12 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./../../css/Register.css";
 import "./../../css/Auth.css";
 import mailSent from "./../../assets/icons/Mail-sent.svg";
 import favIcon from "./../../assets/icons/favicon.svg";
 import { Link } from "react-router-dom";
-import { faChevronCircleLeft } from "@fortawesome/free-solid-svg-icons";
 import Spinner from "../components/Spinner";
 import { register, reset } from "./../slices/auth/authSlice";
 import { toast } from "react-toastify";
@@ -14,19 +12,23 @@ import { toast } from "react-toastify";
 const ConfirmationRegister = () => {
   return (
     <div className="confirm-register">
-      <div className="goback">
-        <Link to="/login">
-          <FontAwesomeIcon icon={faChevronCircleLeft} /> Retourner à la page de
-          login
-        </Link>
-      </div>
-      <h1>
-        <span style={{ color: "var(--orange-light)" }}>
-          Merci pour votre incription !{" "}
-        </span>{" "}
-        Vous allez recevoir un mail de confirmation
-      </h1>{" "}
-      <img src={mailSent} height="auto" width="40%" />
+      <section aria-labelledby="registration-feedback-title">
+        <h1 id="registration-feedback-title">
+          <span style={{ color: "var(--orange-light)" }}>
+            Demande d’inscription prise en compte
+          </span>
+        </h1>
+        <p>
+          Si cette adresse peut être utilisée pour une inscription, vous
+          recevrez un email de confirmation.
+        </p>
+        <p>
+          Si vous avez déjà un compte, vous pouvez vous{" "}
+          <Link to="/login">connecter</Link> ou{" "}
+          <Link to="/forgot-password">réinitialiser votre mot de passe</Link>.
+        </p>
+      </section>
+      <img src={mailSent} height="auto" width="40%" alt="" />
     </div>
   );
 };

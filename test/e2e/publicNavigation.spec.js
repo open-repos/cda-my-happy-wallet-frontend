@@ -47,3 +47,41 @@ test("shows one registration confirmation success toast", async ({ page }) => {
   await expect(successToast).toBeVisible();
   await expect(page).toHaveURL(/\/login$/);
 });
+
+test("keeps accepted registration feedback generic", async ({ page }) => {
+  await page.route("**/v1/users/register/", async (route) => {
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({
+        succes: true,
+        message:
+          "If registration is available, a confirmation email will be sent.",
+      }),
+    });
+  });
+  await page.goto("/register");
+
+  await page.getByPlaceholder("Entrez prénom").fill("Happy");
+  await page.getByPlaceholder("Entrez votre nom").fill("Wallet");
+  await page.getByPlaceholder("Entrez votre email").fill("user@example.test");
+  await page.getByPlaceholder("Entrez mot de passe").fill("LocalPass!1");
+  await page
+    .getByPlaceholder("Confirmez votre mot de passe")
+    .fill("LocalPass!1");
+  await page.getByRole("button", { name: "S'enregistrer" }).click();
+
+  await expect(
+    page.getByRole("heading", {
+      name: "Demande d’inscription prise en compte",
+    })
+  ).toBeVisible();
+  await expect(page.getByText(/Vous allez recevoir/i)).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "connecter" })).toHaveAttribute(
+    "href",
+    "/login"
+  );
+  await expect(
+    page.getByRole("link", { name: "réinitialiser votre mot de passe" })
+  ).toHaveAttribute("href", "/forgot-password");
+});
