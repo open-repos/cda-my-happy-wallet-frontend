@@ -5,6 +5,8 @@ export const createRefreshTokenHandler = ({
   getStoredUser,
   now = () => Date.now(),
 }) => {
+  let refreshInFlight = null;
+
   return async (request) => {
     const user = store?.getState()?.auth?.user;
     const accessToken = user?.payload?.accessToken;
@@ -27,12 +29,20 @@ export const createRefreshTokenHandler = ({
       email: user.payload.user.email,
     };
 
-    await store.dispatch(createRefreshAction({ body, accessToken }));
+    if (refreshInFlight == null) {
+      refreshInFlight = Promise.resolve(
+        store.dispatch(createRefreshAction({ body, accessToken }))
+      ).finally(() => {
+        refreshInFlight = null;
+      });
+    }
+
+    await refreshInFlight;
 
     const refreshedUser = store?.getState()?.auth?.user;
     if (refreshedUser == null) {
       getStoredUser("user");
-      return request;
+      throw new Error("Session renewal failed");
     }
 
     const refreshedAccessToken = refreshedUser.payload.accessToken;
