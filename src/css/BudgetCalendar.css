@@ -74,6 +74,8 @@
   flex-direction: column;
   gap: var(--ds-primitive-space-1);
   margin: 0;
+  /* Sur une surface claire : ne pas hériter du texte clair du body. */
+  color: var(--ds-color-text-primary);
 }
 
 .budget-breakdown__row {
@@ -94,7 +96,16 @@
   border-left: var(--ds-border-width-focus) solid var(--ds-color-data-forecast);
   border-radius: var(--ds-radius-control);
   background: var(--ds-color-status-info-surface);
+  color: var(--ds-color-status-info-text);
   font-weight: var(--ds-primitive-font-weight-semibold);
+}
+
+/*
+ * Le fond d'information reste clair dans les deux thèmes : les couleurs de
+ * signe y manquent de contraste en sombre. Le signe reste écrit (+ / −).
+ */
+.budget-breakdown__row--carry dd {
+  color: inherit;
 }
 
 .budget-breakdown__row--total {
