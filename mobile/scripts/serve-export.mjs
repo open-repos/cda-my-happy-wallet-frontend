@@ -54,6 +54,41 @@ const testApiResponse = (pathname) => {
       meta: noNextPage,
     };
   }
+  const summary = /\/budget-periods\/(\d{4}-\d{2})\/summary$/.exec(pathname);
+  if (summary != null) {
+    return {
+      data: {
+        month: summary[1],
+        currency: "EUR",
+        status: "OPEN",
+        revision: 1,
+        correctedAt: null,
+        balanceStatus: "POSITIVE",
+        fixedIncome: "2400.00",
+        fixedExpense: "900.00",
+        base: "1500.00",
+        carryIn: "-120.00",
+        carryFromMonth: "2026-08",
+        actualIncome: "0.00",
+        actualExpense: "42.50",
+        monthResult: "1457.50",
+        realRemaining: "1337.50",
+        remainingDays: 21,
+        realDailyAllowance: "63.69",
+        unresolvedEvents: 1,
+        forecast: {
+          plannedIncome: "0.00",
+          plannedExpense: "300.00",
+          goalSavings: "150.00",
+          forecastRemaining: "887.50",
+          prudentDailyAllowance: "42.26",
+          unresolvedCount: 1,
+          overdueCount: 1,
+        },
+        days: [],
+      },
+    };
+  }
   if (pathname.endsWith("/operation-categories")) {
     return {
       data: [{ color: "#EA7C69", id: 4, name: "Alimentation" }],
