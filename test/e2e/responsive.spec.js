@@ -591,6 +591,49 @@ for (const viewport of viewports.slice(1)) {
 }
 
 for (const theme of ["light", "dark"]) {
+  test(`budget breakdown labels use the text tokens in the ${theme} theme`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewports[0]);
+    await prepareProtectedPage(page);
+    await page.addInitScript((value) => {
+      window.localStorage.setItem("mhw-theme", value);
+    }, theme);
+
+    for (const path of ["/home", "/calendrier"]) {
+      await page.goto(path);
+      const breakdown = page.locator(".budget-breakdown").first();
+      await expect(breakdown).toBeVisible();
+      const colors = await breakdown.evaluate((element) => {
+        const probe = (name) => {
+          const span = document.createElement("span");
+          span.style.color = `var(${name})`;
+          element.appendChild(span);
+          const color = getComputedStyle(span).color;
+          span.remove();
+          return color;
+        };
+        const label = (selector) =>
+          getComputedStyle(element.querySelector(selector)).color;
+        return {
+          primary: probe("--ds-color-text-primary"),
+          info: probe("--ds-color-status-info-text"),
+          result: label(
+            ".budget-breakdown__row:not(.budget-breakdown__row--carry) dt"
+          ),
+          carry: label(".budget-breakdown__row--carry dt"),
+          carryAmount: label(".budget-breakdown__row--carry dd"),
+        };
+      });
+      expect(colors.result, path).toBe(colors.primary);
+      expect(colors.carry, path).toBe(colors.info);
+      // Montant du report : même contraste que son libellé, signe écrit.
+      expect(colors.carryAmount, path).toBe(colors.info);
+    }
+  });
+}
+
+for (const theme of ["light", "dark"]) {
   for (const viewport of viewports) {
     test(`profile theme ${theme} fits the ${viewport.name} viewport`, async ({
       page,
