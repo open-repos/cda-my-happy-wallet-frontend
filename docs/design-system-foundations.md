@@ -80,9 +80,14 @@ deux thèmes et contrôlés par `contrastPairs` :
 | `backgroundShell`  | `--ds-color-background-shell`    | `green700`   | —         |
 | `textOnShell`      | `--ds-color-text-on-shell`       | `neutral100` | 7,56:1    |
 | `textOnShellMuted` | `--ds-color-text-on-shell-muted` | `green200`   | 5,55:1    |
+| `focusRingOnShell` | `--ds-color-focus-ring-on-shell` | `neutral100` | 7,56:1    |
 
 Titres d'en-tête sur la coque en `textOnShell`; sur-titres et sous-titres en
-`textOnShellMuted`. Les cartes de surface gardent les rôles `text*`. Un
+`textOnShellMuted`; anneau de focus des contrôles posés sur la coque (en-têtes,
+bouton menu) en `focusRingOnShell` (minimum 3:1), toujours avec un décalage
+d'au moins 2 px : en sombre, le fond des boutons d'action est trop proche de
+la coque pour qu'une seule couleur contraste avec les deux, l'anneau ne doit
+donc toucher que la coque. Les cartes de surface gardent les rôles `text*`. Un
 contrôle Playwright mesure le contraste réel de tout texte visible posé sur la
 coque, sur chaque page protégée et dans les deux thèmes.
 

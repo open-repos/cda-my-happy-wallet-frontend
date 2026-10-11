@@ -228,6 +228,11 @@
   color: var(--ds-color-action-secondary-text);
 }
 
+/* Contrôles posés sur la coque : anneau de focus contrasté avec elle. */
+.monthly-events-header :is(a, button, input, select):focus-visible {
+  outline-color: var(--ds-color-focus-ring-on-shell);
+}
+
 /* « Aujourd'hui », affiché hors du mois courant, est aussi sur la coque. */
 .monthly-events-header .budget-link-button {
   color: var(--ds-color-text-on-shell);

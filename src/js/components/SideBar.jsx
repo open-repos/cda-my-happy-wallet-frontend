@@ -72,6 +72,13 @@ const Button = styled.button`
 
   position: relative;
 
+  /* Le bouton menu est posé sur la coque : anneau contrasté avec elle. */
+  &:focus-visible {
+    outline: var(--ds-border-width-focus) solid
+      var(--ds-color-focus-ring-on-shell);
+    outline-offset: 2px;
+  }
+
   &::before,
   &::after {
     content: "";
