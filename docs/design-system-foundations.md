@@ -68,6 +68,24 @@ Les styles calculés, dimensions dépendantes des données et contraintes propre
 à un composant peuvent rester locaux. L'objectif est de centraliser les
 décisions de design partagées, pas chaque nombre présent dans le CSS.
 
+### Texte sur la coque historique
+
+Les pages protégées reposent encore sur la coque verte historique (alias
+`--background`, `green700`), identique dans les deux thèmes. Le texte posé
+directement dessus utilise les rôles dédiés, également identiques dans les
+deux thèmes et contrôlés par `contrastPairs` :
+
+| Rôle               | Variable CSS                     | Valeur       | Contraste |
+| ------------------ | -------------------------------- | ------------ | --------- |
+| `backgroundShell`  | `--ds-color-background-shell`    | `green700`   | —         |
+| `textOnShell`      | `--ds-color-text-on-shell`       | `neutral100` | 7,56:1    |
+| `textOnShellMuted` | `--ds-color-text-on-shell-muted` | `green200`   | 5,55:1    |
+
+Titres d'en-tête sur la coque en `textOnShell`; sur-titres et sous-titres en
+`textOnShellMuted`. Les cartes de surface gardent les rôles `text*`. Un
+contrôle Playwright mesure le contraste réel de tout texte visible posé sur la
+coque, sur chaque page protégée et dans les deux thèmes.
+
 ## Accessibilité et qualité
 
 - les combinaisons texte/fond et états interactifs respectent au minimum le

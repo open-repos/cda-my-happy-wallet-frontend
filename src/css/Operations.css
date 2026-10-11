@@ -19,11 +19,13 @@
   margin: 0 auto;
 }
 
+/* En-tête posé sur la coque verte : rôles de texte « sur coque ». */
 .one-off-header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--ds-primitive-space-6);
+  color: var(--ds-color-text-on-shell);
 }
 
 .one-off-header h1 {
@@ -39,12 +41,12 @@
 .one-off-header p:not(.one-off-eyebrow) {
   max-width: 44rem;
   margin-top: var(--ds-primitive-space-2);
-  color: var(--ds-color-text-muted);
+  color: var(--ds-color-text-on-shell-muted);
 }
 
 .one-off-eyebrow {
   margin-bottom: var(--ds-primitive-space-2);
-  color: var(--ds-color-text-secondary);
+  color: var(--ds-color-text-on-shell-muted);
   font-size: var(--ds-primitive-font-size-sm);
   font-weight: var(--ds-primitive-font-weight-bold);
   letter-spacing: 0.08em;
