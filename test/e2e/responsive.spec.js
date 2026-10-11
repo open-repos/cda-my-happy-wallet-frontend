@@ -784,6 +784,85 @@ const SHELL_CONTROLS = {
   "/profil": ["Ouvrir le menu"],
 };
 
+/** Contraste de l'anneau de focus de l'élément actif contre son fond réel. */
+const focusRingContrast = (page) =>
+  page.evaluate(() => {
+    const element = document.activeElement;
+    const parse = (color) => {
+      const [r, g, b, a = 1] = color.match(/[\d.]+/g).map(Number);
+      return { r, g, b, a };
+    };
+    const luminance = ({ r, g, b }) => {
+      const [lr, lg, lb] = [r, g, b].map((value) => {
+        const channel = value / 255;
+        return channel <= 0.03928
+          ? channel / 12.92
+          : ((channel + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
+    };
+    let background = getComputedStyle(document.body).backgroundColor;
+    for (let node = element.parentElement; node; node = node.parentElement) {
+      const color = getComputedStyle(node).backgroundColor;
+      if (parse(color).a > 0) {
+        background = color;
+        break;
+      }
+    }
+    const style = getComputedStyle(element);
+    const name = (element.getAttribute("aria-label") || element.textContent)
+      .trim()
+      .slice(0, 30);
+    if (style.outlineStyle === "none" || parseFloat(style.outlineWidth) === 0) {
+      return { name, ratio: 0, inNavigation: Boolean(element.closest("nav")) };
+    }
+    const [high, low] = [
+      luminance(parse(style.outlineColor)),
+      luminance(parse(background)),
+    ].sort((a, b) => b - a);
+    return {
+      name,
+      ratio: (high + 0.05) / (low + 0.05),
+      inNavigation: Boolean(element.closest("nav")),
+    };
+  });
+
+for (const theme of ["light", "dark"]) {
+  for (const viewport of viewports) {
+    test(`navigation focus rings are visible in the ${theme} theme on the ${viewport.name} viewport`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await prepareProtectedPage(page);
+      await page.addInitScript((value) => {
+        window.localStorage.setItem("mhw-theme", value);
+      }, theme);
+      await page.goto("/home");
+      await expect(page.locator(".home-budget")).toBeVisible();
+      if (viewport === viewports[0]) {
+        await page.getByRole("button", { name: "Ouvrir le menu" }).click();
+      }
+      const reached = new Map();
+      for (let index = 0; index < 30; index += 1) {
+        await page.keyboard.press("Tab");
+        const ring = await focusRingContrast(page);
+        if (ring.inNavigation) reached.set(ring.name, ring.ratio);
+      }
+      expect([...reached.keys()]).toEqual(
+        expect.arrayContaining([
+          "Home",
+          "Calendrier",
+          "Objectifs-Évènements",
+          "Liste Opérations",
+          "Analyses",
+        ])
+      );
+      const weak = [...reached].filter(([, ratio]) => ratio < 3);
+      expect(weak).toEqual([]);
+    });
+  }
+}
+
 for (const theme of ["light", "dark"]) {
   for (const viewport of viewports) {
     test(`focus rings on the shell are visible in the ${theme} theme on the ${viewport.name} viewport`, async ({

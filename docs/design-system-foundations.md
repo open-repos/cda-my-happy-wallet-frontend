@@ -75,16 +75,19 @@ Les pages protégées reposent encore sur la coque verte historique (alias
 directement dessus utilise les rôles dédiés, également identiques dans les
 deux thèmes et contrôlés par `contrastPairs` :
 
-| Rôle               | Variable CSS                     | Valeur       | Contraste |
-| ------------------ | -------------------------------- | ------------ | --------- |
-| `backgroundShell`  | `--ds-color-background-shell`    | `green700`   | —         |
-| `textOnShell`      | `--ds-color-text-on-shell`       | `neutral100` | 7,56:1    |
-| `textOnShellMuted` | `--ds-color-text-on-shell-muted` | `green200`   | 5,55:1    |
-| `focusRingOnShell` | `--ds-color-focus-ring-on-shell` | `neutral100` | 7,56:1    |
+| Rôle                | Variable CSS                     | Valeur       | Contraste |
+| ------------------- | -------------------------------- | ------------ | --------- |
+| `backgroundShell`   | `--ds-color-background-shell`    | `green700`   | —         |
+| `textOnShell`       | `--ds-color-text-on-shell`       | `neutral100` | 7,56:1    |
+| `textOnShellMuted`  | `--ds-color-text-on-shell-muted` | `green200`   | 5,55:1    |
+| `focusRingOnShell`  | `--ds-color-focus-ring-on-shell` | `neutral100` | 7,56:1    |
+| `backgroundSidebar` | `--ds-color-background-sidebar`  | `neutral900` | —         |
 
 Titres d'en-tête sur la coque en `textOnShell`; sur-titres et sous-titres en
 `textOnShellMuted`; anneau de focus des contrôles posés sur la coque (en-têtes,
-bouton menu) en `focusRingOnShell` (minimum 3:1), toujours avec un décalage
+bouton menu) et des liens de la barre latérale (fond historique
+`backgroundSidebar`, alias `--dark-secondary-color`) en `focusRingOnShell`
+(minimum 3:1, 11,56:1 sur la barre latérale), toujours avec un décalage
 d'au moins 2 px : en sombre, le fond des boutons d'action est trop proche de
 la coque pour qu'une seule couleur contraste avec les deux, l'anneau ne doit
 donc toucher que la coque. Les cartes de surface gardent les rôles `text*`. Un
