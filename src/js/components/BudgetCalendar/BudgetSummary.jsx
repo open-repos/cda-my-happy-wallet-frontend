@@ -12,11 +12,11 @@ const balanceLabels = {
   NEGATIVE: "Négatif",
 };
 
-const toneOf = (amount) =>
+export const toneOf = (amount) =>
   Number(amount) < 0 ? "negative" : Number(amount) > 0 ? "positive" : "neutral";
 
 /** Décomposition explicite : report du mois précédent + résultat du mois. */
-const RealBreakdown = ({ summary }) => (
+export const RealBreakdown = ({ summary }) => (
   <dl className="budget-breakdown">
     {summary.carryFromMonth && (
       <div className="budget-breakdown__row budget-breakdown__row--carry">
@@ -39,7 +39,7 @@ const RealBreakdown = ({ summary }) => (
   </dl>
 );
 
-const CarryHelp = ({ summary }) =>
+export const CarryHelp = ({ summary }) =>
   summary.carryFromMonth ? (
     <p className="budget-help">
       {Number(summary.carryIn) < 0

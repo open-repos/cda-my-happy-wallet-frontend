@@ -46,4 +46,5 @@ réalisation rétroactive (`PERIOD_CLOSED`).
 Nœuds Figma `403:27863`, `403:28042`, `403:28124` et `403:28210` relus avec le
 MCP le 11 octobre 2026; complément produit du 19 septembre et décision report
 de solde du 11 octobre. Les tokens versionnés remplacent les valeurs des
-wireframes. Les vues Mois/Semaine/Jour de l'accueil sont suivies par #99.
+wireframes. Les vues Mois/Semaine/Jour de l’accueil sont décrites dans
+`docs/web-home-budget.md`.

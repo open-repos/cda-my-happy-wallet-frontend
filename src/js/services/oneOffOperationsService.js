@@ -1,7 +1,8 @@
 import { apiPrivate } from "../../utils/axiosHelper";
 
 export const OPERATIONS_PAGE_LIMIT = 20;
-const CATEGORIES_PAGE_LIMIT = 100;
+const MAX_PAGE_LIMIT = 100;
+const CATEGORIES_PAGE_LIMIT = MAX_PAGE_LIMIT;
 
 const isPaginationMeta = (meta) =>
   Number.isInteger(meta?.limit) &&
@@ -78,6 +79,33 @@ export const oneOffOperationsService = {
       withCredentials: true,
     });
     return parseCollectionPage(response.data, parseOperation);
+  },
+
+  /** Toutes les opérations d'une période bornée (par exemple un mois). */
+  async listAllOperations(filter) {
+    const operations = [];
+    const visitedCursors = new Set();
+    let cursor = null;
+
+    do {
+      const response = await apiPrivate.get("/operations", {
+        params: {
+          ...filter,
+          limit: MAX_PAGE_LIMIT,
+          ...(cursor ? { cursor } : {}),
+        },
+        withCredentials: true,
+      });
+      const page = parseCollectionPage(response.data, parseOperation);
+      operations.push(...page.data);
+      cursor = page.meta.hasNext ? page.meta.nextCursor : null;
+      if (cursor && visitedCursors.has(cursor)) {
+        throw new Error("Repeated operation cursor");
+      }
+      if (cursor) visitedCursors.add(cursor);
+    } while (cursor);
+
+    return operations;
   },
 
   async listAllCategories() {
