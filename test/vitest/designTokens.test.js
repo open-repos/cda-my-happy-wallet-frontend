@@ -49,6 +49,11 @@ describe("design token contract", () => {
           foreground: "textOnShellMuted",
           background: "backgroundShell",
         }),
+        expect.objectContaining({
+          foreground: "focusRingOnShell",
+          background: "backgroundShell",
+          minimum: 3,
+        }),
       ])
     );
   });

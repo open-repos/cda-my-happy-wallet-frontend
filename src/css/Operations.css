@@ -38,6 +38,11 @@
   line-height: var(--ds-primitive-line-height-tight);
 }
 
+/* Contrôles posés sur la coque : anneau de focus contrasté avec elle. */
+.one-off-header :is(a, button, input, select):focus-visible {
+  outline-color: var(--ds-color-focus-ring-on-shell);
+}
+
 .one-off-header p:not(.one-off-eyebrow) {
   max-width: 44rem;
   margin-top: var(--ds-primitive-space-2);

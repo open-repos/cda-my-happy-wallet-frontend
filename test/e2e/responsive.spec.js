@@ -706,6 +706,119 @@ const lowContrastOnShell = (page) =>
     return failures;
   });
 
+/**
+ * Parcourt la page au clavier et renvoie les contrôles posés sur la coque dont
+ * l'anneau de focus manque de contraste avec elle (3:1, WCAG 1.4.11).
+ */
+const weakFocusOnShell = async (page, presses = 40) => {
+  const failures = new Set();
+  const checked = new Set();
+  for (let index = 0; index < presses; index += 1) {
+    await page.keyboard.press("Tab");
+    const result = await page.evaluate(() => {
+      const element = document.activeElement;
+      if (!element || element === document.body) return null;
+      const parse = (color) => {
+        const [r, g, b, a = 1] = color.match(/[\d.]+/g).map(Number);
+        return { r, g, b, a };
+      };
+      const luminance = ({ r, g, b }) => {
+        const [lr, lg, lb] = [r, g, b].map((value) => {
+          const channel = value / 255;
+          return channel <= 0.03928
+            ? channel / 12.92
+            : ((channel + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
+      };
+      for (
+        let node = element.parentElement;
+        node && node !== document.body;
+        node = node.parentElement
+      ) {
+        if (parse(getComputedStyle(node).backgroundColor).a > 0) return null;
+      }
+      const style = getComputedStyle(element);
+      const name = (
+        element.getAttribute("aria-label") ||
+        element.textContent ||
+        element.tagName
+      )
+        .trim()
+        .slice(0, 30);
+      if (
+        style.outlineStyle === "none" ||
+        parseFloat(style.outlineWidth) === 0
+      ) {
+        return { name, failure: `${name} (aucun anneau)` };
+      }
+      const [high, low] = [
+        luminance(parse(style.outlineColor)),
+        luminance(parse(getComputedStyle(document.body).backgroundColor)),
+      ].sort((a, b) => b - a);
+      const ratio = (high + 0.05) / (low + 0.05);
+      return {
+        name,
+        failure: ratio < 3 ? `${name} (${ratio.toFixed(2)}:1)` : null,
+      };
+    });
+    if (result) {
+      checked.add(result.name);
+      if (result.failure) failures.add(result.failure);
+    }
+  }
+  return { failures: [...failures], checked: [...checked] };
+};
+
+// Contrôles de la coque que le parcours clavier doit atteindre.
+const SHELL_CONTROLS = {
+  "/home": ["Ouvrir le menu"],
+  "/calendrier": ["Ouvrir le menu", "Mois précédent", "Mois suivant"],
+  "/objectifs-evenements": [
+    "Ouvrir le menu",
+    "Ajouter un objectif",
+    "Ajouter un événement",
+  ],
+  "/operations": ["Ouvrir le menu", "Ajouter une opération"],
+  "/analyses": ["Ouvrir le menu"],
+  "/profil": ["Ouvrir le menu"],
+};
+
+for (const theme of ["light", "dark"]) {
+  for (const viewport of viewports) {
+    test(`focus rings on the shell are visible in the ${theme} theme on the ${viewport.name} viewport`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await prepareProtectedPage(page);
+      await page.addInitScript((value) => {
+        window.localStorage.setItem("mhw-theme", value);
+      }, theme);
+      const failures = {};
+      for (const protectedPage of protectedPages) {
+        await page.goto(protectedPage.path);
+        await expect(page.locator(protectedPage.selector)).toBeVisible();
+        const { failures: pageFailures, checked } = await weakFocusOnShell(
+          page
+        );
+        if (pageFailures.length) failures[protectedPage.path] = pageFailures;
+        expect(checked, protectedPage.path).toEqual(
+          expect.arrayContaining(SHELL_CONTROLS[protectedPage.path])
+        );
+      }
+      await page.goto("/calendrier");
+      await page.getByRole("button", { name: "Mois suivant" }).click();
+      const { failures: calendarFailures, checked: calendarChecked } =
+        await weakFocusOnShell(page);
+      expect(calendarChecked).toEqual(expect.arrayContaining(["Aujourd’hui"]));
+      if (calendarFailures.length) {
+        failures["/calendrier (mois suivant)"] = calendarFailures;
+      }
+      expect(failures).toEqual({});
+    });
+  }
+}
+
 for (const theme of ["light", "dark"]) {
   for (const viewport of viewports) {
     test(`text on the shell is readable in the ${theme} theme on the ${viewport.name} viewport`, async ({
