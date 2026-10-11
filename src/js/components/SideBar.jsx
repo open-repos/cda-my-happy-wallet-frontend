@@ -261,6 +261,16 @@ const Profile = styled.div`
   }
 `;
 
+/** Bouton d'ouverture du profil : l'image reste décorative. */
+const ProfileToggle = styled.button`
+  display: inline-flex;
+  padding: 0;
+  border: none;
+  border-radius: 70%;
+  background: transparent;
+  cursor: pointer;
+`;
+
 const Details = styled.div`
   display: ${(props) => (props.clicked ? "flex" : "none")};
   justify-content: space-between;
@@ -440,12 +450,16 @@ const Sidebar = () => {
           </Item>
         </SlickBar>
         <Profile clicked={profileClick} path={location.pathname} to="/profil" className={(navData) => (navData.isActive ? "active-profile" : "")}>
-          <img
+          <ProfileToggle
+            type="button"
+            aria-label={profileClick ? "Masquer le profil" : "Afficher le profil"}
+            aria-expanded={profileClick}
+            aria-controls="sidebar-profile-details"
             onClick={() => handleProfileClick()}
-            src={Profil} //"https://picsum.photos/200"
-            alt="Profile"
-          />
-          <Details clicked={profileClick}>
+          >
+            <img src={Profil} alt="" aria-hidden="true" />
+          </ProfileToggle>
+          <Details id="sidebar-profile-details" clicked={profileClick}>
             {/* <NavLink
               to="/profil"
               className={(navData) =>
@@ -468,14 +482,8 @@ const Sidebar = () => {
                 <Link className="link-profil" to="/profil">voir&nbsp;profil</Link>
               </Name>
             {/* </NavLink> */}
-            <Logout>
-              <img
-                // className="logout"
-                // onClick={() => handleLogout()}
-                onClick={onLogout}
-                src={PowerOff}
-                alt="logout"
-              />
+            <Logout type="button" aria-label="Se déconnecter" onClick={onLogout}>
+              <img src={PowerOff} alt="" aria-hidden="true" />
             </Logout>
           </Details>
         </Profile>

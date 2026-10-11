@@ -863,6 +863,40 @@ for (const theme of ["light", "dark"]) {
   }
 }
 
+for (const viewport of viewports) {
+  test(`profile and logout are keyboard reachable on the ${viewport.name} viewport`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await prepareProtectedPage(page);
+    await page.goto("/home");
+    await expect(page.locator(".home-budget")).toBeVisible();
+    if (viewport === viewports[0]) {
+      await page.getByRole("button", { name: "Ouvrir le menu" }).click();
+    }
+    const tabTo = async (name) => {
+      for (let index = 0; index < 40; index += 1) {
+        await page.keyboard.press("Tab");
+        const ring = await focusRingContrast(page);
+        if (ring.name === name) return ring;
+      }
+      throw new Error(`${name} non atteint au clavier`);
+    };
+
+    const toggle = await tabTo("Afficher le profil");
+    expect(toggle.ratio).toBeGreaterThanOrEqual(3);
+    await page.keyboard.press("Enter");
+    await expect(
+      page.getByRole("button", { name: "Masquer le profil" })
+    ).toHaveAttribute("aria-expanded", "true");
+
+    const logout = await tabTo("Se déconnecter");
+    expect(logout.ratio).toBeGreaterThanOrEqual(3);
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/login/);
+  });
+}
+
 for (const theme of ["light", "dark"]) {
   for (const viewport of viewports) {
     test(`focus rings on the shell are visible in the ${theme} theme on the ${viewport.name} viewport`, async ({
