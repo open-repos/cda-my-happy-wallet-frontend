@@ -82,8 +82,16 @@ export const ExpensesByCategoryCard = ({ section, currency }) => (
     ) : (
       <ExpensesChart rows={section.data} currency={currency} />
     )}
-    <Link className="home-budget__button" to="/operations">
-      Ajouter une dépense
-    </Link>
+    <div className="home-budget__actions">
+      <Link className="home-budget__button" to="/operations">
+        Ajouter une dépense
+      </Link>
+      <Link
+        className="home-budget__link"
+        to="/analyses?metric=expense&groupBy=category&splitBy=none&chart=pie&period=month"
+      >
+        Explorer mes dépenses
+      </Link>
+    </div>
   </article>
 );

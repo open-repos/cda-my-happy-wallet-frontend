@@ -170,6 +170,12 @@ describe("Home reste à vivre", () => {
     expect(
       screen.getByRole("link", { name: "Ajouter une dépense" })
     ).toHaveAttribute("href", "/operations");
+    expect(
+      screen.getByRole("link", { name: "Explorer mes dépenses" })
+    ).toHaveAttribute(
+      "href",
+      "/analyses?metric=expense&groupBy=category&splitBy=none&chart=pie&period=month"
+    );
   });
 
   it("renders the goals ring with an accessible label", () => {

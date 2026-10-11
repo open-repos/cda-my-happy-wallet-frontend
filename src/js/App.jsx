@@ -17,6 +17,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import NewPassword from "./pages/NewPassword";
 import 'react-toastify/dist/ReactToastify.css';
 import OperationsFixes from "./pages/OperationsFixes";
+import Analyses from "./pages/Analyses";
 import CalculRaV from "./components/CalculRaV";
 
 function App() {
@@ -66,6 +67,14 @@ function App() {
               element={
                 <ProtectedLayout>
                   <ListeOperations />
+                </ProtectedLayout>
+              }
+            ></Route>
+            <Route
+              path="/analyses"
+              element={
+                <ProtectedLayout>
+                  <Analyses />
                 </ProtectedLayout>
               }
             ></Route>

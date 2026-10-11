@@ -242,6 +242,46 @@ const prepareProtectedPage = async (page) => {
       },
     })
   );
+  await page.route(/\/v1\/analytics\/operations/, (route) => {
+    const params = new URL(route.request().url()).searchParams;
+    const totals = (key, expense, extra = {}) => ({
+      key,
+      label: null,
+      color: null,
+      income: "0.00",
+      expense,
+      net: `-${expense}`,
+      count: 1,
+      ...extra,
+    });
+    const categories = [
+      totals("4", "42.50", { label: "Alimentation", color: "#55AA22" }),
+      totals("7", "18.00", { label: "Loisirs" }),
+    ];
+    const buckets =
+      params.get("groupBy") === "category"
+        ? categories
+        : ["2026-08", "2026-09", "2026-10"].map((month, index) => ({
+            ...totals(month, (60.5 + index * 10).toFixed(2)),
+            ...(params.get("splitBy") === "category"
+              ? { series: categories }
+              : {}),
+          }));
+    return route.fulfill({
+      contentType: "application/json",
+      json: {
+        data: {
+          currency: "EUR",
+          from: params.get("from"),
+          to: params.get("to"),
+          groupBy: params.get("groupBy"),
+          splitBy: params.get("splitBy"),
+          kind: params.get("kind"),
+          buckets,
+        },
+      },
+    });
+  });
   await page.route(/\/v1\/event-occurrences\/pending/, (route) => {
     const through = new URL(route.request().url()).searchParams.get("through");
     return route.fulfill({
@@ -269,6 +309,7 @@ const protectedPages = [
   { path: "/calendrier", selector: ".calendrier-container" },
   { path: "/objectifs-evenements", selector: ".objEv-container" },
   { path: "/operations", selector: ".operations-container" },
+  { path: "/analyses", selector: ".analytics" },
   { path: "/profil", selector: ".profil-container" },
 ];
 
@@ -396,6 +437,54 @@ for (const viewport of viewports) {
     await expect(
       page.getByRole("img", { name: /25 % de l’épargne visée atteinte/ })
     ).toBeVisible();
+
+    const hasHorizontalOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth
+    );
+    expect(hasHorizontalOverflow).toBe(false);
+  });
+
+  test(`analytics explorer charts two combinations on the ${viewport.name} viewport`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await prepareProtectedPage(page);
+    await page.goto("/home");
+    await expect(page.locator('a[href="/analyses"]')).toBeVisible();
+    await page.getByRole("link", { name: "Explorer mes dépenses" }).click();
+    await expect(page).toHaveURL(/\/analyses\?metric=expense&groupBy=category/);
+    await expect(page.getByRole("heading", { name: "Analyses" })).toBeVisible();
+
+    // Défaut : dépenses du mois par catégorie, en secteurs.
+    await expect(page.locator(".analytics-chart canvas")).toBeVisible();
+    await expect(
+      page.getByRole("img", { name: /^Graphique en secteurs : dépenses/ })
+    ).toBeVisible();
+    await expect(
+      page.getByRole("table", { name: "Dépenses par catégorie" })
+    ).toContainText("Alimentation");
+
+    // Mois ventilés par catégorie, en barres empilées, sur 12 mois.
+    await page.getByLabel("Regrouper par").selectOption("month");
+    await page.getByLabel("Ventiler").selectOption("category");
+    await page.getByLabel("Période").selectOption("12m");
+    await expect(page).toHaveURL(/splitBy=category/);
+    await expect(page.getByLabel("Type de graphique")).toHaveValue("stacked");
+    await expect(
+      page.getByRole("img", { name: /^Graphique en barres empilées/ })
+    ).toBeVisible();
+    await expect(page.locator(".analytics-chart canvas")).toBeVisible();
+    const table = page.getByRole("table", { name: "Dépenses par mois" });
+    await expect(table.getByRole("columnheader")).toHaveText([
+      "Mois",
+      "Alimentation",
+      "Loisirs",
+      "Total",
+    ]);
+
+    // Le lien partagé restaure les choix.
+    await page.reload();
+    await expect(page.getByLabel("Ventiler")).toHaveValue("category");
 
     const hasHorizontalOverflow = await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth
