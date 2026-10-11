@@ -38,6 +38,10 @@ describe("design token contract", () => {
       expect(theme.color.backgroundShell.replace(/^\{|\}$/g, "")).toBe(
         contract.platform.web.legacyAliases.background
       );
+      // La barre latérale est peinte avec l'alias `--dark-secondary-color`.
+      expect(theme.color.backgroundSidebar.replace(/^\{|\}$/g, "")).toBe(
+        contract.platform.web.legacyAliases["dark-secondary-color"]
+      );
     }
     expect(contract.contrastPairs).toEqual(
       expect.arrayContaining([
@@ -52,6 +56,11 @@ describe("design token contract", () => {
         expect.objectContaining({
           foreground: "focusRingOnShell",
           background: "backgroundShell",
+          minimum: 3,
+        }),
+        expect.objectContaining({
+          foreground: "focusRingOnShell",
+          background: "backgroundSidebar",
           minimum: 3,
         }),
       ])

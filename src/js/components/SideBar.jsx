@@ -58,7 +58,7 @@ const Container = styled.div`
 `;
 
 const Button = styled.button`
-  background-color: var(--dark-secondary-color);
+  background-color: var(--ds-color-background-sidebar);
   border: none;
   width: 2.5rem;
   height: 2.5rem;
@@ -101,7 +101,7 @@ const Button = styled.button`
 `;
 
 const SidebarContainer = styled.nav`
-  background-color: var(--dark-secondary-color);
+  background-color: var(--ds-color-background-sidebar);
   width: 3.5rem;
   height: 90vh;
   margin-top: 1rem;
@@ -113,6 +113,13 @@ const SidebarContainer = styled.nav`
   justify-content: space-between;
 
   position: relative;
+
+  /* Fond historique sombre : anneau de focus contrasté avec lui. */
+  & :is(a, button):focus-visible {
+    outline: var(--ds-border-width-focus) solid
+      var(--ds-color-focus-ring-on-shell);
+    outline-offset: 2px;
+  }
 
   /* Mobile : tiroir ouvert par le bouton menu, le contenu garde sa largeur. */
   @media (max-width: 767px) {
@@ -152,7 +159,7 @@ const SlickBar = styled.ul`
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: var(--dark-secondary-color);
+  background-color: var(--ds-color-background-sidebar);
 
   padding: 2rem 0;
 
@@ -223,7 +230,7 @@ const Profile = styled.div`
   justify-content: center;
   margin-left: ${(props) => (props.clicked ? "9rem" : "0")};
 
-  background-color: var(--dark-secondary-color);
+  background-color: var(--ds-color-background-sidebar);
   color: var(--white);
 
   transition: all 0.3s ease;

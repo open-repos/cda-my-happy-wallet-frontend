@@ -209,6 +209,7 @@ export const designTokens = {
         textOnShell: "#F4F9F0",
         textOnShellMuted: "#BFE0A5",
         focusRingOnShell: "#F4F9F0",
+        backgroundSidebar: "#343625",
       },
     },
     dark: {
@@ -253,6 +254,7 @@ export const designTokens = {
         textOnShell: "#F4F9F0",
         textOnShellMuted: "#BFE0A5",
         focusRingOnShell: "#F4F9F0",
+        backgroundSidebar: "#343625",
       },
     },
   },
