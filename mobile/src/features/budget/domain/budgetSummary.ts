@@ -14,6 +14,18 @@ export interface BudgetForecast {
   overdueCount: number;
 }
 
+/** Point journalier; les champs prévisionnels sont nuls pour un mois clôturé. */
+export interface BudgetDay {
+  date: string;
+  income: string;
+  expense: string;
+  realRemaining: string;
+  plannedIncome: string | null;
+  plannedExpense: string | null;
+  plannedCount: number | null;
+  forecastRemaining: string | null;
+}
+
 export interface BudgetSummary {
   month: string;
   currency: string;
@@ -25,6 +37,7 @@ export interface BudgetSummary {
   remainingDays: number;
   realDailyAllowance: string | null;
   forecast: BudgetForecast | null;
+  days: BudgetDay[];
 }
 
 export type AmountTone = "positive" | "negative" | "neutral";
@@ -75,6 +88,27 @@ const count = (value: unknown): number =>
 const month = (value: unknown): string =>
   typeof value === "string" && MONTH.test(value) ? value : invalid();
 
+const parseDay = (value: unknown): BudgetDay => {
+  if (
+    !isObject(value) ||
+    typeof value.date !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(value.date)
+  ) {
+    return invalid();
+  }
+  return {
+    date: value.date,
+    income: amount(value.income),
+    expense: amount(value.expense),
+    realRemaining: amount(value.realRemaining),
+    plannedIncome: optionalAmount(value.plannedIncome),
+    plannedExpense: optionalAmount(value.plannedExpense),
+    plannedCount:
+      value.plannedCount === null ? null : count(value.plannedCount),
+    forecastRemaining: optionalAmount(value.forecastRemaining),
+  };
+};
+
 const parseForecast = (value: unknown): BudgetForecast | null => {
   if (value === null) return null;
   if (!isObject(value)) return invalid();
@@ -112,8 +146,18 @@ export const parseBudgetSummary = (value: unknown): BudgetSummary => {
     remainingDays: count(value.remainingDays),
     realDailyAllowance: optionalAmount(value.realDailyAllowance),
     forecast: parseForecast(value.forecast),
+    days: value.days.map(parseDay),
   };
 };
+
+/** Date civile du jour `YYYY-MM-DD` selon l'horloge `Europe/Paris` du backend. */
+export const currentParisDate = (now: Date = new Date()): string =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Paris",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
 
 /** Mois civil courant `YYYY-MM`, aligné sur l'horloge `Europe/Paris` du backend. */
 export const currentParisMonth = (now: Date = new Date()): string =>
@@ -123,7 +167,7 @@ export const currentParisMonth = (now: Date = new Date()): string =>
     month: "2-digit",
   }).format(now);
 
-const toCents = (value: string): number => {
+export const toCents = (value: string): number => {
   const [units, decimals] = value.replace("-", "").split(".");
   const cents = Number(units) * 100 + Number(decimals);
   return value.startsWith("-") ? -cents : cents;
@@ -135,7 +179,11 @@ const formatters = new Map<string, Intl.NumberFormat>();
  * n'applique pas `signDisplay: "exceptZero"` comme Node et affichait
  * « +0,00 € ». Un montant nul n'a jamais de signe.
  */
-const money = (cents: number, currency: string, signed = false): string => {
+export const money = (
+  cents: number,
+  currency: string,
+  signed = false,
+): string => {
   if (!formatters.has(currency)) {
     formatters.set(
       currency,

@@ -68,3 +68,38 @@ test("captures the populated operations screen", async ({ page }) => {
   await expectNoHorizontalOverflow(page);
   await expect(page).toHaveScreenshot("operations.png", { fullPage: true });
 });
+
+test("captures the budget calendar and its day filter", async ({ page }) => {
+  // Date figée : la grille et sa capture ne dépendent pas du jour d'exécution.
+  await page.clock.setFixedTime(new Date("2026-10-11T10:00:00+02:00"));
+  await signIn(page);
+  await page.getByRole("tab", { name: "Calendrier" }).click();
+  await expect(
+    page.getByText("Opérations du mois", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Courses", { exact: true })).toBeVisible();
+
+  // Cibles tactiles d'au moins 44 px, y compris sur un écran de 360 px.
+  const dayBox = await page
+    .getByRole("button", { name: /^3 .* Dépenses 42,50/ })
+    .boundingBox();
+  expect(dayBox?.width).toBeGreaterThanOrEqual(44);
+  expect(dayBox?.height).toBeGreaterThanOrEqual(44);
+
+  await page.getByRole("radio", { name: "Dépenses" }).click();
+  await expect(page.getByText("-43", { exact: true })).toBeVisible();
+  await page.getByRole("radio", { name: "Repères" }).click();
+
+  await page.getByRole("button", { name: /^3 .* Dépenses 42,50/ }).click();
+  await expect(page.getByText(/^Opérations du 3 /)).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Tout le mois" }),
+  ).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+  await expect(page).toHaveScreenshot("calendar.png", { fullPage: true });
+
+  await page.getByRole("button", { name: "Tout le mois" }).click();
+  await expect(
+    page.getByText("Opérations du mois", { exact: true }),
+  ).toBeVisible();
+});

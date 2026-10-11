@@ -16,7 +16,7 @@ const contentTypes = {
 };
 const noNextPage = { hasNext: false, limit: 100, nextCursor: null };
 
-const testApiResponse = (pathname) => {
+const testApiResponse = (pathname, searchParams) => {
   if (pathname.endsWith("/auth/native/sessions")) {
     return {
       payload: {
@@ -85,7 +85,28 @@ const testApiResponse = (pathname) => {
           unresolvedCount: 1,
           overdueCount: 1,
         },
-        days: [],
+        days: [
+          {
+            date: `${summary[1]}-03`,
+            income: "0.00",
+            expense: "42.50",
+            realRemaining: "1337.50",
+            plannedIncome: "0.00",
+            plannedExpense: "0.00",
+            plannedCount: 0,
+            forecastRemaining: "1337.50",
+          },
+          {
+            date: `${summary[1]}-20`,
+            income: "0.00",
+            expense: "0.00",
+            realRemaining: "1337.50",
+            plannedIncome: "0.00",
+            plannedExpense: "300.00",
+            plannedCount: 1,
+            forecastRemaining: "1037.50",
+          },
+        ],
       },
     };
   }
@@ -103,7 +124,10 @@ const testApiResponse = (pathname) => {
           categoryId: 4,
           currency: "EUR",
           id: 7,
-          operationDate: "2026-09-14",
+          // Une date du mois demandé lorsque le calendrier filtre par période.
+          operationDate: searchParams.get("from")
+            ? `${searchParams.get("from").slice(0, 7)}-03`
+            : "2026-09-14",
           title: "Courses",
           type: "DEPENSE",
         },
@@ -128,7 +152,8 @@ const findExportedFile = (pathname) => {
 };
 
 createServer((request, response) => {
-  const pathname = new URL(request.url ?? "/", "http://localhost").pathname;
+  const url = new URL(request.url ?? "/", "http://localhost");
+  const pathname = url.pathname;
   if (pathname === "/health/ready") {
     response.writeHead(200, {
       "Cache-Control": "no-store",
@@ -138,7 +163,7 @@ createServer((request, response) => {
     return;
   }
   if (pathname.startsWith("/v1/")) {
-    const payload = testApiResponse(pathname);
+    const payload = testApiResponse(pathname, url.searchParams);
     response.writeHead(payload == null ? 404 : 200, {
       "Cache-Control": "no-store",
       "Content-Type": "application/json; charset=utf-8",
