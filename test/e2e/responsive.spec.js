@@ -474,7 +474,8 @@ for (const viewport of viewports) {
     await page.setViewportSize(viewport);
     await prepareProtectedPage(page);
     await page.goto("/home");
-    await expect(page.locator('a[href="/analyses"]')).toBeVisible();
+    // Entrée de la barre latérale (dans le tiroir fermé sur mobile).
+    await expect(page.locator('a[href="/analyses"]')).toHaveCount(1);
     await page.getByRole("link", { name: "Explorer mes dépenses" }).click();
     await expect(page).toHaveURL(/\/analyses\?metric=expense&groupBy=category/);
     await expect(page.getByRole("heading", { name: "Analyses" })).toBeVisible();
@@ -582,6 +583,109 @@ for (const viewport of viewports) {
       expect(hasHorizontalOverflow).toBe(false);
     });
   }
+}
+
+test("mobile navigation is a drawer that never covers the page", async ({
+  page,
+}) => {
+  await page.setViewportSize(viewports[0]);
+  await prepareProtectedPage(page);
+  const navigation = page.getByRole("navigation", {
+    name: "Navigation principale",
+  });
+  const menu = page.getByRole("button", { name: "Ouvrir le menu" });
+
+  for (const protectedPage of protectedPages) {
+    await page.goto(protectedPage.path);
+    await expect(page.locator(protectedPage.selector)).toBeVisible();
+    await expect(navigation).toBeHidden();
+    await expect(menu).toHaveAttribute("aria-expanded", "false");
+  }
+
+  await menu.click();
+  await expect(navigation).toBeVisible();
+  await expect(
+    navigation.getByRole("link", { name: /Analyses/ })
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(navigation).toBeHidden();
+  await expect(menu).toBeFocused();
+
+  // Un vrai clic hors de la navigation atteint le fond et referme le tiroir.
+  await menu.click();
+  await expect(navigation).toBeVisible();
+  await page.mouse.click(370, 420);
+  await expect(navigation).toBeHidden();
+  await expect(menu).toBeFocused();
+
+  // Rotation en paysage : le tiroir ouvert se referme au passage desktop.
+  await menu.click();
+  await page.setViewportSize({ width: 844, height: 390 });
+  await expect(
+    page.getByRole("button", { name: "Ouvrir le menu" })
+  ).toHaveAttribute("aria-expanded", "false");
+  await page.setViewportSize(viewports[0]);
+
+  await menu.click();
+  await navigation.getByRole("link", { name: /Calendrier/ }).click();
+  await expect(page).toHaveURL(/\/calendrier$/);
+  await expect(navigation).toBeHidden();
+});
+
+for (const viewport of viewports.slice(1)) {
+  test(`navigation stays visible on the ${viewport.name} viewport`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await prepareProtectedPage(page);
+    await page.goto("/home");
+    await expect(
+      page.getByRole("navigation", { name: "Navigation principale" })
+    ).toBeVisible();
+  });
+}
+
+for (const theme of ["light", "dark"]) {
+  test(`budget breakdown labels use the text tokens in the ${theme} theme`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewports[0]);
+    await prepareProtectedPage(page);
+    await page.addInitScript((value) => {
+      window.localStorage.setItem("mhw-theme", value);
+    }, theme);
+
+    for (const path of ["/home", "/calendrier"]) {
+      await page.goto(path);
+      const breakdown = page.locator(".budget-breakdown").first();
+      await expect(breakdown).toBeVisible();
+      const colors = await breakdown.evaluate((element) => {
+        const probe = (name) => {
+          const span = document.createElement("span");
+          span.style.color = `var(${name})`;
+          element.appendChild(span);
+          const color = getComputedStyle(span).color;
+          span.remove();
+          return color;
+        };
+        const label = (selector) =>
+          getComputedStyle(element.querySelector(selector)).color;
+        return {
+          primary: probe("--ds-color-text-primary"),
+          info: probe("--ds-color-status-info-text"),
+          result: label(
+            ".budget-breakdown__row:not(.budget-breakdown__row--carry) dt"
+          ),
+          carry: label(".budget-breakdown__row--carry dt"),
+          carryAmount: label(".budget-breakdown__row--carry dd"),
+        };
+      });
+      expect(colors.result, path).toBe(colors.primary);
+      expect(colors.carry, path).toBe(colors.info);
+      // Montant du report : même contraste que son libellé, signe écrit.
+      expect(colors.carryAmount, path).toBe(colors.info);
+    }
+  });
 }
 
 for (const theme of ["light", "dark"]) {

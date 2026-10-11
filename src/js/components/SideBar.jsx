@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 //All the svg files
 import logo from "./../../assets/icons/logo.svg";
 import Home from "./../../assets/icons/dashboard.svg";
@@ -24,7 +24,7 @@ import { useSelector, useDispatch } from "react-redux";
 
 const Container = styled.div`
   position: fixed;
-  z-index:1;
+  z-index: var(--ds-z-index-navigation);
   font-size:1.2rem;
   .active {
     border-right: 4px solid var(--orange-light);
@@ -93,7 +93,7 @@ const Button = styled.button`
   }
 `;
 
-const SidebarContainer = styled.div`
+const SidebarContainer = styled.nav`
   background-color: var(--dark-secondary-color);
   width: 3.5rem;
   height: 90vh;
@@ -106,6 +106,28 @@ const SidebarContainer = styled.div`
   justify-content: space-between;
 
   position: relative;
+
+  /* Mobile : tiroir ouvert par le bouton menu, le contenu garde sa largeur. */
+  @media (max-width: 767px) {
+    display: ${(props) => (props.$open ? "flex" : "none")};
+    height: calc(100dvh - 4rem);
+    margin-top: 0.5rem;
+  }
+`;
+
+/** Fond du tiroir mobile : un clic referme la navigation. */
+const Backdrop = styled.div`
+  display: none;
+
+  @media (max-width: 767px) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-color: var(--ds-color-background-canvas);
+    /* Voile local au tiroir : aucun token d'opacité n'existe encore. */
+    opacity: 0.7;
+  }
 `;
 
 const Logo = styled.div`
@@ -292,6 +314,34 @@ const Sidebar = () => {
   const handleProfileClick = () => setprofileClick(!profileClick);
 
   const location = useLocation();
+  const menuButton = useRef(null);
+
+  // Échap referme la navigation et rend le focus au bouton menu.
+  useEffect(() => {
+    if (!click) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key !== "Escape") return;
+      setClick(false);
+      menuButton.current?.focus();
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [click]);
+
+  // Passer de mobile à tablette/desktop (ou l'inverse) referme la navigation :
+  // le tiroir déplié ne doit ni recouvrir le contenu ni s'ouvrir seul.
+  useEffect(() => {
+    const mobile = window.matchMedia?.("(max-width: 767px)");
+    if (!mobile) return undefined;
+    const close = () => setClick(false);
+    mobile.addEventListener?.("change", close);
+    return () => mobile.removeEventListener?.("change", close);
+  }, []);
+
+  const closeFromBackdrop = () => {
+    setClick(false);
+    menuButton.current?.focus();
+  };
 
   // const userStorage = getLocalStorageItem("user");
   const { user } = useSelector((state) => state.auth);
@@ -304,8 +354,28 @@ const Sidebar = () => {
 
   return (
     <Container style={divStyle}>
-      <Button clicked={click} onClick={() => handleClick()}></Button>
-      <SidebarContainer>
+      {click && (
+        <Backdrop
+          data-testid="sidebar-backdrop"
+          aria-hidden="true"
+          onClick={closeFromBackdrop}
+        />
+      )}
+      <Button
+        ref={menuButton}
+        type="button"
+        clicked={click}
+        aria-label={click ? "Fermer le menu" : "Ouvrir le menu"}
+        aria-expanded={click}
+        aria-controls="main-navigation"
+        onClick={() => handleClick()}
+      ></Button>
+      <SidebarContainer
+        id="main-navigation"
+        aria-label="Navigation principale"
+        $open={click}
+        data-open={click}
+      >
         <Logo>
           <img src={logo} alt="logo" />
         </Logo>
