@@ -1,6 +1,7 @@
 /* Objectifs financiers : cartes avec anneau ECharts et prévision. */
 
 .objectives-page-title {
+  color: var(--ds-color-text-on-shell);
   width: 100%;
   max-width: 76rem;
   margin: 0 auto;

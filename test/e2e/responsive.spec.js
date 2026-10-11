@@ -645,6 +645,98 @@ for (const viewport of viewports.slice(1)) {
   });
 }
 
+/**
+ * Textes visibles posés directement sur la coque (aucun ancêtre opaque avant
+ * `body`) dont le contraste WCAG est insuffisant : 4,5:1, ou 3:1 pour un grand
+ * texte (≥ 24 px, ou ≥ 18,66 px en gras).
+ */
+const lowContrastOnShell = (page) =>
+  page.evaluate(() => {
+    const parse = (color) => {
+      const [r, g, b, a = 1] = color.match(/[\d.]+/g).map(Number);
+      return { r, g, b, a };
+    };
+    const luminance = ({ r, g, b }) => {
+      const [lr, lg, lb] = [r, g, b].map((value) => {
+        const channel = value / 255;
+        return channel <= 0.03928
+          ? channel / 12.92
+          : ((channel + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
+    };
+    const ratio = (first, second) => {
+      const [high, low] = [luminance(first), luminance(second)].sort(
+        (a, b) => b - a
+      );
+      return (high + 0.05) / (low + 0.05);
+    };
+    const shell = parse(getComputedStyle(document.body).backgroundColor);
+    const onShell = (element) => {
+      for (
+        let node = element;
+        node && node !== document.body;
+        node = node.parentElement
+      ) {
+        const background = parse(getComputedStyle(node).backgroundColor);
+        if (background.a > 0) return false;
+      }
+      return true;
+    };
+    const failures = [];
+    const walker = document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT
+    );
+    while (walker.nextNode()) {
+      const text = walker.currentNode.textContent.trim();
+      const element = walker.currentNode.parentElement;
+      if (!text || !element || !element.checkVisibility?.()) continue;
+      if (element.closest("[aria-hidden='true'], .sr-only, nav")) continue;
+      if (!onShell(element)) continue;
+      const style = getComputedStyle(element);
+      const size = parseFloat(style.fontSize);
+      const large =
+        size >= 24 || (size >= 18.66 && Number(style.fontWeight) >= 700);
+      const value = ratio(parse(style.color), shell);
+      if (value < (large ? 3 : 4.5)) {
+        failures.push(`${text.slice(0, 40)} (${value.toFixed(2)}:1)`);
+      }
+    }
+    return failures;
+  });
+
+for (const theme of ["light", "dark"]) {
+  for (const viewport of viewports) {
+    test(`text on the shell is readable in the ${theme} theme on the ${viewport.name} viewport`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await prepareProtectedPage(page);
+      await page.addInitScript((value) => {
+        window.localStorage.setItem("mhw-theme", value);
+      }, theme);
+      const failures = {};
+      const check = async (name) => {
+        await page.waitForTimeout(300);
+        const pageFailures = await lowContrastOnShell(page);
+        if (pageFailures.length) failures[name] = pageFailures;
+      };
+      for (const protectedPage of protectedPages) {
+        await page.goto(protectedPage.path);
+        await expect(page.locator(protectedPage.selector)).toBeVisible();
+        await check(protectedPage.path);
+      }
+      // Hors du mois courant, le calendrier affiche aussi « Aujourd'hui ».
+      await page.goto("/calendrier");
+      await page.getByRole("button", { name: "Mois suivant" }).click();
+      await expect(page.getByRole("button", { name: /Aujourd/ })).toBeVisible();
+      await check("/calendrier (mois suivant)");
+      expect(failures).toEqual({});
+    });
+  }
+}
+
 for (const theme of ["light", "dark"]) {
   test(`budget breakdown labels use the text tokens in the ${theme} theme`, async ({
     page,

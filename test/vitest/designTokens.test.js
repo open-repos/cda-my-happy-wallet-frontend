@@ -30,6 +30,29 @@ describe("design token contract", () => {
     );
   });
 
+  it("paints the legacy shell with the colour checked by its contrast pairs", () => {
+    // `--background` peint body; les rôles « sur coque » sont contrôlés contre
+    // `backgroundShell` : les deux doivent rester la même couleur.
+    for (const theme of Object.values(contract.themes)) {
+      // Les rôles s'écrivent `{chemin}`, les alias historiques `chemin`.
+      expect(theme.color.backgroundShell.replace(/^\{|\}$/g, "")).toBe(
+        contract.platform.web.legacyAliases.background
+      );
+    }
+    expect(contract.contrastPairs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          foreground: "textOnShell",
+          background: "backgroundShell",
+        }),
+        expect.objectContaining({
+          foreground: "textOnShellMuted",
+          background: "backgroundShell",
+        }),
+      ])
+    );
+  });
+
   it("does not persist temporary Figma asset URLs", () => {
     expect(JSON.stringify(contract)).not.toContain("figma.com/api/mcp/asset");
     expect(webAdapter).not.toContain("figma.com/api/mcp/asset");

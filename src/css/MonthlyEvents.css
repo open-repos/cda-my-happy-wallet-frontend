@@ -31,6 +31,11 @@
   gap: var(--ds-primitive-space-4);
 }
 
+/* En-têtes posés sur la coque verte : rôles de texte « sur coque ». */
+.monthly-events-header {
+  color: var(--ds-color-text-on-shell);
+}
+
 .monthly-events-header h1 {
   font-size: clamp(
     var(--ds-primitive-font-size-2xl),
@@ -43,12 +48,12 @@
 .monthly-events-header p:not(.monthly-events-eyebrow) {
   max-width: 44rem;
   margin-top: var(--ds-primitive-space-2);
-  color: var(--ds-color-text-muted);
+  color: var(--ds-color-text-on-shell-muted);
 }
 
 .monthly-events-eyebrow {
   margin-bottom: var(--ds-primitive-space-2);
-  color: var(--ds-color-text-secondary);
+  color: var(--ds-color-text-on-shell-muted);
   font-size: var(--ds-primitive-font-size-sm);
   font-weight: var(--ds-primitive-font-weight-bold);
   letter-spacing: 0.08em;
@@ -212,6 +217,20 @@
 }
 .monthly-event-icon-button:hover {
   background: var(--ds-color-action-secondary-background);
+}
+
+/* Navigation du mois posée sur la coque. */
+.monthly-events-header .monthly-event-icon-button {
+  color: var(--ds-color-text-on-shell);
+}
+
+.monthly-events-header .monthly-event-icon-button:hover {
+  color: var(--ds-color-action-secondary-text);
+}
+
+/* « Aujourd'hui », affiché hors du mois courant, est aussi sur la coque. */
+.monthly-events-header .budget-link-button {
+  color: var(--ds-color-text-on-shell);
 }
 .monthly-event-icon-button img {
   width: 1.25rem;

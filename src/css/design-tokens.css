@@ -129,6 +129,9 @@
   --ds-color-data-expense: #a30707;
   --ds-color-data-income: #075e3b;
   --ds-color-data-forecast: #275dad;
+  --ds-color-background-shell: #43553a;
+  --ds-color-text-on-shell: #f4f9f0;
+  --ds-color-text-on-shell-muted: #bfe0a5;
   --black: var(--ds-primitive-color-neutral1000);
   --white: var(--ds-primitive-color-neutral0);
   --grey: var(--ds-primitive-color-neutral500);
@@ -181,6 +184,9 @@
   --ds-color-data-expense: #ea7c69;
   --ds-color-data-income: #bfe0a5;
   --ds-color-data-forecast: #f09d65;
+  --ds-color-background-shell: #43553a;
+  --ds-color-text-on-shell: #f4f9f0;
+  --ds-color-text-on-shell-muted: #bfe0a5;
   --black: var(--ds-primitive-color-neutral1000);
   --white: var(--ds-primitive-color-neutral0);
   --grey: var(--ds-primitive-color-neutral500);
@@ -234,6 +240,9 @@
     --ds-color-data-expense: #ea7c69;
     --ds-color-data-income: #bfe0a5;
     --ds-color-data-forecast: #f09d65;
+    --ds-color-background-shell: #43553a;
+    --ds-color-text-on-shell: #f4f9f0;
+    --ds-color-text-on-shell-muted: #bfe0a5;
     --black: var(--ds-primitive-color-neutral1000);
     --white: var(--ds-primitive-color-neutral0);
     --grey: var(--ds-primitive-color-neutral500);
