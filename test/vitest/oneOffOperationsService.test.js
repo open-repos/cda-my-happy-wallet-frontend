@@ -131,3 +131,37 @@ describe("oneOffOperationsService", () => {
     expect(body).not.toHaveProperty("ownerId");
   });
 });
+
+describe("oneOffOperationsService.listAllOperations", () => {
+  const filter = { from: "2026-10-01", to: "2026-10-31", currency: "EUR" };
+
+  it("follows every page of the filtered period", async () => {
+    apiPrivate.get
+      .mockResolvedValueOnce(
+        page([operation], { limit: 100, hasNext: true, nextCursor: "c1" })
+      )
+      .mockResolvedValueOnce(page([{ ...operation, id: 8 }]));
+
+    const operations = await oneOffOperationsService.listAllOperations(filter);
+
+    expect(operations.map((item) => item.id)).toEqual([7, 8]);
+    expect(apiPrivate.get).toHaveBeenNthCalledWith(1, "/operations", {
+      params: { ...filter, limit: 100 },
+      withCredentials: true,
+    });
+    expect(apiPrivate.get).toHaveBeenNthCalledWith(2, "/operations", {
+      params: { ...filter, limit: 100, cursor: "c1" },
+      withCredentials: true,
+    });
+  });
+
+  it("stops on a repeated cursor", async () => {
+    apiPrivate.get.mockResolvedValue(
+      page([operation], { limit: 100, hasNext: true, nextCursor: "loop" })
+    );
+
+    await expect(
+      oneOffOperationsService.listAllOperations(filter)
+    ).rejects.toThrow("Repeated operation cursor");
+  });
+});

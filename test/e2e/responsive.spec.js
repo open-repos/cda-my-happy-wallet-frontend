@@ -222,6 +222,26 @@ const prepareProtectedPage = async (page) => {
       },
     });
   });
+  await page.route(/\/v1\/goals(?:\?.*)?$/, (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      json: {
+        data: [
+          {
+            id: 1,
+            title: "Vélo",
+            targetAmount: "1200.00",
+            savedAmount: "300.00",
+            monthlyContribution: "150.00",
+            currency: "EUR",
+            targetDate: null,
+            forecast: { status: "NO_DEADLINE" },
+          },
+        ],
+        meta: { limit: 100, hasNext: false, nextCursor: null },
+      },
+    })
+  );
   await page.route(/\/v1\/event-occurrences\/pending/, (route) => {
     const through = new URL(route.request().url()).searchParams.get("through");
     return route.fulfill({
@@ -245,7 +265,7 @@ const prepareProtectedPage = async (page) => {
 };
 
 const protectedPages = [
-  { path: "/home", selector: ".container-home-all" },
+  { path: "/home", selector: ".home-budget" },
   { path: "/calendrier", selector: ".calendrier-container" },
   { path: "/objectifs-evenements", selector: ".objEv-container" },
   { path: "/operations", selector: ".operations-container" },
@@ -326,6 +346,61 @@ for (const viewport of viewports) {
         Math.min(...days.map((day) => day.getBoundingClientRect().height))
       );
     expect(smallestDay).toBeGreaterThanOrEqual(44);
+  });
+
+  test(`home shows the reste à vivre views on the ${viewport.name} viewport`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await prepareProtectedPage(page);
+    await page.goto("/home");
+
+    await expect(
+      page.getByRole("heading", { name: "Reste à vivre du mois" })
+    ).toBeVisible();
+    await expect(page.locator(".home-budget__amount")).toContainText("037,50");
+    await expect(page.getByText(/^Report d/)).toBeVisible();
+    const content = await page
+      .locator(".protected-layout__content")
+      .boundingBox();
+    const remaining = await page
+      .locator(".home-budget__remaining")
+      .boundingBox();
+    expect(
+      Math.abs(
+        remaining.x + remaining.width / 2 - (content.x + content.width / 2)
+      )
+    ).toBeLessThan(2);
+
+    await page.getByText("Semaine", { exact: true }).click();
+    await expect(page.locator(".home-budget__amount")).toContainText("447,72");
+    await expect(page.getByText(/63,96\s€ par jour × 7 jours/)).toBeVisible();
+
+    await page.getByText("Jour", { exact: true }).click();
+    await expect(page.locator(".home-budget__amount")).toContainText("63,96");
+
+    await expect(
+      page.getByRole("list", { name: "Dépenses par catégorie" })
+    ).toContainText("Alimentation");
+    const expenseCanvas = page.locator(".home-chart canvas");
+    await expect(expenseCanvas).toBeVisible();
+    expect((await expenseCanvas.boundingBox()).height).toBeGreaterThan(100);
+    const expensesGraph = page.getByRole("img", {
+      name: /^Graphique des dépenses du mois par catégorie/,
+    });
+    await expect(expensesGraph).toBeVisible();
+    await page.getByText("Secteurs", { exact: true }).click();
+    await expect(page.locator(".home-chart--pie canvas")).toBeVisible();
+    await expect(expensesGraph).toBeVisible();
+    await expect(page.locator(".home-ring canvas")).toBeVisible();
+    await expect(
+      page.getByRole("img", { name: /25 % de l’épargne visée atteinte/ })
+    ).toBeVisible();
+
+    const hasHorizontalOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth
+    );
+    expect(hasHorizontalOverflow).toBe(false);
   });
 
   test(`operations fixes fit the ${viewport.name} viewport`, async ({
