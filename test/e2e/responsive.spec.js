@@ -222,26 +222,50 @@ const prepareProtectedPage = async (page) => {
       },
     });
   });
-  await page.route(/\/v1\/goals(?:\?.*)?$/, (route) =>
-    route.fulfill({
+  const goals = [
+    {
+      id: 1,
+      title: "Vélo",
+      targetAmount: "1200.00",
+      savedAmount: "300.00",
+      monthlyContribution: "150.00",
+      currency: "EUR",
+      targetDate: null,
+      forecast: {
+        referenceMonth: "2026-10",
+        status: "NO_DEADLINE",
+        remainingAmount: "900.00",
+        contributionsNeeded: 6,
+        estimatedReachMonth: "2027-04",
+        requiredMonthlyContribution: null,
+      },
+    },
+  ];
+  await page.route(/\/v1\/goals(?:\/\d+)?(?:\?.*)?$/, (route) => {
+    const request = route.request();
+    if (request.method() === "POST") {
+      const body = request.postDataJSON();
+      const created = {
+        ...goals[0],
+        ...body,
+        id: goals.length + 1,
+        forecast: { ...goals[0].forecast, status: "NO_DEADLINE" },
+      };
+      goals.push(created);
+      return route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        json: { data: created },
+      });
+    }
+    return route.fulfill({
       contentType: "application/json",
       json: {
-        data: [
-          {
-            id: 1,
-            title: "Vélo",
-            targetAmount: "1200.00",
-            savedAmount: "300.00",
-            monthlyContribution: "150.00",
-            currency: "EUR",
-            targetDate: null,
-            forecast: { status: "NO_DEADLINE" },
-          },
-        ],
+        data: goals,
         meta: { limit: 100, hasNext: false, nextCursor: null },
       },
-    })
-  );
+    });
+  });
   await page.route(/\/v1\/analytics\/operations/, (route) => {
     const params = new URL(route.request().url()).searchParams;
     const totals = (key, expense, extra = {}) => ({
@@ -486,6 +510,37 @@ for (const viewport of viewports) {
     await page.reload();
     await expect(page.getByLabel("Ventiler")).toHaveValue("category");
 
+    const hasHorizontalOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth
+    );
+    expect(hasHorizontalOverflow).toBe(false);
+  });
+
+  test(`financial goals are listed and created on the ${viewport.name} viewport`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await prepareProtectedPage(page);
+    await page.goto("/objectifs-evenements");
+
+    await expect(
+      page.getByRole("heading", { name: "Objectifs et événements", level: 1 })
+    ).toBeVisible();
+    const card = page.getByRole("article", { name: "Vélo" });
+    await expect(card).toContainText("Sans échéance");
+    await expect(card).toContainText("avril 2027");
+    await expect(card.locator("canvas")).toBeVisible();
+
+    await page.getByRole("button", { name: "Ajouter un objectif" }).click();
+    await page.getByLabel("Titre", { exact: true }).fill("Vacances");
+    await page.getByLabel(/^Montant cible/).fill("1500");
+    await page.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(page.getByRole("status")).toContainText("Objectif ajouté.");
+    await expect(page.getByRole("article", { name: "Vacances" })).toBeVisible();
+
+    await expect(
+      page.getByRole("heading", { name: "Événements mensuels" })
+    ).toBeVisible();
     const hasHorizontalOverflow = await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth
     );

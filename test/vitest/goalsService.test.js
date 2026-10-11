@@ -3,7 +3,7 @@ import { goalsService, parseGoal } from "../../src/js/services/goalsService";
 import { apiPrivate } from "../../src/utils/axiosHelper";
 
 vi.mock("../../src/utils/axiosHelper", () => ({
-  apiPrivate: { get: vi.fn() },
+  apiPrivate: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
 }));
 
 const goal = {
@@ -14,7 +14,14 @@ const goal = {
   monthlyContribution: "150.00",
   currency: "EUR",
   targetDate: null,
-  forecast: { status: "NO_DEADLINE" },
+  forecast: {
+    referenceMonth: "2026-10",
+    status: "NO_DEADLINE",
+    remainingAmount: "900.00",
+    contributionsNeeded: 6,
+    estimatedReachMonth: "2027-04",
+    requiredMonthlyContribution: null,
+  },
 };
 
 const page = (
@@ -27,13 +34,16 @@ const page = (
 beforeEach(() => vi.clearAllMocks());
 
 describe("goalsService", () => {
-  it("keeps only the fields displayed by the home page", () => {
-    expect(parseGoal(goal)).toEqual({
+  it("parses the goal and its forecast without extra fields", () => {
+    expect(parseGoal({ ...goal, ownerId: 9 })).toEqual({
       id: 3,
       title: "Vélo",
       targetAmount: "1200.00",
       savedAmount: "300.00",
+      monthlyContribution: "150.00",
       currency: "EUR",
+      targetDate: null,
+      forecast: goal.forecast,
     });
   });
 
@@ -42,6 +52,9 @@ describe("goalsService", () => {
     { ...goal, targetAmount: "-1.00" },
     { ...goal, savedAmount: 300 },
     { ...goal, currency: "eur" },
+    { ...goal, targetDate: "15/03/2027" },
+    { ...goal, forecast: { ...goal.forecast, status: "LATE" } },
+    { ...goal, forecast: { ...goal.forecast, estimatedReachMonth: "2027-13" } },
   ])("rejects an invalid goal %#", (invalid) => {
     expect(() => parseGoal(invalid)).toThrow("Invalid goal response");
   });
@@ -74,5 +87,35 @@ describe("goalsService", () => {
     await expect(goalsService.listAllGoals()).rejects.toThrow(
       "Repeated goal cursor"
     );
+  });
+
+  it("writes only contract fields and reads the saved goal", async () => {
+    const draft = {
+      title: "Vélo",
+      targetAmount: "1200.00",
+      savedAmount: "300.00",
+      monthlyContribution: "150.00",
+      currency: "EUR",
+      targetDate: null,
+      ownerId: 9,
+    };
+    apiPrivate.post.mockResolvedValue({ data: { data: goal } });
+    apiPrivate.put.mockResolvedValue({ data: { data: goal } });
+
+    await goalsService.createGoal(draft);
+    await goalsService.updateGoal(3, draft);
+    await goalsService.deleteGoal(3);
+
+    const { ownerId, ...body } = draft;
+    expect(ownerId).toBe(9);
+    expect(apiPrivate.post).toHaveBeenCalledWith("/goals", body, {
+      withCredentials: true,
+    });
+    expect(apiPrivate.put).toHaveBeenCalledWith("/goals/3", body, {
+      withCredentials: true,
+    });
+    expect(apiPrivate.delete).toHaveBeenCalledWith("/goals/3", {
+      withCredentials: true,
+    });
   });
 });
