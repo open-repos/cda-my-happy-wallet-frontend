@@ -67,9 +67,11 @@ export const parseCategory = (category) => {
 };
 
 export const oneOffOperationsService = {
-  async listOperations(cursor = null) {
+  /** `filter` accepte `from`, `to` (inclus) et `currency`, tous facultatifs. */
+  async listOperations(cursor = null, filter = {}) {
     const response = await apiPrivate.get("/operations", {
       params: {
+        ...filter,
         limit: OPERATIONS_PAGE_LIMIT,
         ...(cursor ? { cursor } : {}),
       },

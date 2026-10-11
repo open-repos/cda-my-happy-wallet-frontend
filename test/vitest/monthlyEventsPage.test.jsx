@@ -4,9 +4,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Calendrier from "../../src/js/pages/Calendrier";
 import Objectifs from "../../src/js/pages/Objectifs";
 import { useMonthlyEvents } from "../../src/js/hooks/useMonthlyEvents";
+import { useBudgetCalendar } from "../../src/js/hooks/useBudgetCalendar";
 
 vi.mock("../../src/js/hooks/useMonthlyEvents", () => ({
   useMonthlyEvents: vi.fn(),
+}));
+vi.mock("../../src/js/hooks/useBudgetCalendar", () => ({
+  useBudgetCalendar: vi.fn(),
 }));
 
 const event = {
@@ -74,17 +78,31 @@ describe("monthly event pages", () => {
     });
   });
 
-  it("shows occurrences on the selected calendar day and changes month", () => {
+  it("marks planned occurrences of a future month and changes month", () => {
     const today = new Date().toISOString().slice(0, 10);
     useMonthlyEvents.mockReturnValue({
       ...state,
       occurrences: [{ ...event, occurrenceDate: today }],
     });
+    useBudgetCalendar.mockReturnValue({
+      summary: null,
+      summaryStatus: "future",
+      pending: [],
+      categories: [],
+      operations: [],
+      operationsMeta: null,
+      operationsStatus: "success",
+      mutationStatus: "idle",
+      message: { tone: "info", text: "" },
+      retry: vi.fn(),
+    });
     render(<Calendrier />);
     expect(
       screen.getByRole("heading", { name: "Calendrier" })
     ).toBeInTheDocument();
-    expect(screen.getByText("Assurance")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /1 événement prévu/ })
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Mois suivant" }));
     expect(useMonthlyEvents).toHaveBeenCalled();
   });

@@ -41,6 +41,7 @@ const validate = (operation, categoryIds) => {
 export const OneOffOperationForm = ({
   categories,
   operation,
+  initialDate = "",
   isSaving,
   onCancel,
   onDelete,
@@ -53,7 +54,7 @@ export const OneOffOperationForm = ({
           kind: operation.type,
           categoryId: `${operation.categoryId}`,
         }
-      : emptyOperation
+      : { ...emptyOperation, operationDate: initialDate }
   );
   const [errors, setErrors] = useState({});
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);

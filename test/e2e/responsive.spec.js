@@ -158,6 +158,90 @@ const prepareProtectedPage = async (page) => {
       },
     });
   });
+  await page.route(/\/v1\/budget-periods\/(\d{4}-\d{2})\/summary/, (route) => {
+    const month = route
+      .request()
+      .url()
+      .match(/(\d{4}-\d{2})\/summary/)[1];
+    const previous = new Date(`${month}-01T00:00:00.000Z`);
+    previous.setUTCMonth(previous.getUTCMonth() - 1);
+    return route.fulfill({
+      contentType: "application/json",
+      json: {
+        data: {
+          month,
+          currency: "EUR",
+          status: "OPEN",
+          revision: 1,
+          correctedAt: null,
+          balanceStatus: "POSITIVE",
+          fixedIncome: "2000.00",
+          fixedExpense: "800.00",
+          base: "1200.00",
+          carryIn: "-120.00",
+          carryFromMonth: previous.toISOString().slice(0, 7),
+          actualIncome: "0.00",
+          actualExpense: "42.50",
+          monthResult: "1157.50",
+          realRemaining: "1037.50",
+          remainingDays: 12,
+          realDailyAllowance: "86.46",
+          unresolvedEvents: 1,
+          forecast: {
+            plannedIncome: "0.00",
+            plannedExpense: "120.00",
+            goalSavings: "150.00",
+            forecastRemaining: "767.50",
+            prudentDailyAllowance: "63.96",
+            unresolvedCount: 1,
+            overdueCount: 0,
+          },
+          days: [
+            {
+              date: `${month}-18`,
+              income: "0.00",
+              expense: "42.50",
+              realRemaining: "1037.50",
+              plannedIncome: "0.00",
+              plannedExpense: "0.00",
+              plannedCount: 0,
+              forecastRemaining: "887.50",
+            },
+            {
+              date: `${month}-20`,
+              income: "0.00",
+              expense: "0.00",
+              realRemaining: "1037.50",
+              plannedIncome: "0.00",
+              plannedExpense: "120.00",
+              plannedCount: 1,
+              forecastRemaining: "767.50",
+            },
+          ],
+        },
+      },
+    });
+  });
+  await page.route(/\/v1\/event-occurrences\/pending/, (route) => {
+    const through = new URL(route.request().url()).searchParams.get("through");
+    return route.fulfill({
+      contentType: "application/json",
+      json: {
+        data: [
+          {
+            eventId: 8,
+            occurrenceDate: `${through.slice(0, 7)}-20`,
+            title: "Assurance",
+            amount: "120.00",
+            currency: "EUR",
+            kind: "DEPENSE",
+            overdue: false,
+          },
+        ],
+        meta: { limit: 100, hasNext: false, nextCursor: null },
+      },
+    });
+  });
 };
 
 const protectedPages = [
@@ -208,6 +292,40 @@ for (const viewport of viewports) {
     expect(contentBounds.x + contentBounds.width).toBeLessThanOrEqual(
       viewport.width
     );
+  });
+
+  test(`budget calendar explains the carry on the ${viewport.name} viewport`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await prepareProtectedPage(page);
+    await page.goto("/calendrier");
+
+    const real = page.locator("article", {
+      has: page.getByRole("heading", { name: "Reste réel" }),
+    });
+    await expect(real.getByText(/^Report d/)).toBeVisible();
+    await expect(real).toContainText("120,00");
+    await expect(
+      page.getByRole("heading", { name: "Reste prévisionnel" })
+    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Prévus" })).toBeVisible();
+
+    await page.getByText("Prévisionnel", { exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: /reste prévisionnel 767,50/ })
+    ).toContainText("767");
+
+    const hasHorizontalOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth
+    );
+    expect(hasHorizontalOverflow).toBe(false);
+    const smallestDay = await page
+      .locator(".budget-day")
+      .evaluateAll((days) =>
+        Math.min(...days.map((day) => day.getBoundingClientRect().height))
+      );
+    expect(smallestDay).toBeGreaterThanOrEqual(44);
   });
 
   test(`operations fixes fit the ${viewport.name} viewport`, async ({
