@@ -1,12 +1,70 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { formatMoney } from "../BudgetCalendar/budgetFormat";
+import { EChart } from "../charts/EChart";
+import {
+  EXPENSE_CHART_TYPES,
+  expensesChartHeight,
+  expensesChartOption,
+} from "../charts/homeChartOptions";
+import { useChartTokens } from "../charts/useChartTokens";
 import { SectionState } from "./SectionState";
 
-/**
- * Graphique en barres des dépenses du mois. Chaque barre est décorative :
- * le libellé et le montant visibles de la ligne en sont l'équivalent textuel.
- */
+const ChartTypeToggle = ({ type, onChange }) => (
+  <fieldset className="budget-mode__group home-budget__chart-types">
+    <legend className="sr-only">Type de graphique</legend>
+    {EXPENSE_CHART_TYPES.map((option) => (
+      <label
+        key={option.value}
+        className={`budget-mode__option${
+          option.value === type ? " budget-mode__option--active" : ""
+        }`}
+      >
+        <input
+          type="radio"
+          name="home-expenses-chart"
+          value={option.value}
+          checked={option.value === type}
+          onChange={() => onChange(option.value)}
+        />
+        {option.label}
+      </label>
+    ))}
+  </fieldset>
+);
+
+const ExpensesChart = ({ rows, currency }) => {
+  const [type, setType] = useState("bar");
+  const tokens = useChartTokens();
+  const option = useMemo(
+    () => expensesChartOption(rows, type, tokens, currency),
+    [rows, type, tokens, currency]
+  );
+  return (
+    <>
+      <ChartTypeToggle type={type} onChange={setType} />
+      <EChart
+        className={`home-chart home-chart--${type}`}
+        option={option}
+        style={{ height: `${expensesChartHeight(rows, type)}px` }}
+        label={`Graphique des dépenses du mois par catégorie, ${
+          rows.length
+        } catégorie${
+          rows.length > 1 ? "s" : ""
+        }. Détail dans la liste qui suit.`}
+      />
+      <ul className="sr-only" aria-label="Dépenses par catégorie">
+        {rows.map((row) => (
+          <li key={row.id}>
+            {row.name} : {formatMoney(row.amount, currency)}
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+};
+
+/** Dépenses réelles du mois par catégorie, en barres ou en secteurs (ECharts). */
 export const ExpensesByCategoryCard = ({ section, currency }) => (
   <article className="home-budget__card" aria-labelledby="home-expenses-title">
     <h2 id="home-expenses-title">Mes dépenses du mois par catégories</h2>
@@ -22,25 +80,7 @@ export const ExpensesByCategoryCard = ({ section, currency }) => (
         Vous n’avez pas encore renseigné de dépense ce mois-ci.
       </p>
     ) : (
-      <ul className="home-chart" aria-label="Dépenses par catégorie">
-        {section.data.map((row) => (
-          <li key={row.id} className="home-chart__row">
-            <span className="home-chart__label">{row.name}</span>
-            <span className="home-chart__track" aria-hidden="true">
-              <span
-                className="home-chart__bar"
-                style={{
-                  width: `${Math.max(row.share * 100, 2)}%`,
-                  ...(row.color ? { backgroundColor: row.color } : {}),
-                }}
-              />
-            </span>
-            <span className="home-chart__value">
-              {formatMoney(row.amount, currency)}
-            </span>
-          </li>
-        ))}
-      </ul>
+      <ExpensesChart rows={section.data} currency={currency} />
     )}
     <Link className="home-budget__button" to="/operations">
       Ajouter une dépense

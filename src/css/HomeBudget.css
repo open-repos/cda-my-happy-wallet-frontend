@@ -24,8 +24,10 @@
   border: 0;
 }
 
+/* Posé sur le fond de la coque : une surface garde l'option active lisible. */
 .home-budget__periods {
   align-self: center;
+  background: var(--ds-color-background-surface);
 }
 
 .home-budget__illustration {
@@ -40,6 +42,11 @@
   gap: var(--ds-primitive-space-3);
   width: 100%;
   max-width: var(--ds-primitive-size-content-sm);
+  box-sizing: border-box;
+  padding: var(--ds-space-card);
+  border-radius: var(--ds-radius-card);
+  background: var(--ds-color-background-surface);
+  box-shadow: var(--ds-shadow-card);
 }
 
 .home-budget__caption {
@@ -133,85 +140,19 @@
   outline-offset: 2px;
 }
 
-.home-chart {
-  display: flex;
-  flex-direction: column;
-  gap: var(--ds-primitive-space-2);
+.home-budget__chart-types {
+  align-self: center;
+}
+
+/* Conteneurs ECharts : le canvas prend la taille de son conteneur. */
+.echart {
   width: 100%;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.home-chart__row {
-  display: grid;
-  grid-template-columns: minmax(0, 8rem) minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--ds-primitive-space-2);
-  text-align: left;
-}
-
-.home-chart__label {
-  overflow: hidden;
-  color: var(--ds-color-text-primary);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.home-chart__track {
-  display: block;
-  height: 0.75rem;
-  border-radius: var(--ds-primitive-radius-pill);
-  background: var(--ds-color-border-subtle);
-}
-
-.home-chart__bar {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--ds-color-data-expense);
-}
-
-.home-chart__value {
-  color: var(--ds-color-text-primary);
-  font-variant-numeric: tabular-nums;
+  min-width: 0;
 }
 
 .home-ring {
-  width: 9rem;
-  height: 9rem;
-}
-
-.home-ring circle {
-  fill: none;
-  stroke-width: 12;
-}
-
-.home-ring__track {
-  stroke: var(--ds-color-border-subtle);
-}
-
-.home-ring__value {
-  stroke: var(--ds-color-data-income);
-  stroke-linecap: round;
-  transition: stroke-dashoffset var(--ds-motion-duration-normal)
-    var(--ds-motion-easing-standard);
-}
-
-.home-ring__percent,
-.home-ring__caption {
-  fill: var(--ds-color-text-primary);
-  text-anchor: middle;
-}
-
-.home-ring__percent {
-  font-size: var(--ds-primitive-font-size-xl);
-  font-weight: var(--ds-primitive-font-weight-bold);
-}
-
-.home-ring__caption {
-  fill: var(--ds-color-text-secondary);
-  font-size: var(--ds-primitive-font-size-xs);
+  width: 10rem;
+  height: 10rem;
 }
 
 .home-goals {
@@ -240,15 +181,5 @@
 
   .home-budget__amount {
     font-size: var(--ds-primitive-font-size-2xl);
-  }
-
-  .home-chart__row {
-    grid-template-columns: minmax(0, 6rem) minmax(0, 1fr) auto;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .home-ring__value {
-    transition: none;
   }
 }

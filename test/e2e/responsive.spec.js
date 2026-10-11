@@ -382,6 +382,17 @@ for (const viewport of viewports) {
     await expect(
       page.getByRole("list", { name: "Dépenses par catégorie" })
     ).toContainText("Alimentation");
+    const expenseCanvas = page.locator(".home-chart canvas");
+    await expect(expenseCanvas).toBeVisible();
+    expect((await expenseCanvas.boundingBox()).height).toBeGreaterThan(100);
+    const expensesGraph = page.getByRole("img", {
+      name: /^Graphique des dépenses du mois par catégorie/,
+    });
+    await expect(expensesGraph).toBeVisible();
+    await page.getByText("Secteurs", { exact: true }).click();
+    await expect(page.locator(".home-chart--pie canvas")).toBeVisible();
+    await expect(expensesGraph).toBeVisible();
+    await expect(page.locator(".home-ring canvas")).toBeVisible();
     await expect(
       page.getByRole("img", { name: /25 % de l’épargne visée atteinte/ })
     ).toBeVisible();

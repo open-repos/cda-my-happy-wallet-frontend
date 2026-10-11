@@ -16,6 +16,17 @@ vi.mock("../../src/js/hooks/useHomeBudget", () => ({
   useHomeBudget: vi.fn(),
 }));
 
+// jsdom n'a pas de canvas : le graphique expose son option pour les assertions.
+vi.mock("../../src/js/components/charts/EChart", () => ({
+  EChart: ({ option, label }) => (
+    <div
+      role="img"
+      aria-label={label}
+      data-series={option.series.map((serie) => serie.type).join(",")}
+    />
+  ),
+}));
+
 const summary = (overrides = {}) => ({
   month: "2026-10",
   currency: "EUR",
@@ -143,9 +154,19 @@ describe("Home reste à vivre", () => {
     const chart = screen.getByRole("list", { name: "Dépenses par catégorie" });
     const rows = within(chart).getAllByRole("listitem");
     expect(rows.map((row) => normalize(row.textContent))).toEqual([
-      "Loisirs60,00 €",
-      "Alimentation42,80 €",
+      "Loisirs : 60,00 €",
+      "Alimentation : 42,80 €",
     ]);
+    const graph = screen.getByRole("img", {
+      name: /Graphique des dépenses du mois par catégorie, 2 catégories/,
+    });
+    expect(graph).toHaveAttribute("data-series", "bar");
+
+    fireEvent.click(screen.getByLabelText("Secteurs"));
+
+    expect(
+      screen.getByRole("img", { name: /Graphique des dépenses/ })
+    ).toHaveAttribute("data-series", "pie");
     expect(
       screen.getByRole("link", { name: "Ajouter une dépense" })
     ).toHaveAttribute("href", "/operations");
@@ -191,7 +212,7 @@ describe("Home reste à vivre", () => {
     expect(screen.getByRole("status", { name: "" }).textContent).toBe(
       "Chargement du reste à vivre…"
     );
-    expect(screen.getByText("Loisirs")).toBeInTheDocument();
+    expect(screen.getByText(/^Loisirs :/)).toBeInTheDocument();
     const alert = screen.getByRole("alert");
     expect(alert).toHaveTextContent("Les objectifs n’ont pas pu être chargés.");
     fireEvent.click(within(alert).getByRole("button", { name: "Réessayer" }));
