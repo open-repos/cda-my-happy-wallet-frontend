@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import addIcon from "../../assets/icons/add.svg";
+import { FinancialGoalsSection } from "../components/FinancialGoals/FinancialGoalsSection";
 import { MonthlyEventForm } from "../components/MonthlyEvents/MonthlyEventForm";
 import { MonthlyEventList } from "../components/MonthlyEvents/MonthlyEventList";
 import { useMonthlyEvents } from "../hooks/useMonthlyEvents";
@@ -29,10 +30,12 @@ function Objectifs() {
   };
   return (
     <main className="objEv-container monthly-events-page">
+      <h1 className="objectives-page-title">Objectifs et événements</h1>
+      <FinancialGoalsSection />
       <header className="monthly-events-header">
         <div>
           <p className="monthly-events-eyebrow">Prévisions</p>
-          <h1>Événements mensuels</h1>
+          <h2>Événements mensuels</h2>
           <p>
             Anticipez les entrées et dépenses qui influenceront votre budget.
           </p>
