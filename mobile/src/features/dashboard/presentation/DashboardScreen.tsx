@@ -16,14 +16,10 @@ import { FeedbackState } from "@/src/design/FeedbackState";
 import { useAuth } from "@/src/features/auth/presentation/AuthProvider";
 import { HttpFixedBudgetGateway } from "@/src/features/dashboard/infrastructure/HttpFixedBudgetGateway";
 import { useFixedBudget } from "@/src/features/dashboard/presentation/useFixedBudget";
+import { HttpBudgetSummaryGateway } from "@/src/features/budget/infrastructure/HttpBudgetSummaryGateway";
+import { BudgetSummaryCards } from "@/src/features/budget/presentation/BudgetSummaryCards";
 
 const colors = themes.light.color;
-const money = (amount: number) =>
-  new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 2,
-  }).format(amount);
 
 interface ActionCardProps {
   description: string;
@@ -58,7 +54,11 @@ export const DashboardScreen = () => {
     () => new HttpFixedBudgetGateway(httpClient),
     [httpClient],
   );
-  const { operationCount, retry, status, summary } = useFixedBudget(gateway);
+  const summaryGateway = useMemo(
+    () => new HttpBudgetSummaryGateway(httpClient),
+    [httpClient],
+  );
+  const { operationCount, retry, status } = useFixedBudget(gateway);
   const email =
     state.status === "authenticated" || state.status === "refreshing"
       ? state.user.email
@@ -148,43 +148,7 @@ export const DashboardScreen = () => {
         ) : null}
 
         {status === "success" && operationCount > 0 ? (
-          <View
-            accessibilityLabel={`Reste à vivre mensuel ${money(summary.remaining)}`}
-            style={styles.budgetCard}
-          >
-            <View style={styles.budgetIcon}>
-              <Ionicons
-                color={colors.textInverse}
-                name="wallet-outline"
-                size={28}
-              />
-            </View>
-            <Text style={styles.budgetLabel}>Reste à vivre mensuel</Text>
-            <Text
-              style={[
-                styles.budgetAmount,
-                summary.remaining < 0 && styles.negative,
-              ]}
-            >
-              {money(summary.remaining)}
-            </Text>
-            <View style={styles.divider} />
-            <View style={styles.totals}>
-              <View style={styles.totalItem}>
-                <Text style={styles.totalLabel}>Revenus fixes</Text>
-                <Text style={[styles.totalValue, styles.income]}>
-                  {money(summary.income)}
-                </Text>
-              </View>
-              <View style={styles.totalSeparator} />
-              <View style={styles.totalItem}>
-                <Text style={styles.totalLabel}>Charges fixes</Text>
-                <Text style={[styles.totalValue, styles.expense]}>
-                  {money(summary.expenses)}
-                </Text>
-              </View>
-            </View>
-          </View>
+          <BudgetSummaryCards gateway={summaryGateway} />
         ) : null}
 
         <View style={styles.actions}>
@@ -254,47 +218,6 @@ const styles = StyleSheet.create({
     lineHeight: 37,
   },
   subtitle: { color: colors.textSecondary, fontSize: 16, lineHeight: 24 },
-  budgetCard: {
-    alignItems: "center",
-    backgroundColor: colors.backgroundSurface,
-    borderColor: colors.borderSubtle,
-    borderRadius: semantic.radius.card,
-    borderWidth: 1,
-    padding: 24,
-    shadowColor: semantic.shadow.card.color,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 6,
-  },
-  budgetIcon: {
-    alignItems: "center",
-    backgroundColor: colors.actionPrimaryBackground,
-    borderRadius: 999,
-    height: 56,
-    justifyContent: "center",
-    width: 56,
-  },
-  budgetLabel: { color: colors.textSecondary, fontSize: 16, marginTop: 16 },
-  budgetAmount: {
-    color: colors.textPrimary,
-    fontSize: 32,
-    fontWeight: "700",
-    marginTop: 4,
-  },
-  negative: { color: colors.statusErrorText },
-  divider: {
-    backgroundColor: colors.borderSubtle,
-    height: 1,
-    marginVertical: 20,
-    width: "100%",
-  },
-  totals: { flexDirection: "row", width: "100%" },
-  totalItem: { alignItems: "center", flex: 1, gap: 4 },
-  totalSeparator: { backgroundColor: colors.borderSubtle, width: 1 },
-  totalLabel: { color: colors.textMuted, fontSize: 14, textAlign: "center" },
-  totalValue: { fontSize: 16, fontWeight: "700" },
-  income: { color: colors.dataIncome },
-  expense: { color: colors.dataExpense },
   actions: { gap: 12 },
   sectionTitle: { color: colors.textPrimary, fontSize: 20, fontWeight: "700" },
   actionCard: {

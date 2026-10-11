@@ -34,7 +34,12 @@ test("captures the populated dashboard and navigation", async ({
   page,
 }, testInfo) => {
   await signIn(page);
-  await expect(page.getByText("1 500,00 €", { exact: true })).toBeVisible();
+  await expect(page.getByText("Reste réel", { exact: true })).toBeVisible();
+  await expect(page.getByText(/^1\s337,50\s€$/)).toBeVisible();
+  await expect(page.getByText("Report d’août", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Disponible prudent par jour", { exact: true }),
+  ).toBeVisible();
   const operationsTab = page.getByRole("tab", {
     name: "Opérations ponctuelles",
   });
