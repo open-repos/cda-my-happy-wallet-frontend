@@ -5,6 +5,8 @@ import Home from "./../../assets/icons/dashboard.svg";
 import Calendar from "./../../assets/icons/calendar.svg";
 import Projects from "./../../assets/icons/target.svg";
 import List from "./../../assets/icons/list.svg";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChartColumn } from "@fortawesome/free-solid-svg-icons";
 import PowerOff from "./../../assets/icons/power-off.svg";
 import Profil from "./../../assets/icons/user.svg";
 import styled from "styled-components";
@@ -32,6 +34,9 @@ const Container = styled.div`
 
     img {
       filter: var(--filter-img-orange-light)
+    }
+    svg {
+      color: var(--orange-light);
     }
   }
   .active-profile {
@@ -147,6 +152,16 @@ const Item = styled(NavLink)`
     img {
       filter: var(--filter-img-orange-light)
     }
+    svg {
+      color: var(--orange-light);
+    }
+  }
+
+  /* Icône FontAwesome : même taille et même gris que les icônes images. */
+  svg {
+    width: 1.8rem;
+    height: 1.8rem;
+    color: var(--grey);
   }
 
   img {
@@ -330,6 +345,14 @@ const Sidebar = () => {
           >
             <img src={List} alt="Liste Operations" />
             <Text clicked={click}>Liste Opérations</Text>
+          </Item>
+          <Item
+            onClick={() => setClick(false)}
+            className={(navData) => (navData.isActive ? "active" : "")}
+            to="/analyses"
+          >
+            <FontAwesomeIcon icon={faChartColumn} aria-hidden="true" />
+            <Text clicked={click}>Analyses</Text>
           </Item>
         </SlickBar>
         <Profile clicked={profileClick} path={location.pathname} to="/profil" className={(navData) => (navData.isActive ? "active-profile" : "")}>

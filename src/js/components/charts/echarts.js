@@ -6,6 +6,8 @@
 import * as echarts from "echarts/core";
 import { BarChart, LineChart, PieChart } from "echarts/charts";
 import {
+  DataZoomInsideComponent,
+  DataZoomSliderComponent,
   GridComponent,
   LegendComponent,
   TooltipComponent,
@@ -16,6 +18,8 @@ echarts.use([
   BarChart,
   LineChart,
   PieChart,
+  DataZoomInsideComponent,
+  DataZoomSliderComponent,
   GridComponent,
   LegendComponent,
   TooltipComponent,

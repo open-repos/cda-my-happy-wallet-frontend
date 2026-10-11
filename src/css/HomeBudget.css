@@ -134,6 +134,28 @@
   cursor: pointer;
 }
 
+.home-budget__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ds-primitive-space-4);
+  margin-top: auto;
+}
+
+.home-budget__actions .home-budget__button {
+  margin-top: 0;
+}
+
+.home-budget__link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--ds-color-text-primary);
+  font-weight: var(--ds-typography-action-weight);
+}
+
+.home-budget__link:focus-visible,
 .home-budget__button:focus-visible,
 .home-budget__edit:focus-visible {
   outline: var(--ds-border-width-focus) solid var(--ds-color-focus-ring);
