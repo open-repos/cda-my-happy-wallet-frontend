@@ -10,7 +10,8 @@ import {
 interface OperationCardProps {
   category?: OperationCategory;
   operation: OneOffOperation;
-  onEdit(operation: OneOffOperation): void;
+  /** Absent : carte en lecture seule (par exemple dans le calendrier). */
+  onEdit?(operation: OneOffOperation): void;
 }
 
 const colors = themes.light.color;
@@ -42,22 +43,24 @@ export const OperationCard = ({
           </Text>
           <Text style={styles.date}>{formatDate(operation.operationDate)}</Text>
         </View>
-        <Pressable
-          accessibilityLabel={`Modifier ${operation.title}`}
-          accessibilityRole="button"
-          hitSlop={primitives.space["2"]}
-          onPress={() => onEdit(operation)}
-          style={({ pressed }) => [
-            styles.editButton,
-            pressed && styles.pressed,
-          ]}
-        >
-          <Ionicons
-            color={colors.textSecondary}
-            name="create-outline"
-            size={24}
-          />
-        </Pressable>
+        {onEdit ? (
+          <Pressable
+            accessibilityLabel={`Modifier ${operation.title}`}
+            accessibilityRole="button"
+            hitSlop={primitives.space["2"]}
+            onPress={() => onEdit(operation)}
+            style={({ pressed }) => [
+              styles.editButton,
+              pressed && styles.pressed,
+            ]}
+          >
+            <Ionicons
+              color={colors.textSecondary}
+              name="create-outline"
+              size={24}
+            />
+          </Pressable>
+        ) : null}
       </View>
       <View style={styles.details}>
         <View style={styles.category}>

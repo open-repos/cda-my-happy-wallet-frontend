@@ -55,4 +55,20 @@ describe("HttpBudgetSummaryGateway", () => {
       new HttpBudgetSummaryGateway({ request }).getSummary("2026-10"),
     ).rejects.toThrow("Invalid budget summary");
   });
+
+  it("returns no month for a future period and rethrows other errors", async () => {
+    const future = vi
+      .fn()
+      .mockResolvedValue(
+        json(422, { error: { details: { code: "FUTURE_PERIOD" } } }),
+      );
+    await expect(
+      new HttpBudgetSummaryGateway({ request: future }).getMonth("2027-01"),
+    ).resolves.toBeNull();
+
+    const invalid = vi.fn().mockResolvedValue(json(422, { error: {} }));
+    await expect(
+      new HttpBudgetSummaryGateway({ request: invalid }).getMonth("2027-01"),
+    ).rejects.toEqual(new BudgetSummaryRequestError(422));
+  });
 });

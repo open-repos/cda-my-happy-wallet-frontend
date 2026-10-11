@@ -1,11 +1,5 @@
-import { DestinationScreen } from "@/src/navigation/DestinationScreen";
+import { BudgetCalendarScreen } from "@/src/features/budget/presentation/BudgetCalendarScreen";
 
 export default function CalendarScreen() {
-  return (
-    <DestinationScreen
-      description="Consultez bientôt vos opérations et événements dans une vue chronologique adaptée au mobile."
-      icon="calendar-outline"
-      title="Calendrier"
-    />
-  );
+  return <BudgetCalendarScreen />;
 }

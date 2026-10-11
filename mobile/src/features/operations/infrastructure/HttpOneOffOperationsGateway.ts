@@ -13,9 +13,17 @@ export interface OperationsHttpClient {
   request(path: string, init?: RequestInit): Promise<Response>;
 }
 
+/** Filtre facultatif de `GET /operations` : dates incluses et devise. */
+export interface OperationFilter {
+  from: string;
+  to: string;
+  currency: string;
+}
+
 export interface OneOffOperationsGateway {
   listOperations(
     cursor?: string | null,
+    filter?: OperationFilter,
   ): Promise<CollectionPage<OneOffOperation>>;
   listAllCategories(): Promise<OperationCategory[]>;
   createOperation(draft: OperationDraft): Promise<OneOffOperation>;
@@ -42,8 +50,14 @@ const buildCollectionPath = (
   resource: string,
   limit: number,
   cursor?: string | null,
+  filter?: OperationFilter,
 ): string => {
   const params = new URLSearchParams({ limit: `${limit}` });
+  if (filter != null) {
+    params.set("from", filter.from);
+    params.set("to", filter.to);
+    params.set("currency", filter.currency);
+  }
   if (cursor != null) params.set("cursor", cursor);
   return `/${resource}?${params.toString()}`;
 };
@@ -53,9 +67,10 @@ export class HttpOneOffOperationsGateway implements OneOffOperationsGateway {
 
   public async listOperations(
     cursor: string | null = null,
+    filter?: OperationFilter,
   ): Promise<CollectionPage<OneOffOperation>> {
     const response = await this.httpClient.request(
-      buildCollectionPath("operations", OPERATIONS_PAGE_LIMIT, cursor),
+      buildCollectionPath("operations", OPERATIONS_PAGE_LIMIT, cursor, filter),
     );
     return parseCollectionPage(await readJson(response), parseOperation);
   }

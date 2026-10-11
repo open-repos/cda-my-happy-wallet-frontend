@@ -60,6 +60,44 @@ describe("parseBudgetSummary", () => {
   });
 });
 
+describe("parseBudgetSummary days", () => {
+  const point = {
+    date: "2026-10-03",
+    income: "0.00",
+    expense: "42.50",
+    realRemaining: "1295.00",
+    plannedIncome: "0.00",
+    plannedExpense: "120.00",
+    plannedCount: 1,
+    forecastRemaining: "1175.00",
+  };
+
+  it("keeps the daily points of an open month", () => {
+    expect(parseBudgetSummary(raw({ days: [point] })).days).toEqual([point]);
+  });
+
+  it("accepts null forecast fields for a closed month", () => {
+    const closed = {
+      ...point,
+      plannedIncome: null,
+      plannedExpense: null,
+      plannedCount: null,
+      forecastRemaining: null,
+    };
+    expect(
+      parseBudgetSummary(
+        raw({ status: "CLOSED", forecast: null, days: [closed] }),
+      ).days[0],
+    ).toEqual(closed);
+  });
+
+  it("rejects an invalid daily point", () => {
+    expect(() =>
+      parseBudgetSummary(raw({ days: [{ ...point, date: "03/10/2026" }] })),
+    ).toThrow("Invalid budget summary");
+  });
+});
+
 describe("currentParisMonth", () => {
   it("follows the Europe/Paris civil date", () => {
     expect(currentParisMonth(new Date("2026-10-31T23:30:00.000Z"))).toBe(
