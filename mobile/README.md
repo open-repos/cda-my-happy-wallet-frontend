@@ -98,3 +98,5 @@ Strategie de build et de publication : [`docs/ci-cd.md`](docs/ci-cd.md).
 
 Politique SemVer, numeros de build EAS et compatibilite `/v1` :
 [`docs/versioning-and-api-compatibility.md`](docs/versioning-and-api-compatibility.md).
+
+Graphiques du tableau de bord : [décision, dépendances et recette Android #122](docs/mobile-echarts.md).
