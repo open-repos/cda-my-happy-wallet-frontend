@@ -124,6 +124,32 @@ const testApiResponse = (pathname, searchParams) => {
       },
     };
   }
+  if (pathname.endsWith("/event-occurrences/pending")) {
+    const month = (searchParams.get("through") ?? "2026-10-31").slice(0, 7);
+    return {
+      data: [
+        {
+          eventId: 9,
+          occurrenceDate: `${month}-05`,
+          title: "Loyer",
+          amount: "300.00",
+          currency: "EUR",
+          kind: "DEPENSE",
+          overdue: true,
+        },
+        {
+          eventId: 10,
+          occurrenceDate: `${month}-20`,
+          title: "Assurance",
+          amount: "45.00",
+          currency: "EUR",
+          kind: "DEPENSE",
+          overdue: false,
+        },
+      ],
+      meta: noNextPage,
+    };
+  }
   if (pathname.endsWith("/operation-categories")) {
     return {
       data: [{ color: "#EA7C69", id: 4, name: "Alimentation" }],
