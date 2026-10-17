@@ -4,6 +4,7 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
   within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -94,7 +95,9 @@ const state = (overrides = {}) => ({
   summary: summary(),
   summaryStatus: "success",
   pending: [occurrence],
-  categories: [{ id: 3, name: "Logement", color: null }],
+  categories: [
+    { id: 3, name: "Logement", color: "#275DAD", icon: "solid:house" },
+  ],
   operations: [
     {
       id: 1,
@@ -204,6 +207,19 @@ describe("budget calendar page", () => {
       screen.getByRole("button", { name: "Masquer les montants" })
     );
     expect(day).not.toHaveTextContent("890");
+  });
+
+  it("labels each operation with its category and icon", async () => {
+    render(<Calendrier />);
+    const row = screen.getByText("Courses").closest("li");
+    expect(within(row).getByText("Logement")).toBeInTheDocument();
+    // Icône décorative, dessinée dans la couleur de la catégorie.
+    const icon = await waitFor(() => {
+      const svg = row.querySelector("svg[aria-hidden='true']");
+      expect(svg).not.toBeNull();
+      return svg;
+    });
+    expect(icon).toHaveStyle({ color: "#275DAD" });
   });
 
   it("filters the list by day and returns to the whole month", () => {

@@ -120,6 +120,7 @@ describe("Categories page", () => {
     expect(actions.saveCategory).toHaveBeenCalledWith(null, {
       name: "Loisirs",
       color: "#275DAD",
+      icon: null,
     });
     expect(screen.queryByLabelText("Nom")).not.toBeInTheDocument();
   });
@@ -147,6 +148,7 @@ describe("Categories page", () => {
       fireEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
     });
 
+    // Icône inchangée : non renvoyée.
     expect(actions.saveCategory).toHaveBeenCalledWith(7, {
       name: "Alimentation",
       color: "#123456",
@@ -154,6 +156,111 @@ describe("Categories page", () => {
     expect(screen.getByLabelText("Nom")).toHaveAccessibleDescription(
       "Une catégorie porte déjà ce nom."
     );
+  });
+
+  it("searches an icon, previews it and sends it with the category", async () => {
+    renderPage();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Ajouter une catégorie" })
+    );
+    fireEvent.change(screen.getByLabelText("Nom"), {
+      target: { value: "Courses" },
+    });
+    fireEvent.click(screen.getByRole("radio", { name: "Vert" }));
+    const icons = screen.getByRole("group", { name: "Icône" });
+    expect(
+      within(icons).getByRole("radio", { name: "Sans icône" })
+    ).toBeChecked();
+
+    fireEvent.change(within(icons).getByLabelText("Rechercher une icône"), {
+      target: { value: "courses" },
+    });
+    fireEvent.click(
+      await within(icons).findByRole("radio", { name: "cart shopping (plein)" })
+    );
+    expect(
+      screen.getByRole("img", {
+        name: "Aperçu : Courses, icône cart shopping (plein)",
+      })
+    ).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+    });
+    expect(actions.saveCategory).toHaveBeenCalledWith(null, {
+      name: "Courses",
+      color: "#075E3B",
+      icon: "solid:cart-shopping",
+    });
+  });
+
+  it("keeps the current icon selected and can return to the color dot", async () => {
+    useCategories.mockReturnValue({
+      ...successfulState,
+      categories: [
+        { id: 7, name: "Santé", color: null, icon: "solid:heart-pulse" },
+      ],
+    });
+    renderPage();
+    fireEvent.click(screen.getByRole("button", { name: "Modifier Santé" }));
+    const icons = screen.getByRole("group", { name: "Icône" });
+    expect(
+      await within(icons).findByRole("radio", { name: "heart pulse (plein)" })
+    ).toBeChecked();
+
+    fireEvent.click(within(icons).getByRole("radio", { name: "Sans icône" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+    });
+    expect(actions.saveCategory).toHaveBeenCalledWith(7, {
+      name: "Santé",
+      color: null,
+      icon: null,
+    });
+  });
+
+  it("renames a category whose icon left the list without resending it", async () => {
+    useCategories.mockReturnValue({
+      ...successfulState,
+      categories: [
+        { id: 8, name: "Ancien", color: null, icon: "solid:zz-retired" },
+      ],
+    });
+    renderPage();
+    fireEvent.click(screen.getByRole("button", { name: "Modifier Ancien" }));
+    const icons = screen.getByRole("group", { name: "Icône" });
+    expect(
+      await within(icons).findByRole("radio", { name: "zz retired (plein)" })
+    ).toBeChecked();
+
+    fireEvent.change(screen.getByLabelText("Nom"), {
+      target: { value: "Ancien nom" },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+    });
+    expect(actions.saveCategory).toHaveBeenCalledWith(8, {
+      name: "Ancien nom",
+      color: null,
+    });
+  });
+
+  it("keeps Enter and Escape inside the icon search", async () => {
+    renderPage();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Ajouter une catégorie" })
+    );
+    const search = screen.getByLabelText("Rechercher une icône");
+    fireEvent.change(search, { target: { value: "santé" } });
+    expect(await screen.findByText(/icônes? proposées?\./)).toBeInTheDocument();
+
+    // `fireEvent` renvoie `false` quand le gestionnaire a empêché l'action
+    // par défaut (la soumission implicite du formulaire).
+    expect(fireEvent.keyDown(search, { key: "Enter" })).toBe(false);
+    expect(actions.saveCategory).not.toHaveBeenCalled();
+    fireEvent.keyDown(search, { key: "Escape" });
+    expect(search).toHaveValue("");
+    expect(screen.getByLabelText("Nom")).toBeInTheDocument();
   });
 
   it("asks for confirmation before deleting and keeps the form when in use", async () => {

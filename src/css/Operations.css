@@ -219,7 +219,10 @@
   text-align: right;
 }
 
-.one-off-category,
+.one-off-table .category-label {
+  white-space: nowrap;
+}
+
 .one-off-kind {
   display: inline-flex;
   align-items: center;
@@ -227,16 +230,11 @@
   white-space: nowrap;
 }
 
-.one-off-category__swatch,
 .one-off-kind::before {
   width: 0.75rem;
   height: 0.75rem;
   flex: 0 0 0.75rem;
   border-radius: var(--ds-primitive-radius-pill);
-}
-
-.one-off-category__swatch {
-  border: var(--ds-border-width-default) solid var(--ds-color-border-strong);
 }
 
 .one-off-kind::before {

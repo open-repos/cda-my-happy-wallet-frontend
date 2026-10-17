@@ -1,0 +1,34 @@
+/* Étiquette de catégorie partagée (opérations, calendrier, catégories) :
+   icône ou pastille dans la couleur de la catégorie, puis son nom. */
+
+.category-label {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--ds-primitive-space-2);
+}
+
+.category-icon {
+  flex: 0 0 auto;
+  /* Liseré tokenisé : une couleur de catégorie sombre reste visible sur le
+     fond du thème sombre, comme la bordure de la pastille. */
+  filter: drop-shadow(0 0 1px var(--ds-color-border-strong));
+}
+
+/* Pastille de couleur stockée par l'API; bordure pour rester visible sur
+   tous les fonds. */
+.category-swatch {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: 0 0 1.25rem;
+  border: var(--ds-border-width-default) solid var(--ds-color-border-strong);
+  border-radius: var(--ds-primitive-radius-pill);
+}
+
+.category-swatch--none {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--ds-color-background-surface) 0 3px,
+    var(--ds-color-border-subtle) 3px 6px
+  );
+}

@@ -56,7 +56,10 @@ export const parseCategory = (category) => {
     typeof category?.name !== "string" ||
     category.name.length < 2 ||
     category.name.length > 50 ||
-    (category?.color !== null && !/^#[0-9A-F]{6}$/i.test(category?.color))
+    (category?.color !== null && !/^#[0-9A-F]{6}$/i.test(category?.color)) ||
+    // `icon` (#84) : absent d'une API plus ancienne, sinon `style:nom`.
+    (category.icon != null &&
+      !/^(solid|regular):[a-z0-9-]+$/.test(category.icon))
   ) {
     throw new Error("Invalid category response");
   }
@@ -64,6 +67,7 @@ export const parseCategory = (category) => {
     id: category.id,
     name: category.name,
     color: category.color,
+    icon: category.icon ?? null,
   };
 };
 

@@ -11,7 +11,7 @@ l'écran d'accueil invitant à les saisir reste affiché.
 - `GET /v1/operations?from=&to=&currency=EUR&limit=100` : toutes les pages
   du mois, agrégées côté client en dépenses par catégorie (l'API n'expose pas
   d'agrégat). Les entrées et les autres devises sont ignorées.
-- `GET /v1/operation-categories` : noms et couleurs des catégories.
+- `GET /v1/operation-categories` : noms, couleurs et icônes des catégories.
 - `GET /v1/goals` : toutes les pages d'objectifs, en euros.
 
 Chaque bloc a son propre état chargement, erreur avec `Réessayer`, vide et
@@ -55,7 +55,10 @@ Cartes de l'accueil :
   cliquable, donne montant et part en fr-FR. Le conteneur porte un libellé
   accessible français et une liste réservée aux lecteurs d'écran donne chaque
   catégorie et son montant. L'aria automatique d'ECharts est désactivé : il
-  remplacerait ce libellé par une description anglaise.
+  remplacerait ce libellé par une description anglaise. L'icône Font Awesome
+  d'une catégorie (#131), dans sa couleur, précède son nom sur l'axe des
+  barres et remplace le symbole de sa légende en secteurs, une fois les
+  tracés chargés (voir `web-categories.md`).
 - Objectifs : anneau d'atteinte globale (épargne plafonnée à la cible de chaque
   objectif, pourcentage arrondi à l'inférieur) avec libellé accessible complet,
   suivi de la liste visible des objectifs.

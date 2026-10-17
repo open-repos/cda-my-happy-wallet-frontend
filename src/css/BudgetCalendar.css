@@ -379,9 +379,22 @@
     var(--ds-color-border-subtle);
 }
 
-.budget-operation span:last-child {
+.budget-operation > span:last-child {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+/* Titre puis catégorie (icône et nom) de l'opération. */
+.budget-operation__label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--ds-primitive-space-1);
+}
+
+.budget-operation__label .category-label {
+  color: var(--ds-color-text-secondary);
+  font-size: var(--ds-primitive-font-size-sm);
 }
 
 @media (max-width: 64rem) {

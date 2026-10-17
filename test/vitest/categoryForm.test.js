@@ -35,10 +35,14 @@ describe("category form rules", () => {
   });
 
   it("normalizes the payload sent to the API", () => {
-    expect(toCategoryPayload({ name: "  Loisirs ", color: "#a1b2c3" })).toEqual(
-      { name: "Loisirs", color: "#A1B2C3" }
-    );
-    expect(toCategoryPayload({ name: "Loisirs", color: "" })).toEqual({
+    expect(
+      toCategoryPayload({ name: "  Loisirs ", color: "#a1b2c3", icon: null })
+    ).toEqual({ name: "Loisirs", color: "#A1B2C3", icon: null });
+    expect(
+      toCategoryPayload({ name: "Loisirs", color: "", icon: "solid:film" })
+    ).toEqual({ name: "Loisirs", color: null, icon: "solid:film" });
+    // Icône inchangée : absente du corps, le backend la conserve.
+    expect(toCategoryPayload({ name: "Loisirs", color: null })).toEqual({
       name: "Loisirs",
       color: null,
     });

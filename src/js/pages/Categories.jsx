@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import addIcon from "../../assets/icons/add.svg";
 import { CategoryForm } from "../components/Categories/CategoryForm";
+import { CategoryMark } from "../components/Categories/CategoryLabel";
 import { useCategories } from "../hooks/useCategories";
 import "../../css/Operations.css";
 import "../../css/Categories.css";
@@ -149,15 +150,7 @@ function Categories() {
           >
             {state.categories.map((category) => (
               <li key={category.id} className="categories-list__item">
-                <span
-                  className={`category-swatch ${
-                    category.color ? "" : "category-swatch--none"
-                  }`}
-                  style={
-                    category.color ? { backgroundColor: category.color } : {}
-                  }
-                  aria-hidden="true"
-                />
+                <CategoryMark category={category} />
                 <span className="categories-list__name">
                   {category.name}
                   {!category.color && (

@@ -63,6 +63,7 @@ export const expensesByCategory = (operations, categories, currency) => {
       id,
       name: byId.get(id)?.name ?? "Autre catégorie",
       color: byId.get(id)?.color ?? null,
+      icon: byId.get(id)?.icon ?? null,
       cents,
     }))
     .sort((left, right) => right.cents - left.cents || left.id - right.id);
