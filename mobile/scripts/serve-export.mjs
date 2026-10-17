@@ -191,9 +191,71 @@ const findExportedFile = (pathname) => {
   return existsSync(routePath) ? routePath : null;
 };
 
+const sendJson = (response, status, payload) => {
+  response.writeHead(status, {
+    "Cache-Control": "no-store",
+    "Content-Type": "application/json; charset=utf-8",
+  });
+  response.end(payload == null ? undefined : JSON.stringify(payload));
+};
+
+/**
+ * Commandes des catégories (#134), sans état : la création et la
+ * modification renvoient le corps reçu; « Alimentation » (id 4) est utilisée
+ * par l'opération de démonstration et ne peut pas être supprimée.
+ */
+const handleCategoryCommand = (request, response, pathname) => {
+  const match = /\/v1\/operation-categories(?:\/(\d+))?$/.exec(pathname);
+  if (match == null || !["POST", "PUT", "DELETE"].includes(request.method)) {
+    return false;
+  }
+  const id = match[1] == null ? null : Number(match[1]);
+  if (request.method === "DELETE") {
+    if (id === 4) {
+      sendJson(response, 409, {
+        error: {
+          type: "Conflict",
+          message: "Resource conflict",
+          details: { code: "CATEGORY_IN_USE" },
+        },
+      });
+    } else {
+      sendJson(response, 204, null);
+    }
+    return true;
+  }
+  const chunks = [];
+  request.on("data", (chunk) => chunks.push(chunk));
+  request.on("end", () => {
+    let body;
+    try {
+      body = JSON.parse(Buffer.concat(chunks).toString() || "{}");
+    } catch {
+      sendJson(response, 422, { error: { type: "ValidationFailed" } });
+      return;
+    }
+    // « Alimentation » existe déjà : conflit de nom à la création.
+    if (request.method === "POST" && body.name === "Alimentation") {
+      sendJson(response, 409, {
+        error: {
+          type: "Conflict",
+          message: "Resource conflict",
+          details: { code: "CATEGORY_NAME_CONFLICT" },
+        },
+      });
+      return;
+    }
+    sendJson(response, request.method === "POST" ? 201 : 200, {
+      data: { id: id ?? 9, icon: null, ...body },
+    });
+  });
+  return true;
+};
+
 createServer((request, response) => {
   const url = new URL(request.url ?? "/", "http://localhost");
   const pathname = url.pathname;
+  if (handleCategoryCommand(request, response, pathname)) return;
   if (pathname === "/health/ready") {
     response.writeHead(200, {
       "Cache-Control": "no-store",

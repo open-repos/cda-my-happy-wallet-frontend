@@ -1,3 +1,4 @@
+import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { monthBounds } from "@/src/features/budget/domain/budgetCalendar";
@@ -162,6 +163,28 @@ export const useBudgetCalendar = (
     };
     // `reload` : « Réessayer » relance aussi les catégories après un échec.
   }, [operations, reload]);
+
+  // Retour sur l'onglet : catégories relues sans bruit (modifiées depuis
+  // l'écran des catégories). Le premier focus suit le chargement initial.
+  const hasFocused = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasFocused.current) {
+        hasFocused.current = true;
+        return undefined;
+      }
+      let isActive = true;
+      operations
+        .listAllCategories()
+        .then((next) => {
+          if (isActive) setCategories(next);
+        })
+        .catch(() => {});
+      return () => {
+        isActive = false;
+      };
+    }, [operations]),
+  );
 
   const current =
     operationsResult?.key === operationsKey ? operationsResult : null;

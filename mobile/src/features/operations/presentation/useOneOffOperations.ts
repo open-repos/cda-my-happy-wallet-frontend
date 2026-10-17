@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   OneOffOperation,
@@ -71,6 +72,30 @@ export const useOneOffOperations = (gateway: OneOffOperationsGateway) => {
       isActive = false;
     };
   }, [gateway]);
+
+  // Les onglets restent montés : au retour sur l'écran, les catégories sont
+  // relues sans masquer la liste (créées, renommées ou supprimées entre-temps
+  // depuis l'écran des catégories). Le premier focus suit le montage.
+  const hasFocused = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasFocused.current) {
+        hasFocused.current = true;
+        return undefined;
+      }
+      let isActive = true;
+      gateway
+        .listAllCategories()
+        .then((next) => {
+          if (isActive) setCategories(next);
+        })
+        // Échec silencieux : les catégories déjà affichées restent valables.
+        .catch(() => {});
+      return () => {
+        isActive = false;
+      };
+    }, [gateway]),
+  );
 
   const loadMore = useCallback(async () => {
     if (

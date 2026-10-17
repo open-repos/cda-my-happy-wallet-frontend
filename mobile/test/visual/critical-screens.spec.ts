@@ -92,6 +92,58 @@ test("captures the populated operations screen", async ({ page }) => {
   await expect(page).toHaveScreenshot("operations.png", { fullPage: true });
 });
 
+test("manages categories from the operations screen", async ({ page }) => {
+  await signIn(page);
+  await page.getByRole("tab", { name: "Opérations ponctuelles" }).click();
+  await page.getByRole("link", { name: "Gérer les catégories" }).click();
+  await expect(
+    page.getByText("Catégories d’opérations", { exact: true }),
+  ).toBeVisible();
+  // Les onglets restent montés : « Alimentation » existe aussi sur l'accueil.
+  await expect(
+    page.getByRole("button", { name: "Modifier Alimentation" }),
+  ).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  await page.getByRole("button", { name: "Ajouter une catégorie" }).click();
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(
+    page.getByText("Le nom doit contenir entre 2 et 50 caractères."),
+  ).toBeVisible();
+  await page.getByLabel("Nom", { exact: true }).fill("Alimentation");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(
+    page.getByText("Une catégorie porte déjà ce nom.", { exact: true }),
+  ).toBeVisible();
+  await page.getByLabel("Nom", { exact: true }).fill("Loisirs");
+  await page.getByRole("radio", { name: "Bleu" }).click();
+  await expect(page.getByRole("radio", { name: "Bleu" })).toBeChecked();
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page.getByText("Catégorie ajoutée.")).toBeVisible();
+
+  // « Alimentation » est utilisée par l'opération de démonstration.
+  await page.getByRole("button", { name: "Modifier Alimentation" }).click();
+  await page.getByRole("button", { name: "Supprimer", exact: true }).click();
+  await page.getByRole("button", { name: "Oui, supprimer" }).click();
+  await expect(
+    page.getByText(/Cette catégorie est utilisée par des opérations/),
+  ).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  await page.getByRole("button", { name: "Fermer le formulaire" }).click();
+  // Les onglets restent montés : revenir sur Opérations relit les catégories.
+  const categoriesReloaded = page.waitForRequest(
+    (request) =>
+      request.method() === "GET" &&
+      new URL(request.url()).pathname.endsWith("/operation-categories"),
+  );
+  await page.getByRole("link", { name: "Retour aux opérations" }).click();
+  await expect(
+    page.getByText("Vos opérations ponctuelles", { exact: true }),
+  ).toBeVisible();
+  await categoriesReloaded;
+});
+
 test("captures the budget calendar and its day filter", async ({ page }) => {
   // Date figée : la grille et sa capture ne dépendent pas du jour d'exécution.
   await page.clock.setFixedTime(new Date("2026-10-11T10:00:00+02:00"));
