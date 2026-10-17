@@ -40,7 +40,7 @@ async function login(page, project, journey) {
 }
 
 async function navigate(page, name) {
-  const link = page.getByRole("link", { name });
+  const link = page.getByRole("link", { name, exact: true });
   if (!(await link.isVisible()))
     await page.getByRole("button", { name: "Ouvrir le menu" }).click();
   await link.click();
@@ -318,12 +318,14 @@ for (const theme of ["light", "dark"]) {
       (theme) => localStorage.setItem("mhw-theme", theme),
       theme
     );
+    const viewport = page.viewportSize();
     for (const path of [
       "/login",
       "/register",
       "/forgot-password",
       "/new-password",
     ]) {
+      await page.setViewportSize(viewport);
       await page.goto(path);
       await expect(page.getByRole("main")).toHaveCount(1);
       await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
