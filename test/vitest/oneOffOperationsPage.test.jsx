@@ -1,6 +1,7 @@
 import React from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import ListeOperations from "../../src/js/pages/ListeOperations";
 import { useOneOffOperations } from "../../src/js/hooks/useOneOffOperations";
 
@@ -45,7 +46,7 @@ afterEach(cleanup);
 
 describe("ListeOperations", () => {
   it("renders the populated Figma state and requests the next cursor page", () => {
-    render(<ListeOperations />);
+    render(<ListeOperations />, { wrapper: MemoryRouter });
     expect(
       screen.getByRole("heading", {
         name: "Ensemble des opérations effectuées",
@@ -62,7 +63,7 @@ describe("ListeOperations", () => {
       status: "loading",
       operations: [],
     });
-    const { rerender } = render(<ListeOperations />);
+    const { rerender } = render(<ListeOperations />, { wrapper: MemoryRouter });
     expect(
       screen.getByRole("heading", { name: "Chargement des opérations…" })
     ).toBeInTheDocument();
@@ -90,7 +91,7 @@ describe("ListeOperations", () => {
   });
 
   it("validates and submits a new operation without owner data", async () => {
-    render(<ListeOperations />);
+    render(<ListeOperations />, { wrapper: MemoryRouter });
     fireEvent.click(
       screen.getByRole("button", { name: "Ajouter une opération" })
     );
@@ -133,7 +134,7 @@ describe("ListeOperations", () => {
   });
 
   it("opens editing and requires explicit deletion confirmation", () => {
-    render(<ListeOperations />);
+    render(<ListeOperations />, { wrapper: MemoryRouter });
     fireEvent.click(screen.getByRole("button", { name: "Modifier Courses" }));
     expect(
       screen.getByRole("heading", { name: "Modifier l’opération" })
