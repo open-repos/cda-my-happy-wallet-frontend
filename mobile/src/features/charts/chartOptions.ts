@@ -11,14 +11,20 @@ export const expensesOption = (
   grid: { left: 8, right: 16, top: 8, bottom: 24, containLabel: true },
   xAxis: {
     type: "value",
-    axisLabel: { color: colors.textMuted },
+    axisLabel: { color: colors.textMuted, fontSize: 12, lineHeight: 16 },
     splitLine: { lineStyle: { color: colors.borderSubtle } },
   },
   yAxis: {
     type: "category",
     inverse: true,
     data: rows.map((r) => r.name),
-    axisLabel: { color: colors.textPrimary, width: 120, overflow: "truncate" },
+    axisLabel: {
+      color: colors.textPrimary,
+      fontSize: 12,
+      lineHeight: 16,
+      width: 120,
+      overflow: "truncate",
+    },
   },
   series: [
     {

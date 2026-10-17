@@ -172,3 +172,17 @@ environnement; les tests locaux ont utilisé un Chromium 149 fourni par un
 paquet temporaire hors dépôt, avec les polices Liberation. Aucune dépendance
 ni configuration locale de navigateur n'a été ajoutée au projet. La CI conserve
 son installation Playwright officielle et ses seuils de comparaison inchangés.
+
+La reproduction CI a ensuite confirmé 12 parcours existants réussis et trois
+écarts sur les nouvelles captures de dépenses. Les artefacts attendu/obtenu/diff
+montrent un décalage vertical du tracé et des graduations, sans différence de
+valeur. La hauteur de ligne des deux axes est désormais explicite (16 px,
+police 12 px), pour éviter que la géométrie `containLabel` dépende des métriques
+de police par défaut de l'environnement. Le seuil de comparaison reste à 1 %.
+Les trois références de dépenses ont été régénérées après cette correction.
+
+Le navigateur officiel Chrome for Testing 149.0.7827.55 (headless shell) a
+finalement été téléchargé depuis le miroir Google; les derniers contrôles
+utilisent directement `npm run test:visual`, sans configuration temporaire.
+La CI conserve les traces et images de ses échecs pendant trois jours pour
+rendre les différences vérifiables.
