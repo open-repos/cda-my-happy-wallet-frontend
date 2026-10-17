@@ -85,7 +85,8 @@ Do not hide failures with arbitrary sleeps, retries or snapshots of internals.
 - Web unit tests do not validate a real database, API deployment or email
   delivery. Backend contracts and real cross-layer behavior need their own tests.
 - `npm run test:e2e` runs the separate Playwright suite. The isolated full-stack
-  journeys belong to [#60](https://github.com/open-repos/cda-my-happy-wallet-frontend/issues/60).
+  journeys run with `npm run test:e2e:stack`; see the
+  [isolated stack guide](web-e2e-stack.md) delivered by #60.
 - Accessibility audit [#58](https://github.com/open-repos/cda-my-happy-wallet-frontend/issues/58)
   and native integration tests [#57](https://github.com/open-repos/cda-my-happy-wallet-frontend/issues/57)
   remain separate work; passing Web unit tests does not close them.
