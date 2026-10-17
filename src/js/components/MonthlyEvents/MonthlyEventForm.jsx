@@ -1,3 +1,4 @@
+import { useFormFocus } from "../../hooks/useFormFocus";
 import React, { useEffect, useRef, useState } from "react";
 
 const emptyEvent = {
@@ -53,7 +54,7 @@ export const MonthlyEventForm = ({
   const [errors, setErrors] = useState({});
   const [confirmDelete, setConfirmDelete] = useState(false);
   const titleRef = useRef(null);
-  useEffect(() => titleRef.current?.focus(), []);
+  useFormFocus(titleRef);
   useEffect(() => {
     const close = (keyboardEvent) =>
       keyboardEvent.key === "Escape" && !isSaving && onCancel();

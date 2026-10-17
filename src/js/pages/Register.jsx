@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 
 const ConfirmationRegister = () => {
   return (
-    <div className="confirm-register">
+    <main className="confirm-register" id="main-content" tabIndex={-1}>
       <section aria-labelledby="registration-feedback-title">
         <h1 id="registration-feedback-title">
           <span style={{ color: "var(--orange-light)" }}>
@@ -29,7 +29,7 @@ const ConfirmationRegister = () => {
         </p>
       </section>
       <img src={mailSent} height="auto" width="40%" alt="" />
-    </div>
+    </main>
   );
 };
 
@@ -103,47 +103,75 @@ const FormRegister = ({ onRegistered }) => {
   };
 
   if (isLoading) {
-    return <Spinner />;
+    return (
+      <main id="main-content" tabIndex={-1}>
+        <Spinner />
+      </main>
+    );
   }
 
   return (
-    <div className="register">
+    <main className="register" id="main-content" tabIndex={-1}>
       <form className="register_form" onSubmit={handleSubmit}>
         <h1>
           Pas encore inscrit ? <br /> Créer un compte pour utiliser
-          MyHappyWallet <img src={favIcon} height="20rem" width="20rem" />
+          MyHappyWallet{" "}
+          <img src={favIcon} height="20rem" width="20rem" alt="" />
         </h1>
+        <label className="auth-field-label" htmlFor="register-firstname">
+          Prénom
+        </label>
         <input
+          id="register-firstname"
+          autoComplete="given-name"
           type="text"
           name="firstname"
           placeholder="Entrez prénom"
           value={firstname}
           onChange={onChange}
         />
+        <label className="auth-field-label" htmlFor="register-lastname">
+          Nom
+        </label>
         <input
+          id="register-lastname"
+          autoComplete="family-name"
           type="text"
           name="lastname"
           placeholder="Entrez votre nom"
           value={lastname}
-          autoComplete="on"
           onChange={onChange}
         />
+        <label className="auth-field-label" htmlFor="register-email">
+          Adresse email
+        </label>
         <input
+          id="register-email"
+          autoComplete="email"
           type="email"
           name="email"
           placeholder="Entrez votre email"
           value={email}
-          autoComplete="on"
           onChange={onChange}
         />
+        <label className="auth-field-label" htmlFor="register-password">
+          Mot de passe
+        </label>
         <input
+          id="register-password"
+          autoComplete="new-password"
           type="password"
           name="password"
           placeholder="Entrez mot de passe"
           value={password}
           onChange={onChange}
         />
+        <label className="auth-field-label" htmlFor="register-confirm-password">
+          Confirmer le mot de passe
+        </label>
         <input
+          id="register-confirm-password"
+          autoComplete="new-password"
           type="password"
           name="confirmpassword"
           placeholder="Confirmez votre mot de passe"
@@ -157,7 +185,7 @@ const FormRegister = ({ onRegistered }) => {
           <Link to="/login">Déjà inscrit ? Connectez vous ici</Link>
         </div>
       </form>
-    </div>
+    </main>
   );
 };
 

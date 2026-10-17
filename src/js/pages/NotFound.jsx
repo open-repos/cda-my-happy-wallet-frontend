@@ -1,9 +1,12 @@
-import React from 'react'
+import React from "react";
+import { Link } from "react-router-dom";
 
-function NotFound() {
+export default function NotFound() {
   return (
-    <div>NotFound</div>
-  )
+    <main id="main-content" tabIndex={-1}>
+      <h1>Page introuvable</h1>
+      <p>Cette page n’existe pas.</p>
+      <Link to="/home">Revenir à l’accueil</Link>
+    </main>
+  );
 }
-
-export default NotFound

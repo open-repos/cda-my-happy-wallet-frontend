@@ -1,3 +1,4 @@
+import { useFormFocus } from "../../hooks/useFormFocus";
 import React, { useEffect, useRef, useState } from "react";
 import tokens from "../../../../design-tokens/tokens.json";
 import {
@@ -40,9 +41,7 @@ export const CategoryForm = ({
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const nameRef = useRef(null);
 
-  useEffect(() => {
-    nameRef.current?.focus();
-  }, []);
+  useFormFocus(nameRef);
   useEffect(() => {
     const closeOnEscape = (event) => {
       if (event.key === "Escape" && !isSaving) onCancel();
