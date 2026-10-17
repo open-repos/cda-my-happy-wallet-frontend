@@ -40,6 +40,24 @@ describe("mobile dashboard charts", () => {
     expect(rows[1].label).toContain("Courses : 0,30");
     expect(rows[0].name).toBe("Autre catégorie");
   });
+  it("breaks equal totals by category id like Web", () => {
+    const base = {
+      id: 1,
+      title: "Course",
+      operationDate: "2026-10-01",
+      currency: "EUR",
+      type: "DEPENSE" as const,
+      amount: "5.00",
+    };
+    const rows = expenseRows(
+      [
+        { ...base, categoryId: 3 },
+        { ...base, categoryId: 2 },
+      ],
+      [],
+    );
+    expect(rows.map((r) => r.categoryId)).toEqual([2, 3]);
+  });
   it("caps EACH goal before aggregation and floors the percentage like Web", () => {
     expect(goalProgress([goal]).percent).toBe(99);
     expect(
@@ -121,7 +139,14 @@ describe("mobile dashboard charts", () => {
     it(`renders valid ${theme} SVG options without generated aria or animation`, () => {
       for (const option of [
         expensesOption(
-          [{ name: "Courses", cents: 30, label: "Courses : 0,30 €" }],
+          [
+            {
+              categoryId: 1,
+              name: "Courses",
+              cents: 30,
+              label: "Courses : 0,30 €",
+            },
+          ],
           themes[theme].color,
         ),
         goalsOption(99, themes[theme].color),

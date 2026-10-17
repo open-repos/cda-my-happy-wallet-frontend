@@ -12,6 +12,7 @@ export interface Goal {
   targetAmount: string;
 }
 export interface ChartRow {
+  categoryId: number;
   name: string;
   cents: number;
   label: string;
@@ -28,13 +29,19 @@ export const expenseRows = (
         (totals.get(op.categoryId) ?? 0) + toCents(op.amount),
       );
   }
+  // Ordre stable entre deux montants égaux, comme sur le Web.
   return [...totals]
     .map(([id, cents]) => {
       const name =
         categories.find((c) => c.id === id)?.name ?? "Autre catégorie";
-      return { name, cents, label: `${name} : ${money(cents, "EUR")}` };
+      return {
+        categoryId: id,
+        name,
+        cents,
+        label: `${name} : ${money(cents, "EUR")}`,
+      };
     })
-    .sort((a, b) => b.cents - a.cents);
+    .sort((a, b) => b.cents - a.cents || a.categoryId - b.categoryId);
 };
 export const goalProgress = (goals: Goal[]) => {
   const rows = goals.filter((g) => g.currency === "EUR");

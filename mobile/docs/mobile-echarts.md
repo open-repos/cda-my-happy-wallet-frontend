@@ -8,8 +8,10 @@ un incident technique : son label ne prouve pas une incompatibilité native.
 Les trois dépendances graphiques et leur intégration mobile étaient absentes.
 Aucune PR existante liée à #122 n'a été trouvée lors de cette intervention.
 
-Le Web utilise déjà ECharts 6.1.0. Le mobile passe du correctif Expo 57.0.27 à 57.0.30 et conserve React
-19.2.3 et React Native 0.86.3. Ajout en versions exactes :
+Le Web utilise déjà ECharts 6.1.0. Le mobile conserve React 19.2.3 et React
+Native 0.86.3; l'alignement des correctifs Expo 57.0.30 est arrivé sur
+`develop` par #129, cette PR ne modifie plus les versions Expo. Ajout en
+versions exactes :
 
 | Dépendance                 | Version | Motif                                                  |
 | -------------------------- | ------- | ------------------------------------------------------ |
@@ -47,34 +49,42 @@ sur le Web. Les montants réels par objectif restent lisibles sous l'anneau.
 Chargement, vide, erreur et relance sont propres à chaque section; retour sur
 l'écran recharge les données et les réponses obsolètes sont ignorées.
 
-Les tokens clair/sombre suivent le thème système. Les animations sont
+Les graphiques utilisent les tokens du thème clair (`themes.light.color`),
+comme le reste de l'application mobile qui n'a pas encore de thème sombre :
+en mode sombre système, les cartes restent cohérentes avec l'écran. L'axe des
+montants limite les graduations (`splitNumber: 3`, `hideOverlap`) pour qu'elles
+ne se chevauchent pas sur un écran de 360 px. Les animations sont
 désactivées. Le dessin SVG est masqué aux lecteurs d'écran, l'aria ECharts est
 désactivé; une liste française visible contient chaque catégorie et montant,
 le taux global et chaque objectif avec épargne/cible. Les boutons de relance
 mesurent au moins 48 px. La largeur suit `onLayout`; l'instance est détruite
 au changement de taille/options et au démontage.
 
-## Recette obligatoire avant clôture
+## Recette Android
 
-**Statut : préparé, recette Android non établie. Garder #122 ouverte et bloquée.**
-L'environnement de cette intervention n'a ni Docker, ni SDK/ADB, ni émulateur.
-Les commandes de contrôle ont été lancées directement dans le checkout isolé,
-conformément à AGENTS.md. Les exports Metro ne remplacent pas cette recette.
+**Statut : recette faite le 17 octobre 2026 sur development build reconstruit.**
 
-Suivre [le guide Android](android-development-build.md) avec le backend local
-et un compte de test. Après installation des dépendances, reconstruire le
-**development build**, car `react-native-svg` ajoute du code natif :
+Environnement : AVD Pixel 5 API 35 (x86_64), backend local et compte de test,
+development build reconstruit avec `react-native-svg` puis installé via le
+script du [guide Android](android-development-build.md)
+(`scripts/start-android-dev.sh --avd <avd> --install`), Metro dans Docker. Les ports
+API/Metro sont inversés; ni Expo Go ni Expo Web seul.
 
-```bash
-cd mobile
-npm ci
-npx expo prebuild --platform android --no-clean
-npx expo run:android --device
-npm run start:dev-client
-```
+Résultats :
 
-Choisir l'AVD Pixel 5 du guide; conserver les ports API/Metro inversés et ne
-pas utiliser Expo Go ou uniquement Expo Web. Vérifier :
+- Les deux graphiques s'affichent avec les montants et le taux attendus.
+- Arbre d'accessibilité : dessins SVG masqués, libellés français lus une seule
+  fois.
+- Grandes polices : aucun débordement des cartes graphiques.
+- Mode sombre système : cartes cohérentes en thème clair (voir plus haut).
+- API indisponible au démarrage : état d'erreur, puis reprise par
+  « Réessayer ».
+- Correctif constaté pendant la recette : graduations de l'axe qui se
+  chevauchaient, corrigées par `splitNumber`/`hideOverlap`.
+
+Hors périmètre, suivis à part : libellés d'onglets tronqués en grandes polices,
+absence de thème sombre mobile. L'application est verrouillée en portrait
+(`app.json`). Grille de recette conservée pour les évolutions :
 
 - Dépenses de plusieurs catégories et plusieurs pages : montants égaux au Web,
   aucune entrée ni autre devise; mois courant Paris.
@@ -86,10 +96,6 @@ pas utiliser Expo Go ou uniquement Expo Web. Vérifier :
   et navigation répétée : pas de données obsolètes ni d'instance persistante.
 - Clair/sombre, grandes polices, libellés longs et TalkBack : tous les montants
   accessibles, absence de lecture SVG en double, relance activable.
-
-Joindre avant clôture : commit testé, versions npm/Expo/RN/SVG/Wuba, AVD et ABI,
-commande et résultat de compilation, installation APK, captures clair/sombre,
-résultats TalkBack et des cas ci-dessus. Aucune preuve Android n'est revendiquée.
 
 ## Retour arrière
 
@@ -130,9 +136,8 @@ La reconstruction du development build doit inclure ces correctifs.
 
 Après alignement et nouvelle installation propre (`npm ci`) : format, lint,
 typage, 110 tests et **Expo Doctor 20/20** réussis. Les exports Web et Android
-ont été relancés avec ce lockfile. Seule la recette du development build
-Android reste à établir; les tests automatisés ne couvrent pas les gestes,
-TalkBack ni la compilation native.
+ont été relancés avec ce lockfile. Les tests automatisés ne couvrent pas les
+gestes, TalkBack ni la compilation native : voir la recette Android ci-dessus.
 
 ## Correction du contrôle visuel de la PR #126
 
@@ -186,3 +191,13 @@ finalement été téléchargé depuis le miroir Google; les derniers contrôles
 utilisent directement `npm run test:visual`, sans configuration temporaire.
 La CI conserve les traces et images de ses échecs pendant trois jours pour
 rendre les différences vérifiables.
+
+Les références suivent le rendu de la CI (`ubuntu-latest` et Chromium installé
+par `npx playwright install --with-deps`), où les 15 scénarios passent. Dans
+le conteneur local `agent-playwright` (image `mcr.microsoft.com/playwright`),
+la capture tablette du tableau de bord dépasse le seuil de 1 % (8 292 pixels) :
+environ un quart de l'écart vient des polices de la barre d'onglets, le reste
+de la zone du graphique, car cette référence précède la hauteur de ligne
+explicite des axes. Elle passe en CI avec peu de marge : la rafraîchir depuis
+un artefact de rendu CI si elle échoue. Ne pas régénérer de référence depuis
+ce conteneur.

@@ -15,7 +15,7 @@ export const NativeChart = ({
   option: echarts.EChartsCoreOption;
   height: number;
 }) => {
-  const ref = useRef<React.ElementRef<typeof SvgChart>>(null);
+  const ref = useRef<React.ComponentRef<typeof SvgChart>>(null);
   const [width, setWidth] = useState(0);
   useEffect(() => {
     if (!ref.current || width <= 0) return;
