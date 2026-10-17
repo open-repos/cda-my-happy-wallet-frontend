@@ -2,8 +2,10 @@ const { createRequire } = require("node:module");
 
 function assertTestDatabase(environment) {
   let url;
+  let shadow;
   try {
     url = new URL(environment.DATABASE_URL);
+    shadow = new URL(environment.SHADOW_DATABASE_URL);
   } catch {
     throw new Error("E2E fixtures require the dedicated Compose database.");
   }
@@ -18,7 +20,14 @@ function assertTestDatabase(environment) {
     url.username !== "mhw_e2e" ||
     !url.password ||
     url.search ||
-    url.hash
+    url.hash ||
+    shadow.protocol !== "mysql:" ||
+    shadow.host !== url.host ||
+    shadow.username !== url.username ||
+    shadow.password !== url.password ||
+    shadow.pathname !== "/mhw_e2e_shadow" ||
+    shadow.search ||
+    shadow.hash
   ) {
     throw new Error("E2E fixtures refuse this environment.");
   }
@@ -35,7 +44,7 @@ async function seed() {
     const password = await argon2.hash(process.env.E2E_PASSWORD);
     for (const project of ["mobile", "tablet", "desktop"]) {
       for (const journey of ["operations", "events", "recovery", "session"]) {
-        const email = `${project}-${journey}@example.test`;
+        const email = `${project}-${journey}@example.com`;
         const user = await prisma.utilisateur.upsert({
           where: { email },
           create: {

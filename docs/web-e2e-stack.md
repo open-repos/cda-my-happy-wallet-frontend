@@ -14,9 +14,11 @@
 Aucun dépôt backend voisin n'est nécessaire ou modifié. Les migrations du commit
 fixé sont appliquées dans cette base neuve. Le seed de production du backend
 n'est jamais appelé : `test/full-stack/seed.cjs` crée uniquement douze comptes
-`@example.test`, leurs catégories et deux opérations fixes donnant une base
+`@example.com`, leurs catégories et deux opérations fixes donnant une base
 mensuelle de 1 200 EUR. Chaque couple parcours/viewport dispose de son compte.
 Le bootstrap exécute le seed deux fois pour vérifier sa répétabilité.
+L'URL shadow pointe vers le nom distinct `mhw_e2e_shadow`, comme l'exige Prisma ;
+`migrate deploy` ne crée ni n'utilise cette base shadow.
 
 Les vues visées viennent de la synthèse versionnée des
 [références UX](ux-design-references.md), notamment les transitions vide/alimenté,

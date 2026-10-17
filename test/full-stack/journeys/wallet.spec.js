@@ -22,7 +22,7 @@ async function login(page, project, journey) {
   await page.goto("/login");
   await page
     .getByPlaceholder("Entrez votre email")
-    .fill(`${project}-${journey}@example.test`);
+    .fill(`${project}-${journey}@example.com`);
   await page
     .getByPlaceholder("Entrez mot de passe")
     .fill(process.env.E2E_PASSWORD);
@@ -175,7 +175,7 @@ test("shows invalid credentials and recovers from a failed API read", async ({
   await page.goto("/login");
   await page
     .getByPlaceholder("Entrez votre email")
-    .fill(`${testInfo.project.name}-recovery@example.test`);
+    .fill(`${testInfo.project.name}-recovery@example.com`);
   await page
     .getByPlaceholder("Entrez mot de passe")
     .fill("incorrect-e2e-password");

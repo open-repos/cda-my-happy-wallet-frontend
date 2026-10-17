@@ -25,6 +25,7 @@ const environment = {
   MHW_E2E: "1",
   E2E_PASSWORD: "a".repeat(64),
   DATABASE_URL: "mysql://mhw_e2e:synthetic@mysql:3306/mhw_e2e",
+  SHADOW_DATABASE_URL: "mysql://mhw_e2e:synthetic@mysql:3306/mhw_e2e_shadow",
 };
 
 test("fixture guard accepts only the dedicated test environment", () => {
@@ -39,6 +40,11 @@ test("fixture guard accepts only the dedicated test environment", () => {
     { DATABASE_URL: "mysql://mhw_e2e:x@mysql:3307/mhw_e2e" },
     { DATABASE_URL: "mysql://mhw_e2e:x@mysql:3306/mhw_e2e?schema=production" },
     { DATABASE_URL: "not a database URL" },
+    { SHADOW_DATABASE_URL: environment.DATABASE_URL },
+    {
+      SHADOW_DATABASE_URL:
+        "mysql://mhw_e2e:synthetic@external:3306/mhw_e2e_shadow",
+    },
   ])
     assert.throws(
       () => assertTestDatabase({ ...environment, ...change }),
