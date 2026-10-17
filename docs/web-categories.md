@@ -1,17 +1,17 @@
 # Catégories d'opérations Web
 
-Issue #133 (parent backend #83). La page authentifiée `/categories`
+Issues #133 et #131 (parent backend #83). La page authentifiée `/categories`
 (« Catégories d’opérations ») permet de gérer les catégories qui classent les
 opérations. Elle est accessible depuis la navigation (« Catégories ») et depuis
-la liste des opérations (« Gérer les catégories »). Le sélecteur d'icône Font
-Awesome (#131) s'ajoutera à ce formulaire.
+la liste des opérations (« Gérer les catégories »).
 
 ## Données
 
 `GET /v1/operation-categories` (toutes les pages), `POST`, `PUT /{id}` et
 `DELETE /{id}`, contrat backend `docs/one-off-operation-api.md` et
 `docs/operation-category-icons.md`. Les corps envoyés ne contiennent que `name`
-et `color` : sans `icon`, un `PUT` conserve l'icône existante. Après toute
+, `color` et `icon` (`style:nom` ou `null`); un appel sans `icon` laisse
+l'icône inchangée côté backend. Après toute
 écriture, la liste est rechargée. Les formulaires d'opération et le calendrier
 relisent les catégories à leur ouverture et reflètent donc les changements.
 
@@ -42,6 +42,39 @@ relisent les catégories à leur ouverture et reflètent donc les changements.
   n'est lisible que sur cette surface, en clair comme en sombre. La bordure
   d'un champ invalide prend le rôle danger.
 
+## Icône (#131)
+
+- Le formulaire propose une icône Font Awesome 6 Free facultative : recherche
+  par mot-clé français (« courses », « santé », « café »…) ou par nom Font
+  Awesome, suggestions budgétaires avant toute saisie, aperçu dans la couleur
+  choisie et « Sans icône » pour revenir à la pastille. Les options sont des
+  boutons radio natifs (flèches pour parcourir); 48 résultats au plus,
+  l'icône actuelle reste toujours visible.
+- L'icône, dessinée dans la couleur de la catégorie (couleur de texte
+  secondaire sans couleur), précède le nom dans la liste des catégories, la
+  liste des opérations, les lignes d'opérations du calendrier, et les barres
+  et la légende des secteurs du graphique de l'accueil. Elle est décorative
+  (`aria-hidden`) : le nom porte le sens.
+- Liste autorisée et tracés : `src/assets/category-icons.json`, généré par
+  `scripts/generate-category-icons.mjs` depuis la liste du backend (#84,
+  intersection Web et mobile) et les paquets Font Awesome Free du Web, avec
+  l'attribution CC BY 4.0. Vite l'émet comme ressource hachée (`?url`),
+  téléchargée par `fetch` (environ 400 ko compressé) à la première icône
+  affichée ou à l'ouverture du sélecteur; avant son chargement ou hors ligne,
+  la pastille reste affichée. Le sélecteur signale un échec et propose
+  « Réessayer » (un `import()` en échec resterait en cache du navigateur).
+  Importer les paquets complets aurait fusionné plus de 1 Mo dans le bundle
+  principal, où ils sont déjà importés icône par icône.
+- Une icône inchangée n'est pas renvoyée au `PUT` : une icône retirée depuis
+  de la liste autorisée reste affichée (pastille dans le sélecteur) et
+  n'empêche pas de renommer la catégorie. `INVALID_CATEGORY_ICON` invite à en
+  choisir une autre.
+- Dans la recherche, Entrée n'enregistre pas et Échap vide d'abord le champ.
+  Une région live permanente annonce chargement et nombre de résultats.
+- Régénération, après toute régénération de la liste backend ou montée de
+  version Font Awesome : `node scripts/generate-category-icons.mjs` (dans
+  `agent-frontend-node`, checkout backend voisin), `--check` pour vérifier.
+
 ## Navigation
 
 L'entrée « Catégories » porte la navigation latérale à six liens. Les
@@ -56,7 +89,9 @@ seule la bordure de la pastille suit le thème.
 
 ## Tests
 
-- Vitest : `categoryService`, `categoryForm`, `useCategories` et
+- Vitest : `categoryIcons` (fichier généré, recherche, libellés, image des
+  graphiques), `categoryLabel`, `categoryService`, `categoryForm`,
+  `useCategories`, `homeChartOptions`, `budgetCalendarPage` et
   `categoriesPage` (états, validation, palette, couleur personnalisée, conflit,
   confirmation et refus de suppression, `Échap`).
 - Playwright : création et refus de suppression sur trois viewports, absence de

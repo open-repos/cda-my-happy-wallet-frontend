@@ -80,7 +80,7 @@ describe("periodRemaining", () => {
 
 describe("expensesByCategory", () => {
   const categories = [
-    { id: 4, name: "Alimentation", color: "#55AA22" },
+    { id: 4, name: "Alimentation", color: "#55AA22", icon: "solid:utensils" },
     { id: 5, name: "Loisirs", color: null },
   ];
 
@@ -95,11 +95,19 @@ describe("expensesByCategory", () => {
     ];
 
     expect(expensesByCategory(operations, categories, "EUR")).toEqual([
-      { id: 5, name: "Loisirs", color: null, amount: "60.00", share: 1 },
+      {
+        id: 5,
+        name: "Loisirs",
+        color: null,
+        icon: null,
+        amount: "60.00",
+        share: 1,
+      },
       {
         id: 4,
         name: "Alimentation",
         color: "#55AA22",
+        icon: "solid:utensils",
         amount: "42.80",
         share: 4280 / 6000,
       },

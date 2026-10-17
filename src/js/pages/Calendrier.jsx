@@ -5,6 +5,7 @@ import { BudgetSummary } from "../components/BudgetCalendar/BudgetSummary";
 import { CalendarModeToggle } from "../components/BudgetCalendar/CalendarModeToggle";
 import { PendingOccurrences } from "../components/BudgetCalendar/PendingOccurrences";
 import { RealizeOccurrenceForm } from "../components/BudgetCalendar/RealizeOccurrenceForm";
+import { CategoryLabel } from "../components/Categories/CategoryLabel";
 import {
   formatCompact,
   formatMoney,
@@ -134,6 +135,10 @@ function Calendrier() {
     () =>
       groupByDate(budget.operations, (operation) => operation.operationDate),
     [budget.operations]
+  );
+  const categoryById = useMemo(
+    () => new Map(budget.categories.map((category) => [category.id, category])),
+    [budget.categories]
   );
   const currency = budget.summary?.currency || "EUR";
   const isSaving = budget.mutationStatus === "loading";
@@ -419,7 +424,15 @@ function Calendrier() {
             <ul className="budget-operation-list">
               {items.map((operation) => (
                 <li key={operation.id} className="budget-operation">
-                  <span>{operation.title}</span>
+                  <span className="budget-operation__label">
+                    <span>{operation.title}</span>
+                    {/* Rien tant que les catégories ne sont pas chargées. */}
+                    {categoryById.has(operation.categoryId) && (
+                      <CategoryLabel
+                        category={categoryById.get(operation.categoryId)}
+                      />
+                    )}
+                  </span>
                   <span
                     className={
                       operation.type === "ENTREE"

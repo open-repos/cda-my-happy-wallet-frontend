@@ -23,25 +23,40 @@ describe("categoryService", () => {
     apiPrivate.post.mockResolvedValue({ data: { data: saved } });
 
     await expect(
-      categoryService.create({ name: "Loisirs", color: "#275DAD" })
-    ).resolves.toEqual({ id: 9, name: "Loisirs", color: "#275DAD" });
+      categoryService.create({
+        name: "Loisirs",
+        color: "#275DAD",
+        icon: "solid:film",
+      })
+    ).resolves.toEqual({
+      id: 9,
+      name: "Loisirs",
+      color: "#275DAD",
+      icon: null,
+    });
     expect(apiPrivate.post).toHaveBeenCalledWith(
       "/operation-categories",
-      { name: "Loisirs", color: "#275DAD" },
+      { name: "Loisirs", color: "#275DAD", icon: "solid:film" },
       { withCredentials: true }
     );
   });
 
-  it("updates name and color without sending the icon", async () => {
+  it("updates name, color and icon, or keeps the icon when it is absent", async () => {
     apiPrivate.put.mockResolvedValue({ data: { data: saved } });
 
     await categoryService.update(9, {
       name: "Loisirs",
       color: null,
-      icon: "solid:house",
+      icon: null,
     });
-    // `icon` absent : le backend conserve l'icône existante.
     expect(apiPrivate.put).toHaveBeenCalledWith(
+      "/operation-categories/9",
+      { name: "Loisirs", color: null, icon: null },
+      { withCredentials: true }
+    );
+    // `icon` absent : le backend conserve l'icône existante.
+    await categoryService.update(9, { name: "Loisirs", color: null });
+    expect(apiPrivate.put).toHaveBeenLastCalledWith(
       "/operation-categories/9",
       { name: "Loisirs", color: null },
       { withCredentials: true }

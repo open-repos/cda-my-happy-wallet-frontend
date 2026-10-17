@@ -5,6 +5,7 @@ import {
   toCategoryPayload,
   validateCategory,
 } from "../../utils/categoryForm";
+import { CategoryIconPicker } from "./CategoryIconPicker";
 
 const NO_COLOR = "none";
 const CUSTOM_COLOR = "custom";
@@ -34,6 +35,7 @@ export const CategoryForm = ({
 }) => {
   const [name, setName] = useState(category?.name ?? "");
   const [color, setColor] = useState(() => initialChoice(category?.color));
+  const [icon, setIcon] = useState(category?.icon ?? null);
   const [errors, setErrors] = useState({});
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const nameRef = useRef(null);
@@ -51,7 +53,14 @@ export const CategoryForm = ({
 
   const submit = async (event) => {
     event.preventDefault();
-    const values = { name, color: selectedColor(color) };
+    // Icône inchangée : non renvoyée, pour qu'une icône retirée depuis de la
+    // liste autorisée n'empêche pas de renommer la catégorie.
+    const unchanged = category && icon === (category.icon ?? null);
+    const values = {
+      name,
+      color: selectedColor(color),
+      icon: unchanged ? undefined : icon,
+    };
     const validationErrors = validateCategory(values);
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) {
@@ -189,6 +198,12 @@ export const CategoryForm = ({
             </span>
           )}
         </fieldset>
+        <CategoryIconPicker
+          value={icon}
+          onChange={setIcon}
+          name={name}
+          color={selectedColor(color)}
+        />
         <div className="one-off-form__actions">
           {category && !isConfirmingDelete && (
             <button

@@ -52,6 +52,36 @@ describe("expensesChartOption", () => {
     expect(option.animation).toBe(true);
   });
 
+  it("draws each category icon before its name, in the category color", () => {
+    const withIcons = [
+      { ...rows[0], icon: "regular:heart" },
+      { ...rows[1], icon: "solid:utensils" },
+    ];
+    const icons = new Map([
+      ["regular:heart", [512, 512, "M1 1"]],
+      ["solid:utensils", [416, 512, "M2 2"]],
+    ]);
+    const bar = expensesChartOption(withIcons, "bar", tokens, "EUR", icons);
+    const { formatter, rich } = bar.yAxis.axisLabel;
+    expect(formatter("Alimentation", 1)).toBe("{icon1|} Alimentation");
+    const image = decodeURIComponent(rich.icon1.backgroundColor.image);
+    expect(image).toContain('fill="#55AA22"');
+    expect(image).toContain('d="M2 2"');
+    // Sans couleur : l'icône prend la couleur de dépense, comme sa barre.
+    expect(decodeURIComponent(rich.icon0.backgroundColor.image)).toContain(
+      'fill="#cc3300"'
+    );
+
+    const pie = expensesChartOption(withIcons, "pie", tokens, "EUR", icons);
+    expect(
+      pie.legend.data[1].icon.startsWith("image://data:image/svg+xml")
+    ).toBe(true);
+
+    // Icône absente ou pas encore chargée : rendu actuel sans image.
+    const plain = expensesChartOption(rows, "bar", tokens, "EUR", icons);
+    expect(plain.yAxis.axisLabel.formatter("Loisirs", 0)).toBe("Loisirs");
+  });
+
   it("switches to a donut pie without axes", () => {
     const option = expensesChartOption(rows, "pie", tokens, "EUR");
 

@@ -91,6 +91,20 @@ describe("useCategories", () => {
     expect(text()).toContain("Cette catégorie est utilisée par des opérations");
   });
 
+  it("explains a refused icon", async () => {
+    categoryService.listAll.mockResolvedValue([]);
+    categoryService.create.mockRejectedValue(
+      apiError(422, "INVALID_CATEGORY_ICON")
+    );
+    render(<Probe />);
+    await waitFor(() => expect(text()).toBe("success|idle|0|"));
+
+    await act(async () => {
+      await api.saveCategory(null, { name: "Loisirs", color: null });
+    });
+    expect(text()).toContain("Cette icône n’est plus disponible.");
+  });
+
   it("reloads the list when the category no longer exists", async () => {
     categoryService.listAll.mockResolvedValue([]);
     categoryService.remove.mockRejectedValue(apiError(404));

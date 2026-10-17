@@ -11,10 +11,11 @@ const assertId = (id) => {
 };
 
 /**
- * Corps envoyé à l'API. `icon` n'est jamais transmis : un `PUT` sans `icon`
- * conserve l'icône existante côté backend.
+ * Corps envoyé à l'API. Un `icon` absent n'est pas transmis : le backend
+ * conserve alors l'icône existante; `null` revient à la pastille.
  */
-const body = ({ name, color }) => ({ name, color });
+const body = ({ name, color, icon }) =>
+  icon === undefined ? { name, color } : { name, color, icon };
 
 /** Commandes des catégories d'opérations de la personne connectée. */
 export const categoryService = {

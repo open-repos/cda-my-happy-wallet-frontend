@@ -13,6 +13,8 @@ const errorMessages = {
   CATEGORY_IN_USE:
     "Cette catégorie est utilisée par des opérations : modifiez-les avant de la supprimer.",
   CATEGORY_NOT_FOUND: "Cette catégorie n’existe plus. La liste est actualisée.",
+  INVALID_CATEGORY_ICON:
+    "Cette icône n’est plus disponible. Choisissez-en une autre ou « Sans icône ».",
 };
 
 /** Liste et commandes des catégories d'opérations. */

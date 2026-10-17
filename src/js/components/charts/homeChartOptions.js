@@ -1,4 +1,5 @@
 import { formatMoney } from "../BudgetCalendar/budgetFormat";
+import { iconDataUri } from "../../utils/categoryIcons";
 
 export const EXPENSE_CHART_TYPES = [
   { value: "bar", label: "Barres" },
@@ -52,12 +53,23 @@ export const expensesChartHeight = (rows, type) =>
  * haut) ou en secteurs. Les montants API restent des chaînes : seule la
  * valeur numérique tracée est convertie.
  */
-export const expensesChartOption = (rows, type, tokens, currency) => {
+export const expensesChartOption = (
+  rows,
+  type,
+  tokens,
+  currency,
+  icons = new Map()
+) => {
   const data = rows.map((row) => ({
     name: row.name,
     value: Number(row.amount),
     itemStyle: { color: colorOf(row, tokens) },
   }));
+  // Icône de chaque catégorie dans sa couleur, une fois le pack chargé.
+  const iconUris = rows.map((row) => {
+    const definition = row.icon ? icons.get(row.icon) : undefined;
+    return definition ? iconDataUri(definition, colorOf(row, tokens)) : null;
+  });
   const common = {
     // Le libellé français du conteneur et la liste textuelle font foi : l'aria
     // automatique d'ECharts les remplacerait par une description anglaise.
@@ -75,6 +87,11 @@ export const expensesChartOption = (rows, type, tokens, currency) => {
         type: "scroll",
         bottom: 0,
         selectedMode: false,
+        data: rows.map((row, index) =>
+          iconUris[index]
+            ? { name: row.name, icon: `image://${iconUris[index]}` }
+            : { name: row.name }
+        ),
         textStyle: { color: tokens.text },
         formatter: (name) => legendLabels.get(name) ?? name,
       },
@@ -101,7 +118,23 @@ export const expensesChartOption = (rows, type, tokens, currency) => {
       type: "category",
       inverse: true,
       data: rows.map((row) => row.name),
-      axisLabel: { color: tokens.text },
+      axisLabel: {
+        color: tokens.text,
+        formatter: (name, index) =>
+          iconUris[index] ? `{icon${index}|} ${name}` : name,
+        rich: Object.fromEntries(
+          iconUris.flatMap((uri, index) =>
+            uri
+              ? [
+                  [
+                    `icon${index}`,
+                    { width: 14, height: 14, backgroundColor: { image: uri } },
+                  ],
+                ]
+              : []
+          )
+        ),
+      },
       axisLine: { lineStyle: { color: tokens.grid } },
     },
     series: [

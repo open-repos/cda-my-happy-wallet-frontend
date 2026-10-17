@@ -66,7 +66,14 @@ const prepareProtectedPage = async (page) => {
     route.fulfill({
       contentType: "application/json",
       json: {
-        data: [{ id: 4, name: "Alimentation", color: "#55AA22" }],
+        data: [
+          {
+            id: 4,
+            name: "Alimentation",
+            color: "#55AA22",
+            icon: "solid:utensils",
+          },
+        ],
         meta: { limit: 100, hasNext: false, nextCursor: null },
       },
     })
@@ -549,12 +556,14 @@ for (const viewport of viewports) {
     expect(hasHorizontalOverflow).toBe(false);
   });
 
-  test(`categories are created and refused when in use on the ${viewport.name} viewport`, async ({
+  test(`categories are created with an icon and refused when in use on the ${viewport.name} viewport`, async ({
     page,
   }) => {
     await page.setViewportSize(viewport);
     await prepareProtectedPage(page);
-    const categories = [{ id: 4, name: "Alimentation", color: "#55AA22" }];
+    const categories = [
+      { id: 4, name: "Alimentation", color: "#55AA22", icon: "solid:utensils" },
+    ];
     // Enregistrée après `prepareProtectedPage` : prioritaire sur sa route GET.
     await page.route(
       /\/v1\/operation-categories(?:\/\d+)?(?:\?.*)?$/,
@@ -593,10 +602,18 @@ for (const viewport of viewports) {
     await page.getByRole("button", { name: "Ajouter une catégorie" }).click();
     await page.getByLabel("Nom", { exact: true }).fill("Loisirs");
     await page.getByRole("radio", { name: "Bleu" }).check();
+    const icons = page.getByRole("group", { name: "Icône" });
+    await icons.getByLabel("Rechercher une icône").fill("cinéma");
+    await icons.getByRole("radio", { name: "film (plein)" }).check();
+    await expect(
+      page.getByRole("img", { name: "Aperçu : Loisirs, icône film (plein)" })
+    ).toBeVisible();
     await page.getByRole("button", { name: "Enregistrer" }).click();
     await expect(page.getByRole("status")).toContainText("Catégorie ajoutée.");
     const list = page.getByRole("list", { name: "Vos catégories" });
     await expect(list.getByText("Loisirs")).toBeVisible();
+    // Icônes décoratives dessinées dans la couleur de chaque catégorie.
+    await expect(list.locator("svg.category-icon")).toHaveCount(2);
 
     await page.getByRole("button", { name: "Modifier Alimentation" }).click();
     await page.getByRole("button", { name: "Supprimer" }).click();
@@ -746,6 +763,40 @@ for (const theme of ["light", "dark"]) {
     ).toBeGreaterThanOrEqual(4.5);
   });
 }
+
+test("the icon picker recovers after the icon file fails to download", async ({
+  page,
+}) => {
+  await page.setViewportSize(viewports[2]);
+  await prepareProtectedPage(page);
+  let attempts = 0;
+  // Sans icône dans la liste : le premier téléchargement vient du sélecteur.
+  await page.route(/\/v1\/operation-categories(?:\?.*)?$/, (route) =>
+    route.fulfill({
+      json: {
+        data: [{ id: 4, name: "Alimentation", color: "#55AA22", icon: null }],
+        meta: { limit: 100, hasNext: false, nextCursor: null },
+      },
+    })
+  );
+  // Seul le téléchargement des tracés échoue, pas le module de la page.
+  await page.route(/category-icons.*\.json/, (route) => {
+    if (route.request().resourceType() !== "fetch") return route.continue();
+    attempts += 1;
+    return attempts === 1 ? route.abort() : route.continue();
+  });
+  await page.goto("/categories");
+  await page.getByRole("button", { name: "Ajouter une catégorie" }).click();
+  const icons = page.getByRole("group", { name: "Icône" });
+  await expect(icons.getByRole("alert")).toContainText(
+    "Les icônes n’ont pas pu être chargées."
+  );
+  await icons.getByRole("button", { name: "Réessayer" }).click();
+  await expect(
+    icons.getByRole("radio", { name: "cart shopping (plein)" })
+  ).toBeVisible();
+  expect(attempts).toBe(2);
+});
 
 // Hauteurs courantes de portables : la navigation à six entrées tient sans
 // que le dernier lien passe sous le bouton du profil.

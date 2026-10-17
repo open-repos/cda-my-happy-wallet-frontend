@@ -94,6 +94,26 @@ describe("oneOffOperationsService", () => {
     expect(() => parseCategory({ id: 1, name: "X", color: "red" })).toThrow(
       "Invalid category response"
     );
+    expect(() =>
+      parseCategory({ id: 1, name: "Loisirs", color: null, icon: "github" })
+    ).toThrow("Invalid category response");
+  });
+
+  it("exposes the category icon, null when the API omits it", () => {
+    expect(
+      parseCategory({
+        id: 1,
+        name: "Loisirs",
+        color: null,
+        icon: "regular:heart",
+      })
+    ).toEqual({ id: 1, name: "Loisirs", color: null, icon: "regular:heart" });
+    expect(parseCategory({ id: 1, name: "Loisirs", color: null })).toEqual({
+      id: 1,
+      name: "Loisirs",
+      color: null,
+      icon: null,
+    });
   });
 
   it("keeps only the documented public DTO fields", () => {

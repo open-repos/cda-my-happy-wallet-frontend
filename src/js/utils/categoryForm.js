@@ -31,7 +31,9 @@ export const validateCategory = ({ name, color: value }) => {
   return errors;
 };
 
-export const toCategoryPayload = ({ name, color: value }) => ({
+/** `icon` absent (`undefined`) : non transmis, le backend la conserve. */
+export const toCategoryPayload = ({ name, color: value, icon }) => ({
   name: name.trim(),
   color: value ? value.toUpperCase() : null,
+  ...(icon === undefined ? {} : { icon }),
 });

@@ -8,6 +8,7 @@ import {
   expensesChartOption,
 } from "../charts/homeChartOptions";
 import { useChartTokens } from "../charts/useChartTokens";
+import { useCategoryIconPack } from "../Categories/categoryIconPack";
 import { SectionState } from "./SectionState";
 
 const ChartTypeToggle = ({ type, onChange }) => (
@@ -36,9 +37,10 @@ const ChartTypeToggle = ({ type, onChange }) => (
 const ExpensesChart = ({ rows, currency }) => {
   const [type, setType] = useState("bar");
   const tokens = useChartTokens();
+  const { pack: icons } = useCategoryIconPack(rows.some((row) => row.icon));
   const option = useMemo(
-    () => expensesChartOption(rows, type, tokens, currency),
-    [rows, type, tokens, currency]
+    () => expensesChartOption(rows, type, tokens, currency, icons ?? undefined),
+    [rows, type, tokens, currency, icons]
   );
   return (
     <>
