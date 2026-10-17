@@ -335,6 +335,8 @@ export const BudgetCalendarScreen = () => {
         state.summaryStatus === "future" ? (
           <PendingOccurrencesSection
             busy={state.decision}
+            error={state.pendingError}
+            onRetry={state.retry}
             occurrences={state.pending}
             onCancel={confirmCancel}
             onRealize={(occurrence) => {

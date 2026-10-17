@@ -28,6 +28,8 @@ interface SummaryResult {
   status: Exclude<SummaryStatus, "loading">;
   summary: BudgetSummary | null;
   pending: PendingOccurrence[];
+  /** La file est facultative : son échec n'empêche pas d'afficher le mois. */
+  pendingError: boolean;
 }
 
 interface OperationsResult {
@@ -82,15 +84,22 @@ export const useBudgetCalendar = (
   useEffect(() => {
     let isActive = true;
     const through = monthBounds(month).to;
-    // Charger synthèse et file ensemble : une décision recharge les deux.
-    Promise.all([budget.getMonth(month), occurrences.listPending(through)])
-      .then(([summary, pending]) => {
+    // Synthèse et file rechargées ensemble après une décision; une file
+    // indisponible ne masque jamais la synthèse et la grille du mois.
+    Promise.all([
+      budget.getMonth(month),
+      occurrences
+        .listPending(through)
+        .then((pending) => ({ pending, pendingError: false }))
+        .catch(() => ({ pending: [], pendingError: true })),
+    ])
+      .then(([summary, queue]) => {
         if (!isActive) return;
         setSummaryResult({
           key: summaryKey,
           status: summary === null ? "future" : "success",
           summary,
-          pending,
+          ...queue,
         });
       })
       .catch(() => {
@@ -100,6 +109,7 @@ export const useBudgetCalendar = (
           status: "error",
           summary: null,
           pending: [],
+          pendingError: false,
         });
       });
     return () => {
@@ -247,6 +257,7 @@ export const useBudgetCalendar = (
     summary: summaryCurrent?.summary ?? null,
     summaryStatus: (summaryCurrent?.status ?? "loading") as SummaryStatus,
     pending: summaryCurrent?.pending ?? [],
+    pendingError: summaryCurrent?.pendingError ?? false,
     categories,
     categoriesError,
     operations: current?.items ?? [],

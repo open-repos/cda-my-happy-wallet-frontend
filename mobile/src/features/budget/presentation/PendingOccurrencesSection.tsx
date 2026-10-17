@@ -14,6 +14,8 @@ const colors = themes.light.color;
 
 interface PendingOccurrencesSectionProps {
   busy: boolean;
+  error: boolean;
+  onRetry(): void;
   occurrences: PendingOccurrence[];
   selectedDate: string | null;
   onRealize(occurrence: PendingOccurrence): void;
@@ -27,6 +29,8 @@ interface PendingOccurrencesSectionProps {
  */
 export const PendingOccurrencesSection = ({
   busy,
+  error,
+  onRetry,
   occurrences,
   selectedDate,
   onRealize,
@@ -45,7 +49,24 @@ export const PendingOccurrencesSection = ({
           ? `Événements du ${longDate(selectedDate)}`
           : "Événements à traiter"}
       </Text>
-      {total === 0 ? (
+      {error ? (
+        <View style={styles.errorBox}>
+          <Text accessibilityLiveRegion="polite" style={styles.error}>
+            Les événements à traiter n’ont pas pu être chargés.
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={onRetry}
+            style={({ pressed }) => [
+              styles.button,
+              styles.secondaryButton,
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text style={styles.secondaryLabel}>Réessayer</Text>
+          </Pressable>
+        </View>
+      ) : total === 0 ? (
         <Text style={styles.empty}>Aucun événement à traiter.</Text>
       ) : (
         <View style={styles.groups}>
@@ -166,6 +187,8 @@ const styles = StyleSheet.create({
   section: { gap: 12 },
   title: { color: colors.textPrimary, fontSize: 18, fontWeight: "700" },
   empty: { color: colors.textMuted, fontSize: 14 },
+  error: { color: colors.statusErrorText, fontSize: 14 },
+  errorBox: { alignItems: "flex-start", gap: 8 },
   groups: { gap: 16 },
   group: { gap: 8 },
   groupTitle: {
