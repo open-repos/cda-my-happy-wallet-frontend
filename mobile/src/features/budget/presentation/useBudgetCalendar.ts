@@ -1,8 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { monthBounds } from "@/src/features/budget/domain/budgetCalendar";
 import { BudgetSummary } from "@/src/features/budget/domain/budgetSummary";
+import {
+  DecisionResult,
+  PendingOccurrence,
+  RealizeBody,
+  decisionErrorMessage,
+} from "@/src/features/budget/domain/pendingOccurrence";
 import { BudgetMonthGateway } from "@/src/features/budget/infrastructure/HttpBudgetSummaryGateway";
+import {
+  OccurrenceRequestError,
+  OccurrencesGateway,
+} from "@/src/features/budget/infrastructure/HttpOccurrencesGateway";
 import {
   OneOffOperation,
   OperationCategory,
@@ -11,11 +21,13 @@ import { OneOffOperationsGateway } from "@/src/features/operations/infrastructur
 
 type SummaryStatus = "loading" | "success" | "future" | "error";
 type OperationsStatus = "loading" | "success" | "paging" | "error";
+type FeedbackTone = "success" | "error";
 
 interface SummaryResult {
   key: string;
   status: Exclude<SummaryStatus, "loading">;
   summary: BudgetSummary | null;
+  pending: PendingOccurrence[];
 }
 
 interface OperationsResult {
@@ -25,14 +37,20 @@ interface OperationsResult {
   nextCursor: string | null;
 }
 
+export interface DecisionFeedback {
+  tone: FeedbackTone;
+  text: string;
+}
+
 /**
  * Données du calendrier mobile : synthèse du mois (avec ses points
- * journaliers), catégories et opérations du mois ou du jour sélectionné.
- * Chaque résultat garde la clé de sa requête : un résultat périmé n'est
- * jamais affiché et le chargement est déduit d'une clé qui ne correspond pas.
+ * journaliers), file des événements à traiter, catégories et opérations du
+ * mois ou du jour sélectionné, avec les commandes `realize` et `cancel`.
+ * Un résultat périmé est écarté grâce à la clé de sa requête.
  */
 export const useBudgetCalendar = (
   budget: BudgetMonthGateway,
+  occurrences: OccurrencesGateway,
   operations: OneOffOperationsGateway,
   month: string,
   selectedDate: string | null,
@@ -46,6 +64,9 @@ export const useBudgetCalendar = (
   const [paging, setPaging] = useState(false);
   const [pagingErrorKey, setPagingErrorKey] = useState<string | null>(null);
   const [categories, setCategories] = useState<OperationCategory[]>([]);
+  const [categoriesError, setCategoriesError] = useState(false);
+  const [decision, setDecision] = useState(false);
+  const [feedback, setFeedback] = useState<DecisionFeedback | null>(null);
 
   const summaryKey = `${month}:${reload}`;
   const operationsKey = `${month}:${selectedDate ?? "month"}:${reload}`;
@@ -60,25 +81,31 @@ export const useBudgetCalendar = (
 
   useEffect(() => {
     let isActive = true;
-    budget
-      .getMonth(month)
-      .then((summary) => {
+    const through = monthBounds(month).to;
+    // Charger synthèse et file ensemble : une décision recharge les deux.
+    Promise.all([budget.getMonth(month), occurrences.listPending(through)])
+      .then(([summary, pending]) => {
         if (!isActive) return;
         setSummaryResult({
           key: summaryKey,
           status: summary === null ? "future" : "success",
           summary,
+          pending,
         });
       })
       .catch(() => {
-        if (isActive) {
-          setSummaryResult({ key: summaryKey, status: "error", summary: null });
-        }
+        if (!isActive) return;
+        setSummaryResult({
+          key: summaryKey,
+          status: "error",
+          summary: null,
+          pending: [],
+        });
       });
     return () => {
       isActive = false;
     };
-  }, [budget, month, summaryKey]);
+  }, [budget, month, occurrences, summaryKey]);
 
   useEffect(() => {
     let isActive = true;
@@ -113,13 +140,18 @@ export const useBudgetCalendar = (
     operations
       .listAllCategories()
       .then((next) => {
-        if (isActive) setCategories(next);
+        if (!isActive) return;
+        setCategories(next);
+        setCategoriesError(false);
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (isActive) setCategoriesError(true);
+      });
     return () => {
       isActive = false;
     };
-  }, [operations]);
+    // `reload` : « Réessayer » relance aussi les catégories après un échec.
+  }, [operations, reload]);
 
   const current =
     operationsResult?.key === operationsKey ? operationsResult : null;
@@ -148,6 +180,64 @@ export const useBudgetCalendar = (
     }
   }, [current, filter, nextCursor, operations, operationsKey, paging]);
 
+  const retry = useCallback(() => setReload((value) => value + 1), []);
+
+  // Verrou synchrone : deux appuis rapides ne doivent envoyer qu'une décision.
+  const deciding = useRef(false);
+  const decide = useCallback(
+    async (
+      action: () => Promise<void>,
+      successText: string,
+    ): Promise<DecisionResult | null> => {
+      // `null` : appui ignoré pendant qu'une décision est déjà en cours.
+      if (deciding.current) return null;
+      deciding.current = true;
+      setDecision(true);
+      setFeedback(null);
+      try {
+        await action();
+        setFeedback({ tone: "success", text: successText });
+        setReload((value) => value + 1);
+        return { ok: true, code: null };
+      } catch (error) {
+        const code =
+          error instanceof OccurrenceRequestError ? error.code : null;
+        if (code === "OCCURRENCE_ALREADY_RESOLVED") {
+          setReload((value) => value + 1);
+        }
+        setFeedback({ tone: "error", text: decisionErrorMessage(code) });
+        return { ok: false, code };
+      } finally {
+        deciding.current = false;
+        setDecision(false);
+      }
+    },
+    [],
+  );
+
+  const realize = useCallback(
+    (occurrence: PendingOccurrence, body: RealizeBody) =>
+      decide(
+        () =>
+          occurrences.realize(
+            occurrence.eventId,
+            occurrence.occurrenceDate,
+            body,
+          ),
+        "Événement converti en opération.",
+      ),
+    [decide, occurrences],
+  );
+
+  const cancel = useCallback(
+    (occurrence: PendingOccurrence) =>
+      decide(
+        () => occurrences.cancel(occurrence.eventId, occurrence.occurrenceDate),
+        "Événement annulé.",
+      ),
+    [decide, occurrences],
+  );
+
   const summaryCurrent =
     summaryResult?.key === summaryKey ? summaryResult : null;
   const operationsStatus: OperationsStatus =
@@ -156,12 +246,18 @@ export const useBudgetCalendar = (
   return {
     summary: summaryCurrent?.summary ?? null,
     summaryStatus: (summaryCurrent?.status ?? "loading") as SummaryStatus,
+    pending: summaryCurrent?.pending ?? [],
     categories,
+    categoriesError,
     operations: current?.items ?? [],
     operationsStatus,
     hasMore: nextCursor !== null,
     pagingError: pagingErrorKey === operationsKey,
     loadMore,
-    retry: () => setReload((value) => value + 1),
+    retry,
+    decision,
+    feedback,
+    realize,
+    cancel,
   };
 };

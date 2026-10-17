@@ -17,7 +17,9 @@ export interface BudgetMonthGateway extends BudgetSummaryGateway {
 }
 
 /** Code métier stable porté par `error.details.code`, s'il existe. */
-const errorCodeOf = async (response: Response): Promise<string | null> => {
+export const errorCodeOf = async (
+  response: Response,
+): Promise<string | null> => {
   try {
     const body = (await response.json()) as {
       error?: { details?: { code?: unknown } };

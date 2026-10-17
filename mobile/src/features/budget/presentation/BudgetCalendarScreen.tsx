@@ -2,6 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,7 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { semantic, themes } from "@/src/design/tokens";
-import { FeedbackState } from "@/src/design/FeedbackState";
+import { FeedbackBanner, FeedbackState } from "@/src/design/FeedbackState";
 import { useAuth } from "@/src/features/auth/presentation/AuthProvider";
 import {
   CALENDAR_MODES,
@@ -27,7 +28,15 @@ import {
   currentParisDate,
   currentParisMonth,
 } from "@/src/features/budget/domain/budgetSummary";
+import {
+  PendingOccurrence,
+  closesRealizeForm,
+  decisionErrorMessage,
+} from "@/src/features/budget/domain/pendingOccurrence";
 import { HttpBudgetSummaryGateway } from "@/src/features/budget/infrastructure/HttpBudgetSummaryGateway";
+import { HttpOccurrencesGateway } from "@/src/features/budget/infrastructure/HttpOccurrencesGateway";
+import { PendingOccurrencesSection } from "@/src/features/budget/presentation/PendingOccurrencesSection";
+import { RealizeOccurrenceModal } from "@/src/features/budget/presentation/RealizeOccurrenceModal";
 import { useBudgetCalendar } from "@/src/features/budget/presentation/useBudgetCalendar";
 import { HttpOneOffOperationsGateway } from "@/src/features/operations/infrastructure/HttpOneOffOperationsGateway";
 import { OperationCard } from "@/src/features/operations/presentation/OperationCard";
@@ -45,16 +54,38 @@ export const BudgetCalendarScreen = () => {
     () => new HttpOneOffOperationsGateway(httpClient),
     [httpClient],
   );
+  const occurrencesGateway = useMemo(
+    () => new HttpOccurrencesGateway(httpClient),
+    [httpClient],
+  );
   const today = currentParisDate();
   const [month, setMonth] = useState(currentParisMonth());
   const [mode, setMode] = useState<CalendarMode>("markers");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [realizing, setRealizing] = useState<PendingOccurrence | null>(null);
+  const [realizeError, setRealizeError] = useState<string | null>(null);
   const state = useBudgetCalendar(
     budgetGateway,
+    occurrencesGateway,
     operationsGateway,
     month,
     selectedDate,
   );
+
+  const confirmCancel = (occurrence: PendingOccurrence) => {
+    Alert.alert(
+      "Annuler cet événement ?",
+      `${occurrence.title} du ${longDate(occurrence.occurrenceDate)} ne sera plus compté dans le prévisionnel. Aucune opération ne sera créée.`,
+      [
+        { text: "Garder", style: "cancel" },
+        {
+          text: "Annuler l’événement",
+          style: "destructive",
+          onPress: () => void state.cancel(occurrence),
+        },
+      ],
+    );
+  };
 
   const days = useMemo(
     () => new Map((state.summary?.days ?? []).map((day) => [day.date, day])),
@@ -292,6 +323,28 @@ export const BudgetCalendarScreen = () => {
           </View>
         )}
 
+        {state.feedback && realizing === null ? (
+          <FeedbackBanner
+            kind={state.feedback.tone === "error" ? "error" : "success"}
+          >
+            {state.feedback.text}
+          </FeedbackBanner>
+        ) : null}
+
+        {state.summaryStatus === "success" ||
+        state.summaryStatus === "future" ? (
+          <PendingOccurrencesSection
+            busy={state.decision}
+            occurrences={state.pending}
+            onCancel={confirmCancel}
+            onRealize={(occurrence) => {
+              setRealizeError(null);
+              setRealizing(occurrence);
+            }}
+            selectedDate={selectedDate}
+          />
+        ) : null}
+
         <View style={styles.operationsHeader}>
           <Text accessibilityRole="header" style={styles.sectionTitle}>
             {selectedDate
@@ -370,6 +423,32 @@ export const BudgetCalendarScreen = () => {
           </View>
         )}
       </ScrollView>
+      <RealizeOccurrenceModal
+        key={
+          realizing
+            ? `${realizing.eventId}-${realizing.occurrenceDate}`
+            : "closed"
+        }
+        busy={state.decision}
+        categories={state.categories}
+        categoriesError={state.categoriesError}
+        errorMessage={realizeError}
+        onRetryCategories={state.retry}
+        occurrence={realizing}
+        onCancel={() => setRealizing(null)}
+        onSave={(body) => {
+          if (realizing === null) return;
+          void state.realize(realizing, body).then((result) => {
+            if (result === null) return;
+            if (closesRealizeForm(result)) {
+              setRealizing(null);
+            } else {
+              setRealizeError(decisionErrorMessage(result.code));
+            }
+          });
+        }}
+        today={today}
+      />
     </SafeAreaView>
   );
 };
