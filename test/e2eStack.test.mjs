@@ -1,7 +1,21 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { createRequire } from "node:module";
-import { runStack } from "../scripts/run-e2e-stack.mjs";
+import { logSink, runStack } from "../scripts/run-e2e-stack.mjs";
+
+test("redacts secrets split across streamed log chunks and the final line", () => {
+  let output = "";
+  const sink = logSink(
+    (text) => {
+      output += text;
+    },
+    ["synthetic-secret"]
+  );
+  sink.chunk("prefix synthetic-");
+  sink.chunk("secret\nlast synthetic-secret");
+  sink.end();
+  assert.equal(output, "prefix [REDACTED]\nlast [REDACTED]");
+});
 
 const { assertTestDatabase } = createRequire(import.meta.url)(
   "./full-stack/seed.cjs"

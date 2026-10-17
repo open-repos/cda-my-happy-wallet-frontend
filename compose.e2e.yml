@@ -35,6 +35,10 @@ services:
       PORT: "4201"
       APP_BASE_URL: /v1
       API_DOCS_ENABLED: "false"
+      NPM_CONFIG_CACHE: /tmp/npm-cache
+      XDG_CACHE_HOME: /tmp/cache
+      CHECKPOINT_DISABLE: "1"
+      PRISMA_HIDE_UPDATE_MESSAGE: "1"
       DATABASE_URL: mysql://mhw_e2e:${E2E_DB_PASSWORD}@mysql:3306/mhw_e2e
       SHADOW_DATABASE_URL: mysql://mhw_e2e:${E2E_DB_PASSWORD}@mysql:3306/mhw_e2e
       REDIS_URL: redis://redis:6379

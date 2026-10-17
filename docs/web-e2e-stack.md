@@ -59,7 +59,7 @@ des validations distinctes. Cette stack ne contacte aucun SMTP réel.
   `test/full-stack/vite.config.mjs`. Les configurations et artefacts de
   production ne sont pas remplacés.
 - Les mots de passe et trois secrets JWT distincts sont aléatoires à chaque
-  lancement. Ils restent dans l'environnement éphémère, sont masqués dans
+  lancement. Ils restent dans l'environnement éphémère, sont expurgés des sorties du runner et masqués dans
   GitHub Actions et ne sont jamais écrits dans un fichier de configuration.
 - Le garde-fou du seed exige `NODE_ENV=test`, `MHW_E2E=1`, un mot de passe
   généré et l'hôte, le port, l'utilisateur et le nom de base exacts de Compose.
@@ -96,7 +96,7 @@ sortie des tests. Résultat attendu : douze tests réussis et code `0`.
 
 Le contrôle GitHub existant
 [`Web format, lint, test and build`](../.github/workflows/web-quality.yml)
-exécute ce parcours après les contrôles Web et les huit tests du runner. Aucun
+exécute ce parcours après les contrôles Web et les neuf tests du runner. Aucun
 secret de dépôt, déploiement, accès VPS ou paramétrage GitLab n'est requis.
 Le timeout de ce job est de 25 minutes pour inclure la construction des images.
 

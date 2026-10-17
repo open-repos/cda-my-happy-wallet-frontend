@@ -6,6 +6,27 @@ import { appendFileSync } from "node:fs";
 
 const cleanup = ["down", "--volumes", "--remove-orphans", "--timeout", "10"];
 
+export function logSink(write, secrets) {
+  let pending = "";
+  const redact = (text) =>
+    secrets.reduce(
+      (safe, secret) => safe.split(secret).join("[REDACTED]"),
+      text
+    );
+  return {
+    chunk(data) {
+      pending += data;
+      const lines = pending.split("\n");
+      pending = lines.pop();
+      for (const line of lines) write(`${redact(line)}\n`);
+    },
+    end() {
+      if (pending) write(redact(pending));
+      pending = "";
+    },
+  };
+}
+
 export async function runStack(run, interrupted = () => false) {
   let result = 1;
   try {
@@ -16,7 +37,11 @@ export async function runStack(run, interrupted = () => false) {
     ]) {
       if (interrupted()) return 130;
       result = await run(command);
-      if (result !== 0) return result;
+      if (result !== 0) {
+        if (command[0] === "up")
+          await run(["logs", "--no-color", "--tail", "80", "api"]);
+        return result;
+      }
     }
     return interrupted() ? 130 : result;
   } catch {
@@ -32,6 +57,7 @@ export async function runStack(run, interrupted = () => false) {
 async function main() {
   const project = `mhw-e2e-${randomBytes(6).toString("hex")}`;
   const env = { ...process.env };
+  const secrets = [];
   for (const name of [
     "E2E_DB_PASSWORD",
     "E2E_ROOT_PASSWORD",
@@ -41,6 +67,7 @@ async function main() {
     "E2E_REGISTER_SECRET",
   ]) {
     env[name] = randomBytes(32).toString("hex");
+    secrets.push(env[name]);
     if (process.env.GITHUB_ACTIONS === "true")
       console.log(`::add-mask::${env[name]}`);
   }
@@ -67,8 +94,17 @@ async function main() {
       active = spawn("docker", [...prefix, ...args], {
         cwd: root,
         env,
-        stdio: "inherit",
+        stdio: ["ignore", "pipe", "pipe"],
       });
+      for (const [source, destination] of [
+        [active.stdout, process.stdout],
+        [active.stderr, process.stderr],
+      ]) {
+        source.setEncoding("utf8");
+        const sink = logSink((text) => destination.write(text), secrets);
+        source.on("data", (data) => sink.chunk(data));
+        source.on("end", () => sink.end());
+      }
       active.once("error", () => done(1));
       active.once("exit", (code) => done(code ?? 1));
     });
