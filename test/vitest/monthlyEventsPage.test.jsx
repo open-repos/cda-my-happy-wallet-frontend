@@ -1,10 +1,23 @@
 import React from "react";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Calendrier from "../../src/js/pages/Calendrier";
 import Objectifs from "../../src/js/pages/Objectifs";
 import { useMonthlyEvents } from "../../src/js/hooks/useMonthlyEvents";
 import { useBudgetCalendar } from "../../src/js/hooks/useBudgetCalendar";
+import { useFinancialGoals } from "../../src/js/hooks/useFinancialGoals";
+
+// Objectifs also mounts the financial goals section. Its hook and UI have
+// dedicated suites; keep this page test independent from the real API.
+vi.mock("../../src/js/hooks/useFinancialGoals", () => ({
+  useFinancialGoals: vi.fn(),
+}));
 
 vi.mock("../../src/js/hooks/useMonthlyEvents", () => ({
   useMonthlyEvents: vi.fn(),
@@ -41,10 +54,36 @@ const state = {
 beforeEach(() => {
   Object.values(actions).forEach((action) => action.mockClear());
   useMonthlyEvents.mockReturnValue(state);
+  useFinancialGoals.mockReturnValue({
+    goals: [],
+    status: "success",
+    mutationStatus: "idle",
+    message: "",
+    retry: vi.fn(),
+    createGoal: vi.fn(),
+    updateGoal: vi.fn(),
+    deleteGoal: vi.fn(),
+  });
 });
 afterEach(cleanup);
 
 describe("monthly event pages", () => {
+  it("renders without sending a real HTTP request", async () => {
+    const send = vi
+      .spyOn(XMLHttpRequest.prototype, "send")
+      .mockImplementation(() => {
+        throw new Error("Unexpected HTTP request in a unit test");
+      });
+    try {
+      await act(async () => render(<Objectifs />));
+      expect(useFinancialGoals).toHaveBeenCalled();
+      expect(send).not.toHaveBeenCalled();
+    } finally {
+      cleanup();
+      send.mockRestore();
+    }
+  });
+
   it("renders the event list and submits an accessible recurring event form", async () => {
     render(<Objectifs />);
     expect(

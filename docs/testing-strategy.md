@@ -1,60 +1,99 @@
 # Frontend Testing Strategy
 
-## Test Runner Decision
+## Executable Web test stack
 
-Vitest is the target test runner because it shares Vite's module resolution and
-transformation pipeline. It must not be installed against the current toolchain.
+The Web application uses Vite 6, React 17, Vitest 4 and jsdom 26. Testing
+Library 12 exercises React 17 components and hooks. Versions are pinned by
+`package-lock.json`; use `npm ci` rather than installing another test runner.
+GitHub's Web quality workflow runs on Node 22. See
+[`AGENTS.md`](../AGENTS.md) for the complete validation contract.
 
-Current constraints:
+`vitest.config.js` discovers `test/vitest/**/*.test.{js,jsx}` and loads
+`test/vitest/setup.js`. The setup provides DOM assertions and a local category
+icon fixture. Unit tests replace service or HTTP boundaries with controlled
+fixtures; they do not need a running backend, credentials or production data.
 
-- the application uses Vite 2.8 and React 17;
-- the Docker agent uses Node 16 for compatibility with the existing project;
-- current Vitest requires Vite 6 or newer and Node 20 or newer;
-- legacy Vitest 0.12 supports Node 14, but depends on Vite 2.9 or newer.
+The four Node characterization suites remain separate commands. `npm test`
+checks generated design tokens and runs the Vitest suites; it does not run those
+Node scripts or the Playwright tests.
 
-Installing a legacy Vitest release would add an obsolete test runner and a second
-Vite version. Installing a maintained Vitest release requires a coordinated Node
-and Vite migration. Until that migration is planned and validated, the existing
-Node characterization tests remain the executable frontend test suite.
+## Coverage by boundary
 
-## Migration Matrix
+| Boundary                           | Representative tests                                                                                                                             | Behavior protected                                                                                                                                                      |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| HTTP contracts                     | `apiResponse.test.mjs`, `apiPayloadCreator.test.mjs`, `budgetService.test.js`, `monthlyEventsService.test.js`, `oneOffOperationsService.test.js` | Response validation, payloads, pagination and API errors                                                                                                                |
+| Fixed budget and remaining balance | `resteAVivreCalculator.test.mjs`, `useResteAVivre.test.jsx`, `useOperationsFixes.test.jsx`                                                       | Calculation and hook behavior                                                                                                                                           |
+| One-off operations hook            | `useOneOffOperations.test.jsx`                                                                                                                   | Initial load, recoverable errors, cursor pagination, duplicate rows, pending-page guard, create/update/delete and saved-write/failed-refresh distinction                |
+| Monthly events hook                | `useMonthlyEvents.test.jsx`                                                                                                                      | Selected month, empty results, failed reads, create/update/delete, pending refresh and recovery without replaying a write                                               |
+| Budget calendar hook               | `useBudgetCalendar.test.jsx`                                                                                                                     | Leap-year boundaries, day/month filters, independent section failures, future periods, pagination, occurrence commands, closed periods and already-resolved occurrences |
+| Analytics and charts               | `useAnalytics.test.jsx`, `analyticsExplorer.test.js`, `analyticsChartOptions.test.js`, `eChart.test.jsx`                                         | Query constraints, stale responses, aggregates and chart rendering contracts                                                                                            |
+| Pages and forms                    | `oneOffOperationsPage.test.jsx`, `monthlyEventsPage.test.jsx`, `budgetCalendarPage.test.jsx`, `analyticsPage.test.jsx`                           | User actions, form validation and loading/empty/error presentation                                                                                                      |
 
-| Concern | Current | Target | Compatibility reason |
-| --- | --- | --- | --- |
-| Frontend runtime | Node 16 | Node 22 | Supported by Vite 6, Vitest 4 and jsdom 26 |
-| Bundler | Vite 2.8 | Vite 6.4 | Supported by Vitest 4.1 without adopting Vite 7/8 |
-| React plugin | 1.0 | 4.7 | Supports Vite 6 |
-| Test runner | Node scripts | Vitest 4.1 | Maintained runner supporting Vite 6 |
-| DOM environment | none | jsdom 26 | Supports Node 22 |
-| UI test helpers | none | Testing Library 12.1 | Last React 17-compatible major |
+Vitest filenames in this table are relative to `test/vitest/`; the `.mjs`
+characterization suites live directly under `test/`. This is a map of existing
+checks, not a claim of complete product or line coverage.
 
-React and React DOM stay on version 17 during this migration. Upgrading React is
-a separate user-facing migration and is not required to modernize the test
-toolchain.
+The hook suites added for [#59](https://github.com/open-repos/cda-my-happy-wallet-frontend/issues/59)
+mount the real hook and mock only its service boundary. They complement page
+tests that mock the hook itself: removing a reload, cursor guard, filter or error
+transition must fail the corresponding hook assertion. Deferred promises make
+pending states reproducible without real delays or network access.
 
-## Adoption Sequence
+`monthlyEventsPage.test.jsx` also supplies the financial goals hook mounted by
+the shared page. A regression assertion refuses real XMLHttpRequest sends when
+rendering this page; its goals hook and section retain their dedicated suites.
 
-1. Add a dedicated Node 22 Compose service for frontend commands.
-2. Upgrade Vite and its plugins, then validate the existing build and tests.
-3. Install and configure Vitest with jsdom.
-4. Add the React 17-compatible Testing Library release.
-5. Migrate existing tests without removing behavioral coverage.
-6. Add component, hook, navigation, form, and responsive tests incrementally.
+## Run locally or in an isolated cloud checkout
 
-## Rollback Strategy
+From the repository root:
 
-Each adoption step is an independent commit. If a validation fails:
+```bash
+npm ci
+npm run format
+npm run lint
+npm run test:api-response
+npm run test:api-thunk
+npm run test:rav
+npm run test:refresh-token
+npm run type-check
+npm test
+npm run build
+```
 
-1. stop before committing the failing step;
-2. keep the Node 16 backend service unchanged;
-3. restore the frontend `package.json`, lockfile, Vite config and tests to the
-   last validated frontend commit;
-4. remove the dedicated frontend Compose service only if the migration is
-   abandoned entirely;
-5. rerun the pre-migration Node characterization tests and Vite build.
+`type-check` currently aliases `vite build`; it is not a standalone TypeScript
+check of the JavaScript Web application. Web CI runs the same sequence. When
+working from the parent workspace, use its documented Docker service instead;
+GitHub Actions and Codex Cloud may execute these commands directly as allowed by
+`AGENTS.md`.
 
-## References
+Run the new hook suites alone:
 
-- Vitest guide: https://vitest.dev/guide/
-- npm package metadata checked for Vite 6.4, Vitest 4.1, React plugin 4.7,
-  jsdom 26 and Testing Library 12.1.5.
+```bash
+npx vitest run test/vitest/useOneOffOperations.test.jsx test/vitest/useMonthlyEvents.test.jsx test/vitest/useBudgetCalendar.test.jsx
+npx prettier --check test/vitest/useOneOffOperations.test.jsx test/vitest/useMonthlyEvents.test.jsx test/vitest/useBudgetCalendar.test.jsx docs/testing-strategy.md
+```
+
+Expected result: all assertions pass with exit code `0`. If a test fails, run the
+individual file and inspect the expected state, mock fixture and service call.
+Reset service mocks between cases and settle deferred promises before cleanup.
+Do not hide failures with arbitrary sleeps, retries or snapshots of internals.
+
+## Limits and next validation layers
+
+- jsdom does not validate layout, touch behavior, browser storage policy or
+  native Android/iOS behavior.
+- Web unit tests do not validate a real database, API deployment or email
+  delivery. Backend contracts and real cross-layer behavior need their own tests.
+- `npm run test:e2e` runs the separate Playwright suite. The isolated full-stack
+  journeys belong to [#60](https://github.com/open-repos/cda-my-happy-wallet-frontend/issues/60).
+- Accessibility audit [#58](https://github.com/open-repos/cda-my-happy-wallet-frontend/issues/58)
+  and native integration tests [#57](https://github.com/open-repos/cda-my-happy-wallet-frontend/issues/57)
+  remain separate work; passing Web unit tests does not close them.
+
+## Rollback
+
+This test-only change adds three hook suites, isolates the existing events page
+suite from the real API and updates this document. Revert its commit to restore
+the previous coverage. It changes no runtime code,
+dependency, configuration, API contract or database and requires no deployment
+or migration.
