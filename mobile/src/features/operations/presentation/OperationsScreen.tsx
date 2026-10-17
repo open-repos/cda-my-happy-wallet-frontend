@@ -1,4 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -27,6 +28,7 @@ const colors = themes.light.color;
 const semibold = `${primitives.fontWeight.semibold}` as "600";
 
 export const OperationsScreen = () => {
+  const router = useRouter();
   const { httpClient } = useAuth();
   const gateway = useMemo(
     () => new HttpOneOffOperationsGateway(httpClient),
@@ -145,6 +147,21 @@ export const OperationsScreen = () => {
               />
               <Text style={styles.addLabel}>Ajouter une opération</Text>
             </Pressable>
+            <Pressable
+              accessibilityRole="link"
+              onPress={() => router.navigate("/(app)/categories")}
+              style={({ pressed }) => [
+                styles.categoriesLink,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Ionicons
+                color={colors.actionSecondaryText}
+                name="pricetags-outline"
+                size={20}
+              />
+              <Text style={styles.categoriesLabel}>Gérer les catégories</Text>
+            </Pressable>
             {state.message ? (
               <FeedbackBanner
                 kind={
@@ -255,10 +272,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: primitives.space["2"],
     justifyContent: "center",
-    marginBottom: primitives.space["6"],
+    marginBottom: primitives.space["3"],
     marginTop: primitives.space["5"],
     minHeight: semantic.size.controlMinHeight,
     paddingHorizontal: semantic.space.controlInline,
+  },
+  categoriesLink: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    gap: primitives.space["2"],
+    marginBottom: primitives.space["6"],
+    minHeight: semantic.size.controlMinHeight,
+  },
+  categoriesLabel: {
+    color: colors.actionSecondaryText,
+    fontSize: primitives.fontSize.md,
+    fontWeight: semibold,
+    textDecorationLine: "underline",
   },
   addLabel: {
     color: colors.actionPrimaryText,

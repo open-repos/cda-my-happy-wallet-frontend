@@ -10,6 +10,9 @@ import { primitives, semantic, themes } from "@/src/design/tokens";
 
 const colors = themes.light.color;
 const desktopNavigationBreakpoint = 1024;
+// Seuil tablette de React Navigation. La position des libellés est fixée :
+// déduite, elle dépendrait du nombre de routes, onglets cachés compris.
+const tabletBreakpoint = 768;
 const semiboldFontWeight = `${primitives.fontWeight.semibold}` as "600";
 
 const createTabOptions = (destination: AppDestination) => ({
@@ -46,7 +49,10 @@ export default function AppLayout() {
         tabBarItemStyle: usesDesktopNavigation
           ? styles.desktopTabItem
           : styles.tabItem,
-        tabBarLabelPosition: usesDesktopNavigation ? "below-icon" : undefined,
+        tabBarLabelPosition:
+          usesDesktopNavigation || width < tabletBreakpoint
+            ? "below-icon"
+            : "beside-icon",
         tabBarLabelStyle: styles.tabLabel,
         tabBarPosition: usesDesktopNavigation ? "left" : "bottom",
         tabBarShowLabel: !usesDesktopNavigation,
@@ -64,6 +70,7 @@ export default function AppLayout() {
         />
       ))}
       <Tabs.Screen name="fixed-budget" options={{ href: null }} />
+      <Tabs.Screen name="categories" options={{ href: null }} />
     </Tabs>
   );
 }
