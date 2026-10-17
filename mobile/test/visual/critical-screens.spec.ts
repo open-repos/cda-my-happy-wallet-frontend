@@ -86,6 +86,15 @@ test("captures the budget calendar and its day filter", async ({ page }) => {
   expect(dayBox?.width).toBeGreaterThanOrEqual(44);
   expect(dayBox?.height).toBeGreaterThanOrEqual(44);
 
+  // File des événements : le retard d'abord, avec ses deux actions.
+  await expect(page.getByText("À traiter (1)", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /^Convertir Loyer du 5 octobre/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /^Annuler Assurance du 20 octobre/ }),
+  ).toBeVisible();
+
   await page.getByRole("radio", { name: "Dépenses" }).click();
   await expect(page.getByText("-43", { exact: true })).toBeVisible();
   await page.getByRole("radio", { name: "Repères" }).click();
