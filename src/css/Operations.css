@@ -49,6 +49,20 @@
   color: var(--ds-color-text-on-shell-muted);
 }
 
+/* Lien secondaire de l'en-tête, posé sur la coque. */
+.one-off-header-link {
+  color: inherit;
+  font-weight: var(--ds-primitive-font-weight-semibold);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.one-off-header-link:focus-visible {
+  outline: var(--ds-border-width-focus) solid
+    var(--ds-color-focus-ring-on-shell);
+  outline-offset: 2px;
+}
+
 .one-off-eyebrow {
   margin-bottom: var(--ds-primitive-space-2);
   color: var(--ds-color-text-on-shell-muted);

@@ -18,6 +18,7 @@ import NewPassword from "./pages/NewPassword";
 import 'react-toastify/dist/ReactToastify.css';
 import OperationsFixes from "./pages/OperationsFixes";
 import Analyses from "./pages/Analyses";
+import Categories from "./pages/Categories";
 import CalculRaV from "./components/CalculRaV";
 
 function App() {
@@ -67,6 +68,14 @@ function App() {
               element={
                 <ProtectedLayout>
                   <ListeOperations />
+                </ProtectedLayout>
+              }
+            ></Route>
+            <Route
+              path="/categories"
+              element={
+                <ProtectedLayout>
+                  <Categories />
                 </ProtectedLayout>
               }
             ></Route>

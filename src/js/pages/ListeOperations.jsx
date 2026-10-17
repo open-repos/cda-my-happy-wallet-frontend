@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import addIcon from "../../assets/icons/add.svg";
 import { OneOffOperationForm } from "../components/OneOffOperations/OneOffOperationForm";
 import { OneOffOperationList } from "../components/OneOffOperations/OneOffOperationList";
@@ -42,7 +43,10 @@ function ListeOperations() {
           <h1>Ensemble des opérations effectuées</h1>
           <p>
             Retrouvez vos entrées et dépenses ponctuelles, des plus récentes aux
-            plus anciennes.
+            plus anciennes.{" "}
+            <Link className="one-off-header-link" to="/categories">
+              Gérer les catégories
+            </Link>
           </p>
         </div>
         <button

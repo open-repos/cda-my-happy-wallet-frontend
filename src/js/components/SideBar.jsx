@@ -6,7 +6,7 @@ import Calendar from "./../../assets/icons/calendar.svg";
 import Projects from "./../../assets/icons/target.svg";
 import List from "./../../assets/icons/list.svg";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChartColumn } from "@fortawesome/free-solid-svg-icons";
+import { faChartColumn, faTags } from "@fortawesome/free-solid-svg-icons";
 import PowerOff from "./../../assets/icons/power-off.svg";
 import Profil from "./../../assets/icons/user.svg";
 import styled from "styled-components";
@@ -161,7 +161,9 @@ const SlickBar = styled.ul`
   align-items: center;
   background-color: var(--ds-color-background-sidebar);
 
-  padding: 2rem 0;
+  /* Espacements bornés par la hauteur : six entrées tiennent au-dessus du
+     profil dès 720 px de haut. */
+  padding: clamp(1rem, 3vh, 2rem) 0;
 
   position: absolute;
   top: 6rem;
@@ -176,7 +178,7 @@ const Item = styled(NavLink)`
   color: : var(--white);
   text-decoration: none;
   width: 100%;
-  padding: 1.5rem 0;
+  padding: clamp(0.75rem, 2.5vh, 1.5rem) 0;
   cursor: pointer;
 
   display: flex;
@@ -439,6 +441,14 @@ const Sidebar = () => {
           >
             <img src={List} alt="Liste Operations" />
             <Text clicked={click}>Liste Opérations</Text>
+          </Item>
+          <Item
+            onClick={() => setClick(false)}
+            className={(navData) => (navData.isActive ? "active" : "")}
+            to="/categories"
+          >
+            <FontAwesomeIcon icon={faTags} aria-hidden="true" />
+            <Text clicked={click}>Catégories</Text>
           </Item>
           <Item
             onClick={() => setClick(false)}

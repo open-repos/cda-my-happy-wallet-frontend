@@ -333,6 +333,7 @@ const protectedPages = [
   { path: "/calendrier", selector: ".calendrier-container" },
   { path: "/objectifs-evenements", selector: ".objEv-container" },
   { path: "/operations", selector: ".operations-container" },
+  { path: "/categories", selector: ".categories-container" },
   { path: "/analyses", selector: ".analytics" },
   { path: "/profil", selector: ".profil-container" },
 ];
@@ -548,6 +549,68 @@ for (const viewport of viewports) {
     expect(hasHorizontalOverflow).toBe(false);
   });
 
+  test(`categories are created and refused when in use on the ${viewport.name} viewport`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await prepareProtectedPage(page);
+    const categories = [{ id: 4, name: "Alimentation", color: "#55AA22" }];
+    // Enregistrée après `prepareProtectedPage` : prioritaire sur sa route GET.
+    await page.route(
+      /\/v1\/operation-categories(?:\/\d+)?(?:\?.*)?$/,
+      (route) => {
+        const request = route.request();
+        if (request.method() === "POST") {
+          const created = { id: 9, icon: null, ...request.postDataJSON() };
+          categories.push(created);
+          return route.fulfill({ status: 201, json: { data: created } });
+        }
+        if (request.method() === "DELETE") {
+          return route.fulfill({
+            status: 409,
+            json: {
+              error: {
+                type: "Conflict",
+                message: "Resource conflict",
+                details: { code: "CATEGORY_IN_USE" },
+              },
+            },
+          });
+        }
+        return route.fulfill({
+          json: {
+            data: categories,
+            meta: { limit: 100, hasNext: false, nextCursor: null },
+          },
+        });
+      }
+    );
+    await page.goto("/categories");
+
+    await expect(
+      page.getByRole("heading", { name: "Catégories d’opérations", level: 1 })
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Ajouter une catégorie" }).click();
+    await page.getByLabel("Nom", { exact: true }).fill("Loisirs");
+    await page.getByRole("radio", { name: "Bleu" }).check();
+    await page.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(page.getByRole("status")).toContainText("Catégorie ajoutée.");
+    const list = page.getByRole("list", { name: "Vos catégories" });
+    await expect(list.getByText("Loisirs")).toBeVisible();
+
+    await page.getByRole("button", { name: "Modifier Alimentation" }).click();
+    await page.getByRole("button", { name: "Supprimer" }).click();
+    await page.getByRole("button", { name: "Oui, supprimer" }).click();
+    await expect(page.getByRole("alert").first()).toContainText(
+      "Cette catégorie est utilisée par des opérations"
+    );
+
+    const hasHorizontalOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth
+    );
+    expect(hasHorizontalOverflow).toBe(false);
+  });
+
   test(`operations fixes fit the ${viewport.name} viewport`, async ({
     page,
   }) => {
@@ -631,6 +694,85 @@ test("mobile navigation is a drawer that never covers the page", async ({
   await expect(page).toHaveURL(/\/calendrier$/);
   await expect(navigation).toBeHidden();
 });
+
+/** Contraste d'un texte contre le fond qu'il porte lui-même. */
+const ownContrast = (locator) =>
+  locator.evaluate((element) => {
+    const parse = (value) => {
+      const [r, g, b] = value.match(/\d+(\.\d+)?/g).map(Number);
+      return { r, g, b };
+    };
+    const luminance = ({ r, g, b }) => {
+      const channel = (value) => {
+        const scaled = value / 255;
+        return scaled <= 0.03928
+          ? scaled / 12.92
+          : ((scaled + 0.055) / 1.055) ** 2.4;
+      };
+      return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+    };
+    const style = getComputedStyle(element);
+    const [high, low] = [
+      luminance(parse(style.color)),
+      luminance(parse(style.backgroundColor)),
+    ].sort((a, b) => b - a);
+    return (high + 0.05) / (low + 0.05);
+  });
+
+for (const theme of ["light", "dark"]) {
+  test(`category form errors are readable in the ${theme} theme`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewports[2]);
+    await prepareProtectedPage(page);
+    await page.addInitScript((value) => {
+      window.localStorage.setItem("mhw-theme", value);
+    }, theme);
+    await page.goto("/categories");
+    await page.getByRole("button", { name: "Ajouter une catégorie" }).click();
+    await page.getByLabel("Nom", { exact: true }).fill("x");
+    await page.getByRole("button", { name: "Enregistrer" }).click();
+    expect(
+      await ownContrast(page.locator("#category-name-error"))
+    ).toBeGreaterThanOrEqual(4.5);
+
+    await page.getByRole("button", { name: "Fermer le formulaire" }).click();
+    await page.getByRole("button", { name: "Modifier Alimentation" }).click();
+    await page.getByRole("button", { name: "Supprimer" }).click();
+    expect(
+      await ownContrast(
+        page.locator(".category-form .one-off-delete-confirmation")
+      )
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+}
+
+// Hauteurs courantes de portables : la navigation à six entrées tient sans
+// que le dernier lien passe sous le bouton du profil.
+for (const size of [
+  { width: 1366, height: 768 },
+  { width: 1280, height: 720 },
+  { width: 1024, height: 768 },
+]) {
+  test(`navigation links stay above the profile at ${size.width}x${size.height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(size);
+    await prepareProtectedPage(page);
+    await page.goto("/home");
+    const navigation = page.getByRole("navigation", {
+      name: "Navigation principale",
+    });
+    const last = await navigation
+      .getByRole("link", { name: "Analyses" })
+      .boundingBox();
+    const profile = await navigation
+      .getByRole("button", { name: "Afficher le profil" })
+      .boundingBox();
+    expect(last.y + last.height).toBeLessThanOrEqual(profile.y);
+    expect(last.y + last.height).toBeLessThanOrEqual(size.height);
+  });
+}
 
 for (const viewport of viewports.slice(1)) {
   test(`navigation stays visible on the ${viewport.name} viewport`, async ({
@@ -779,7 +921,16 @@ const SHELL_CONTROLS = {
     "Ajouter un objectif",
     "Ajouter un événement",
   ],
-  "/operations": ["Ouvrir le menu", "Ajouter une opération"],
+  "/operations": [
+    "Ouvrir le menu",
+    "Gérer les catégories",
+    "Ajouter une opération",
+  ],
+  "/categories": [
+    "Ouvrir le menu",
+    "Voir les opérations",
+    "Ajouter une catégorie",
+  ],
   "/analyses": ["Ouvrir le menu"],
   "/profil": ["Ouvrir le menu"],
 };
@@ -854,6 +1005,7 @@ for (const theme of ["light", "dark"]) {
           "Calendrier",
           "Objectifs-Évènements",
           "Liste Opérations",
+          "Catégories",
           "Analyses",
         ])
       );
