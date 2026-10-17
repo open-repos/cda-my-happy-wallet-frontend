@@ -1,6 +1,6 @@
 import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Pressable, Text, useColorScheme, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { semantic, themes } from "@/src/design/tokens";
 import { ChartGateway } from "./ChartGateway";
 import { NativeChart } from "./NativeChart";
@@ -33,7 +33,9 @@ function useSection<T>(load: () => Promise<T>) {
   return { ...state, retry };
 }
 export const DashboardCharts = ({ gateway }: { gateway: ChartGateway }) => {
-  const colors = themes[useColorScheme() === "dark" ? "dark" : "light"].color;
+  // L'application mobile est entièrement en thème clair : suivre le mode
+  // sombre du système ici rendait ces seules cartes sombres sur fond clair.
+  const colors = themes.light.color;
   const loadExpenses = useCallback(() => gateway.expenses(), [gateway]);
   const loadGoals = useCallback(() => gateway.goals(), [gateway]);
   const expenses = useSection(loadExpenses);
