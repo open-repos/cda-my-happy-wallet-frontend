@@ -8,3 +8,11 @@ dist-e2e
 playwright-report
 test-results
 *.log
+**/.env
+**/.env.*
+**/.git
+**/node_modules
+**/dist
+**/playwright-report
+**/test-results
+**/*.log

@@ -34,7 +34,9 @@ async function login(page, project, journey) {
   await page.getByRole("button", { name: "Connexion", exact: true }).click();
   expect((await authenticated).status()).toBe(200);
   await expect(page).toHaveURL(/\/(?:home|operations)$/);
-  await expect(page.locator("main")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Ouvrir le menu", exact: true })
+  ).toBeVisible();
 }
 
 async function navigate(page, name) {
