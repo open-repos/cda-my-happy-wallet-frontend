@@ -54,6 +54,20 @@ const testApiResponse = (pathname, searchParams) => {
       meta: noNextPage,
     };
   }
+  if (pathname.endsWith("/goals")) {
+    return {
+      data: [
+        {
+          id: 1,
+          title: "Voyage",
+          currency: "EUR",
+          savedAmount: "250.00",
+          targetAmount: "1000.00",
+        },
+      ],
+      meta: noNextPage,
+    };
+  }
   const summary = /\/budget-periods\/(\d{4}-\d{2})\/summary$/.exec(pathname);
   if (summary != null) {
     return {

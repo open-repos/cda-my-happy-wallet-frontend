@@ -133,3 +133,42 @@ typage, 110 tests et **Expo Doctor 20/20** réussis. Les exports Web et Android
 ont été relancés avec ce lockfile. Seule la recette du development build
 Android reste à établir; les tests automatisés ne couvrent pas les gestes,
 TalkBack ni la compilation native.
+
+## Correction du contrôle visuel de la PR #126
+
+Le premier run Mobile quality a réussi format, lint, typage, tests, Doctor et
+export, mais a échoué sur les neuf parcours visuels après connexion. La
+première validation locale n'avait pas exécuté cette suite visuelle.
+
+La reproduction navigateur a d'abord isolé une exception au chargement :
+`Cannot destructure property '__extends' ... as it is undefined`. ECharts et
+zrender embarquent tslib 2.3.0; son entrée conditionnelle `import` réexporte
+un défaut UMD que Metro ne sait pas interpréter. `metro.config.js` sélectionne
+l'entrée ESM du même paquet uniquement pour les imports tslib depuis ECharts
+ou zrender, sur Web et natif. Les autres résolutions sont déléguées à Expo.
+Aucune dépendance ni version n'est remplacée.
+
+Le moteur SVG Wuba attend un hôte natif avec `getChartSize` et `patch`.
+Son composant Web expose un élément HTML, incompatible avec ce moteur. Metro
+sélectionne maintenant `NativeChart.web.tsx` pour Expo Web : cet adaptateur
+utilise le moteur SVG standard d'ECharts sur un div. Android continue à
+utiliser l'adaptateur Wuba de `NativeChart.tsx`, sans changement de dépendance.
+
+La fixture visuelle sert désormais un objectif EUR. Le test du tableau de
+bord vérifie les deux SVG, les montants français, le taux d'atteinte et
+l'absence d'erreur JavaScript avant la comparaison visuelle. Les captures du tableau de bord sont actualisées lorsque les nouvelles sections
+sont visibles; six captures dédiées aux cartes graphiques couvrent également
+les trois tailles d’écran.
+
+SVG est un format de rendu vectoriel, pas une capture figée : ECharts
+recalcule le dessin à chaque mise à jour des données. Les séries restent
+volontairement sans interactions tactiles (`silent`) et sans animations;
+les valeurs complètes sont disponibles dans le texte accessible.
+
+Vérification après correction : les 15 scénarios Playwright passent sans
+mise à jour des références, les 110 tests unitaires passent et Doctor reste
+à 20/20. Le téléchargement Chromium standard était indisponible dans cet
+environnement; les tests locaux ont utilisé un Chromium 149 fourni par un
+paquet temporaire hors dépôt, avec les polices Liberation. Aucune dépendance
+ni configuration locale de navigateur n'a été ajoutée au projet. La CI conserve
+son installation Playwright officielle et ses seuils de comparaison inchangés.

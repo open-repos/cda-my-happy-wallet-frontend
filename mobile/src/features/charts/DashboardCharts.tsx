@@ -71,6 +71,11 @@ export const DashboardCharts = ({ gateway }: { gateway: ChartGateway }) => {
       ].map(({ title, section, empty, labels, option, height }) => (
         <View
           key={title}
+          testID={
+            title === "Atteinte des objectifs"
+              ? "goals-chart-card"
+              : "expenses-chart-card"
+          }
           style={{
             backgroundColor: colors.backgroundSurface,
             borderColor: colors.borderSubtle,
