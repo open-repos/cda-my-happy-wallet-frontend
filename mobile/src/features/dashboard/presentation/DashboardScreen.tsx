@@ -1,3 +1,5 @@
+import { ChartGateway } from "@/src/features/charts/ChartGateway";
+import { DashboardCharts } from "@/src/features/charts/DashboardCharts";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -52,6 +54,10 @@ export const DashboardScreen = () => {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const gateway = useMemo(
     () => new HttpFixedBudgetGateway(httpClient),
+    [httpClient],
+  );
+  const chartGateway = useMemo(
+    () => new ChartGateway(httpClient),
     [httpClient],
   );
   const summaryGateway = useMemo(
@@ -150,6 +156,8 @@ export const DashboardScreen = () => {
         {status === "success" && operationCount > 0 ? (
           <BudgetSummaryCards gateway={summaryGateway} />
         ) : null}
+
+        <DashboardCharts gateway={chartGateway} />
 
         <View style={styles.actions}>
           <Text style={styles.sectionTitle}>Continuez votre suivi</Text>

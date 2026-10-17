@@ -33,7 +33,20 @@ test("captures the sign-in screen", async ({ page }) => {
 test("captures the populated dashboard and navigation", async ({
   page,
 }, testInfo) => {
+  const pageErrors: string[] = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
   await signIn(page);
+  await expect(
+    page.getByText("Alimentation : 42,50", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("25 % de l’épargne visée atteinte", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Voyage : 250,00", { exact: false }),
+  ).toBeVisible();
+  await expect(page.locator('[aria-hidden="true"] svg')).toHaveCount(2);
+  expect(pageErrors).toEqual([]);
   await expect(page.getByText("Reste réel", { exact: true })).toBeVisible();
   await expect(page.getByText(/^1\s337,50\s€$/)).toBeVisible();
   await expect(page.getByText("Report d’août", { exact: true })).toBeVisible();
@@ -56,6 +69,16 @@ test("captures the populated dashboard and navigation", async ({
   }
   await expectNoHorizontalOverflow(page);
   await expect(page).toHaveScreenshot("dashboard.png", { fullPage: true });
+});
+
+test("captures both populated chart cards", async ({ page }) => {
+  await signIn(page);
+  for (const kind of ["expenses", "goals"]) {
+    const card = page.getByTestId(`${kind}-chart-card`);
+    await expect(card.locator("svg")).toHaveCount(1);
+    await card.scrollIntoViewIfNeeded();
+    await expect(card).toHaveScreenshot(`${kind}-chart.png`);
+  }
 });
 
 test("captures the populated operations screen", async ({ page }) => {
