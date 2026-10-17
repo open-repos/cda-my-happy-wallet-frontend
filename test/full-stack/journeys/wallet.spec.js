@@ -415,7 +415,9 @@ for (const theme of ["light", "dark"]) {
       name: "Ajouter une opération",
       exact: true,
     });
+    await expect(add).toBeEnabled();
     await add.focus();
+    await expect(add).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(page.getByLabel(/^Titre/)).toBeFocused();
     await page.keyboard.press("Escape");
