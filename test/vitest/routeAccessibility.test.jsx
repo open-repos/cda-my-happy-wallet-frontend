@@ -43,6 +43,13 @@ it("names the page without taking initial focus, then focuses new route content"
   expect(
     screen.getByRole("link", { name: "Aller au contenu principal" })
   ).toHaveAttribute("href", "#main-content");
+  const content = screen.getByRole("main");
+  fireEvent.click(
+    screen.getByRole("link", { name: "Aller au contenu principal" })
+  );
+  expect(content).toHaveFocus();
+  expect(screen.getByRole("main")).toBe(content);
+  expect(document.title).toBe("Connexion | My Happy Wallet");
   fireEvent.click(screen.getByRole("link", { name: "Accueil" }));
   expect(document.title).toBe("Tableau de bord | My Happy Wallet");
   expect(screen.getByRole("main")).toHaveFocus();

@@ -30,7 +30,18 @@ export const RouteAccessibility = () => {
   }, [pathname]);
 
   return (
-    <a className="skip-link" href="#main-content">
+    <a
+      className="skip-link"
+      href="#main-content"
+      onClick={(event) => {
+        const content = document.getElementById("main-content");
+        if (content) {
+          // Keep focus transfer independent of router hash transitions/remounts.
+          event.preventDefault();
+          content.focus();
+        }
+      }}
+    >
       Aller au contenu principal
     </a>
   );
