@@ -4,9 +4,34 @@ import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve, join } from "node:path";
 import { buildPwaWorker } from "../../scripts/build-pwa-worker.mjs";
+import { build } from "vite";
 
 const source = resolve("dist");
 const temporary = await mkdtemp(join(tmpdir(), "mhw-generated-worker-"));
+// Exercise the real React notice and client against the compiled worker, without
+// executing financial routes or shipping proof controls in the application.
+const uiDirectory = join(temporary, "update-ui");
+await build({
+  configFile: false,
+  envFile: false,
+  publicDir: false,
+  logLevel: "silent",
+  define: { "process.env.NODE_ENV": JSON.stringify("production") },
+  build: {
+    outDir: uiDirectory,
+    lib: {
+      entry: resolve("test/pwa-build/update-page.jsx"),
+      name: "PwaUpdateProof",
+      formats: ["iife"],
+      fileName: () => "updates.js",
+      cssFileName: "updates",
+    },
+    sourcemap: false,
+    minify: true,
+  },
+});
+const updateScript = await readFile(join(uiDirectory, "updates.js"));
+const updateStyle = await readFile(join(uiDirectory, "updates.css"));
 const versions = {};
 const bodies = new Map();
 const publish = async (name, directory, metadata, probe) => {
@@ -89,18 +114,33 @@ const server = createServer(async (req, res) => {
       )
     );
   }
+  if (url.pathname === "/__proof/updates.js")
+    return send(200, "text/javascript", updateScript);
+  if (url.pathname === "/__proof/updates.css")
+    return send(200, "text/css", updateStyle);
+  if (url.pathname === "/updates")
+    return send(
+      200,
+      "text/html",
+      '<!doctype html><html lang="fr"><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>Preuve des mises à jour PWA</title><link rel="stylesheet" href="/__proof/updates.css"><style>body{margin:0;background:var(--ds-color-background-canvas);color:var(--ds-color-text-primary);font:1rem/1.6 system-ui}h1{font-size:1.5rem;margin:1rem}</style><script defer src="/__proof/updates.js"></script></head><body><h1>Preuve des mises à jour</h1><div id="updates"></div></body></html>',
+      "private, no-store"
+    );
   if (url.pathname === "/__proof/stage" && req.method === "POST") {
     let body = "";
     for await (const chunk of req) {
       body += chunk;
       if (body.length > 64) break;
     }
-    if (!Object.hasOwn(versions, body) && body !== "broken")
+    if (
+      !Object.hasOwn(versions, body) &&
+      !["broken", "broken-C"].includes(body)
+    )
       return send(400, "text/plain", "Invalid proof stage");
     stage = body;
     return send(200, "text/plain", "ok");
   }
-  const version = versions[stage === "broken" ? "B" : stage];
+  const broken = stage === "broken" ? "B" : stage === "broken-C" ? "C" : null;
+  const version = versions[broken || stage];
   if (url.pathname === "/sw.js")
     return send(200, "text/javascript", version.worker);
   if (url.pathname === "/pwa-build.json") {
@@ -108,7 +148,7 @@ const server = createServer(async (req, res) => {
     return send(200, "application/json", JSON.stringify(publicMetadata));
   }
   if (bodies.has(url.pathname)) {
-    if (stage === "broken" && url.pathname === versions.B.probe)
+    if (broken && url.pathname === version.probe)
       return send(503, "text/plain", "Synthetic asset failure");
     return send(
       200,

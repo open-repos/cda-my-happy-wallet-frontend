@@ -8,6 +8,7 @@ import { Provider } from "react-redux";
 import "./assets/icons/fontawesome";
 import { setUpInterceptors } from "./utils/axiosHelper.js";
 import { initializeTheme } from "./js/design/theme.js";
+import { PwaUpdates } from "./js/pwa/PwaUpdates.jsx";
 
 setUpInterceptors(store);
 initializeTheme();
@@ -16,6 +17,7 @@ createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <Provider store={store}>
       <BrowserRouter>
+        <PwaUpdates />
         <App />
       </BrowserRouter>
     </Provider>
