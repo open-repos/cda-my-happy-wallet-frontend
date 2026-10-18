@@ -227,7 +227,7 @@ test("keeps real API sessions and owners out of HTTP and worker caches", async (
     title: marker,
     amount: "12.34",
     currency: "EUR",
-    type: "DEPENSE",
+    kind: "DEPENSE",
     operationDate: new Date().toISOString().slice(0, 10),
     categoryId: categories.id,
   };
