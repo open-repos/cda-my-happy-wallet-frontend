@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { LiveMessage } from "../components/LiveMessage";
 import addIcon from "../../assets/icons/add.svg";
 import { OneOffOperationForm } from "../components/OneOffOperations/OneOffOperationForm";
 import { OneOffOperationList } from "../components/OneOffOperations/OneOffOperationList";
@@ -59,22 +60,16 @@ function ListeOperations() {
           Ajouter une opération
         </button>
       </header>
-      {state.message && (
-        <p
-          className={`one-off-message ${
-            state.status === "error" || state.mutationStatus === "error"
-              ? "one-off-message--error"
-              : ""
-          }`}
-          role={
-            state.status === "error" || state.mutationStatus === "error"
-              ? "alert"
-              : "status"
-          }
-        >
-          {state.message}
-        </p>
-      )}
+      <LiveMessage
+        message={state.message}
+        isError={
+          state.status === "error" ||
+          state.mutationStatus === "error" ||
+          state.pageStatus === "error"
+        }
+        className="one-off-message"
+        errorClassName="one-off-message--error"
+      />
       {state.status === "loading" && (
         <section className="one-off-state" aria-live="polite">
           <span className="one-off-loader" aria-hidden="true" />

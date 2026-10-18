@@ -47,6 +47,26 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("Categories page", () => {
+  it("announces the page message in a live region mounted beforehand", () => {
+    const { rerender } = renderPage();
+    const status = screen.getByRole("status");
+    expect(status).toBeEmptyDOMElement();
+
+    useCategories.mockReturnValue({
+      ...successfulState,
+      mutationStatus: "success",
+      message: "Catégorie ajoutée.",
+    });
+    rerender(
+      <MemoryRouter>
+        <Categories />
+      </MemoryRouter>
+    );
+    // Même région, déjà observée par le lecteur d'écran (#151).
+    expect(screen.getByRole("status")).toBe(status);
+    expect(status).toHaveTextContent("Catégorie ajoutée.");
+  });
+
   it("lists every category with its color or a neutral dot", () => {
     renderPage();
     expect(

@@ -100,6 +100,10 @@ coque, sur chaque page protégée et dans les deux thèmes.
   niveau de contraste retenu par l'audit d'accessibilité ;
 - le focus reste visible dans chaque thème ;
 - une information ne dépend jamais uniquement de la couleur ;
+- un message de page après une action (succès ou erreur) passe par le
+  composant Web `LiveMessage` : ses régions `role=status` et `role=alert`
+  restent montées, hors du flux, et reçoivent le texte ; une région montée en
+  même temps que son texte n'est pas toujours annoncée (#151) ;
 - le zoom, les préférences de réduction des animations et les tailles de texte
   restent utilisables ;
 - les tokens générés sont déterministes et couverts par des tests ;
