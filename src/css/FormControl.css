@@ -21,15 +21,17 @@
   margin-inline: auto;
 }
 
-thead,
-tbody,
-tr {
+/* Limité au tableau des charges fixes : en global, ces règles assombrissaient
+   et déformaient les autres tableaux (opérations, analyses), #146. */
+.table-opfixe thead,
+.table-opfixe tbody,
+.table-opfixe tr {
   display: table;
   width: 100%;
   table-layout: fixed;
 }
 
-tbody {
+.table-opfixe tbody {
   display: block;
   overflow: auto;
   table-layout: fixed;
