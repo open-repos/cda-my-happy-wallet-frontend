@@ -62,6 +62,11 @@ aucun SSR, loader serveur ou nouveau protocole d'authentification n'est introdui
   pas les dépendances propres à Expo, les services backend ou la configuration
   de production.
 
+La migration rend explicite le transfert du focus du lien « Aller au contenu
+principal ». Son activation évite une transition de hash qui pouvait remonter
+un formulaire et perdre le focus avec le nouveau routeur ; les six scénarios
+clavier des formulaires publics et le test du lien protègent ce comportement.
+
 ## Vérification et livraison
 
 ```bash
