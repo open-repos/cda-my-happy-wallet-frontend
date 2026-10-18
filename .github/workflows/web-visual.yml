@@ -1,0 +1,41 @@
+name: Web visual regression
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-visual-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  visual:
+    name: Web responsive and visual checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:visual
+      - name: Run responsive and navigation scenarios
+        run: npm run test:e2e
+      - name: Preserve synthetic visual references and differences
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-visual-evidence
+          path: |
+            test/visual/snapshots/
+            test-results/web-visual/
+          retention-days: 3
+          if-no-files-found: ignore

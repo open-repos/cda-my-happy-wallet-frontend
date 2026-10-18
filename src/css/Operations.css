@@ -195,6 +195,21 @@
   border-collapse: collapse;
 }
 
+.one-off-table thead {
+  display: table-header-group;
+}
+
+.one-off-table tr {
+  display: table-row;
+}
+
+.one-off-table tbody {
+  display: table-row-group;
+  max-height: none;
+  overflow: visible;
+  background: var(--ds-color-background-surface);
+}
+
 .one-off-table th,
 .one-off-table td {
   padding: var(--ds-primitive-space-3);
