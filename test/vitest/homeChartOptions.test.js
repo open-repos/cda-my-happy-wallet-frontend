@@ -12,16 +12,32 @@ const tokens = {
   expense: "#cc3300",
   income: "#228844",
   surface: "#ffffff",
+  categories: [
+    "#a10001",
+    "#a10002",
+    "#a10003",
+    "#a10004",
+    "#a10005",
+    "#a10006",
+  ],
   font: "Inter",
   reducedMotion: false,
 };
 
 const rows = [
-  { id: 5, name: "Loisirs", color: null, amount: "60.00", share: 1 },
+  {
+    id: 5,
+    name: "Loisirs",
+    color: null,
+    paletteIndex: 1,
+    amount: "60.00",
+    share: 1,
+  },
   {
     id: 4,
     name: "Alimentation",
     color: "#55AA22",
+    paletteIndex: 0,
     amount: "42.80",
     share: 0.7,
   },
@@ -30,7 +46,7 @@ const rows = [
 const normalize = (text) => text.replace(/\s/g, " ");
 
 describe("expensesChartOption", () => {
-  it("draws horizontal bars, largest first, with token colors as fallback", () => {
+  it("draws horizontal bars, largest first, with palette colors as fallback", () => {
     const option = expensesChartOption(rows, "bar", tokens, "EUR");
 
     expect(option.yAxis).toMatchObject({
@@ -40,7 +56,8 @@ describe("expensesChartOption", () => {
     });
     expect(option.series[0].type).toBe("bar");
     expect(option.series[0].data).toEqual([
-      { name: "Loisirs", value: 60, itemStyle: { color: "#cc3300" } },
+      // Sans couleur propre : la palette du thème, au rang de la catégorie (#172).
+      { name: "Loisirs", value: 60, itemStyle: { color: "#a10002" } },
       { name: "Alimentation", value: 42.8, itemStyle: { color: "#55AA22" } },
     ]);
     expect(normalize(option.series[0].label.formatter({ value: 42.8 }))).toBe(
@@ -67,9 +84,9 @@ describe("expensesChartOption", () => {
     const image = decodeURIComponent(rich.icon1.backgroundColor.image);
     expect(image).toContain('fill="#55AA22"');
     expect(image).toContain('d="M2 2"');
-    // Sans couleur : l'icône prend la couleur de dépense, comme sa barre.
+    // Sans couleur : l'icône prend la couleur de palette de sa barre.
     expect(decodeURIComponent(rich.icon0.backgroundColor.image)).toContain(
-      'fill="#cc3300"'
+      'fill="#a10002"'
     );
 
     const pie = expensesChartOption(withIcons, "pie", tokens, "EUR", icons);
@@ -80,6 +97,45 @@ describe("expensesChartOption", () => {
     // Icône absente ou pas encore chargée : rendu actuel sans image.
     const plain = expensesChartOption(rows, "bar", tokens, "EUR", icons);
     expect(plain.yAxis.axisLabel.formatter("Loisirs", 0)).toBe("Loisirs");
+  });
+
+  it("wraps the palette and falls back to the expense color without tokens", () => {
+    const wrapped = expensesChartOption(
+      [{ ...rows[0], paletteIndex: 7 }],
+      "bar",
+      tokens,
+      "EUR"
+    );
+    expect(wrapped.series[0].data[0].itemStyle.color).toBe("#a10002");
+    const bare = expensesChartOption(
+      rows,
+      "bar",
+      { ...tokens, categories: [] },
+      "EUR"
+    );
+    expect(bare.series[0].data[0].itemStyle.color).toBe("#cc3300");
+  });
+
+  it("fits the label column without the deprecated containLabel (#154)", () => {
+    const option = expensesChartOption(
+      [{ ...rows[0], name: "Abonnements et services numériques" }],
+      "bar",
+      tokens,
+      "EUR"
+    );
+    expect(option.grid).not.toHaveProperty("containLabel");
+    expect(option.grid).toMatchObject({
+      outerBoundsMode: "same",
+      outerBoundsContain: "axisLabel",
+    });
+    expect(option.yAxis.axisLabel.formatter(option.yAxis.data[0], 0)).toBe(
+      "Abonnements et…"
+    );
+    // Graduations espacées sur un écran étroit.
+    expect(option.xAxis).toMatchObject({
+      splitNumber: 3,
+      axisLabel: { hideOverlap: true },
+    });
   });
 
   it("switches to a donut pie without axes", () => {

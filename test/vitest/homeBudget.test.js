@@ -100,6 +100,7 @@ describe("expensesByCategory", () => {
         name: "Loisirs",
         color: null,
         icon: null,
+        paletteIndex: 0,
         amount: "60.00",
         share: 1,
       },
@@ -108,10 +109,36 @@ describe("expensesByCategory", () => {
         name: "Alimentation",
         color: "#55AA22",
         icon: "solid:utensils",
+        paletteIndex: 1,
         amount: "42.80",
         share: 4280 / 6000,
       },
     ]);
+  });
+
+  it("ranks categories by id for a stable palette color (#172)", () => {
+    const expense = (categoryId, amount) => ({
+      type: "DEPENSE",
+      amount,
+      categoryId,
+      currency: "EUR",
+    });
+    const ranks = (operations) =>
+      Object.fromEntries(
+        expensesByCategory(operations, categories, "EUR").map((row) => [
+          row.id,
+          row.paletteIndex,
+        ])
+      );
+    // Seule « Loisirs » est sans couleur : premier rang de la palette. Les
+    // catégories colorées ou inconnues viennent après.
+    expect(
+      ranks([expense(5, "1.00"), expense(4, "9.00"), expense(9, "2.00")])
+    ).toEqual({ 5: 0, 4: 1, 9: 1 });
+    expect(ranks([expense(5, "90.00"), expense(4, "1.00")])).toEqual({
+      5: 0,
+      4: 1,
+    });
   });
 
   it("names an unknown category explicitly", () => {

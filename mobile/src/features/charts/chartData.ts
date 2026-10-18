@@ -19,6 +19,8 @@ export interface ChartRow {
   /** Icône Font Awesome de la catégorie (#132), affichée dans la liste. */
   icon: string | null;
   color: string | null;
+  /** Rang parmi les catégories sans couleur : couleur de palette stable (#172). */
+  paletteIndex: number;
 }
 export const expenseRows = (
   operations: OneOffOperation[],
@@ -32,6 +34,15 @@ export const expenseRows = (
         (totals.get(op.categoryId) ?? 0) + toCents(op.amount),
       );
   }
+  // Rang par identifiant parmi les catégories sans couleur propre : la
+  // palette commence pour elles à sa première couleur, et le rang ne dépend
+  // pas des montants (#172).
+  const ranks = new Map(
+    categories
+      .filter((c) => c.color == null)
+      .sort((a, b) => a.id - b.id)
+      .map((c, i) => [c.id, i]),
+  );
   // Ordre stable entre deux montants égaux, comme sur le Web.
   return [...totals]
     .map(([id, cents]) => {
@@ -44,6 +55,7 @@ export const expenseRows = (
         label: `${name} : ${money(cents, "EUR")}`,
         icon: category?.icon ?? null,
         color: category?.color ?? null,
+        paletteIndex: ranks.get(id) ?? ranks.size,
       };
     })
     .sort((a, b) => b.cents - a.cents || a.categoryId - b.categoryId);

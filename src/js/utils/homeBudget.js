@@ -1,3 +1,5 @@
+import { paletteIndexOf, paletteRanks } from "./categoryPalette";
+
 /**
  * Calculs d'affichage de l'accueil. Les montants API sont des chaînes
  * décimales à deux chiffres : tout calcul se fait en centimes entiers.
@@ -58,12 +60,14 @@ export const expensesByCategory = (operations, categories, currency) => {
       );
     });
   const byId = new Map(categories.map((category) => [category.id, category]));
+  const ranks = paletteRanks(categories);
   const rows = [...totals.entries()]
     .map(([id, cents]) => ({
       id,
       name: byId.get(id)?.name ?? "Autre catégorie",
       color: byId.get(id)?.color ?? null,
       icon: byId.get(id)?.icon ?? null,
+      paletteIndex: paletteIndexOf(ranks, id),
       cents,
     }))
     .sort((left, right) => right.cents - left.cents || left.id - right.id);
