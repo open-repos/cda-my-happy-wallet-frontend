@@ -131,6 +131,16 @@ test("runs the generated worker through private reads, offline/reconnect, update
   expect(offline.status()).toBe(
     versions.A.assets.includes("/offline.html") ? 200 : 503
   );
+  if (versions.A.assets.includes("/offline.html")) {
+    await expect(
+      page.getByRole("heading", { name: "Vous êtes hors ligne", level: 1 })
+    ).toBeVisible();
+    await page.getByRole("link", { name: "Réessayer", exact: true }).click();
+    await expect(page).toHaveURL("/");
+    await expect(
+      page.getByRole("heading", { name: "Vous êtes hors ligne", level: 1 })
+    ).toBeVisible();
+  }
   await expect(page.locator("body")).not.toContainText(
     "synthetic-private-generated"
   );
