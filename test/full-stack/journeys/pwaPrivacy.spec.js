@@ -79,7 +79,7 @@ const login = async (page, email) => {
   await assertResponse(await authenticated, 200);
   await expect(page).toHaveURL(/\/home$/);
   await expect(
-    page.getByRole("article", { name: "Reste réel", exact: true })
+    page.getByRole("heading", { name: "Reste à vivre du mois", exact: true })
   ).toBeVisible();
 };
 const navigateOperations = async (page) => {
@@ -280,7 +280,7 @@ test("keeps real API sessions and owners out of HTTP and worker caches", async (
   // the existing session journey. The API and cookie rotation remain real.
   await page.goto("/home");
   await expect(
-    page.getByRole("article", { name: "Reste réel", exact: true })
+    page.getByRole("heading", { name: "Reste à vivre du mois", exact: true })
   ).toBeVisible();
   await page.clock.setFixedTime(new Date((exp + 1) * 1000));
   const renewed = page.waitForResponse(
