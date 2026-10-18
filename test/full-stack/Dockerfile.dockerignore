@@ -18,3 +18,5 @@ test-results
 **/*.log
 
 **/dist-visual
+
+**/.mhw-e2e-project.env

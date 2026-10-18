@@ -3,6 +3,7 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { appendFileSync } from "node:fs";
+import { writeProjectFile } from "./gitlab-e2e-runner.mjs";
 
 const cleanup = ["down", "--volumes", "--remove-orphans", "--timeout", "10"];
 
@@ -76,6 +77,7 @@ async function main() {
     appendFileSync(process.env.GITHUB_OUTPUT, `project=${project}\n`);
   }
   const root = fileURLToPath(new URL("../", import.meta.url));
+  if (process.env.GITLAB_CI === "true") writeProjectFile(root, project);
   const prefix = [
     "compose",
     "--project-name",

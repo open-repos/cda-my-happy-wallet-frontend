@@ -12,6 +12,10 @@ precedente si le marqueur public `deployment-sha.txt` ne correspond pas au SHA
 attendu. Les cinq releases les plus recentes et la release active sont
 conservees.
 
+Le job E2E facultatif et son runner dédié sont décrits dans
+[gitlab-e2e.md](gitlab-e2e.md). Sa première exécution GitLab reste un contrôle
+externe distinct des validations GitHub.
+
 ## Variables GitLab
 
 Configurer ces variables avec la portee d'environnement `production` et
