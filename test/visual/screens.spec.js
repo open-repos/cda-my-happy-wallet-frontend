@@ -89,6 +89,49 @@ for (const theme of ["light", "dark"]) {
         await expect(page.locator("main canvas").first()).toBeVisible();
       if (definition.name === "events-goals")
         await expect(page.getByText("Vélo", { exact: true })).toBeVisible();
+      if (definition.name === "operations") {
+        const ratio = await page
+          .locator(".one-off-table tbody th")
+          .first()
+          .evaluate((cell) => {
+            const rgb = (value) =>
+              value
+                .match(/[\d.]+/g)
+                .slice(0, 3)
+                .map(Number);
+            const light = (color) =>
+              rgb(color)
+                .map((n) => n / 255)
+                .map((n) =>
+                  n <= 0.04045 ? n / 12.92 : ((n + 0.055) / 1.055) ** 2.4
+                )
+                .reduce(
+                  (sum, n, i) => sum + n * [0.2126, 0.7152, 0.0722][i],
+                  0
+                );
+            const [high, low] = [
+              light(getComputedStyle(cell).color),
+              light(getComputedStyle(cell.closest("tbody")).backgroundColor),
+            ].sort((a, b) => b - a);
+            return (high + 0.05) / (low + 0.05);
+          });
+        expect(ratio).toBeGreaterThanOrEqual(4.5);
+        if (page.viewportSize().width >= 768) {
+          const alignment = await page
+            .locator(".one-off-table")
+            .evaluate((table) => {
+              const headers = [...table.querySelectorAll("thead th")];
+              const cells = [...table.querySelector("tbody tr").children];
+              return headers.map((header, i) =>
+                Math.abs(
+                  header.getBoundingClientRect().left -
+                    cells[i].getBoundingClientRect().left
+                )
+              );
+            });
+          for (const offset of alignment) expect(offset).toBeLessThan(2);
+        }
+      }
       await layout(page);
       await expect(page).toHaveScreenshot(`${definition.name}-${theme}.png`, {
         fullPage: true,

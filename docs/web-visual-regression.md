@@ -28,6 +28,12 @@ mêmes fixtures que les références visuelles. Les tests d'accessibilité et la
 stack E2E réelle restent décrits dans [web-accessibility.md](web-accessibility.md)
 et [web-e2e-stack.md](web-e2e-stack.md).
 
+La relecture initiale a révélé un fond sombre hérité de `FormControl.css` dans
+le tableau des opérations en thème clair. La règle locale utilise maintenant
+la surface du thème et neutralise les blocs de tableau hérités qui désalignaient
+les en-têtes et données sur tablette/bureau ; le texte du tableau doit dépasser 4,5:1 de contraste
+mesuré sur ses styles calculés avant toute capture.
+
 ## Reproduire une comparaison
 
 ```bash
