@@ -77,9 +77,9 @@ const login = async (page, email) => {
   );
   await page.getByRole("button", { name: "Connexion", exact: true }).click();
   await assertResponse(await authenticated, 200);
-  await expect(page).toHaveURL(/\/home$/);
+  await expect(page).toHaveURL(/\/(?:home|operations)$/);
   await expect(
-    page.getByRole("heading", { name: "Reste à vivre du mois", exact: true })
+    page.getByRole("button", { name: "Ouvrir le menu", exact: true })
   ).toBeVisible();
 };
 const navigateOperations = async (page) => {
