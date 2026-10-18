@@ -6,11 +6,15 @@ import {
   Alert,
   FlatList,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+// Barre d'état Android comme encoche iOS : le `SafeAreaView` de React Native
+// n'agit que sur iOS (#147).
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { TAB_SCREEN_EDGES } from "@/src/design/safeArea";
 
 import { primitives, semantic, themes } from "@/src/design/tokens";
 import { FeedbackBanner, FeedbackState } from "@/src/design/FeedbackState";
@@ -82,7 +86,7 @@ export const OperationsScreen = () => {
 
   if (state.status === "loading") {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
         <View style={styles.centeredState}>
           <FeedbackState
             description="Vos entrées et dépenses sont en cours de chargement."
@@ -95,7 +99,7 @@ export const OperationsScreen = () => {
   }
   if (state.status === "error") {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
         <View style={styles.centeredState}>
           <FeedbackState
             actions={[
@@ -111,7 +115,7 @@ export const OperationsScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
       <FlatList
         contentContainerStyle={[
           styles.content,

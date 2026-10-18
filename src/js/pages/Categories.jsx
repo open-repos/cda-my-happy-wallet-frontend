@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { LiveMessage } from "../components/LiveMessage";
 import addIcon from "../../assets/icons/add.svg";
 import { CategoryForm } from "../components/Categories/CategoryForm";
 import { CategoryMark } from "../components/Categories/CategoryLabel";
@@ -84,16 +85,12 @@ function Categories() {
           Ajouter une catégorie
         </button>
       </header>
-      {state.message && (
-        <p
-          className={`one-off-message ${
-            isError ? "one-off-message--error" : ""
-          }`}
-          role={isError ? "alert" : "status"}
-        >
-          {state.message}
-        </p>
-      )}
+      <LiveMessage
+        message={state.message}
+        isError={isError}
+        className="one-off-message"
+        errorClassName="one-off-message--error"
+      />
       {isFormOpen && (
         <CategoryForm
           key={editedCategory?.id || "new"}
@@ -104,8 +101,13 @@ function Categories() {
           onDelete={remove}
         />
       )}
+      {/* Chargement annoncé par une région live toujours montée (#164). */}
+      <LiveMessage
+        message={state.status === "loading" ? "Chargement des catégories…" : ""}
+        visible={false}
+      />
       {state.status === "loading" && (
-        <section className="one-off-state" aria-live="polite">
+        <section className="one-off-state">
           <span className="one-off-loader" aria-hidden="true" />
           <h2>Chargement des catégories…</h2>
         </section>

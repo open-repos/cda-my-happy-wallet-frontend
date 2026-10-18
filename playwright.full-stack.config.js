@@ -37,7 +37,7 @@ export default defineConfig({
   ],
   webServer: {
     command:
-      "npx vite build --config test/full-stack/vite.config.mjs && npx vite preview --config test/full-stack/vite.config.mjs",
+      "npx vite build --config test/full-stack/vite.config.mjs && node test/full-stack/build-pwa.mjs && npx vite preview --config test/full-stack/vite.config.mjs",
     url: "http://127.0.0.1:4175/login",
     reuseExistingServer: false,
     timeout: 120_000,

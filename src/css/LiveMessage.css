@@ -1,0 +1,14 @@
+/* Régions live toujours montées (#151) : visuellement masquées et hors du
+   flux, elles n'ajoutent aucun écart dans les mises en page en grille ou en
+   flex. */
+.live-message__region {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

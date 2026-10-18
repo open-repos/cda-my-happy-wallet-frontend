@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Calendrier from "../../src/js/pages/Calendrier";
 import { useBudgetCalendar } from "../../src/js/hooks/useBudgetCalendar";
 import { useMonthlyEvents } from "../../src/js/hooks/useMonthlyEvents";
+import { captureLiveRegions, expectAnnouncedIn } from "./liveRegions";
 
 vi.mock("../../src/js/hooks/useBudgetCalendar", () => ({
   useBudgetCalendar: vi.fn(),
@@ -170,9 +171,14 @@ describe("budget calendar page", () => {
       screen.getByRole("heading", { name: /^Bilan d/ })
     ).toBeInTheDocument();
     expect(screen.getByText("Positif")).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent(
-      /Bilan corrigé le 11 octobre 2026/
-    );
+    // Plusieurs régions de statut : la page garde aussi sa région live (#151).
+    expect(
+      screen
+        .getAllByRole("status")
+        .some((element) =>
+          /Bilan corrigé le 11 octobre 2026/.test(element.textContent)
+        )
+    ).toBe(true);
     expect(
       screen.getByText(/1 événement de ce mois n’a pas été traité/)
     ).toBeInTheDocument();
@@ -220,6 +226,33 @@ describe("budget calendar page", () => {
       return svg;
     });
     expect(icon).toHaveStyle({ color: "#275DAD" });
+  });
+
+  it("announces the summary and operations in live regions mounted beforehand (#164)", async () => {
+    const { rerender } = render(<Calendrier />);
+    const captured = captureLiveRegions();
+
+    useBudgetCalendar.mockReturnValue(
+      state({ summaryStatus: "loading", operationsStatus: "loading" })
+    );
+    rerender(<Calendrier />);
+    await expectAnnouncedIn(captured, "status", "Calcul de votre budget…");
+    await expectAnnouncedIn(captured, "status", "Chargement des opérations…");
+
+    useBudgetCalendar.mockReturnValue(
+      state({ summaryStatus: "error", operationsStatus: "error" })
+    );
+    rerender(<Calendrier />);
+    await expectAnnouncedIn(
+      captured,
+      "alert",
+      "Votre budget n’a pas pu être calculé."
+    );
+    await expectAnnouncedIn(
+      captured,
+      "alert",
+      "Les opérations n’ont pas pu être chargées."
+    );
   });
 
   it("filters the list by day and returns to the whole month", () => {

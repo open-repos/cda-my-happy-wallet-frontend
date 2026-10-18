@@ -3,6 +3,7 @@ import addIcon from "../../../assets/icons/add.svg";
 import { useFinancialGoals } from "../../hooks/useFinancialGoals";
 import { FinancialGoalCard } from "./FinancialGoalCard";
 import { FinancialGoalForm } from "./FinancialGoalForm";
+import { LiveMessage } from "../LiveMessage";
 import "../../../css/FinancialGoals.css";
 
 /** Section « Objectifs financiers » : liste, états et formulaire. */
@@ -60,24 +61,19 @@ export const FinancialGoalsSection = () => {
           </button>
         )}
       </header>
-      {state.message && (
-        <p
-          className={`monthly-events-message ${
-            state.status === "error" || state.mutationStatus === "error"
-              ? "monthly-events-message--error"
-              : ""
-          }`}
-          role={
-            state.status === "error" || state.mutationStatus === "error"
-              ? "alert"
-              : "status"
-          }
-        >
-          {state.message}
-        </p>
-      )}
+      <LiveMessage
+        message={state.message}
+        isError={state.status === "error" || state.mutationStatus === "error"}
+        className="monthly-events-message"
+        errorClassName="monthly-events-message--error"
+      />
+      {/* Chargement annoncé par une région live toujours montée (#164). */}
+      <LiveMessage
+        message={state.status === "loading" ? "Chargement des objectifs…" : ""}
+        visible={false}
+      />
       {state.status === "loading" && (
-        <div className="monthly-events-state" aria-live="polite">
+        <div className="monthly-events-state">
           <span className="monthly-events-loader" aria-hidden="true" />
           <h3>Chargement des objectifs…</h3>
         </div>

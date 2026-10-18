@@ -11,6 +11,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { TAB_SCREEN_EDGES } from "@/src/design/safeArea";
+
 import { semantic, themes } from "@/src/design/tokens";
 import { FeedbackBanner, FeedbackState } from "@/src/design/FeedbackState";
 import { useAuth } from "@/src/features/auth/presentation/AuthProvider";
@@ -111,7 +113,7 @@ export const BudgetCalendarScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.heading}>
           <Text style={styles.eyebrow}>BUDGET</Text>
@@ -170,7 +172,7 @@ export const BudgetCalendarScreen = () => {
             return (
               <Pressable
                 accessibilityRole="radio"
-                accessibilityState={{ checked }}
+                aria-checked={checked}
                 key={option.value}
                 onPress={() => setMode(option.value)}
                 style={[styles.mode, checked && styles.modeActive]}

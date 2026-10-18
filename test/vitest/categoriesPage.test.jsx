@@ -11,6 +11,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Categories from "../../src/js/pages/Categories";
 import { useCategories } from "../../src/js/hooks/useCategories";
+import { captureLiveRegions, expectAnnouncedIn } from "./liveRegions";
 
 vi.mock("../../src/js/hooks/useCategories", () => ({
   useCategories: vi.fn(),
@@ -47,6 +48,51 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("Categories page", () => {
+  it("announces the page message in a live region mounted beforehand", async () => {
+    const { rerender } = renderPage();
+    const captured = captureLiveRegions();
+
+    useCategories.mockReturnValue({
+      ...successfulState,
+      mutationStatus: "success",
+      message: "Catégorie ajoutée.",
+    });
+    rerender(
+      <MemoryRouter>
+        <Categories />
+      </MemoryRouter>
+    );
+    // Même région, déjà observée par le lecteur d'écran (#151).
+    await expectAnnouncedIn(captured, "status", "Catégorie ajoutée.");
+  });
+
+  it("announces loading and failure in regions mounted beforehand (#164)", async () => {
+    const { rerender } = renderPage();
+    const captured = captureLiveRegions();
+    const rerenderPage = () =>
+      rerender(
+        <MemoryRouter>
+          <Categories />
+        </MemoryRouter>
+      );
+
+    useCategories.mockReturnValue({ ...successfulState, status: "loading" });
+    rerenderPage();
+    await expectAnnouncedIn(captured, "status", "Chargement des catégories…");
+
+    useCategories.mockReturnValue({
+      ...successfulState,
+      status: "error",
+      message: "Impossible de charger vos catégories.",
+    });
+    rerenderPage();
+    await expectAnnouncedIn(
+      captured,
+      "alert",
+      "Impossible de charger vos catégories."
+    );
+  });
+
   it("lists every category with its color or a neutral dot", () => {
     renderPage();
     expect(
@@ -64,7 +110,9 @@ describe("Categories page", () => {
   it("renders loading, empty and recoverable error states", () => {
     useCategories.mockReturnValue({ ...successfulState, status: "loading" });
     const { rerender } = renderPage();
-    expect(screen.getByText("Chargement des catégories…")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Chargement des catégories…" })
+    ).toBeInTheDocument();
 
     useCategories.mockReturnValue({ ...successfulState, categories: [] });
     rerender(
@@ -84,9 +132,10 @@ describe("Categories page", () => {
         <Categories />
       </MemoryRouter>
     );
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      "Impossible de charger vos catégories."
-    );
+    // Message visible immédiat; son annonce est testée à part (#164).
+    expect(
+      screen.getByText("Impossible de charger vos catégories.")
+    ).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Réessayer" }));
     expect(actions.retry).toHaveBeenCalledTimes(1);
   });

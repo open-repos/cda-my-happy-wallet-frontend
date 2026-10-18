@@ -161,13 +161,36 @@ const SlickBar = styled.ul`
   align-items: center;
   background-color: var(--ds-color-background-sidebar);
 
-  /* Espacements bornés par la hauteur : six entrées tiennent au-dessus du
-     profil dès 720 px de haut. */
+  /* Espacements bornés par la hauteur au-delà de 740px de haut (en dessous,
+     voir la media query plus bas). */
   padding: clamp(1rem, 3vh, 2rem) 0;
 
   position: absolute;
   top: 6rem;
   left: 0;
+
+  /* Écran bas (#150) : espacements resserrés pour que les six entrées
+     tiennent, et liste bornée au-dessus du profil (6rem de haut de liste,
+     3rem de profil, 1rem de padding de la nav, 0,5rem d'écart : à ajuster
+     avec eux), qui ne défile qu'en dernier recours. La marge horizontale de
+     4px garde l'anneau de focus (2px + 2px de décalage) dans la zone
+     défilante, qui rogne ce qui la dépasse. Au-delà de 740px de haut, rien
+     ne défile : anneau et barre active restent intacts. */
+  @media (max-height: 740px) {
+    max-height: calc(100% - 10.5rem);
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    padding: 0.5rem 4px;
+    /* Sans arrondi : il rognerait le coin de l'anneau du premier et du
+       dernier lien. Replié, la nav derrière garde ses propres coins. */
+    border-radius: 0;
+
+    & > a {
+      padding-top: 0.4rem;
+      padding-bottom: 0.4rem;
+    }
+  }
 
   width: ${(props) => (props.clicked ? "12rem" : "3.5rem")};
   transition: all 0.5s ease;

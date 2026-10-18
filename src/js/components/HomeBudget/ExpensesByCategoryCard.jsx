@@ -9,7 +9,7 @@ import {
 } from "../charts/homeChartOptions";
 import { useChartTokens } from "../charts/useChartTokens";
 import { useCategoryIconPack } from "../Categories/categoryIconPack";
-import { SectionState } from "./SectionState";
+import { SectionAnnouncement, SectionState } from "./SectionState";
 
 const ChartTypeToggle = ({ type, onChange }) => (
   <fieldset className="budget-mode__group home-budget__chart-types">
@@ -66,15 +66,20 @@ const ExpensesChart = ({ rows, currency }) => {
   );
 };
 
+const TEXTS = {
+  loadingText: "Chargement des dépenses…",
+  errorText: "Les dépenses du mois n’ont pas pu être chargées.",
+};
+
 /** Dépenses réelles du mois par catégorie, en barres ou en secteurs (ECharts). */
 export const ExpensesByCategoryCard = ({ section, currency }) => (
   <article className="home-budget__card" aria-labelledby="home-expenses-title">
     <h2 id="home-expenses-title">Mes dépenses du mois par catégories</h2>
+    <SectionAnnouncement status={section.status} {...TEXTS} />
     {section.status !== "success" ? (
       <SectionState
         status={section.status}
-        loadingText="Chargement des dépenses…"
-        errorText="Les dépenses du mois n’ont pas pu être chargées."
+        {...TEXTS}
         onRetry={section.reload}
       />
     ) : section.data.length === 0 ? (

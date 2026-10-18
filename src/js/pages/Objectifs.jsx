@@ -4,6 +4,7 @@ import { FinancialGoalsSection } from "../components/FinancialGoals/FinancialGoa
 import { MonthlyEventForm } from "../components/MonthlyEvents/MonthlyEventForm";
 import { MonthlyEventList } from "../components/MonthlyEvents/MonthlyEventList";
 import { useMonthlyEvents } from "../hooks/useMonthlyEvents";
+import { LiveMessage } from "../components/LiveMessage";
 import "../../css/MonthlyEvents.css";
 
 const currentMonth = () => new Date().toISOString().slice(0, 7);
@@ -53,24 +54,19 @@ function Objectifs() {
           Ajouter un événement
         </button>
       </header>
-      {state.message && (
-        <p
-          className={`monthly-events-message ${
-            state.status === "error" || state.mutationStatus === "error"
-              ? "monthly-events-message--error"
-              : ""
-          }`}
-          role={
-            state.status === "error" || state.mutationStatus === "error"
-              ? "alert"
-              : "status"
-          }
-        >
-          {state.message}
-        </p>
-      )}
+      <LiveMessage
+        message={state.message}
+        isError={state.status === "error" || state.mutationStatus === "error"}
+        className="monthly-events-message"
+        errorClassName="monthly-events-message--error"
+      />
+      {/* Chargement annoncé par une région live toujours montée (#164). */}
+      <LiveMessage
+        message={state.status === "loading" ? "Chargement des événements…" : ""}
+        visible={false}
+      />
       {state.status === "loading" && (
-        <section className="monthly-events-state" aria-live="polite">
+        <section className="monthly-events-state">
           <span className="monthly-events-loader" aria-hidden="true" />
           <h2>Chargement des événements…</h2>
         </section>

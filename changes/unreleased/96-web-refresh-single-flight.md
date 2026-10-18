@@ -1,7 +1,7 @@
-## Fixed
+---
+type: fixed
+issue: 96
+user: Votre session n'est plus interrompue sans raison quand plusieurs actions se déroulent en même temps.
+---
 
-- Mutualise le renouvellement du jeton Web entre les requêtes concurrentes afin
-  qu'une expiration de session ne provoque plus plusieurs rotations du même
-  refresh token ni une déconnexion injustifiée.
-- Interrompt les requêtes protégées lorsque le renouvellement est refusé, au
-  lieu de les envoyer avec un jeton d'accès expiré.
+Shared one Web token refresh between concurrent requests and stopped sending protected requests with an expired access token when the refresh is refused, so an expired session no longer rotates the same refresh token several times or signs users out unexpectedly.
