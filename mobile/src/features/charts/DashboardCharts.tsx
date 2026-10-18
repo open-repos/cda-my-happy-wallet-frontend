@@ -2,6 +2,8 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { semantic, themes } from "@/src/design/tokens";
+import { fontAwesomeIcon } from "@/src/features/categories/domain/categoryIcons";
+import { CategoryMark } from "@/src/features/categories/presentation/CategoryMark";
 import { ChartGateway } from "./ChartGateway";
 import { NativeChart } from "./NativeChart";
 import { expensesOption, goalsOption } from "./chartOptions";
@@ -55,7 +57,14 @@ export const DashboardCharts = ({ gateway }: { gateway: ChartGateway }) => {
           title: "Dépenses du mois par catégorie",
           section: expenses,
           empty: !expenses.data?.length,
-          labels: expenses.data?.map((r) => r.label) ?? [],
+          labels:
+            expenses.data?.map((r) => ({
+              text: r.label,
+              // Icône de la catégorie devant son montant (#132).
+              mark: fontAwesomeIcon(r.icon)
+                ? { icon: r.icon, color: r.color }
+                : null,
+            })) ?? [],
           option: expenseOption,
           height: Math.max(160, (expenses.data?.length ?? 0) * 40 + 48),
         },
@@ -66,7 +75,7 @@ export const DashboardCharts = ({ gateway }: { gateway: ChartGateway }) => {
           labels: [
             `${goals.data?.percent ?? 0} % de l’épargne visée atteinte`,
             ...(goals.data?.labels ?? []),
-          ],
+          ].map((text) => ({ text, mark: null })),
           option: goalOption,
           height: 200,
         },
@@ -128,11 +137,25 @@ export const DashboardCharts = ({ gateway }: { gateway: ChartGateway }) => {
           ) : (
             <>
               <NativeChart option={option} height={height} />
-              {labels.map((label, index) => (
-                <Text key={index} style={{ color: colors.textPrimary }}>
-                  {label}
-                </Text>
-              ))}
+              {labels.map(({ text, mark }, index) =>
+                mark ? (
+                  <View
+                    key={index}
+                    style={{
+                      alignItems: "center",
+                      flexDirection: "row",
+                      gap: 8,
+                    }}
+                  >
+                    <CategoryMark category={mark} size={18} />
+                    <Text style={{ color: colors.textPrimary }}>{text}</Text>
+                  </View>
+                ) : (
+                  <Text key={index} style={{ color: colors.textPrimary }}>
+                    {text}
+                  </Text>
+                ),
+              )}
             </>
           )}
         </View>

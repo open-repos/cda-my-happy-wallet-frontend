@@ -14,6 +14,8 @@ export interface OperationCategory {
   id: number;
   name: string;
   color: string | null;
+  /** Icône Font Awesome `style:nom` (#84), `null` sans icône. */
+  icon?: string | null;
 }
 
 export interface PaginationMeta {
@@ -95,7 +97,11 @@ export const parseCategory = (value: unknown): OperationCategory => {
     value.name.length < 2 ||
     value.name.length > 50 ||
     (value.color !== null &&
-      (typeof value.color !== "string" || !/^#[0-9A-F]{6}$/i.test(value.color)))
+      (typeof value.color !== "string" ||
+        !/^#[0-9A-F]{6}$/i.test(value.color))) ||
+    (value.icon != null &&
+      (typeof value.icon !== "string" ||
+        !/^(solid|regular):[a-z0-9-]+$/.test(value.icon)))
   ) {
     throw new Error("Invalid category response");
   }
@@ -104,6 +110,7 @@ export const parseCategory = (value: unknown): OperationCategory => {
     id: Number(value.id),
     name: value.name,
     color: value.color,
+    icon: typeof value.icon === "string" ? value.icon : null,
   };
 };
 

@@ -16,6 +16,9 @@ export interface ChartRow {
   name: string;
   cents: number;
   label: string;
+  /** Icône Font Awesome de la catégorie (#132), affichée dans la liste. */
+  icon: string | null;
+  color: string | null;
 }
 export const expenseRows = (
   operations: OneOffOperation[],
@@ -32,13 +35,15 @@ export const expenseRows = (
   // Ordre stable entre deux montants égaux, comme sur le Web.
   return [...totals]
     .map(([id, cents]) => {
-      const name =
-        categories.find((c) => c.id === id)?.name ?? "Autre catégorie";
+      const category = categories.find((c) => c.id === id);
+      const name = category?.name ?? "Autre catégorie";
       return {
         categoryId: id,
         name,
         cents,
         label: `${name} : ${money(cents, "EUR")}`,
+        icon: category?.icon ?? null,
+        color: category?.color ?? null,
       };
     })
     .sort((a, b) => b.cents - a.cents || a.categoryId - b.categoryId);

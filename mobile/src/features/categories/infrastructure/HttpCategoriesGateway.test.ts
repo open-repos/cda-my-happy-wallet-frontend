@@ -22,7 +22,9 @@ describe("HttpCategoriesGateway", () => {
     );
     await expect(
       new HttpCategoriesGateway({ request }).listAll(),
-    ).resolves.toEqual([{ id: 9, name: "Loisirs", color: "#275DAD" }]);
+    ).resolves.toEqual([
+      { id: 9, name: "Loisirs", color: "#275DAD", icon: null },
+    ]);
     expect(request).toHaveBeenCalledWith("/operation-categories?limit=100");
   });
 

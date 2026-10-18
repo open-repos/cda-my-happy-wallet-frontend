@@ -118,10 +118,41 @@ test("manages categories from the operations screen", async ({ page }) => {
   await page.getByLabel("Nom", { exact: true }).fill("Loisirs");
   await page.getByRole("radio", { name: "Bleu" }).click();
   await expect(page.getByRole("radio", { name: "Bleu" })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "Sans icône" })).toBeChecked();
+  await page.getByLabel("Rechercher une icône").fill("cinéma");
+  await page.getByRole("radio", { name: "film (plein)" }).click();
+  await expect(page.getByRole("radio", { name: "film (plein)" })).toBeChecked();
+  await expect(
+    page.getByLabel("Aperçu : Loisirs, icône film (plein)"),
+  ).toBeVisible();
+  const created = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" &&
+      new URL(request.url()).pathname.endsWith("/operation-categories"),
+  );
   await page.getByRole("button", { name: "Enregistrer" }).click();
+  expect((await created).postDataJSON()).toEqual({
+    name: "Loisirs",
+    color: "#275DAD",
+    icon: "solid:film",
+  });
   await expect(page.getByText("Catégorie ajoutée.")).toBeVisible();
 
   // « Alimentation » est utilisée par l'opération de démonstration.
+  // Icône inchangée : le PUT ne transmet pas `icon` (le backend la garde).
+  await page.getByRole("button", { name: "Modifier Alimentation" }).click();
+  const updated = page.waitForRequest(
+    (request) =>
+      request.method() === "PUT" &&
+      new URL(request.url()).pathname.endsWith("/operation-categories/4"),
+  );
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  expect((await updated).postDataJSON()).toEqual({
+    name: "Alimentation",
+    color: "#EA7C69",
+  });
+  await expect(page.getByText("Catégorie modifiée.")).toBeVisible();
+
   await page.getByRole("button", { name: "Modifier Alimentation" }).click();
   await page.getByRole("button", { name: "Supprimer", exact: true }).click();
   await page.getByRole("button", { name: "Oui, supprimer" }).click();

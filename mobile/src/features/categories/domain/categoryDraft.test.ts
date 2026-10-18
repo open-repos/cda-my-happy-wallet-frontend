@@ -44,10 +44,17 @@ describe("category draft", () => {
     ).toEqual({});
   });
 
-  it("sends a normalized name and color, never the icon", () => {
+  it("sends a normalized name and color, and the icon only when chosen", () => {
+    // `icon` absent : le backend conserve l'icône existante.
     expect(
       toCategoryPayload({ name: "  Loisirs ", color: "#a1b2c3" }),
     ).toStrictEqual({ name: "Loisirs", color: "#A1B2C3" });
+    expect(
+      toCategoryPayload({ name: "Loisirs", color: null, icon: "solid:film" }),
+    ).toStrictEqual({ name: "Loisirs", color: null, icon: "solid:film" });
+    expect(
+      toCategoryPayload({ name: "Loisirs", color: null, icon: null }),
+    ).toStrictEqual({ name: "Loisirs", color: null, icon: null });
     expect(toCategoryPayload({ name: "Loisirs", color: "" })).toStrictEqual({
       name: "Loisirs",
       color: null,
@@ -63,6 +70,9 @@ describe("category draft", () => {
     );
     expect(categoryErrorMessage("CATEGORY_NOT_FOUND")).toContain(
       "n’existe plus",
+    );
+    expect(categoryErrorMessage("INVALID_CATEGORY_ICON")).toContain(
+      "n’est plus disponible",
     );
     expect(categoryErrorMessage(null)).toBe(
       "La catégorie n’a pas pu être enregistrée. Réessayez.",

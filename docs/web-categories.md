@@ -65,15 +65,17 @@ relisent les catégories à leur ouverture et reflètent donc les changements.
   « Réessayer » (un `import()` en échec resterait en cache du navigateur).
   Importer les paquets complets aurait fusionné plus de 1 Mo dans le bundle
   principal, où ils sont déjà importés icône par icône.
-- Une icône inchangée n'est pas renvoyée au `PUT` : une icône retirée depuis
-  de la liste autorisée reste affichée (pastille dans le sélecteur) et
+- Une icône inchangée n'est pas renvoyée au `PUT` : une icône retirée
+  entre-temps de la liste autorisée reste affichée (pastille dans le sélecteur) et
   n'empêche pas de renommer la catégorie. `INVALID_CATEGORY_ICON` invite à en
   choisir une autre.
 - Dans la recherche, Entrée n'enregistre pas et Échap vide d'abord le champ.
   Une région live permanente annonce chargement et nombre de résultats.
 - Régénération, après toute régénération de la liste backend ou montée de
   version Font Awesome : `node scripts/generate-category-icons.mjs` (dans
-  `agent-frontend-node`, checkout backend voisin), `--check` pour vérifier.
+  `agent-frontend-node`, checkout backend voisin, `npm ci` fait à la racine et
+  dans `mobile/` : le script formate la sortie mobile avec le Prettier du
+  mobile), `--check` pour vérifier. Il écrit aussi la liste mobile (#132).
 
 ## Navigation
 
