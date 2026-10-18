@@ -2,9 +2,10 @@
 
 Le build produit désormais `dist/sw.js` et `dist/pwa-build.json` après le build
 Vite habituel. Le worker est autonome, à URL stable, sans import réseau, sans
-source map ni dépendance supplémentaire. **Il n’est pas enregistré par
-l’application** : les validations de confidentialité #50/backend #98 et
-l’expérience #51/#53 précèdent son activation. Les fichiers d’installation de
+source map ni dépendance supplémentaire. **Il n’est pas enregistré par défaut par
+l’application** : les validations de confidentialité #50/backend #98 et la recette
+intégrée précèdent l’activation du client optionnel de
+[#53](pwa-updates.md). Les fichiers d’installation de
 #52 restent indépendants.
 
 ## Construire et identifier une version
@@ -77,8 +78,9 @@ Aucune activation anticipée n’est automatique. Le message
 `ACTIVATE_PUBLIC_UPDATE` est accepté depuis un client de même origine, et sa
 réponse publique identifie la version dont l’activation a été demandée. Le message
 `PUBLIC_BUILD` permet une vérification de version ; aucun de ces messages ne
-renvoie une donnée utilisateur. #53 ajoutera la présentation de la mise à jour et
-la protection des formulaires non enregistrés avant toute demande d’activation.
+renvoie une donnée utilisateur. Le client optionnel de #53 présente la mise à jour,
+bloque les formulaires ouverts et demande un rechargement explicite dans chaque
+fenêtre ; il reste désactivé par défaut.
 
 Le nettoyage capture les caches avant d’identifier les workers en cours
 (installing/waiting/active). Il préserve leur version : un `controllerchange` ne
@@ -98,7 +100,7 @@ En staging, avant toute inscription :
 
 1. Servir `/sw.js` comme JavaScript, sans redirection ni HTML de repli SPA, avec
    une politique HTTP empêchant de réutiliser un ancien script (`no-cache` ou
-   `no-store`). L’inscription de #53 utilisera `updateViaCache: none`.
+   `no-store`). L’inscription optionnelle de #53 utilise `updateViaCache: none`.
 2. Servir les assets avec leur MIME réel et sans personnalisation ; les JavaScript
    peuvent utiliser `application/javascript` ou `text/javascript`.
 3. Conserver les assets de la version précédente pendant la transition et le
@@ -154,7 +156,8 @@ n’est utilisé dans les parcours navigateur.
 
 - Le contrat HTTP avant contrôle par un worker dépend de backend #98 ; ces tests
   simulent ce contrat et ne prouvent pas son déploiement.
-- L’interface hors ligne et de mise à jour n’est pas livrée par le simple worker.
+- L’interface hors ligne et de mise à jour est livrée séparément (#51/#53) et
+  l’inscription reste désactivée par défaut.
 - Un navigateur peut évincer le stockage public ; le hors-ligne n’est pas garanti
   en toutes circonstances, notamment en mode privé ou sous quota.
 - XSS et hébergement compromis restent hors de la protection d’une liste de cache.

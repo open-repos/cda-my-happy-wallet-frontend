@@ -39,9 +39,10 @@ vérifie mises à jour et rollback. Ses pages et son API sont synthétiques. Les
 parcours de présentation utilisent la vraie page statique et les routes Web, sans
 faire passer un profil Chromium pour un appareil Android ou iOS.
 
-**L’application n’enregistre toujours pas le worker.** Cette PR rend le document
+**L’application n’enregistre pas le worker par défaut.** Cette PR rend le document
 disponible et vérifie son intégration au build ; l’activation applicative dépend
-de #53 et de la validation de confidentialité #50/backend #98. L’installation et
+du client optionnel [#53](pwa-updates.md) et de la validation de confidentialité
+#50/backend #98. L’installation et
 le mode standalone sur appareils restent la recette #54. Aucun déploiement de
 production n’est effectué.
 
