@@ -63,7 +63,7 @@ précache doit empêcher l’installation de la nouvelle version.
 La politique ne garantit pas qu’une URL présente dans un build fiable restera
 publique si le serveur est compromis. Elle suppose que les assets statiques sont
 servis sans personnalisation. Le serveur doit émettre le MIME attendu, notamment
-`application/javascript` pour les scripts ; les autres MIME doivent être ajoutés
+`application/javascript` ou `text/javascript` pour les scripts ; les autres MIME doivent être ajoutés
 explicitement avec leurs tests avant utilisation.
 
 ## Deux caches distincts et dépendance backend

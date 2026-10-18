@@ -80,6 +80,16 @@ describe("PWA public cache boundary", () => {
     expect(policy.canStore(request(), response())).toBe(true);
     expect(
       policy.canStore(
+        request(),
+        response({
+          headers: new Headers({
+            "content-type": "text/javascript; charset=utf-8",
+          }),
+        })
+      )
+    ).toBe(true);
+    expect(
+      policy.canStore(
         request("/offline.html"),
         response({ headers: new Headers({ "content-type": "text/html" }) })
       )

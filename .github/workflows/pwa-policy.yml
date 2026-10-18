@@ -4,20 +4,32 @@ on:
   pull_request:
     branches: [develop, main]
     paths:
-      - src/js/pwa/**
+      - src/**
+      - index.html
+      - public/**
+      - scripts/build-pwa-worker.mjs
       - test/pwa-policy/**
+      - test/pwa-build/**
+      - test/pwaWorkerBuild.test.mjs
       - test/vitest/pwaCachePolicy.test.js
       - playwright.pwa-policy.config.js
+      - playwright.pwa-build.config.js
       - package.json
       - package-lock.json
       - .github/workflows/pwa-policy.yml
   push:
     branches: [develop, main]
     paths:
-      - src/js/pwa/**
+      - src/**
+      - index.html
+      - public/**
+      - scripts/build-pwa-worker.mjs
       - test/pwa-policy/**
+      - test/pwa-build/**
+      - test/pwaWorkerBuild.test.mjs
       - test/vitest/pwaCachePolicy.test.js
       - playwright.pwa-policy.config.js
+      - playwright.pwa-build.config.js
       - package.json
       - package-lock.json
       - .github/workflows/pwa-policy.yml
@@ -42,5 +54,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx vitest run test/vitest/pwaCachePolicy.test.js
+      - run: npm run test:pwa:builder
       - run: npx playwright install --with-deps chromium
       - run: npm run test:pwa:proof
+      - run: npm run test:pwa:built
