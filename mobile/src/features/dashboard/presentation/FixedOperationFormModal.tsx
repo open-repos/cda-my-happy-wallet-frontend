@@ -12,6 +12,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import { primitives, semantic, themes } from "@/src/design/tokens";
 import {
@@ -74,131 +75,139 @@ export const FixedOperationFormModal = ({
 
   return (
     <Modal animationType="slide" onRequestClose={onCancel} visible={visible}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={styles.flex}
-      >
-        <ScrollView
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.header}>
-            <Text accessibilityRole="header" style={styles.title}>
-              {operation == null
-                ? "Ajouter au budget fixe"
-                : "Modifier le budget fixe"}
-            </Text>
-            <Pressable
-              accessibilityLabel="Fermer le formulaire"
-              accessibilityRole="button"
-              disabled={isSaving}
-              onPress={onCancel}
-              style={styles.iconButton}
+      {/* Une Modal Android a besoin de son propre fournisseur de marges. */}
+      <SafeAreaProvider>
+        <SafeAreaView edges={["top", "bottom"]} style={styles.flex}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            style={styles.flex}
+          >
+            <ScrollView
+              contentContainerStyle={styles.content}
+              keyboardShouldPersistTaps="handled"
             >
-              <Ionicons color={colors.textPrimary} name="close" size={28} />
-            </Pressable>
-          </View>
-
-          <Text style={styles.label}>Type</Text>
-          <View accessibilityRole="radiogroup" style={styles.segmented}>
-            {(["REVENU", "CHARGE"] as const).map((type) => {
-              const selected = draft.type === type;
-              return (
+              <View style={styles.header}>
+                <Text accessibilityRole="header" style={styles.title}>
+                  {operation == null
+                    ? "Ajouter au budget fixe"
+                    : "Modifier le budget fixe"}
+                </Text>
                 <Pressable
-                  key={type}
-                  accessibilityRole="radio"
-                  accessibilityState={{
-                    checked: selected,
-                    disabled: operation != null,
-                  }}
-                  disabled={isSaving || operation != null}
-                  onPress={() => update("type", type)}
-                  style={[styles.segment, selected && styles.segmentSelected]}
+                  accessibilityLabel="Fermer le formulaire"
+                  accessibilityRole="button"
+                  disabled={isSaving}
+                  onPress={onCancel}
+                  style={styles.iconButton}
                 >
-                  <Text
-                    style={[
-                      styles.segmentLabel,
-                      selected && styles.segmentLabelSelected,
-                    ]}
-                  >
-                    {type === "REVENU" ? "Revenu" : "Charge"}
-                  </Text>
+                  <Ionicons color={colors.textPrimary} name="close" size={28} />
                 </Pressable>
-              );
-            })}
-          </View>
-          {operation != null ? (
-            <Text style={styles.help}>
-              Le type ne peut pas être changé après création.
-            </Text>
-          ) : null}
+              </View>
 
-          <Text style={styles.label}>Libellé</Text>
-          <TextInput
-            accessibilityLabel="Libellé"
-            editable={!isSaving}
-            maxLength={50}
-            onChangeText={(value) => update("title", value)}
-            placeholder="Exemple : Loyer"
-            style={[styles.input, errors.title && styles.invalid]}
-            value={draft.title}
-          />
-          {errors.title ? (
-            <Text style={styles.error}>{errors.title}</Text>
-          ) : null}
+              <Text style={styles.label}>Type</Text>
+              <View accessibilityRole="radiogroup" style={styles.segmented}>
+                {(["REVENU", "CHARGE"] as const).map((type) => {
+                  const selected = draft.type === type;
+                  return (
+                    <Pressable
+                      key={type}
+                      accessibilityRole="radio"
+                      accessibilityState={{
+                        checked: selected,
+                        disabled: operation != null,
+                      }}
+                      disabled={isSaving || operation != null}
+                      onPress={() => update("type", type)}
+                      style={[
+                        styles.segment,
+                        selected && styles.segmentSelected,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.segmentLabel,
+                          selected && styles.segmentLabelSelected,
+                        ]}
+                      >
+                        {type === "REVENU" ? "Revenu" : "Charge"}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {operation != null ? (
+                <Text style={styles.help}>
+                  Le type ne peut pas être changé après création.
+                </Text>
+              ) : null}
 
-          <Text style={styles.label}>Montant mensuel en euros</Text>
-          <TextInput
-            accessibilityLabel="Montant mensuel en euros"
-            editable={!isSaving}
-            keyboardType="decimal-pad"
-            onChangeText={(value) => update("amount", value)}
-            placeholder="0,00"
-            style={[styles.input, errors.amount && styles.invalid]}
-            value={draft.amount}
-          />
-          {errors.amount ? (
-            <Text style={styles.error}>{errors.amount}</Text>
-          ) : null}
+              <Text style={styles.label}>Libellé</Text>
+              <TextInput
+                accessibilityLabel="Libellé"
+                editable={!isSaving}
+                maxLength={50}
+                onChangeText={(value) => update("title", value)}
+                placeholder="Exemple : Loyer"
+                style={[styles.input, errors.title && styles.invalid]}
+                value={draft.title}
+              />
+              {errors.title ? (
+                <Text style={styles.error}>{errors.title}</Text>
+              ) : null}
 
-          <View style={styles.actions}>
-            {operation != null ? (
-              <Pressable
-                accessibilityRole="button"
-                disabled={isSaving}
-                onPress={onDelete}
-                style={[styles.button, styles.deleteButton]}
-              >
-                <Text style={styles.deleteLabel}>Supprimer</Text>
-              </Pressable>
-            ) : null}
-            <Pressable
-              accessibilityRole="button"
-              disabled={isSaving}
-              onPress={onCancel}
-              style={[styles.button, styles.secondaryButton]}
-            >
-              <Text style={styles.secondaryLabel}>Annuler</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              disabled={isSaving}
-              onPress={submit}
-              style={[
-                styles.button,
-                styles.primaryButton,
-                isSaving && styles.disabled,
-              ]}
-            >
-              {isSaving ? (
-                <ActivityIndicator color={colors.actionPrimaryText} />
-              ) : (
-                <Text style={styles.primaryLabel}>Enregistrer</Text>
-              )}
-            </Pressable>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+              <Text style={styles.label}>Montant mensuel en euros</Text>
+              <TextInput
+                accessibilityLabel="Montant mensuel en euros"
+                editable={!isSaving}
+                keyboardType="decimal-pad"
+                onChangeText={(value) => update("amount", value)}
+                placeholder="0,00"
+                style={[styles.input, errors.amount && styles.invalid]}
+                value={draft.amount}
+              />
+              {errors.amount ? (
+                <Text style={styles.error}>{errors.amount}</Text>
+              ) : null}
+
+              <View style={styles.actions}>
+                {operation != null ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    disabled={isSaving}
+                    onPress={onDelete}
+                    style={[styles.button, styles.deleteButton]}
+                  >
+                    <Text style={styles.deleteLabel}>Supprimer</Text>
+                  </Pressable>
+                ) : null}
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={isSaving}
+                  onPress={onCancel}
+                  style={[styles.button, styles.secondaryButton]}
+                >
+                  <Text style={styles.secondaryLabel}>Annuler</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={isSaving}
+                  onPress={submit}
+                  style={[
+                    styles.button,
+                    styles.primaryButton,
+                    isSaving && styles.disabled,
+                  ]}
+                >
+                  {isSaving ? (
+                    <ActivityIndicator color={colors.actionPrimaryText} />
+                  ) : (
+                    <Text style={styles.primaryLabel}>Enregistrer</Text>
+                  )}
+                </Pressable>
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </SafeAreaProvider>
     </Modal>
   );
 };

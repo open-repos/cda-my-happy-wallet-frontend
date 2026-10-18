@@ -12,6 +12,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { TAB_SCREEN_EDGES } from "@/src/design/safeArea";
+
 import { primitives, semantic, themes } from "@/src/design/tokens";
 import { FeedbackBanner, FeedbackState } from "@/src/design/FeedbackState";
 import {
@@ -101,7 +103,7 @@ export const FixedBudgetScreen = () => {
 
   if (state.status === "loading") {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
         <View style={styles.centeredState}>
           <FeedbackState
             description="Vos revenus et charges récurrents sont en cours de chargement."
@@ -114,7 +116,7 @@ export const FixedBudgetScreen = () => {
   }
   if (state.status === "error") {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
         <View style={styles.centeredState}>
           <FeedbackState
             actions={[
@@ -135,7 +137,7 @@ export const FixedBudgetScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
       <SectionList
         contentContainerStyle={[
           styles.content,
