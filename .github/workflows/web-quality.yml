@@ -47,6 +47,8 @@ jobs:
         run: npm run test:rav
       - name: Test refresh token behavior
         run: npm run test:refresh-token
+      - name: Test release script
+        run: npm run test:release
       - name: Type-check
         run: npm run type-check
       - name: Run unit tests

@@ -40,5 +40,5 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Replaced dynamic SSH host discovery with a pre-verified `known_hosts` file.
 - Isolated SSH credentials from validation and build jobs.
 
-[Unreleased]: https://acperso.gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.0.0...develop
-[1.0.0]: https://acperso.gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/commits/v1.0.0
+[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.0.0...develop
+[1.0.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/commits/v1.0.0
