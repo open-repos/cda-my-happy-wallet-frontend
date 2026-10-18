@@ -1,3 +1,4 @@
+import { useFormFocus } from "../../hooks/useFormFocus";
 import React, { useEffect, useRef, useState } from "react";
 
 const emptyOperation = {
@@ -60,9 +61,7 @@ export const OneOffOperationForm = ({
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const titleRef = useRef(null);
 
-  useEffect(() => {
-    titleRef.current?.focus();
-  }, []);
+  useFormFocus(titleRef);
   useEffect(() => {
     const closeOnEscape = (event) => {
       if (event.key === "Escape" && !isSaving) onCancel();

@@ -7,10 +7,10 @@ import forgotPassword from "./../../assets/icons/ForgotPassword.svg";
 // import { useforgotpasswordMutation } from "../services/authService";
 import { Link } from "react-router-dom";
 import { faChevronCircleLeft } from "@fortawesome/free-solid-svg-icons";
-import Spinner from '../components/Spinner'
-import { forgotPsswdApi, reset } from './../slices/auth/authSlice'
-import { toast } from 'react-toastify'
-import { useDispatch,useSelector } from "react-redux";
+import Spinner from "../components/Spinner";
+import { forgotPsswdApi, reset } from "./../slices/auth/authSlice";
+import { toast } from "react-toastify";
+import { useDispatch, useSelector } from "react-redux";
 
 const Forgotpassword = () => {
   let dispatch = useDispatch();
@@ -21,33 +21,39 @@ const Forgotpassword = () => {
   // const [forgotpassword, { isLoading, isUpdating }] = useforgotpasswordMutation();
   const { isLoading, isError, isEmailSent, message } = useSelector(
     (state) => state.auth
-  )
+  );
 
   useEffect(() => {
     if (isError) {
-      if(! toast.isActive(toastId.current)) {
-        toastId.current =  toast.error(message)
+      if (!toast.isActive(toastId.current)) {
+        toastId.current = toast.error(message);
       }
     }
 
-    if(isEmailSent){
-      setSend(true)
+    if (isEmailSent) {
+      setSend(true);
     }
 
-    dispatch(reset())
-  }, [message,isError,isEmailSent, dispatch])
-
-
+    dispatch(reset());
+  }, [message, isError, isEmailSent, dispatch]);
 
   const Confirmationforgotpassword = () => {
-
-
     if (isLoading) {
-      return <Spinner />
+      return (
+        <main id="main-content" tabIndex={-1}>
+          <Spinner />
+        </main>
+      );
     }
     return (
-      <div className="confirm-forgotpassword">
-        <div className="goback">  <Link to="/login"><FontAwesomeIcon icon={faChevronCircleLeft} /> Retourner à la page de login</Link></div>
+      <main className="confirm-forgotpassword" id="main-content" tabIndex={-1}>
+        <div className="goback">
+          {" "}
+          <Link to="/login">
+            <FontAwesomeIcon icon={faChevronCircleLeft} /> Retourner à la page
+            de login
+          </Link>
+        </div>
         <h1>
           <span style={{ color: "var(--orange-light)" }}>
             Votre demande a été prise en compte !{" "}
@@ -55,64 +61,74 @@ const Forgotpassword = () => {
         </h1>{" "}
         <h2>
           Vous allez recevoir un lien par email pour changer votre mot de passe
-          </h2>
-        <img src={mailSent} height="auto" width="40%" />
-      </div>
+        </h2>
+        <img src={mailSent} height="auto" width="40%" alt="" />
+      </main>
     );
   };
 
   const FormForgotPassword = () => {
-      //body
-  const [email, setEmail] = useState("");
+    //body
+    const [email, setEmail] = useState("");
 
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      const body = { email };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const body = { email };
+      dispatch(forgotPsswdApi(body));
+    };
 
-    dispatch(forgotPsswdApi(body))
-
-  };
-
-  if (isLoading) {
-    return <Spinner />
-  }
+    if (isLoading) {
+      return (
+        <main id="main-content" tabIndex={-1}>
+          <Spinner />
+        </main>
+      );
+    }
     return (
-      <div className="forgotpassword">
+      <main className="forgotpassword" id="main-content" tabIndex={-1}>
         <form className="forgotpassword_form" onSubmit={(e) => handleSubmit(e)}>
           <div className="title">
-          <h1>
-          <span style={{ color: "var(--orange-light)" }}>Vous avez oublié votre mot de passe ? </span> </h1>  
-          <h2>Renseignez votre email pour en définir un nouveau</h2>
+            <h1>
+              <span style={{ color: "var(--orange-light)" }}>
+                Vous avez oublié votre mot de passe ?{" "}
+              </span>{" "}
+            </h1>
+            <h2>Renseignez votre email pour en définir un nouveau</h2>
           </div>
+          <label className="auth-field-label" htmlFor="forgot-email">
+            Adresse email
+          </label>
           <input
+            id="forgot-email"
+            autoComplete="email"
             type="email"
             name="email"
             placeholder="Entrez votre email"
             value={email}
-            autoComplete="on"
             onChange={(e) => setEmail(e.target.value)}
           />
           <button type="submit" className="submit_btn">
-          Changer de mot de passe
+            Changer de mot de passe
           </button>
           <div className="link-div">
-            <Link to="/login">Je connais mon mot de passe ? Connectez vous ici</Link>
+            <Link to="/login">
+              Je connais mon mot de passe ? Connectez vous ici
+            </Link>
           </div>
         </form>
-        <img src={forgotPassword} height="auto" width="20%" />
-      </div>
+        <img src={forgotPassword} height="auto" width="20%" alt="" />
+      </main>
     );
   };
 
   {
-    if(send){
-      return <Confirmationforgotpassword /> 
-    } else{
-      return <FormForgotPassword />
+    if (send) {
+      return <Confirmationforgotpassword />;
+    } else {
+      return <FormForgotPassword />;
     }
   }
-
 };
 
 export default Forgotpassword;

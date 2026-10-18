@@ -1,3 +1,4 @@
+import { useFormFocus } from "../../hooks/useFormFocus";
 import React, { useEffect, useRef, useState } from "react";
 import { formatMoney, longDate } from "./budgetFormat";
 
@@ -23,7 +24,7 @@ export const RealizeOccurrenceForm = ({
   });
   const [errors, setErrors] = useState({});
   const titleRef = useRef(null);
-  useEffect(() => titleRef.current?.focus(), []);
+  useFormFocus(titleRef);
 
   const update = ({ target }) => {
     setValues((current) => ({ ...current, [target.name]: target.value }));

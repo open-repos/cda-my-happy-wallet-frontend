@@ -7,7 +7,13 @@ export const ProtectedLayout = ({ children }) => {
     <RequireAuth>
       <div className="protected-layout">
         <Sidebar />
-        <div className="protected-layout__content">{children}</div>
+        <div
+          className="protected-layout__content"
+          id="main-content"
+          tabIndex={-1}
+        >
+          {children}
+        </div>
       </div>
     </RequireAuth>
   );

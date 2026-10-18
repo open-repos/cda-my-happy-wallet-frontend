@@ -286,3 +286,63 @@ describe("authentication forms", () => {
     });
   });
 });
+
+describe("accessible authentication controls", () => {
+  it.each([
+    [
+      "login",
+      Login,
+      [
+        ["Adresse email", "username"],
+        ["Mot de passe", "current-password"],
+      ],
+    ],
+    [
+      "register",
+      Register,
+      [
+        ["Prénom", "given-name"],
+        ["Nom", "family-name"],
+        ["Adresse email", "email"],
+        ["Mot de passe", "new-password"],
+        ["Confirmer le mot de passe", "new-password"],
+      ],
+    ],
+    ["forgot password", ForgotPassword, [["Adresse email", "email"]]],
+    [
+      "new password",
+      NewPassword,
+      [
+        ["Nouveau mot de passe", "new-password"],
+        ["Confirmer le nouveau mot de passe", "new-password"],
+      ],
+    ],
+  ])(
+    "provides persistent labels and autocomplete on %s",
+    (_name, Component, fields) => {
+      const { container } = renderForm(<Component />);
+      expect(screen.getAllByRole("main")).toHaveLength(1);
+      for (const [label, autocomplete] of fields) {
+        const input = screen.getByLabelText(label, { exact: true });
+        expect(input).toBeVisible();
+        expect(input).toHaveAttribute("autocomplete", autocomplete);
+        expect(
+          container.querySelector(`label[for="${input.id}"]`)
+        ).toBeVisible();
+      }
+      for (const image of container.querySelectorAll("img"))
+        expect(image).toHaveAttribute("alt");
+    }
+  );
+  it.each([Login, Register, ForgotPassword])(
+    "announces loading inside the page landmark",
+    (Component) => {
+      mocks.authState.isLoading = true;
+      renderForm(<Component />);
+      expect(screen.getByRole("main")).toContainElement(
+        screen.getByRole("status", { name: "Chargement en cours" })
+      );
+      expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");
+    }
+  );
+});

@@ -414,7 +414,7 @@ const Sidebar = () => {
             {/* {(navData) => (navData.isActive ?  <img src={Home} alt="Home" style="color: orange"/> :  <img src={Home} alt="Home" style="color: white"/>)} */}
             {/* <Icon.Dashboard className={(navData) => (navData.isActive ? 'active' : '')}/> */}
             {/* <HomeIcon succes={(navData) => (navData.isActive)} /> */}
-            <img src={Home} alt="Home" />
+            <img src={Home} alt="" aria-hidden="true" />
             <Text clicked={click}>Home</Text>
           </Item>
 
@@ -423,7 +423,7 @@ const Sidebar = () => {
             className={(navData) => (navData.isActive ? "active" : "")}
             to="/calendrier"
           >
-            <img src={Calendar} alt="Calender" />
+            <img src={Calendar} alt="" aria-hidden="true" />
             <Text clicked={click}>Calendrier</Text>
           </Item>
           <Item
@@ -431,7 +431,7 @@ const Sidebar = () => {
             className={(navData) => (navData.isActive ? "active" : "")}
             to="/objectifs-evenements"
           >
-            <img src={Projects} alt="Objectifs-Evenements" />
+            <img src={Projects} alt="" aria-hidden="true" />
             <Text clicked={click}>Objectifs-Évènements</Text>
           </Item>
           <Item
@@ -439,7 +439,7 @@ const Sidebar = () => {
             className={(navData) => (navData.isActive ? "active" : "")}
             to="/operations"
           >
-            <img src={List} alt="Liste Operations" />
+            <img src={List} alt="" aria-hidden="true" />
             <Text clicked={click}>Liste Opérations</Text>
           </Item>
           <Item

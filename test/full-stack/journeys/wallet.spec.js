@@ -40,7 +40,7 @@ async function login(page, project, journey) {
 }
 
 async function navigate(page, name) {
-  const link = page.getByRole("link", { name });
+  const link = page.getByRole("link", { name, exact: true });
   if (!(await link.isVisible()))
     await page.getByRole("button", { name: "Ouvrir le menu" }).click();
   await link.click();
@@ -259,3 +259,176 @@ test("renews a browser session with a real rotating HttpOnly cookie and logs out
   await page.goto("/operations");
   await expect(page).toHaveURL(/\/login$/);
 });
+
+// These checks inspect computed browser styles, rather than token values alone.
+async function contrast(locator, kind = "text") {
+  return locator.evaluate((element, kind) => {
+    const parse = (value) => value.match(/[\d.]+/g).map(Number);
+    const blend = (front, back) =>
+      front
+        .slice(0, 3)
+        .map(
+          (value, i) =>
+            value * (front[3] ?? 1) + back[i] * (1 - (front[3] ?? 1))
+        );
+    const background = (node) => {
+      if (!node) return [255, 255, 255];
+      return blend(
+        parse(getComputedStyle(node).backgroundColor),
+        background(node.parentElement)
+      );
+    };
+    const luminance = (rgb) =>
+      rgb
+        .slice(0, 3)
+        .map((value) => value / 255)
+        .map((value) =>
+          value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+        )
+        .reduce(
+          (sum, value, i) => sum + value * [0.2126, 0.7152, 0.0722][i],
+          0
+        );
+    const style = getComputedStyle(
+      element,
+      kind === "placeholder" ? "::placeholder" : null
+    );
+    const back = background(kind === "focus" ? element.parentElement : element);
+    const front = blend(
+      parse(kind === "focus" ? style.outlineColor : style.color),
+      back
+    );
+    const [high, low] = [luminance(front), luminance(back)].sort(
+      (a, b) => b - a
+    );
+    if (
+      kind === "focus" &&
+      (style.outlineStyle === "none" || parseFloat(style.outlineWidth) === 0)
+    )
+      return 0;
+    return (high + 0.05) / (low + 0.05);
+  }, kind);
+}
+
+for (const theme of ["light", "dark"]) {
+  test(`public forms support keyboard, contrast and text zoom (${theme})`, async ({
+    page,
+  }) => {
+    await page.addInitScript(
+      (theme) => localStorage.setItem("mhw-theme", theme),
+      theme
+    );
+    const viewport = page.viewportSize();
+    for (const path of [
+      "/login",
+      "/register",
+      "/forgot-password",
+      "/new-password",
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.goto(path);
+      await expect(page.getByRole("main")).toHaveCount(1);
+      await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+      await page.keyboard.press("Tab");
+      const skip = page.getByRole("link", {
+        name: "Aller au contenu principal",
+      });
+      await expect(skip).toBeFocused();
+      await expect(skip).toBeInViewport();
+      expect(await contrast(skip)).toBeGreaterThanOrEqual(4.5);
+      await page.keyboard.press("Enter");
+      await expect(page.locator("#main-content")).toBeFocused();
+      const fields = page.locator("main input");
+      for (const field of await fields.all()) {
+        const id = await field.getAttribute("id");
+        const label = page.locator(`label[for="${id}"]`);
+        await expect(label).toBeVisible();
+        expect(await field.getAttribute("autocomplete")).toBeTruthy();
+        expect(await contrast(label)).toBeGreaterThanOrEqual(4.5);
+        expect(await contrast(field)).toBeGreaterThanOrEqual(4.5);
+        expect(await contrast(field, "placeholder")).toBeGreaterThanOrEqual(
+          4.5
+        );
+      }
+      // Reach each control by Tab, including inputs, links and submit.
+      const controls = page.locator("main input, main a, main button");
+      const count = await controls.count();
+      for (let i = 0; i < count; i += 1) {
+        await page.keyboard.press("Tab");
+        const control = controls.nth(i);
+        await expect(control).toBeFocused();
+        expect(await contrast(control, "focus")).toBeGreaterThanOrEqual(3);
+      }
+      const button = page.locator("main button[type='submit']");
+      expect(await contrast(button)).toBeGreaterThanOrEqual(4.5);
+      await button.hover();
+      expect(await contrast(button)).toBeGreaterThanOrEqual(4.5);
+      for (const link of await page.locator("main a").all()) {
+        await link.hover();
+        expect(await contrast(link)).toBeGreaterThanOrEqual(4.5);
+      }
+      await page.setViewportSize({ width: 320, height: 800 });
+      await page.evaluate(() => {
+        document.documentElement.style.fontSize = "200%";
+      });
+      for (const control of await controls.all()) {
+        await control.scrollIntoViewIfNeeded();
+        const box = await control.boundingBox();
+        expect(box.x).toBeGreaterThanOrEqual(-1);
+        expect(box.x + box.width).toBeLessThanOrEqual(321);
+      }
+      await button.focus();
+      await expect(button).toBeInViewport();
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth + 1
+        )
+      ).toBe(true);
+    }
+  });
+
+  test(`protected routes expose landmarks and restore form focus (${theme})`, async ({
+    page,
+  }, testInfo) => {
+    await page.addInitScript(
+      (theme) => localStorage.setItem("mhw-theme", theme),
+      theme
+    );
+    await login(page, testInfo.project.name, "recovery");
+    for (const [name, title] of [
+      ["Calendrier", "Calendrier"],
+      ["Home", "Tableau de bord"],
+      ["Objectifs-Évènements", "Objectifs et événements"],
+      ["Liste Opérations", "Opérations"],
+      ["Catégories", "Catégories"],
+      ["Analyses", "Analyses"],
+    ]) {
+      await navigate(page, name);
+      await expect(page).toHaveTitle(`${title} | My Happy Wallet`);
+      await expect(page.getByRole("main")).toHaveCount(1);
+      await expect(page.locator("#main-content")).toHaveCount(1);
+      await expect(page.locator("#main-content")).toBeFocused();
+      await expect(page.locator("nav a img:not([alt=''])")).toHaveCount(0);
+    }
+    await navigate(page, "Liste Opérations");
+    const add = page.getByRole("button", {
+      name: "Ajouter une opération",
+      exact: true,
+    });
+    await expect(add).toBeEnabled();
+    await add.focus();
+    await expect(add).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(page.getByLabel(/^Titre/)).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(add).toBeFocused();
+    await page.reload();
+    await expect(add).toBeVisible();
+    await page.keyboard.press("Tab");
+    await expect(
+      page.getByRole("link", { name: "Aller au contenu principal" })
+    ).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(page.locator("#main-content")).toBeFocused();
+  });
+}

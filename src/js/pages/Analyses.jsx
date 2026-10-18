@@ -115,7 +115,7 @@ const Analyses = () => {
   );
 
   return (
-    <div className="analytics">
+    <main className="analytics">
       <header className="analytics__header">
         <h1>Analyses</h1>
         <p>Choisissez ce que vous visualisez et comment le regrouper.</p>
@@ -238,7 +238,7 @@ const Analyses = () => {
           <Result data={result.data} state={state} />
         )}
       </section>
-    </div>
+    </main>
   );
 };
 

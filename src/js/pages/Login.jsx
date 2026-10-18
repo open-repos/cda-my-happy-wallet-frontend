@@ -121,11 +121,15 @@ const Login = () => {
   };
 
   if (isLoading) {
-    return <Spinner />;
+    return (
+      <main id="main-content" tabIndex={-1}>
+        <Spinner />
+      </main>
+    );
   }
 
   return (
-    <div className="login">
+    <main className="login" id="main-content" tabIndex={-1}>
       <img src={logo} width="300px" height="auto" alt="My Happy Wallet" />
       <form className="login_form" onSubmit={handleSubmit}>
         <h1>
@@ -133,14 +137,24 @@ const Login = () => {
           <img src={favIcon} height="20rem" width="20rem" alt="" />
         </h1>
 
+        <label className="auth-field-label" htmlFor="login-email">
+          Adresse email
+        </label>
         <input
+          id="login-email"
+          autoComplete="username"
           type="email"
           name="email"
           placeholder="Entrez votre email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
         />
+        <label className="auth-field-label" htmlFor="login-password">
+          Mot de passe
+        </label>
         <input
+          id="login-password"
+          autoComplete="current-password"
           type="password"
           name="password"
           placeholder="Entrez mot de passe"
@@ -161,7 +175,7 @@ const Login = () => {
           </Link>
         </div>
       </form>
-    </div>
+    </main>
   );
 };
 
