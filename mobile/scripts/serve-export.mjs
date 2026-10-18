@@ -152,7 +152,11 @@ const testApiResponse = (pathname, searchParams) => {
   }
   if (pathname.endsWith("/operation-categories")) {
     return {
-      data: [{ color: "#EA7C69", id: 4, name: "Alimentation" }],
+      // « Transport », sans couleur propre, prend la palette du thème (#172).
+      data: [
+        { color: "#EA7C69", id: 4, name: "Alimentation" },
+        { color: null, icon: "solid:bus", id: 5, name: "Transport" },
+      ],
       meta: noNextPage,
     };
   }
@@ -169,6 +173,17 @@ const testApiResponse = (pathname, searchParams) => {
             ? `${searchParams.get("from").slice(0, 7)}-03`
             : "2026-09-14",
           title: "Courses",
+          type: "DEPENSE",
+        },
+        {
+          amount: "12.00",
+          categoryId: 5,
+          currency: "EUR",
+          id: 8,
+          operationDate: searchParams.get("from")
+            ? `${searchParams.get("from").slice(0, 7)}-05`
+            : "2026-09-15",
+          title: "Bus",
           type: "DEPENSE",
         },
       ],

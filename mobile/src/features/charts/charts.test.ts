@@ -1,9 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
 import { expenseRows, goalProgress, parseGoal } from "./chartData";
 import { allPages, ChartGateway } from "./ChartGateway";
-import { expensesOption, goalsOption } from "./chartOptions";
+import {
+  axisLabelText,
+  categoryColor,
+  CATEGORY_PALETTE,
+  expensesOption,
+  goalsOption,
+} from "./chartOptions";
 import { themes } from "@/src/design/tokens";
+import { CATEGORY_PALETTE as PICKER_COLORS } from "@/src/features/categories/domain/categoryDraft";
 import * as echarts from "echarts/core";
+import type { EChartsCoreOption } from "echarts/core";
 import { BarChart, PieChart } from "echarts/charts";
 import { GridComponent } from "echarts/components";
 import { SVGRenderer } from "echarts/renderers";
@@ -15,6 +23,27 @@ const goal = {
   currency: "EUR",
   savedAmount: "99.99",
   targetAmount: "100.00",
+};
+/** Rendu SVG hors écran ; échoue si ECharts signale une option obsolète. */
+const renderSvg = (option: EChartsCoreOption) => {
+  const logs = (["log", "warn", "error"] as const).map((method) =>
+    vi.spyOn(console, method).mockImplementation(() => undefined),
+  );
+  const chart = echarts.init(null, undefined, {
+    renderer: "svg",
+    ssr: true,
+    width: 320,
+    height: 240,
+  });
+  try {
+    chart.setOption(option);
+    const svg = chart.renderToSVGString();
+    for (const spy of logs) expect(spy).not.toHaveBeenCalled();
+    return svg;
+  } finally {
+    chart.dispose();
+    for (const spy of logs) spy.mockRestore();
+  }
 };
 describe("mobile dashboard charts", () => {
   it("counts cents, excludes income and foreign currencies, sorts and provides French text", () => {
@@ -148,6 +177,102 @@ describe("mobile dashboard charts", () => {
       vi.useRealTimers();
     }
   });
+  it("ranks categories by id for a stable palette color (#172)", () => {
+    const base = {
+      id: 1,
+      title: "Achat",
+      operationDate: "2026-10-01",
+      currency: "EUR",
+      type: "DEPENSE" as const,
+    };
+    const categories = [
+      { id: 9, name: "Transport", color: null, icon: "solid:bus" },
+      { id: 3, name: "Autres", color: null },
+      { id: 5, name: "Loisir", color: "#123456" },
+    ];
+    const rows = (amounts: Record<number, string>) =>
+      expenseRows(
+        Object.entries(amounts).map(([categoryId, amount]) => ({
+          ...base,
+          categoryId: Number(categoryId),
+          amount,
+        })),
+        categories,
+      );
+    const indexOf = (list: ReturnType<typeof rows>) =>
+      Object.fromEntries(list.map((r) => [r.categoryId, r.paletteIndex]));
+    const first = rows({ 9: "350.00", 3: "10.00", 5: "1.00", 42: "2.00" });
+    // Rang par identifiant parmi les catégories sans couleur (3, 9) ; les
+    // autres, inutilisées ou inconnues, viennent après.
+    expect(indexOf(first)).toEqual({ 3: 0, 9: 1, 5: 2, 42: 2 });
+    // Le rang ne dépend ni des montants ni du tri.
+    expect(indexOf(rows({ 9: "1.00", 3: "500.00", 5: "9.00" }))).toEqual({
+      3: 0,
+      9: 1,
+      5: 2,
+    });
+  });
+  it("uses the category color, else the theme palette, wrapping around", () => {
+    for (const theme of ["light", "dark"] as const) {
+      const colors = themes[theme].color;
+      const palette = CATEGORY_PALETTE.map((role) => colors[role]);
+      expect(new Set(palette).size).toBe(6);
+      expect(categoryColor({ color: "#123456", paletteIndex: 0 }, colors)).toBe(
+        "#123456",
+      );
+      expect(categoryColor({ color: null, paletteIndex: 2 }, colors)).toBe(
+        palette[2],
+      );
+      expect(categoryColor({ color: null, paletteIndex: 6 }, colors)).toBe(
+        palette[0],
+      );
+    }
+  });
+  it("never reuses a color offered by the category picker", () => {
+    // Sinon une catégorie sans couleur ressemble à une catégorie colorée :
+    // « Autres » prenait le bleu de « Transport » (#172).
+    const picker = new Set(PICKER_COLORS.map((c) => c.value.toLowerCase()));
+    for (const theme of ["light", "dark"] as const)
+      for (const role of CATEGORY_PALETTE)
+        expect(picker.has(themes[theme].color[role].toLowerCase())).toBe(false);
+  });
+  it("draws each bar in its category color and fits the label column (#154, #172)", () => {
+    const colors = themes.light.color;
+    const rows = [
+      { categoryId: 9, paletteIndex: 2, color: null, name: "Transport" },
+      { categoryId: 3, paletteIndex: 0, color: null, name: "Autres" },
+      { categoryId: 5, paletteIndex: 1, color: "#123456", name: "Loisir" },
+    ].map((row) => ({ ...row, cents: 100, icon: null, label: row.name }));
+    const raw = expensesOption(rows, colors);
+    const option = raw as unknown as {
+      grid: Record<string, unknown>;
+      yAxis: { axisLabel: Record<string, unknown> };
+      series: { data: { itemStyle: { color: string } }[] }[];
+    };
+    expect(option.series[0].data.map((d) => d.itemStyle.color)).toEqual([
+      colors.dataCategory3,
+      colors.dataCategory1,
+      "#123456",
+    ]);
+    // `containLabel` est remplacé par les bornes extérieures d'ECharts 6.
+    expect(option.grid).not.toHaveProperty("containLabel");
+    expect(option.grid).toMatchObject({
+      outerBoundsMode: "same",
+      outerBoundsContain: "axisLabel",
+    });
+    // Pas de largeur fixe : la colonne suit le libellé le plus long.
+    expect(option.yAxis.axisLabel).not.toHaveProperty("width");
+    expect(option.yAxis.axisLabel.formatter).toBe(axisLabelText);
+    const svg = renderSvg(raw).toLowerCase();
+    for (const color of [colors.dataCategory3, colors.dataCategory1, "#123456"])
+      expect(svg).toContain(`fill="${color.toLowerCase()}"`);
+  });
+  it("truncates long category names on the axis only", () => {
+    expect(axisLabelText("Autres")).toBe("Autres");
+    const long = axisLabelText("Abonnements et services numériques");
+    // 16 caractères au plus, sans espace devant les points de suspension.
+    expect(long).toBe("Abonnements et…");
+  });
   for (const theme of ["light", "dark"] as const)
     it(`renders valid ${theme} SVG options without generated aria or animation`, () => {
       for (const option of [
@@ -159,6 +284,7 @@ describe("mobile dashboard charts", () => {
               cents: 30,
               icon: null,
               color: null,
+              paletteIndex: 0,
               label: "Courses : 0,30 €",
             },
           ],
@@ -168,18 +294,7 @@ describe("mobile dashboard charts", () => {
       ]) {
         expect(option.aria).toEqual({ enabled: false });
         expect(option.animation).toBe(false);
-        const chart = echarts.init(null, undefined, {
-          renderer: "svg",
-          ssr: true,
-          width: 320,
-          height: 240,
-        });
-        try {
-          chart.setOption(option);
-          expect(chart.renderToSVGString()).toContain("<path");
-        } finally {
-          chart.dispose();
-        }
+        expect(renderSvg(option)).toContain("<path");
       }
     });
 });

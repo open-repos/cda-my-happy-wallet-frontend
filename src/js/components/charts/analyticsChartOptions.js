@@ -4,6 +4,7 @@ import {
   bucketLabel,
   isTemporal,
 } from "../../utils/analyticsExplorer";
+import { paletteColor, paletteIndexOf } from "../../utils/categoryPalette";
 
 /** Au-delà, un zoom/défilement est proposé sur les séries temporelles. */
 export const ZOOM_THRESHOLD = 31;
@@ -30,13 +31,27 @@ const kindColor = (key, tokens) =>
     ? tokens.expense
     : undefined;
 
-/** Couleur d'un seau ou d'une série : catégorie, sens, sinon palette ECharts. */
-const colorOf = (totals, dimension, tokens) =>
-  dimension === "category"
-    ? totals.color ?? undefined
-    : dimension === "kind"
-    ? kindColor(totals.key, tokens)
-    : undefined;
+/**
+ * Couleurs des seaux ou séries, dans l'ordre : catégorie (couleur propre,
+ * sinon palette au rang de la catégorie comme sur l'accueil, #172), sens, ou
+ * palette du thème par position. Sans rangs chargés, les catégories sans
+ * couleur suivent leur ordre d'affichage.
+ */
+const colorsOf = (items, dimension, tokens, ranks) => {
+  let unranked = 0;
+  return items.map((item, index) => {
+    if (dimension === "kind")
+      return kindColor(item.key, tokens) ?? paletteColor(index, tokens);
+    if (dimension !== "category") return paletteColor(index, tokens);
+    return (
+      item.color ??
+      paletteColor(
+        ranks ? paletteIndexOf(ranks, Number(item.key)) : unranked++,
+        tokens
+      )
+    );
+  });
+};
 
 const valueOf = (totals, metric) => Number(totals[metric]);
 
@@ -62,25 +77,13 @@ const legend = (tokens, position) => ({
   ...position,
 });
 
-/** Palette par défaut d'ECharts, rendue explicite pour la partager avec le tableau. */
-export const PIE_PALETTE = [
-  "#5470c6",
-  "#91cc75",
-  "#fac858",
-  "#ee6666",
-  "#73c0de",
-  "#3ba272",
-  "#fc8452",
-  "#9a60b4",
-  "#ea7ccc",
-];
-
 /**
  * Parts non nulles d'un graphique en secteurs, avec leur couleur et leur part
  * calculée en centimes. Le tableau des valeurs sert de légende.
  */
-export const pieSlices = (data, metric, tokens) => {
+export const pieSlices = (data, metric, tokens, ranks = null) => {
   const rows = data.buckets.filter((bucket) => valueOf(bucket, metric) !== 0);
+  const colors = colorsOf(rows, data.groupBy, tokens, ranks);
   const totalCents = rows.reduce(
     (sum, bucket) => sum + Math.round(valueOf(bucket, metric) * 100),
     0
@@ -89,9 +92,7 @@ export const pieSlices = (data, metric, tokens) => {
     key: bucket.key,
     name: bucketLabel(bucket, data.groupBy),
     value: valueOf(bucket, metric),
-    color:
-      colorOf(bucket, data.groupBy, tokens) ??
-      PIE_PALETTE[index % PIE_PALETTE.length],
+    color: colors[index],
     share:
       totalCents > 0
         ? Math.round(valueOf(bucket, metric) * 100) / totalCents
@@ -101,7 +102,7 @@ export const pieSlices = (data, metric, tokens) => {
 
 // Sans légende dans le canvas : elle recouvrait l'anneau sur mobile avec de
 // nombreuses catégories.
-const pieOption = (data, metric, tokens) => ({
+const pieOption = (data, metric, tokens, ranks) => ({
   ...baseOption(tokens, data.currency, "item"),
   series: [
     {
@@ -109,7 +110,7 @@ const pieOption = (data, metric, tokens) => ({
       radius: ["38%", "72%"],
       center: ["50%", "50%"],
       label: { show: false },
-      data: pieSlices(data, metric, tokens).map((slice) => ({
+      data: pieSlices(data, metric, tokens, ranks).map((slice) => ({
         name: slice.name,
         value: slice.value,
         itemStyle: { color: slice.color },
@@ -118,8 +119,13 @@ const pieOption = (data, metric, tokens) => ({
   ],
 });
 
-const seriesOf = (data, metric, chart, tokens) => {
+const seriesOf = (data, metric, chart, tokens, ranks) => {
   if (data.splitBy === null) {
+    // Une barre par catégorie, dans sa couleur ; le solde garde son signe.
+    const perCategory = data.groupBy === "category" && metric !== "net";
+    const barColors = perCategory
+      ? colorsOf(data.buckets, "category", tokens, ranks)
+      : null;
     return [
       {
         name: metricLabel(metric),
@@ -127,8 +133,9 @@ const seriesOf = (data, metric, chart, tokens) => {
         ...(chart === "area" ? { areaStyle: { opacity: 0.25 } } : {}),
         itemStyle: { color: metricColor(metric, tokens) },
         lineStyle: { color: metricColor(metric, tokens) },
-        data: data.buckets.map((bucket) => ({
+        data: data.buckets.map((bucket, index) => ({
           value: valueOf(bucket, metric),
+          ...(barColors ? { itemStyle: { color: barColors[index] } } : {}),
           // Solde : négatif en couleur de dépense, positif en couleur d'entrée.
           ...(metric === "net" && chart === "bar"
             ? {
@@ -145,8 +152,9 @@ const seriesOf = (data, metric, chart, tokens) => {
     ];
   }
   const keys = data.buckets[0]?.series ?? [];
+  const colors = colorsOf(keys, data.splitBy, tokens, ranks);
   return keys.map((serie, index) => {
-    const color = colorOf(serie, data.splitBy, tokens);
+    const color = colors[index];
     return {
       name: bucketLabel(serie, data.splitBy),
       type: chart === "stacked" ? "bar" : "line",
@@ -163,8 +171,13 @@ const seriesOf = (data, metric, chart, tokens) => {
  * horizontales ou en secteurs; le temps en barres, barres empilées, lignes ou
  * aires, avec zoom au-delà de 31 points.
  */
-export const analyticsChartOption = (data, { metric, chart }, tokens) => {
-  if (chart === "pie") return pieOption(data, metric, tokens);
+export const analyticsChartOption = (
+  data,
+  { metric, chart },
+  tokens,
+  ranks = null
+) => {
+  if (chart === "pie") return pieOption(data, metric, tokens, ranks);
   const labels = data.buckets.map((bucket) =>
     bucketLabel(bucket, data.groupBy)
   );
@@ -194,7 +207,9 @@ export const analyticsChartOption = (data, { metric, chart }, tokens) => {
       right: 16,
       top: split ? 36 : 12,
       bottom: zoom ? 56 : 8,
-      containLabel: true,
+      // Équivalent ECharts 6 de `containLabel` (#154).
+      outerBoundsMode: "same",
+      outerBoundsContain: "axisLabel",
     },
     xAxis: temporal ? categoryAxis : valueAxis,
     yAxis: temporal ? valueAxis : categoryAxis,
@@ -216,6 +231,6 @@ export const analyticsChartOption = (data, { metric, chart }, tokens) => {
           ],
         }
       : {}),
-    series: seriesOf(data, metric, chart, tokens),
+    series: seriesOf(data, metric, chart, tokens, ranks),
   };
 };

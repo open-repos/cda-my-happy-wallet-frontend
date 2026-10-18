@@ -17,16 +17,24 @@ export const NativeChart = ({
 }) => {
   const ref = useRef<React.ComponentRef<typeof SvgChart>>(null);
   const [width, setWidth] = useState(0);
+  const [chart, setChart] = useState<echarts.ECharts | null>(null);
+  // L'instance suit la taille ; de nouvelles données la réutilisent (#154).
   useEffect(() => {
     if (!ref.current || width <= 0) return;
-    const chart = echarts.init(ref.current, undefined, {
+    const instance = echarts.init(ref.current, undefined, {
       renderer: "svg",
       width,
       height,
     });
-    chart.setOption(option);
-    return () => chart.dispose();
-  }, [option, width, height]);
+    setChart(instance);
+    return () => {
+      setChart(null);
+      instance.dispose();
+    };
+  }, [width, height]);
+  useEffect(() => {
+    chart?.setOption(option, true);
+  }, [chart, option]);
   return (
     <View
       accessible={false}

@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  PIE_PALETTE,
   ZOOM_THRESHOLD,
   analyticsChartOption,
   pieSlices,
@@ -14,6 +13,14 @@ const tokens = {
   income: "#228844",
   forecast: "#3355aa",
   surface: "#ffffff",
+  categories: [
+    "#a10001",
+    "#a10002",
+    "#a10003",
+    "#a10004",
+    "#a10005",
+    "#a10006",
+  ],
   font: "Inter",
   reducedMotion: false,
 };
@@ -161,10 +168,59 @@ describe("analyticsChartOption", () => {
         slice.share,
       ])
     ).toEqual([
-      ["Loisirs", PIE_PALETTE[0], 0.6],
+      ["Loisirs", "#a10001", 0.6],
       ["Alimentation", "#55AA22", 0.4],
     ]);
     expect(pie.series[0].data[1].itemStyle.color).toBe("#55AA22");
+    // Une barre par catégorie, dans la même couleur que son secteur (#172).
+    expect(bars.series[0].data.map((item) => item.itemStyle.color)).toEqual([
+      "#a10001",
+      "#55AA22",
+      "#a10002",
+    ]);
+  });
+
+  it("colours categories by their rank, like the home page (#172)", () => {
+    const buckets = [
+      totals("7", "60.00", "0.00", { label: "Loisirs" }),
+      totals("4", "40.00", "0.00", { label: "Alimentation", color: "#55AA22" }),
+      totals("12", "5.00", "0.00", { label: "Inconnue" }),
+    ];
+    // Rangs de l'accueil : Loisirs (7) au rang 3, la catégorie 12 inconnue.
+    const ranks = new Map([
+      [2, 0],
+      [3, 1],
+      [5, 2],
+      [7, 3],
+    ]);
+    expect(
+      pieSlices(data("category", buckets), "expense", tokens, ranks).map(
+        (slice) => slice.color
+      )
+    ).toEqual(["#a10004", "#55AA22", "#a10005"]);
+    const split = analyticsChartOption(
+      data(
+        "month",
+        [{ ...totals("2026-09", "0.00"), series: buckets }],
+        "category"
+      ),
+      { metric: "expense", chart: "stacked" },
+      tokens,
+      ranks
+    );
+    expect(split.series.map((serie) => serie.itemStyle.color)).toEqual([
+      "#a10004",
+      "#55AA22",
+      "#a10005",
+    ]);
+    // Le solde garde ses couleurs de signe.
+    const net = analyticsChartOption(
+      data("category", buckets),
+      { metric: "net", chart: "bar" },
+      tokens,
+      ranks
+    );
+    expect(net.series[0].data[0].itemStyle.color).toBe("#cc3300");
   });
 
   it("keeps many categories readable: no canvas legend, cycled colours", () => {
@@ -183,8 +239,8 @@ describe("analyticsChartOption", () => {
     const colors = pieSlices(data("category", many), "expense", tokens).map(
       (slice) => slice.color
     );
-    expect(new Set(colors.slice(0, 9)).size).toBe(9);
-    expect(colors[9]).toBe(colors[0]);
+    expect(new Set(colors.slice(0, 6)).size).toBe(6);
+    expect(colors[6]).toBe(colors[0]);
   });
 
   it("zooms with Ctrl + wheel only, so the page keeps scrolling", () => {

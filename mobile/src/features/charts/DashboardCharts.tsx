@@ -1,27 +1,27 @@
 import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Pressable, Text, View } from "react-native";
-import { semantic, themes } from "@/src/design/tokens";
-import { fontAwesomeIcon } from "@/src/features/categories/domain/categoryIcons";
+import { Text, View } from "react-native";
+import { FeedbackState } from "@/src/design/FeedbackState";
+import { primitives, semantic, themes } from "@/src/design/tokens";
 import { CategoryMark } from "@/src/features/categories/presentation/CategoryMark";
 import { ChartGateway } from "./ChartGateway";
 import { NativeChart } from "./NativeChart";
-import { expensesOption, goalsOption } from "./chartOptions";
+import { categoryColor, expensesOption, goalsOption } from "./chartOptions";
+import { SectionState, sectionLoading, sectionView } from "./sectionState";
 
 function useSection<T>(load: () => Promise<T>) {
-  const [state, setState] = useState<{
-    status: "loading" | "error" | "success";
-    data?: T;
-  }>({ status: "loading" });
+  const [state, setState] = useState<SectionState<T>>({ status: "loading" });
   const latest = useRef(0);
   const retry = useCallback(async () => {
     const request = ++latest.current;
-    setState({ status: "loading" });
+    // Le graphique déjà affiché reste visible pendant le rechargement (#154).
+    setState(sectionLoading);
     try {
       const data = await load();
       if (request === latest.current) setState({ status: "success", data });
     } catch {
-      if (request === latest.current) setState({ status: "error" });
+      if (request === latest.current)
+        setState((current) => ({ ...current, status: "error" }));
     }
   }, [load]);
   useFocusEffect(
@@ -51,27 +51,34 @@ export const DashboardCharts = ({ gateway }: { gateway: ChartGateway }) => {
     [goals.data, colors],
   );
   return (
-    <View style={{ gap: 16 }}>
+    <View style={{ gap: primitives.space["4"] }}>
       {[
         {
           title: "Dépenses du mois par catégorie",
-          section: expenses,
-          empty: !expenses.data?.length,
+          testID: "expenses-chart-card",
+          loading: "Les dépenses du mois arrivent.",
+          view: sectionView(expenses, (rows) => rows.length === 0),
+          retry: expenses.retry,
+          emptyTitle: "Aucune dépense ce mois-ci",
+          emptyDescription:
+            "Vos dépenses du mois apparaîtront ici par catégorie.",
           labels:
             expenses.data?.map((r) => ({
               text: r.label,
-              // Icône de la catégorie devant son montant (#132).
-              mark: fontAwesomeIcon(r.icon)
-                ? { icon: r.icon, color: r.color }
-                : null,
+              // Icône ou pastille dans la couleur de la barre (#132, #172).
+              mark: { icon: r.icon, color: categoryColor(r, colors) },
             })) ?? [],
           option: expenseOption,
           height: Math.max(160, (expenses.data?.length ?? 0) * 40 + 48),
         },
         {
           title: "Atteinte des objectifs",
-          section: goals,
-          empty: !goals.data?.labels.length,
+          testID: "goals-chart-card",
+          loading: "Vos objectifs d’épargne arrivent.",
+          view: sectionView(goals, (data) => data.labels.length === 0),
+          retry: goals.retry,
+          emptyTitle: "Aucun objectif en euros",
+          emptyDescription: "Créez un objectif pour suivre votre épargne ici.",
           labels: [
             `${goals.data?.percent ?? 0} % de l’épargne visée atteinte`,
             ...(goals.data?.labels ?? []),
@@ -79,87 +86,96 @@ export const DashboardCharts = ({ gateway }: { gateway: ChartGateway }) => {
           option: goalOption,
           height: 200,
         },
-      ].map(({ title, section, empty, labels, option, height }) => (
-        <View
-          key={title}
-          testID={
-            title === "Atteinte des objectifs"
-              ? "goals-chart-card"
-              : "expenses-chart-card"
-          }
-          style={{
-            backgroundColor: colors.backgroundSurface,
-            borderColor: colors.borderSubtle,
-            borderWidth: 1,
-            borderRadius: semantic.radius.card,
-            padding: 16,
-            gap: 8,
-          }}
-        >
-          <Text
-            accessibilityRole="header"
+      ].map(
+        ({
+          title,
+          testID,
+          loading,
+          view,
+          retry,
+          emptyTitle,
+          emptyDescription,
+          labels,
+          option,
+          height,
+        }) => (
+          <View
+            key={title}
+            testID={testID}
             style={{
-              color: colors.textPrimary,
-              fontSize: 20,
-              fontWeight: "600",
+              backgroundColor: colors.backgroundSurface,
+              borderColor: colors.borderSubtle,
+              borderWidth: semantic.borderWidth.default,
+              borderRadius: semantic.radius.card,
+              padding: primitives.space["4"],
+              gap: primitives.space["2"],
             }}
           >
-            {title}
-          </Text>
-          {section.status === "loading" ? (
             <Text
-              accessibilityLiveRegion="polite"
-              style={{ color: colors.textPrimary }}
+              accessibilityRole="header"
+              style={{
+                color: colors.textPrimary,
+                fontSize: primitives.fontSize.lg,
+                fontWeight: `${primitives.fontWeight.semibold}` as "600",
+              }}
             >
-              Chargement…
+              {title}
             </Text>
-          ) : section.status === "error" ? (
-            <>
-              <Text
-                accessibilityRole="alert"
-                style={{ color: colors.textPrimary }}
-              >
-                Graphique indisponible. Vérifiez votre connexion.
-              </Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Réessayer : ${title}`}
-                onPress={() => void section.retry()}
-                style={{ minHeight: 48, justifyContent: "center" }}
-              >
-                <Text style={{ color: colors.textPrimary }}>Réessayer</Text>
-              </Pressable>
-            </>
-          ) : empty ? (
-            <Text style={{ color: colors.textPrimary }}>
-              Aucune donnée à afficher.
-            </Text>
-          ) : (
-            <>
-              <NativeChart option={option} height={height} />
-              {labels.map(({ text, mark }, index) =>
-                mark ? (
-                  <View
-                    key={index}
-                    style={{
-                      alignItems: "center",
-                      flexDirection: "row",
-                      gap: 8,
-                    }}
-                  >
-                    <CategoryMark category={mark} size={18} />
-                    <Text style={{ color: colors.textPrimary }}>{text}</Text>
-                  </View>
-                ) : (
-                  <Text key={index} style={{ color: colors.textPrimary }}>
-                    {text}
-                  </Text>
-                ),
-              )}
-            </>
-          )}
-        </View>
-      ))}
+            {view === "loading" ? (
+              <FeedbackState
+                description={loading}
+                framed={false}
+                kind="loading"
+                title="Chargement du graphique"
+              />
+            ) : view === "error" ? (
+              <FeedbackState
+                actions={[
+                  {
+                    accessibilityLabel: `Réessayer : ${title}`,
+                    label: "Réessayer",
+                    onPress: () => void retry(),
+                  },
+                ]}
+                description="Vérifiez votre connexion puis réessayez."
+                framed={false}
+                kind="error"
+                title="Graphique indisponible"
+              />
+            ) : view === "empty" ? (
+              <FeedbackState
+                description={emptyDescription}
+                framed={false}
+                kind="empty"
+                title={emptyTitle}
+              />
+            ) : (
+              <>
+                <NativeChart option={option} height={height} />
+                {labels.map(({ text, mark }, index) =>
+                  mark ? (
+                    <View
+                      key={index}
+                      style={{
+                        alignItems: "center",
+                        flexDirection: "row",
+                        gap: primitives.space["2"],
+                      }}
+                    >
+                      <CategoryMark category={mark} size={18} />
+                      <Text style={{ color: colors.textPrimary }}>{text}</Text>
+                    </View>
+                  ) : (
+                    <Text key={index} style={{ color: colors.textPrimary }}>
+                      {text}
+                    </Text>
+                  ),
+                )}
+              </>
+            )}
+          </View>
+        ),
+      )}
     </View>
   );
 };

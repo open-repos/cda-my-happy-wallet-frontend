@@ -12,6 +12,19 @@ const TOKENS = {
   font: "--ds-typography-body-family",
 };
 
+/** Palette des catégories sans couleur propre (#172). */
+const CATEGORY_TOKENS = [1, 2, 3, 4, 5, 6].map(
+  (rank) => `--ds-color-data-category${rank}`
+);
+
+/** Toute la palette ou rien : un token manquant décalerait les rangs. */
+const categoryPalette = (style) => {
+  const colors = CATEGORY_TOKENS.map((name) =>
+    style.getPropertyValue(name).trim()
+  );
+  return colors.every(Boolean) ? colors : [];
+};
+
 export const readChartTokens = (root = document.documentElement) => {
   const style = window.getComputedStyle(root);
   return {
@@ -21,6 +34,7 @@ export const readChartTokens = (root = document.documentElement) => {
         style.getPropertyValue(name).trim(),
       ])
     ),
+    categories: categoryPalette(style),
     reducedMotion:
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false,
   };

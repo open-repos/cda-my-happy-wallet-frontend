@@ -18,6 +18,10 @@ import Analyses from "../../src/js/pages/Analyses";
 import { useAnalytics } from "../../src/js/hooks/useAnalytics";
 
 vi.mock("../../src/js/hooks/useAnalytics", () => ({ useAnalytics: vi.fn() }));
+// Les rangs de palette ont leur propre test (#172).
+vi.mock("../../src/js/hooks/useCategoryRanks", () => ({
+  useCategoryRanks: vi.fn(() => ({ ranks: null, settled: true })),
+}));
 // jsdom n'a pas de canvas : le graphique expose son type de série.
 vi.mock("../../src/js/components/charts/EChart", () => ({
   EChart: ({ option, label }) => (

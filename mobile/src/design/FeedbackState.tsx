@@ -20,6 +20,8 @@ const semibold = `${primitives.fontWeight.semibold}` as "600";
 type BannerKind = "success" | "error";
 
 interface FeedbackAction {
+  /** Nom accessible quand plusieurs actions identiques coexistent à l'écran. */
+  accessibilityLabel?: string;
   label: string;
   onPress(): void;
   variant?: "primary" | "secondary";
@@ -28,6 +30,8 @@ interface FeedbackAction {
 interface FeedbackStateProps {
   actions?: FeedbackAction[];
   description: string;
+  /** `false` dans une carte qui a déjà son cadre, comme un graphique (#154). */
+  framed?: boolean;
   icon?: keyof typeof Ionicons.glyphMap;
   kind: FeedbackKind;
   title: string;
@@ -45,6 +49,7 @@ const defaultIcons: Record<
 export const FeedbackState = ({
   actions = [],
   description,
+  framed = true,
   icon,
   kind,
   title,
@@ -54,7 +59,7 @@ export const FeedbackState = ({
   const accessibility = getFeedbackAccessibility(kind);
 
   return (
-    <View style={styles.state}>
+    <View style={[styles.state, !framed && styles.unframed]}>
       <View
         accessible
         accessibilityLabel={`${title}. ${description}`}
@@ -92,30 +97,33 @@ export const FeedbackState = ({
       </View>
       {actions.length > 0 ? (
         <View style={styles.actions}>
-          {actions.map(({ label, onPress, variant = "primary" }) => (
-            <Pressable
-              accessibilityRole="button"
-              key={label}
-              onPress={onPress}
-              style={({ pressed }) => [
-                styles.action,
-                variant === "secondary"
-                  ? styles.secondaryAction
-                  : styles.primaryAction,
-                pressed && styles.pressed,
-              ]}
-            >
-              <Text
-                style={
+          {actions.map(
+            ({ accessibilityLabel, label, onPress, variant = "primary" }) => (
+              <Pressable
+                accessibilityLabel={accessibilityLabel}
+                accessibilityRole="button"
+                key={label}
+                onPress={onPress}
+                style={({ pressed }) => [
+                  styles.action,
                   variant === "secondary"
-                    ? styles.secondaryActionLabel
-                    : styles.primaryActionLabel
-                }
+                    ? styles.secondaryAction
+                    : styles.primaryAction,
+                  pressed && styles.pressed,
+                ]}
               >
-                {label}
-              </Text>
-            </Pressable>
-          ))}
+                <Text
+                  style={
+                    variant === "secondary"
+                      ? styles.secondaryActionLabel
+                      : styles.primaryActionLabel
+                  }
+                >
+                  {label}
+                </Text>
+              </Pressable>
+            ),
+          )}
         </View>
       ) : null}
     </View>
@@ -166,6 +174,11 @@ const styles = StyleSheet.create({
     maxWidth: primitives.size.contentSm,
     padding: semantic.space.card,
     width: "100%",
+  },
+  unframed: {
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    padding: 0,
   },
   announcement: {
     alignItems: "center",

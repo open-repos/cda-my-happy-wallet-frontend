@@ -46,8 +46,23 @@ pagination contrôlée. Aucun changement backend ni donnée simulée.
 Le mois suit Europe/Paris. Les calculs se font en centimes; chaque objectif
 est plafonné à sa cible avant le calcul global, arrondi à l'inférieur comme
 sur le Web. Les montants réels par objectif restent lisibles sous l'anneau.
-Chargement, vide, erreur et relance sont propres à chaque section; retour sur
-l'écran recharge les données et les réponses obsolètes sont ignorées.
+Chargement, vide, erreur et relance sont propres à chaque section et passent
+par `FeedbackState` sans cadre (`framed={false}`) dans la carte. Le retour sur
+l'écran recharge les données; le graphique déjà affiché reste visible pendant
+ce rechargement (`sectionState.ts`, #154) et les réponses obsolètes sont
+ignorées. `NativeChart` ne recrée l'instance ECharts qu'au changement de
+taille : de nouvelles données la réutilisent (`setOption` sans fusion). Un
+échec de rechargement affiche l'erreur et sa relance à la place du graphique.
+
+Chaque barre prend la couleur de sa catégorie. Une catégorie sans couleur
+propre prend la palette `dataCategory1` à `dataCategory6` (règle et limites
+dans `docs/design-system-foundations.md`), au rang de son
+identifiant parmi les catégories sans couleur : la couleur ne change ni avec
+les montants ni avec le tri, et suit la même règle que le Web (#172). La
+pastille ou l'icône de la liste reprend la couleur de la barre. La grille
+utilise `outerBoundsMode: "same"` et `outerBoundsContain: "axisLabel"`,
+équivalents ECharts 6 de `containLabel`; sans largeur fixe, la colonne des
+libellés suit le plus long, tronqué à 16 caractères.
 
 Les graphiques utilisent les tokens du thème clair (`themes.light.color`),
 comme le reste de l'application mobile qui n'a pas encore de thème sombre :

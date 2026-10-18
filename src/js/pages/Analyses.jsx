@@ -9,6 +9,7 @@ import {
 import { useChartTokens } from "../components/charts/useChartTokens";
 import { AnalyticsTable } from "../components/Analytics/AnalyticsTable";
 import { useAnalytics } from "../hooks/useAnalytics";
+import { useCategoryRanks } from "../hooks/useCategoryRanks";
 import {
   CHART_TYPES,
   GROUPINGS,
@@ -50,7 +51,7 @@ const Select = ({ id, label, value, options, onChange }) => (
 );
 
 /** Graphique et tableau partagent les tokens et, en secteurs, les couleurs. */
-const Result = ({ data, state }) => {
+const Result = ({ data, state, ranks }) => {
   const tokens = useChartTokens();
   const { metric: metricValue, chart: chartValue } = state;
   const option = useMemo(
@@ -58,13 +59,15 @@ const Result = ({ data, state }) => {
       analyticsChartOption(
         data,
         { metric: metricValue, chart: chartValue },
-        tokens
+        tokens,
+        ranks
       ),
-    [data, metricValue, chartValue, tokens]
+    [data, metricValue, chartValue, tokens, ranks]
   );
   const slices = useMemo(
-    () => (chartValue === "pie" ? pieSlices(data, metricValue, tokens) : null),
-    [data, metricValue, chartValue, tokens]
+    () =>
+      chartValue === "pie" ? pieSlices(data, metricValue, tokens, ranks) : null,
+    [data, metricValue, chartValue, tokens, ranks]
   );
   const metric = METRICS.find((item) => item.value === metricValue).label;
   const chart = CHART_TYPES.find((item) => item.value === chartValue).label;
@@ -97,6 +100,11 @@ const Analyses = () => {
   );
   const query = toApiQuery(state);
   const result = useAnalytics(query, problem);
+  // Mêmes couleurs de catégorie que l'accueil (#172), lues une fois pour la
+  // page : un changement de filtre ne les relit pas et ne les fait pas varier.
+  const palette = useCategoryRanks();
+  const status =
+    result.status === "success" && !palette.settled ? "loading" : result.status;
 
   // Les dates saisies remplacent l'entrée d'historique au lieu d'en ajouter.
   const update = (changes, { replace = false } = {}) => {
@@ -201,7 +209,7 @@ const Analyses = () => {
       </form>
 
       <section className="analytics__result" aria-live="polite">
-        {result.status === "loading" && (
+        {status === "loading" && (
           <p className="analytics__state" role="status">
             Chargement du graphique…
           </p>
@@ -234,8 +242,8 @@ const Analyses = () => {
             Aucune opération sur cette période.
           </p>
         )}
-        {result.status === "success" && (
-          <Result data={result.data} state={state} />
+        {status === "success" && (
+          <Result data={result.data} state={state} ranks={palette.ranks} />
         )}
       </section>
     </main>

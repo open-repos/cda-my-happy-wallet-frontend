@@ -45,6 +45,20 @@ avec des adaptateurs distincts.
 - données financières et séries de graphiques ;
 - navigation, cartes, champs et contrôles.
 
+Les catégories sans couleur propre utilisent la palette `dataCategory1` à
+`dataCategory6` (`--ds-color-data-category1` à `6`), propre à chaque thème :
+contraste d'au moins 3:1 sur `backgroundSurface`, vérifié par le générateur,
+et écart perçu CIEDE2000 d'au moins 15 entre ses couleurs et avec celles du
+sélecteur de catégorie (`test/vitest/categoryPalette.test.js`). Une catégorie
+prend la couleur de son rang, par identifiant, parmi les catégories sans
+couleur (`src/js/utils/categoryPalette.js`). La règle est la même sur
+l'accueil, les analyses et le mobile (#172). Les analyses lisent les
+catégories une fois par page et ne tracent qu'ensuite; si cette lecture
+échoue, elles suivent l'ordre d'affichage. Limites connues : au-delà de six
+catégories sans couleur, les couleurs se répètent; supprimer ou colorer une
+catégorie décale le rang des suivantes; les catégories inconnues partagent un
+rang.
+
 Les noms décrivent un rôle (`--color-text-primary`) et non une valeur
 (`--dark-green`). Les thèmes clair et sombre redéfinissent les tokens
 sémantiques sans modifier les composants consommateurs.

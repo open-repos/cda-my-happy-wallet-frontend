@@ -1,5 +1,6 @@
 import { formatMoney } from "../BudgetCalendar/budgetFormat";
 import { iconDataUri } from "../../utils/categoryIcons";
+import { paletteColor } from "../../utils/categoryPalette";
 
 export const EXPENSE_CHART_TYPES = [
   { value: "bar", label: "Barres" },
@@ -19,7 +20,17 @@ const tooltip = (currency, tokens) => ({
   textStyle: textStyle(tokens),
 });
 
-const colorOf = (row, tokens) => row.color ?? tokens.expense;
+/** Couleur propre, sinon palette du thème au rang de la catégorie (#172). */
+const colorOf = (row, tokens) =>
+  row.color ?? paletteColor(row.paletteIndex ?? 0, tokens);
+
+const LABEL_MAX_LENGTH = 16;
+
+/** Libellé d'axe tronqué ; le nom complet reste dans l'infobulle et la liste. */
+const axisLabelText = (name) =>
+  name.length > LABEL_MAX_LENGTH
+    ? `${name.slice(0, LABEL_MAX_LENGTH - 1).trimEnd()}…`
+    : name;
 
 const percentFormat = new Intl.NumberFormat("fr-FR", {
   style: "percent",
@@ -108,10 +119,21 @@ export const expensesChartOption = (
   }
   return {
     ...common,
-    grid: { left: 8, right: 72, top: 8, bottom: 8, containLabel: true },
+    // Équivalent ECharts 6 de `containLabel` (#154).
+    grid: {
+      left: 8,
+      right: 72,
+      top: 8,
+      bottom: 8,
+      outerBoundsMode: "same",
+      outerBoundsContain: "axisLabel",
+    },
     xAxis: {
       type: "value",
-      axisLabel: { color: tokens.muted },
+      // Comme sur le mobile : trois intervalles au plus, sans graduations qui
+      // se touchent (« 0 100200300 ») sur un écran de 360 px (#172).
+      splitNumber: 3,
+      axisLabel: { color: tokens.muted, hideOverlap: true },
       splitLine: { lineStyle: { color: tokens.grid } },
     },
     yAxis: {
@@ -121,7 +143,9 @@ export const expensesChartOption = (
       axisLabel: {
         color: tokens.text,
         formatter: (name, index) =>
-          iconUris[index] ? `{icon${index}|} ${name}` : name,
+          iconUris[index]
+            ? `{icon${index}|} ${axisLabelText(name)}`
+            : axisLabelText(name),
         rich: Object.fromEntries(
           iconUris.flatMap((uri, index) =>
             uri

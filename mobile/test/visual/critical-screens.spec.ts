@@ -40,6 +40,9 @@ test("captures the populated dashboard and navigation", async ({
     page.getByText("Alimentation : 42,50", { exact: false }),
   ).toBeVisible();
   await expect(
+    page.getByText("Transport : 12,00", { exact: false }),
+  ).toBeVisible();
+  await expect(
     page.getByText("25 % de l’épargne visée atteinte", { exact: true }),
   ).toBeVisible();
   await expect(
