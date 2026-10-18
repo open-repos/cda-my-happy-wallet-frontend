@@ -23,6 +23,7 @@ import {
   CategoryDraftErrors,
   validateCategoryDraft,
 } from "@/src/features/categories/domain/categoryDraft";
+import { CategoryIconPicker } from "@/src/features/categories/presentation/CategoryIconPicker";
 import { CategoryResult } from "@/src/features/categories/presentation/useCategories";
 import { OperationCategory } from "@/src/features/operations/domain/oneOffOperation";
 
@@ -112,6 +113,7 @@ export const CategoryFormModal = ({
 }: CategoryFormModalProps) => {
   const [name, setName] = useState(category?.name ?? "");
   const [color, setColor] = useState(() => initialChoice(category?.color));
+  const [icon, setIcon] = useState<string | null>(category?.icon ?? null);
   const [errors, setErrors] = useState<CategoryDraftErrors>({});
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
@@ -121,7 +123,14 @@ export const CategoryFormModal = ({
   };
 
   const submit = async () => {
-    const draft = { name, color: selectedColor(color) };
+    // Icône inchangée : non renvoyée, pour qu'une icône retirée entre-temps de
+    // la liste autorisée n'empêche pas de renommer la catégorie.
+    const unchanged = category != null && icon === (category.icon ?? null);
+    const draft = {
+      name,
+      color: selectedColor(color),
+      icon: unchanged ? undefined : icon,
+    };
     const validationErrors = validateCategoryDraft(draft);
     setErrors(validationErrors);
     const firstError = validationErrors.name ?? validationErrors.color;
@@ -254,6 +263,17 @@ export const CategoryFormModal = ({
                   {errors.color}
                 </Text>
               ) : null}
+
+              <CategoryIconPicker
+                color={selectedColor(color)}
+                disabled={isSaving}
+                name={name}
+                value={icon}
+                onChange={(next) => {
+                  onClearError();
+                  setIcon(next);
+                }}
+              />
 
               {category != null && isConfirmingDelete ? (
                 <View accessibilityRole="alert" style={styles.confirmation}>

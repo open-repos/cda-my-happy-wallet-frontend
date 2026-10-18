@@ -1,6 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { fontAwesomeIcon } from "@/src/features/categories/domain/categoryIcons";
+import { CategoryMark } from "@/src/features/categories/presentation/CategoryMark";
 import { primitives, semantic, themes } from "@/src/design/tokens";
 import {
   OneOffOperation,
@@ -64,14 +66,18 @@ export const OperationCard = ({
       </View>
       <View style={styles.details}>
         <View style={styles.category}>
-          <View
-            accessibilityElementsHidden
-            importantForAccessibility="no"
-            style={[
-              styles.swatch,
-              { backgroundColor: category?.color ?? colors.borderSubtle },
-            ]}
-          />
+          {category?.icon && fontAwesomeIcon(category.icon) ? (
+            <CategoryMark category={category} size={18} />
+          ) : (
+            <View
+              accessibilityElementsHidden
+              importantForAccessibility="no"
+              style={[
+                styles.swatch,
+                { backgroundColor: category?.color ?? colors.borderSubtle },
+              ]}
+            />
+          )}
           <Text numberOfLines={1} style={styles.categoryLabel}>
             {category?.name ?? "Catégorie indisponible"}
           </Text>

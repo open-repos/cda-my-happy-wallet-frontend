@@ -34,9 +34,22 @@ describe("mobile dashboard charts", () => {
         { ...base, amount: "99.00", currency: "USD" },
         { ...base, categoryId: 2, amount: "1.00" },
       ],
-      [{ id: 1, name: "Courses", color: null }],
+      [
+        {
+          id: 1,
+          name: "Courses",
+          color: "#275DAD",
+          icon: "solid:cart-shopping",
+        },
+      ],
     );
     expect(rows.map((r) => r.cents)).toEqual([100, 30]);
+    // Icône et couleur de la catégorie, pour la liste sous le graphique.
+    expect(rows[1]).toMatchObject({
+      icon: "solid:cart-shopping",
+      color: "#275DAD",
+    });
+    expect(rows[0]).toMatchObject({ icon: null, color: null });
     expect(rows[1].label).toContain("Courses : 0,30");
     expect(rows[0].name).toBe("Autre catégorie");
   });
@@ -144,6 +157,8 @@ describe("mobile dashboard charts", () => {
               categoryId: 1,
               name: "Courses",
               cents: 30,
+              icon: null,
+              color: null,
               label: "Courses : 0,30 €",
             },
           ],

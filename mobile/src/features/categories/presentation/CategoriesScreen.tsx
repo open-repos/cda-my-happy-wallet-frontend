@@ -12,6 +12,7 @@ import { useAuth } from "@/src/features/auth/presentation/AuthProvider";
 import { CategoryDraft } from "@/src/features/categories/domain/categoryDraft";
 import { HttpCategoriesGateway } from "@/src/features/categories/infrastructure/HttpCategoriesGateway";
 import { CategoryFormModal } from "@/src/features/categories/presentation/CategoryFormModal";
+import { CategoryMark } from "@/src/features/categories/presentation/CategoryMark";
 import {
   CategoryResult,
   useCategories,
@@ -156,14 +157,7 @@ export const CategoriesScreen = () => {
         }
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <View
-              style={[
-                styles.swatch,
-                item.color
-                  ? { backgroundColor: item.color }
-                  : styles.swatchNone,
-              ]}
-            />
+            <CategoryMark category={item} />
             <View style={styles.cardText}>
               <Text style={styles.cardName}>{item.name}</Text>
               {item.color ? null : (
@@ -278,14 +272,6 @@ const styles = StyleSheet.create({
     paddingLeft: primitives.space["4"],
     paddingRight: primitives.space["2"],
   },
-  swatch: {
-    borderColor: colors.borderStrong,
-    borderRadius: primitives.radius.pill,
-    borderWidth: semantic.borderWidth.default,
-    height: primitives.space["5"],
-    width: primitives.space["5"],
-  },
-  swatchNone: { backgroundColor: colors.backgroundCanvas },
   cardText: { flex: 1, paddingVertical: primitives.space["3"] },
   cardName: {
     color: colors.textPrimary,

@@ -20,9 +20,11 @@ export const CATEGORY_PALETTE = [
 export interface CategoryDraft {
   name: string;
   color: string | null;
+  /** `undefined` : icône inchangée, non transmise (le backend la conserve). */
+  icon?: string | null;
 }
 
-export type CategoryDraftErrors = Partial<Record<keyof CategoryDraft, string>>;
+export type CategoryDraftErrors = Partial<Record<"name" | "color", string>>;
 
 /** Code d'erreur stable de l'API, `null` pour une panne réseau. */
 export type CategoryErrorCode =
@@ -49,12 +51,13 @@ export const validateCategoryDraft = (
 };
 
 /**
- * Corps envoyé à l'API : jamais d'`icon`, que le backend conserve alors
- * (le choix d'icône mobile arrive avec #132).
+ * Corps envoyé à l'API. `icon` n'est transmis que s'il a été choisi : une
+ * icône inchangée (même retirée de la liste depuis) n'empêche pas de renommer.
  */
 export const toCategoryPayload = (draft: CategoryDraft): CategoryDraft => ({
   name: draft.name.trim(),
   color: draft.color ? draft.color.toUpperCase() : null,
+  ...(draft.icon === undefined ? {} : { icon: draft.icon }),
 });
 
 const messages: Record<string, string> = {
@@ -63,6 +66,8 @@ const messages: Record<string, string> = {
   CATEGORY_IN_USE:
     "Cette catégorie est utilisée par des opérations : modifiez-les avant de la supprimer.",
   CATEGORY_NOT_FOUND: "Cette catégorie n’existe plus. La liste est actualisée.",
+  INVALID_CATEGORY_ICON:
+    "Cette icône n’est plus disponible. Choisissez-en une autre ou « Sans icône ».",
 };
 
 export const categoryErrorMessage = (code: CategoryErrorCode): string =>

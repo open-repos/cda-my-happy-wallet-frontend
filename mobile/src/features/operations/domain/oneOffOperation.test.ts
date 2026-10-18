@@ -27,6 +27,24 @@ describe("one-off operation domain", () => {
     expect(() => parseOperation({ ...operation, amount: 42.5 })).toThrow();
     expect(() => parseCategory({ id: 2, name: "X", color: "red" })).toThrow();
     expect(() =>
+      parseCategory({ id: 2, name: "Loisirs", color: null, icon: "github" }),
+    ).toThrow();
+    // `icon` (#84) : `null` quand l'API l'omet.
+    expect(
+      parseCategory({
+        id: 2,
+        name: "Loisirs",
+        color: null,
+        icon: "regular:heart",
+      }),
+    ).toEqual({ id: 2, name: "Loisirs", color: null, icon: "regular:heart" });
+    expect(parseCategory({ id: 2, name: "Loisirs", color: null })).toEqual({
+      id: 2,
+      name: "Loisirs",
+      color: null,
+      icon: null,
+    });
+    expect(() =>
       parseCollectionPage(
         {
           data: [operation],
