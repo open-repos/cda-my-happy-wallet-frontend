@@ -38,6 +38,12 @@ const requiredColorRoles = [
   "fieldBackground",
   "fieldText",
   "fieldBorder",
+  "dataCategory1",
+  "dataCategory2",
+  "dataCategory3",
+  "dataCategory4",
+  "dataCategory5",
+  "dataCategory6",
 ];
 
 const toKebabCase = (value) =>

@@ -29,6 +29,17 @@ Le guide Android local couvre la premiere installation SDK/AVD, les dependances
 Docker, la generation du dossier Android absent d'un clone neuf, les prerequis
 du build natif humain, ADB, Metro, le backend et les retours arriere :
 [`docs/android-development-build.md`](docs/android-development-build.md).
+Il documente aussi `--api-origin` pour choisir entre l'origine locale exposee
+par `adb reverse` et l'adresse LAN du poste utilisee par un appareil reel.
+
+Avant le premier lancement, executer le diagnostic automatise sur le poste
+Linux. L'option stricte verifie aussi qu'un appareil est en ligne et que le
+development build est installe :
+
+```bash
+./mobile/scripts/diagnose-android-host.sh
+./mobile/scripts/diagnose-android-host.sh --require-device
+```
 
 ## Development Build Sur iPhone
 
@@ -84,3 +95,10 @@ l'access token et le profil utilisateur ne sont pas persistants dans ce coffre.
 Documentation officielle : https://docs.expo.dev/
 
 Strategie de build et de publication : [`docs/ci-cd.md`](docs/ci-cd.md).
+
+Politique SemVer, numeros de build EAS et compatibilite `/v1` :
+[`docs/versioning-and-api-compatibility.md`](docs/versioning-and-api-compatibility.md).
+
+Graphiques du tableau de bord : [décision, dépendances et recette Android #122](docs/mobile-echarts.md).
+
+Catégories d'opérations : [parcours, formulaire et recette Android #134](docs/mobile-categories.md).

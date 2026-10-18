@@ -27,6 +27,58 @@
   width: min(100%, 36rem);
 }
 
+:is(.login_form, .register_form, .forgotpassword_form, .newpassword_form)
+  > .auth-field-label {
+  width: min(100%, 36rem);
+  align-self: center;
+  text-align: left;
+  color: var(--ds-color-text-on-shell);
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+:is(.login, .register, .forgotpassword, .newpassword)
+  :is(.login_form, .register_form, .forgotpassword_form, .newpassword_form)
+  > input {
+  font-size: 1rem;
+  color: var(--ds-color-text-primary);
+  background: var(--ds-color-background-surface);
+  border: 2px solid var(--ds-color-text-muted);
+}
+
+:is(.login, .register, .forgotpassword, .newpassword) input::placeholder {
+  color: var(--ds-color-text-muted);
+  opacity: 1;
+}
+
+:is(.login, .register, .forgotpassword, .newpassword) input:focus-visible {
+  outline: var(--ds-border-width-focus) solid
+    var(--ds-color-focus-ring-on-shell);
+  outline-offset: 3px;
+}
+
+:is(.login, .register, .forgotpassword, .newpassword) .submit_btn {
+  height: auto;
+  min-height: 3rem;
+  padding: 0.75rem;
+  white-space: normal;
+  color: var(--ds-color-action-primary-text);
+  background: var(--ds-color-action-primary-background);
+  border: 2px solid var(--ds-color-text-on-shell);
+  font-size: 1rem;
+}
+
+:is(.login, .register, .forgotpassword, .newpassword) .submit_btn:hover {
+  color: var(--ds-color-action-secondary-text);
+  background: var(--ds-color-action-secondary-background);
+}
+
+:is(.login, .register, .forgotpassword, .newpassword)
+  .submit_btn:focus-visible {
+  outline-color: var(--ds-color-focus-ring-on-shell);
+}
+
 :is(.login, .register, .forgotpassword, .newpassword) > img {
   width: auto;
   max-width: min(18.75rem, 70vw);
@@ -48,4 +100,15 @@
   :is(.login, .register, .forgotpassword, .newpassword) .link-div {
     text-align: center !important;
   }
+}
+
+:is(.login, .register, .forgotpassword, .newpassword) a,
+:is(.login, .register, .forgotpassword, .newpassword) a:hover {
+  color: var(--ds-color-text-on-shell);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+:is(.login, .register, .forgotpassword, .newpassword) a:focus-visible {
+  outline-color: var(--ds-color-focus-ring-on-shell);
 }

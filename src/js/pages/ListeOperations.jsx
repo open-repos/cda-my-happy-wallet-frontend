@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { LiveMessage } from "../components/LiveMessage";
 import addIcon from "../../assets/icons/add.svg";
 import { OneOffOperationForm } from "../components/OneOffOperations/OneOffOperationForm";
 import { OneOffOperationList } from "../components/OneOffOperations/OneOffOperationList";
@@ -42,7 +44,10 @@ function ListeOperations() {
           <h1>Ensemble des opérations effectuées</h1>
           <p>
             Retrouvez vos entrées et dépenses ponctuelles, des plus récentes aux
-            plus anciennes.
+            plus anciennes.{" "}
+            <Link className="one-off-header-link" to="/categories">
+              Gérer les catégories
+            </Link>
           </p>
         </div>
         <button
@@ -55,24 +60,23 @@ function ListeOperations() {
           Ajouter une opération
         </button>
       </header>
-      {state.message && (
-        <p
-          className={`one-off-message ${
-            state.status === "error" || state.mutationStatus === "error"
-              ? "one-off-message--error"
-              : ""
-          }`}
-          role={
-            state.status === "error" || state.mutationStatus === "error"
-              ? "alert"
-              : "status"
-          }
-        >
-          {state.message}
-        </p>
-      )}
+      <LiveMessage
+        message={state.message}
+        isError={
+          state.status === "error" ||
+          state.mutationStatus === "error" ||
+          state.pageStatus === "error"
+        }
+        className="one-off-message"
+        errorClassName="one-off-message--error"
+      />
+      {/* Chargement annoncé par une région live toujours montée (#164). */}
+      <LiveMessage
+        message={state.status === "loading" ? "Chargement des opérations…" : ""}
+        visible={false}
+      />
       {state.status === "loading" && (
-        <section className="one-off-state" aria-live="polite">
+        <section className="one-off-state">
           <span className="one-off-loader" aria-hidden="true" />
           <h2>Chargement des opérations…</h2>
         </section>

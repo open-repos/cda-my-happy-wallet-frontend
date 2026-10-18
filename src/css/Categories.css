@@ -1,0 +1,278 @@
+/* Page des catégories : réutilise la mise en page et les boutons des
+   opérations (Operations.css) et ajoute la liste et le choix de couleur. */
+
+.categories-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.categories-list__item {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-primitive-space-3);
+  padding: var(--ds-primitive-space-3) 0;
+  border-bottom: var(--ds-border-width-default) solid
+    var(--ds-color-border-subtle);
+}
+
+.categories-list__item:last-child {
+  border-bottom: 0;
+}
+
+.categories-list__name {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  font-weight: var(--ds-primitive-font-weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.categories-list__hint {
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-primitive-font-size-sm);
+  font-weight: var(--ds-primitive-font-weight-regular);
+}
+
+.category-form {
+  display: grid;
+  gap: var(--ds-primitive-space-5);
+}
+
+.category-form__name {
+  display: flex;
+  max-width: var(--ds-primitive-size-content-sm);
+  flex-direction: column;
+  gap: var(--ds-primitive-space-2);
+  color: var(--ds-color-text-secondary);
+  font-weight: var(--ds-primitive-font-weight-semibold);
+}
+
+.category-form__name input {
+  min-height: var(--ds-size-control-min-height);
+  padding: var(--ds-primitive-space-3);
+  border: var(--ds-border-width-default) solid var(--ds-color-field-border);
+  border-radius: var(--ds-radius-control);
+  background: var(--ds-color-field-background);
+  color: var(--ds-color-field-text);
+  font: inherit;
+}
+
+/* Neutralise le style global orange des libellés (FormControl.css). */
+.category-form__name label,
+.category-form__custom {
+  margin: 0;
+  color: var(--ds-color-text-secondary);
+  font-weight: var(--ds-primitive-font-weight-semibold);
+}
+
+/* `status-error-text` n'est lisible que sur `status-error-surface` (paire de
+   contraste du design system) : les messages portent cette surface, et la
+   bordure d'un champ invalide prend le rôle danger, contrasté dans chaque
+   thème. */
+.category-form [aria-invalid="true"] {
+  border-color: var(--ds-color-action-danger-background);
+  border-width: var(--ds-primitive-border-width-strong);
+}
+
+.category-form__error,
+.category-form .one-off-delete-confirmation {
+  padding: var(--ds-primitive-space-2) var(--ds-primitive-space-3);
+  border-radius: var(--ds-radius-control);
+  background: var(--ds-color-status-error-surface);
+  color: var(--ds-color-status-error-text);
+}
+
+.category-form__error {
+  font-size: var(--ds-primitive-font-size-sm);
+}
+
+.category-colors {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: var(--ds-primitive-space-2);
+  margin: 0;
+  padding: var(--ds-primitive-space-3);
+  border: var(--ds-border-width-default) solid var(--ds-color-border-subtle);
+  border-radius: var(--ds-radius-control);
+  color: var(--ds-color-text-secondary);
+}
+
+.category-colors legend {
+  padding: 0 var(--ds-primitive-space-2);
+  font-weight: var(--ds-primitive-font-weight-semibold);
+}
+
+.category-color-option {
+  display: flex;
+  min-height: var(--ds-size-control-min-height);
+  align-items: center;
+  gap: var(--ds-primitive-space-2);
+  padding: 0 var(--ds-primitive-space-2);
+  border-radius: var(--ds-radius-control);
+  color: var(--ds-color-text-primary);
+  cursor: pointer;
+}
+
+.category-color-option:has(input:checked) {
+  background: var(--ds-color-status-info-surface);
+  color: var(--ds-color-status-info-text);
+  font-weight: var(--ds-primitive-font-weight-semibold);
+}
+
+.category-form__custom,
+.category-colors .category-form__error {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: var(--ds-primitive-space-3);
+}
+
+.category-form__custom input {
+  width: 3rem;
+  height: var(--ds-size-control-min-height);
+  padding: var(--ds-primitive-space-1);
+  border: var(--ds-border-width-default) solid var(--ds-color-field-border);
+  border-radius: var(--ds-radius-control);
+  background: var(--ds-color-field-background);
+}
+
+/* Choix de l'icône : recherche et aperçu, puis grille de boutons radio. */
+.category-icons {
+  display: grid;
+  gap: var(--ds-primitive-space-3);
+  margin: 0;
+  padding: var(--ds-primitive-space-3);
+  border: var(--ds-border-width-default) solid var(--ds-color-border-subtle);
+  border-radius: var(--ds-radius-control);
+  color: var(--ds-color-text-secondary);
+}
+
+.category-icons legend {
+  padding: 0 var(--ds-primitive-space-2);
+  font-weight: var(--ds-primitive-font-weight-semibold);
+}
+
+.category-icons__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--ds-primitive-space-4);
+}
+
+.category-icons__search {
+  display: flex;
+  min-width: min(100%, 16rem);
+  flex: 1 1 16rem;
+  flex-direction: column;
+  gap: var(--ds-primitive-space-2);
+}
+
+.category-icons__search label {
+  margin: 0;
+  color: var(--ds-color-text-secondary);
+  font-weight: var(--ds-primitive-font-weight-semibold);
+}
+
+.category-icons__search input {
+  min-height: var(--ds-size-control-min-height);
+  padding: var(--ds-primitive-space-3);
+  border: var(--ds-border-width-default) solid var(--ds-color-field-border);
+  border-radius: var(--ds-radius-control);
+  background: var(--ds-color-field-background);
+  color: var(--ds-color-field-text);
+  font: inherit;
+}
+
+.category-icons__search span {
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-primitive-font-size-sm);
+}
+
+.category-icons__preview {
+  display: flex;
+  min-height: var(--ds-size-control-min-height);
+  align-items: center;
+  gap: var(--ds-primitive-space-3);
+  padding: var(--ds-primitive-space-2) var(--ds-primitive-space-4);
+  border-radius: var(--ds-radius-control);
+  background: var(--ds-color-background-surface);
+  color: var(--ds-color-text-primary);
+  font-weight: var(--ds-primitive-font-weight-semibold);
+}
+
+.category-icons__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(3rem, 1fr));
+  gap: var(--ds-primitive-space-2);
+  max-height: 15rem;
+  overflow-y: auto;
+}
+
+.category-icon-option {
+  display: flex;
+  min-height: var(--ds-size-control-min-height);
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  border: var(--ds-border-width-default) solid var(--ds-color-border-subtle);
+  border-radius: var(--ds-radius-control);
+  color: var(--ds-color-text-primary);
+  cursor: pointer;
+}
+
+/* Radio masqué visuellement mais focalisable : l'option entière porte
+   l'état coché et l'anneau de focus. */
+.category-icon-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.category-icon-option:has(input:checked) {
+  border-color: var(--ds-color-status-info-text);
+  background: var(--ds-color-status-info-surface);
+  color: var(--ds-color-status-info-text);
+}
+
+.category-icon-option:has(input:focus-visible) {
+  outline: var(--ds-border-width-focus) solid var(--ds-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.category-icon-option--none {
+  justify-self: start;
+  gap: var(--ds-primitive-space-2);
+  padding: 0 var(--ds-primitive-space-4);
+  font-weight: var(--ds-primitive-font-weight-semibold);
+}
+
+.category-icons__status {
+  margin: 0;
+  color: var(--ds-color-text-muted);
+}
+
+.category-icons__error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ds-primitive-space-3);
+  padding: var(--ds-primitive-space-2) var(--ds-primitive-space-3);
+  border-radius: var(--ds-radius-control);
+  background: var(--ds-color-status-error-surface);
+  color: var(--ds-color-status-error-text);
+}
+
+@media (max-width: 767px) {
+  .categories-list__item {
+    flex-wrap: wrap;
+  }
+
+  .categories-list__item .one-off-button {
+    margin-left: auto;
+  }
+}

@@ -1,0 +1,107 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: mhw_e2e
+      MYSQL_USER: mhw_e2e
+      MYSQL_PASSWORD: ${E2E_DB_PASSWORD:?Run npm run test:e2e:stack}
+      MYSQL_ROOT_PASSWORD: ${E2E_ROOT_PASSWORD:?Run npm run test:e2e:stack}
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+    networks: [isolated]
+
+  redis:
+    image: redis:8.2.1-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    networks: [isolated]
+
+  api:
+    build:
+      # Consume an immutable backend revision; never edit or seed another clone.
+      context: https://github.com/open-repos/cda-my-happy-wallet-backend.git#9a2444a26fc2cc063feeeb95329ab20170003785
+    environment:
+      NODE_ENV: test
+      MHW_E2E: "1"
+      PORT: "4201"
+      APP_BASE_URL: /v1
+      API_DOCS_ENABLED: "false"
+      NPM_CONFIG_CACHE: /tmp/npm-cache
+      XDG_CACHE_HOME: /tmp/cache
+      CHECKPOINT_DISABLE: "1"
+      PRISMA_HIDE_UPDATE_MESSAGE: "1"
+      DATABASE_URL: mysql://mhw_e2e:${E2E_DB_PASSWORD}@mysql:3306/mhw_e2e
+      SHADOW_DATABASE_URL: mysql://mhw_e2e:${E2E_DB_PASSWORD}@mysql:3306/mhw_e2e_shadow
+      REDIS_URL: redis://redis:6379
+      ACCESS_TOKEN: ${E2E_ACCESS_SECRET:?Run npm run test:e2e:stack}
+      REFRESH_TOKEN: ${E2E_REFRESH_SECRET:?Run npm run test:e2e:stack}
+      REGISTER_TOKEN: ${E2E_REGISTER_SECRET:?Run npm run test:e2e:stack}
+      JWT_ISSUER: urn:myhappywallet:e2e:issuer
+      JWT_AUDIENCE: urn:myhappywallet:e2e:web
+      FRONTEND_URL: http://127.0.0.1:4175
+      API_PUBLIC_URL: http://api:4201
+      CORS_ORIGINS: http://127.0.0.1:4175
+      MAILER_DRIVER: smtp
+      SMTP_HOST: 127.0.0.1
+      SMTP_PORT: "1025"
+      SMTP_SECURE: "false"
+      EMAIL_SENDER: no-reply@example.test
+      E2E_PASSWORD: ${E2E_PASSWORD:?Run npm run test:e2e:stack}
+    command:
+      - sh
+      - -ec
+      - node /fixtures/seed.cjs --check && npm run db:deploy && node /fixtures/seed.cjs && node /fixtures/seed.cjs && node dist/index.js
+    volumes:
+      - ./test/full-stack/seed.cjs:/fixtures/seed.cjs:ro
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4201/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 3s
+      timeout: 3s
+      start_period: 30s
+      retries: 40
+    networks: [isolated]
+
+  tests:
+    build:
+      context: .
+      dockerfile: test/full-stack/Dockerfile
+    environment:
+      CI: "true"
+      MHW_E2E: "1"
+      E2E_PASSWORD: ${E2E_PASSWORD:?Run npm run test:e2e:stack}
+    init: true
+    shm_size: 1gb
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [isolated]
+
+networks:
+  isolated:
+    internal: true

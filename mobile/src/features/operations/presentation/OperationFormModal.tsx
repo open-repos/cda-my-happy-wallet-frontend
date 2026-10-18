@@ -12,6 +12,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import { primitives, semantic, themes } from "@/src/design/tokens";
 import {
@@ -75,173 +76,188 @@ export const OperationFormModal = ({
 
   return (
     <Modal animationType="slide" onRequestClose={onCancel} visible={visible}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={styles.flex}
-      >
-        <ScrollView
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.header}>
-            <Text accessibilityRole="header" style={styles.title}>
-              {operation == null
-                ? "Ajouter une opération"
-                : "Modifier l’opération"}
-            </Text>
-            <Pressable
-              accessibilityLabel="Fermer le formulaire"
-              accessibilityRole="button"
-              disabled={isSaving}
-              onPress={onCancel}
-              style={styles.iconButton}
-            >
-              <Ionicons color={colors.textPrimary} name="close" size={28} />
-            </Pressable>
-          </View>
-
-          <Text style={styles.label}>Titre</Text>
-          <TextInput
-            accessibilityLabel="Titre"
-            editable={!isSaving}
-            maxLength={50}
-            onChangeText={(value) => update("title", value)}
-            placeholder="Exemple : Courses"
-            style={[styles.input, errors.title && styles.invalid]}
-            value={draft.title}
-          />
-          {errors.title ? (
-            <Text style={styles.error}>{errors.title}</Text>
-          ) : null}
-
-          <Text style={styles.label}>Montant en euros</Text>
-          <TextInput
-            accessibilityLabel="Montant en euros"
-            editable={!isSaving}
-            keyboardType="decimal-pad"
-            onChangeText={(value) => update("amount", value)}
-            placeholder="0,00"
-            style={[styles.input, errors.amount && styles.invalid]}
-            value={draft.amount}
-          />
-          {errors.amount ? (
-            <Text style={styles.error}>{errors.amount}</Text>
-          ) : null}
-
-          <Text style={styles.label}>Date</Text>
-          <OperationDatePicker
-            disabled={isSaving}
-            invalid={errors.operationDate != null}
-            onChange={(value) => update("operationDate", value)}
-            value={draft.operationDate}
-          />
-          {errors.operationDate ? (
-            <Text style={styles.error}>{errors.operationDate}</Text>
-          ) : null}
-
-          <Text style={styles.label}>Type d’opération</Text>
-          <View accessibilityRole="radiogroup" style={styles.segmented}>
-            {(["DEPENSE", "ENTREE"] as const).map((kind) => {
-              const selected = draft.kind === kind;
-              return (
-                <Pressable
-                  key={kind}
-                  accessibilityRole="radio"
-                  accessibilityState={{ checked: selected }}
-                  disabled={isSaving}
-                  onPress={() => update("kind", kind)}
-                  style={[styles.segment, selected && styles.segmentSelected]}
-                >
-                  <Text
-                    style={[
-                      styles.segmentLabel,
-                      selected && styles.segmentLabelSelected,
-                    ]}
-                  >
-                    {kind === "DEPENSE" ? "Dépense" : "Entrée"}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <Text style={styles.label}>Catégorie</Text>
-          <View
-            style={[styles.categoryList, errors.categoryId && styles.invalid]}
+      {/* Une Modal Android a besoin de son propre fournisseur de marges. */}
+      <SafeAreaProvider>
+        <SafeAreaView edges={["top", "bottom"]} style={styles.flex}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            style={styles.flex}
           >
-            {categories.map((category) => {
-              const selected = draft.categoryId === category.id;
-              return (
+            <ScrollView
+              contentContainerStyle={styles.content}
+              keyboardShouldPersistTaps="handled"
+            >
+              <View style={styles.header}>
+                <Text accessibilityRole="header" style={styles.title}>
+                  {operation == null
+                    ? "Ajouter une opération"
+                    : "Modifier l’opération"}
+                </Text>
                 <Pressable
-                  key={category.id}
-                  accessibilityRole="radio"
-                  accessibilityState={{ checked: selected }}
+                  accessibilityLabel="Fermer le formulaire"
+                  accessibilityRole="button"
                   disabled={isSaving}
-                  onPress={() => update("categoryId", category.id)}
-                  style={[styles.category, selected && styles.categorySelected]}
+                  onPress={onCancel}
+                  style={styles.iconButton}
                 >
-                  <View
-                    style={[
-                      styles.swatch,
-                      {
-                        backgroundColor: category.color ?? colors.borderSubtle,
-                      },
-                    ]}
-                  />
-                  <Text style={styles.categoryLabel}>{category.name}</Text>
-                  {selected ? (
-                    <Ionicons
-                      color={colors.statusSuccessText}
-                      name="checkmark-circle"
-                      size={20}
-                    />
-                  ) : null}
+                  <Ionicons color={colors.textPrimary} name="close" size={28} />
                 </Pressable>
-              );
-            })}
-          </View>
-          {errors.categoryId ? (
-            <Text style={styles.error}>{errors.categoryId}</Text>
-          ) : null}
+              </View>
 
-          <View style={styles.actions}>
-            {operation != null ? (
-              <Pressable
-                accessibilityRole="button"
+              <Text style={styles.label}>Titre</Text>
+              <TextInput
+                accessibilityLabel="Titre"
+                editable={!isSaving}
+                maxLength={50}
+                onChangeText={(value) => update("title", value)}
+                placeholder="Exemple : Courses"
+                style={[styles.input, errors.title && styles.invalid]}
+                value={draft.title}
+              />
+              {errors.title ? (
+                <Text style={styles.error}>{errors.title}</Text>
+              ) : null}
+
+              <Text style={styles.label}>Montant en euros</Text>
+              <TextInput
+                accessibilityLabel="Montant en euros"
+                editable={!isSaving}
+                keyboardType="decimal-pad"
+                onChangeText={(value) => update("amount", value)}
+                placeholder="0,00"
+                style={[styles.input, errors.amount && styles.invalid]}
+                value={draft.amount}
+              />
+              {errors.amount ? (
+                <Text style={styles.error}>{errors.amount}</Text>
+              ) : null}
+
+              <Text style={styles.label}>Date</Text>
+              <OperationDatePicker
                 disabled={isSaving}
-                onPress={onDelete}
-                style={[styles.button, styles.deleteButton]}
+                invalid={errors.operationDate != null}
+                onChange={(value) => update("operationDate", value)}
+                value={draft.operationDate}
+              />
+              {errors.operationDate ? (
+                <Text style={styles.error}>{errors.operationDate}</Text>
+              ) : null}
+
+              <Text style={styles.label}>Type d’opération</Text>
+              <View accessibilityRole="radiogroup" style={styles.segmented}>
+                {(["DEPENSE", "ENTREE"] as const).map((kind) => {
+                  const selected = draft.kind === kind;
+                  return (
+                    <Pressable
+                      key={kind}
+                      accessibilityRole="radio"
+                      aria-checked={selected}
+                      disabled={isSaving}
+                      onPress={() => update("kind", kind)}
+                      style={[
+                        styles.segment,
+                        selected && styles.segmentSelected,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.segmentLabel,
+                          selected && styles.segmentLabelSelected,
+                        ]}
+                      >
+                        {kind === "DEPENSE" ? "Dépense" : "Entrée"}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              <Text style={styles.label}>Catégorie</Text>
+              <View
+                style={[
+                  styles.categoryList,
+                  errors.categoryId && styles.invalid,
+                ]}
               >
-                <Text style={styles.deleteLabel}>Supprimer</Text>
-              </Pressable>
-            ) : null}
-            <Pressable
-              accessibilityRole="button"
-              disabled={isSaving}
-              onPress={onCancel}
-              style={[styles.button, styles.secondaryButton]}
-            >
-              <Text style={styles.secondaryLabel}>Annuler</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              disabled={isSaving}
-              onPress={submit}
-              style={[
-                styles.button,
-                styles.primaryButton,
-                isSaving && styles.disabled,
-              ]}
-            >
-              {isSaving ? (
-                <ActivityIndicator color={colors.actionPrimaryText} />
-              ) : (
-                <Text style={styles.primaryLabel}>Enregistrer</Text>
-              )}
-            </Pressable>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+                {categories.map((category) => {
+                  const selected = draft.categoryId === category.id;
+                  return (
+                    <Pressable
+                      key={category.id}
+                      accessibilityRole="radio"
+                      aria-checked={selected}
+                      disabled={isSaving}
+                      onPress={() => update("categoryId", category.id)}
+                      style={[
+                        styles.category,
+                        selected && styles.categorySelected,
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.swatch,
+                          {
+                            backgroundColor:
+                              category.color ?? colors.borderSubtle,
+                          },
+                        ]}
+                      />
+                      <Text style={styles.categoryLabel}>{category.name}</Text>
+                      {selected ? (
+                        <Ionicons
+                          color={colors.statusSuccessText}
+                          name="checkmark-circle"
+                          size={20}
+                        />
+                      ) : null}
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {errors.categoryId ? (
+                <Text style={styles.error}>{errors.categoryId}</Text>
+              ) : null}
+
+              <View style={styles.actions}>
+                {operation != null ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    disabled={isSaving}
+                    onPress={onDelete}
+                    style={[styles.button, styles.deleteButton]}
+                  >
+                    <Text style={styles.deleteLabel}>Supprimer</Text>
+                  </Pressable>
+                ) : null}
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={isSaving}
+                  onPress={onCancel}
+                  style={[styles.button, styles.secondaryButton]}
+                >
+                  <Text style={styles.secondaryLabel}>Annuler</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={isSaving}
+                  onPress={submit}
+                  style={[
+                    styles.button,
+                    styles.primaryButton,
+                    isSaving && styles.disabled,
+                  ]}
+                >
+                  {isSaving ? (
+                    <ActivityIndicator color={colors.actionPrimaryText} />
+                  ) : (
+                    <Text style={styles.primaryLabel}>Enregistrer</Text>
+                  )}
+                </Pressable>
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </SafeAreaProvider>
     </Modal>
   );
 };

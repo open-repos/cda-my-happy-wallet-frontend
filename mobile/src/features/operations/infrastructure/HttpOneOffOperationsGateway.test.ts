@@ -84,4 +84,16 @@ describe("HttpOneOffOperationsGateway", () => {
       categoryId: 2,
     });
   });
+
+  it("filters the operations of a period", async () => {
+    const request = vi.fn().mockResolvedValue(page([operation]));
+    await new HttpOneOffOperationsGateway({ request }).listOperations(null, {
+      from: "2026-10-14",
+      to: "2026-10-14",
+      currency: "EUR",
+    });
+    expect(request).toHaveBeenCalledWith(
+      `/operations?limit=${OPERATIONS_PAGE_LIMIT}&from=2026-10-14&to=2026-10-14&currency=EUR`,
+    );
+  });
 });

@@ -18,7 +18,8 @@ export class AuthorizedHttpClient {
   public constructor(
     apiBaseUrl: string,
     private readonly session: AuthorizedSession,
-    private readonly fetchImplementation: FetchImplementation = fetch,
+    private readonly fetchImplementation: FetchImplementation = (...args) =>
+      fetch(...args),
   ) {
     this.apiBaseUrl = apiBaseUrl.replace(/\/+$/, "");
   }

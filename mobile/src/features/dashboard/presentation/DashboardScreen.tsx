@@ -1,3 +1,5 @@
+import { ChartGateway } from "@/src/features/charts/ChartGateway";
+import { DashboardCharts } from "@/src/features/charts/DashboardCharts";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -11,18 +13,17 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { TAB_SCREEN_EDGES } from "@/src/design/safeArea";
+
 import { semantic, themes } from "@/src/design/tokens";
+import { FeedbackState } from "@/src/design/FeedbackState";
 import { useAuth } from "@/src/features/auth/presentation/AuthProvider";
 import { HttpFixedBudgetGateway } from "@/src/features/dashboard/infrastructure/HttpFixedBudgetGateway";
 import { useFixedBudget } from "@/src/features/dashboard/presentation/useFixedBudget";
+import { HttpBudgetSummaryGateway } from "@/src/features/budget/infrastructure/HttpBudgetSummaryGateway";
+import { BudgetSummaryCards } from "@/src/features/budget/presentation/BudgetSummaryCards";
 
 const colors = themes.light.color;
-const money = (amount: number) =>
-  new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 2,
-  }).format(amount);
 
 interface ActionCardProps {
   description: string;
@@ -57,7 +58,15 @@ export const DashboardScreen = () => {
     () => new HttpFixedBudgetGateway(httpClient),
     [httpClient],
   );
-  const { operationCount, retry, status, summary } = useFixedBudget(gateway);
+  const chartGateway = useMemo(
+    () => new ChartGateway(httpClient),
+    [httpClient],
+  );
+  const summaryGateway = useMemo(
+    () => new HttpBudgetSummaryGateway(httpClient),
+    [httpClient],
+  );
+  const { operationCount, retry, status } = useFixedBudget(gateway);
   const email =
     state.status === "authenticated" || state.status === "refreshing"
       ? state.user.email
@@ -73,7 +82,7 @@ export const DashboardScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <View style={styles.brand}>
@@ -115,102 +124,42 @@ export const DashboardScreen = () => {
         </View>
 
         {status === "loading" ? (
-          <View accessibilityLiveRegion="polite" style={styles.stateCard}>
-            <ActivityIndicator color={colors.focusRing} size="large" />
-            <Text style={styles.stateTitle}>Calcul de votre budget</Text>
-            <Text style={styles.centered}>
-              Vos charges et revenus sont en cours de chargement.
-            </Text>
-          </View>
+          <FeedbackState
+            description="Vos charges et revenus sont en cours de chargement."
+            kind="loading"
+            title="Calcul de votre budget"
+          />
         ) : null}
 
         {status === "error" ? (
-          <View accessibilityLiveRegion="assertive" style={styles.stateCard}>
-            <View style={[styles.stateIcon, styles.errorIcon]}>
-              <Ionicons
-                color={colors.statusErrorText}
-                name="cloud-offline-outline"
-                size={28}
-              />
-            </View>
-            <Text style={styles.stateTitle}>Budget indisponible</Text>
-            <Text style={styles.centered}>
-              Vérifiez votre connexion puis relancez le chargement.
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => void retry()}
-              style={({ pressed }) => [
-                styles.primaryButton,
-                pressed && styles.pressed,
-              ]}
-            >
-              <Ionicons
-                color={colors.actionPrimaryText}
-                name="refresh"
-                size={18}
-              />
-              <Text style={styles.primaryButtonText}>Réessayer</Text>
-            </Pressable>
-          </View>
+          <FeedbackState
+            actions={[{ label: "Réessayer", onPress: () => void retry() }]}
+            description="Vérifiez votre connexion puis relancez le chargement."
+            kind="error"
+            title="Budget indisponible"
+          />
         ) : null}
 
         {status === "success" && operationCount === 0 ? (
-          <View accessibilityLiveRegion="polite" style={styles.stateCard}>
-            <View style={styles.stateIcon}>
-              <Ionicons
-                color={colors.actionPrimaryBackground}
-                name="calculator-outline"
-                size={28}
-              />
-            </View>
-            <Text style={styles.stateTitle}>Commencez votre budget</Text>
-            <Text style={styles.centered}>
-              Ajoutez vos revenus et charges fixes pour calculer votre reste à
-              vivre mensuel.
-            </Text>
-          </View>
+          <FeedbackState
+            actions={[
+              {
+                label: "Configurer mon budget",
+                onPress: () => router.push("/(app)/fixed-budget"),
+              },
+            ]}
+            description="Ajoutez vos revenus et charges fixes pour calculer votre reste à vivre mensuel."
+            icon="calculator-outline"
+            kind="empty"
+            title="Commencez votre budget"
+          />
         ) : null}
 
         {status === "success" && operationCount > 0 ? (
-          <View
-            accessibilityLabel={`Reste à vivre mensuel ${money(summary.remaining)}`}
-            style={styles.budgetCard}
-          >
-            <View style={styles.budgetIcon}>
-              <Ionicons
-                color={colors.textInverse}
-                name="wallet-outline"
-                size={28}
-              />
-            </View>
-            <Text style={styles.budgetLabel}>Reste à vivre mensuel</Text>
-            <Text
-              style={[
-                styles.budgetAmount,
-                summary.remaining < 0 && styles.negative,
-              ]}
-            >
-              {money(summary.remaining)}
-            </Text>
-            <View style={styles.divider} />
-            <View style={styles.totals}>
-              <View style={styles.totalItem}>
-                <Text style={styles.totalLabel}>Revenus fixes</Text>
-                <Text style={[styles.totalValue, styles.income]}>
-                  {money(summary.income)}
-                </Text>
-              </View>
-              <View style={styles.totalSeparator} />
-              <View style={styles.totalItem}>
-                <Text style={styles.totalLabel}>Charges fixes</Text>
-                <Text style={[styles.totalValue, styles.expense]}>
-                  {money(summary.expenses)}
-                </Text>
-              </View>
-            </View>
-          </View>
+          <BudgetSummaryCards gateway={summaryGateway} />
         ) : null}
+
+        <DashboardCharts gateway={chartGateway} />
 
         <View style={styles.actions}>
           <Text style={styles.sectionTitle}>Continuez votre suivi</Text>
@@ -279,91 +228,6 @@ const styles = StyleSheet.create({
     lineHeight: 37,
   },
   subtitle: { color: colors.textSecondary, fontSize: 16, lineHeight: 24 },
-  stateCard: {
-    alignItems: "center",
-    backgroundColor: colors.backgroundSurface,
-    borderColor: colors.borderSubtle,
-    borderRadius: semantic.radius.card,
-    borderWidth: 1,
-    gap: 12,
-    padding: 24,
-  },
-  stateIcon: {
-    alignItems: "center",
-    backgroundColor: colors.actionSecondaryBackground,
-    borderRadius: 999,
-    height: 52,
-    justifyContent: "center",
-    width: 52,
-  },
-  errorIcon: { backgroundColor: colors.statusErrorSurface },
-  stateTitle: {
-    color: colors.textPrimary,
-    fontSize: 20,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  centered: {
-    color: colors.textSecondary,
-    fontSize: 16,
-    lineHeight: 24,
-    textAlign: "center",
-  },
-  primaryButton: {
-    alignItems: "center",
-    backgroundColor: colors.actionPrimaryBackground,
-    borderRadius: semantic.radius.control,
-    flexDirection: "row",
-    gap: 8,
-    minHeight: 48,
-    paddingHorizontal: 16,
-  },
-  primaryButtonText: {
-    color: colors.actionPrimaryText,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  budgetCard: {
-    alignItems: "center",
-    backgroundColor: colors.backgroundSurface,
-    borderColor: colors.borderSubtle,
-    borderRadius: semantic.radius.card,
-    borderWidth: 1,
-    padding: 24,
-    shadowColor: semantic.shadow.card.color,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 6,
-  },
-  budgetIcon: {
-    alignItems: "center",
-    backgroundColor: colors.actionPrimaryBackground,
-    borderRadius: 999,
-    height: 56,
-    justifyContent: "center",
-    width: 56,
-  },
-  budgetLabel: { color: colors.textSecondary, fontSize: 16, marginTop: 16 },
-  budgetAmount: {
-    color: colors.textPrimary,
-    fontSize: 32,
-    fontWeight: "700",
-    marginTop: 4,
-  },
-  negative: { color: colors.statusErrorText },
-  divider: {
-    backgroundColor: colors.borderSubtle,
-    height: 1,
-    marginVertical: 20,
-    width: "100%",
-  },
-  totals: { flexDirection: "row", width: "100%" },
-  totalItem: { alignItems: "center", flex: 1, gap: 4 },
-  totalSeparator: { backgroundColor: colors.borderSubtle, width: 1 },
-  totalLabel: { color: colors.textMuted, fontSize: 14, textAlign: "center" },
-  totalValue: { fontSize: 16, fontWeight: "700" },
-  income: { color: colors.dataIncome },
-  expense: { color: colors.dataExpense },
   actions: { gap: 12 },
   sectionTitle: { color: colors.textPrimary, fontSize: 20, fontWeight: "700" },
   actionCard: {

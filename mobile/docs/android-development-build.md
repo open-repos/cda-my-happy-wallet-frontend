@@ -151,6 +151,23 @@ Play ni declenchement EAS.
 
 ## Lancement automatise recommande
 
+Depuis la racine du depot frontend, verifier d'abord le poste sans demarrer la
+stack ni modifier l'emulateur :
+
+```bash
+./mobile/scripts/diagnose-android-host.sh
+```
+
+Le diagnostic controle Linux, les variables et outils Android, Java 17,
+Docker Compose, l'acces au daemon, KVM, les AVD et les appareils ADB. Les
+prerequis manquants sont des echecs avec un code de sortie `1`; les composants
+optionnels absents sont des avertissements. Pour preparer un lancement
+immediat, exiger aussi un appareil en ligne avec le development build installe :
+
+```bash
+./mobile/scripts/diagnose-android-host.sh --require-device
+```
+
 Apres la premiere installation ci-dessus, le script versionne regroupe les
 commandes des sections suivantes pour le lancement humain. Il appelle Gradle
 sur le poste si l'APK manque, meme sans `--install` :
@@ -164,6 +181,19 @@ Il reutilise par defaut l'emulateur et le development build deja installes,
 demarre la stack Docker, applique les migrations, configure les ports ADB,
 lance Metro dans Docker puis ouvre l'application. Garder le terminal ouvert et
 utiliser `Ctrl+C` pour arreter uniquement Metro.
+
+Metro est defini dans `mobile/compose.dev-client.yml`. Le lanceur recree ce
+service, attend la reponse exacte `packager-status:running`, ouvre le
+development build puis suit ses journaux. A l'arret, il supprime uniquement ce
+conteneur Compose ; les donnees applicatives de l'emulateur et la session
+restent intactes.
+
+Pour consulter les journaux Metro depuis un autre terminal :
+
+```bash
+docker compose -f my-happy-wallet-frontend/mobile/compose.dev-client.yml \
+  logs --follow metro
+```
 
 Si aucun emulateur n'est actif, le demarrer dans Android Studio ou fournir le
 nom exact d'un AVD existant :
@@ -205,6 +235,31 @@ Le parcours local relie quatre elements :
 `adb reverse` rend les deux ports de l'ordinateur accessibles dans
 l'emulateur sous l'adresse `127.0.0.1`. Il n'est donc pas necessaire de chercher
 l'adresse IP du PC pour un emulateur Android local.
+
+## Choisir l'origine API Android
+
+Le lanceur utilise par defaut `http://127.0.0.1:4200`. Cette origine fonctionne
+sur un emulateur et sur un appareil Android relie a ADB, car le script configure
+`adb reverse tcp:4200 tcp:4200` avant d'ouvrir l'application.
+
+Pour tester un appareil reel par le reseau local, fournir une origine que le
+telephone peut joindre :
+
+```bash
+./my-happy-wallet-frontend/mobile/scripts/start-android-dev.sh \
+  --api-origin http://192.168.1.42:4200
+```
+
+Remplacer l'adresse d'exemple par l'adresse IPv4 du poste sur le meme reseau
+que le telephone. Le port `4200` doit etre accessible depuis ce reseau. Utiliser
+un reseau de confiance et refermer toute regle de pare-feu temporaire apres le
+test.
+
+`--api-origin` attend uniquement une origine HTTP ou HTTPS : ne pas ajouter
+`/v1`, d'identifiants, de query ou de fragment. Le lanceur transmet cette valeur
+a Metro via `EXPO_PUBLIC_API_ORIGIN`; l'application ajoute elle-meme `/v1` pour
+les routes metier et utilise l'origine nue pour `/health/ready`. Cette variable
+est publique et ne doit jamais contenir de secret.
 
 ## 1. Verifier ADB
 
@@ -418,19 +473,42 @@ connexion. Sans session, les onglets proteges ne doivent pas apparaitre.
 
 ### Parcours d'authentification
 
+Le test d'integration `AuthFlow.integration.test.ts` couvre sans service externe
+le parcours inscription, refus avant confirmation, lien a usage unique,
+connexion, renouvellement apres un `401` et deconnexion avec revocation. Les
+tests de session couvrent aussi la restauration apres redemarrage, les appels
+concurrents, le refresh refuse, le reseau indisponible et la suppression locale
+de la session lorsque la revocation distante echoue.
+
+Depuis la racine du workspace, rejouer cette couverture dans Docker avec :
+
+```bash
+docker compose -f docker-compose.agent.yml exec agent-frontend-node \
+  bash -lc 'cd my-happy-wallet-frontend/mobile && npm test -- AuthFlow.integration.test.ts AuthSessionManager.test.ts'
+```
+
+Cette couverture protege les contrats mobiles mais ne remplace pas la recette
+du development build, qui verifie clavier, navigation, Mailpit, stockage natif
+et redemarrage reel de l'application.
+
 Depuis la connexion, verifier aussi les parcours publics suivants :
 
 1. ouvrir **Creer un compte**, faire defiler les cinq champs et soumettre un
    formulaire vide pour controler le message accessible ;
 2. creer un compte avec une adresse locale, puis ouvrir Mailpit sur
-   `http://localhost:8025` et suivre son lien de confirmation ;
-3. revenir a la connexion, ouvrir **Reinitialiser**, envoyer une adresse et
+   `http://localhost:8025` ; verifier que la connexion est refusee avant de
+   suivre le lien de confirmation, puis qu'elle reussit apres confirmation ;
+3. ouvrir une seconde fois le meme lien et verifier qu'il est refuse sans
+   modifier le compte deja confirme ;
+4. revenir a la connexion, ouvrir **Reinitialiser**, envoyer une adresse et
    verifier la confirmation generique qui ne revele pas si le compte existe ;
-4. couper temporairement le reverse API avec
+5. couper temporairement le reverse API avec
    `adb reverse --remove tcp:4200`, soumettre une demande et verifier l'erreur
    reseau, puis retablir le tunnel avec `adb reverse tcp:4200 tcp:4200` ;
-5. se connecter, redemarrer l'application et verifier la restauration de la
-   session avant de tester la deconnexion.
+6. se connecter, fermer completement puis relancer l'application et verifier la
+   restauration de la session ;
+7. se deconnecter depuis le profil, relancer l'application et verifier que la
+   session n'est pas restauree.
 
 Utiliser uniquement des comptes de test locaux. Aucun mot de passe, token ou
 lien de confirmation ne doit etre copie dans Git.

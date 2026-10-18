@@ -11,12 +11,12 @@ import "../../css/Operations.css";
 
 const OperationsFixes = () => {
   return (
-    <div className="home-container">
+    <main className="home-container">
       <div className="goback">
         {" "}
         <Link to="/home">
-          <FontAwesomeIcon icon={faChevronCircleLeft} /> Revenir à la
-          page d'accueil{" "}
+          <FontAwesomeIcon icon={faChevronCircleLeft} /> Revenir à la page
+          d'accueil{" "}
         </Link>
       </div>
       <h1>Home - Operations Fixes</h1>
@@ -37,7 +37,7 @@ const OperationsFixes = () => {
       <button type="button" className="btn-save">
         Sauvegarder
       </button>
-    </div>
+    </main>
   );
 };
 

@@ -1,6 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { fontAwesomeIcon } from "@/src/features/categories/domain/categoryIcons";
+import { CategoryMark } from "@/src/features/categories/presentation/CategoryMark";
 import { primitives, semantic, themes } from "@/src/design/tokens";
 import {
   OneOffOperation,
@@ -10,7 +12,8 @@ import {
 interface OperationCardProps {
   category?: OperationCategory;
   operation: OneOffOperation;
-  onEdit(operation: OneOffOperation): void;
+  /** Absent : carte en lecture seule (par exemple dans le calendrier). */
+  onEdit?(operation: OneOffOperation): void;
 }
 
 const colors = themes.light.color;
@@ -42,33 +45,39 @@ export const OperationCard = ({
           </Text>
           <Text style={styles.date}>{formatDate(operation.operationDate)}</Text>
         </View>
-        <Pressable
-          accessibilityLabel={`Modifier ${operation.title}`}
-          accessibilityRole="button"
-          hitSlop={primitives.space["2"]}
-          onPress={() => onEdit(operation)}
-          style={({ pressed }) => [
-            styles.editButton,
-            pressed && styles.pressed,
-          ]}
-        >
-          <Ionicons
-            color={colors.textSecondary}
-            name="create-outline"
-            size={24}
-          />
-        </Pressable>
+        {onEdit ? (
+          <Pressable
+            accessibilityLabel={`Modifier ${operation.title}`}
+            accessibilityRole="button"
+            hitSlop={primitives.space["2"]}
+            onPress={() => onEdit(operation)}
+            style={({ pressed }) => [
+              styles.editButton,
+              pressed && styles.pressed,
+            ]}
+          >
+            <Ionicons
+              color={colors.textSecondary}
+              name="create-outline"
+              size={24}
+            />
+          </Pressable>
+        ) : null}
       </View>
       <View style={styles.details}>
         <View style={styles.category}>
-          <View
-            accessibilityElementsHidden
-            importantForAccessibility="no"
-            style={[
-              styles.swatch,
-              { backgroundColor: category?.color ?? colors.borderSubtle },
-            ]}
-          />
+          {category?.icon && fontAwesomeIcon(category.icon) ? (
+            <CategoryMark category={category} size={18} />
+          ) : (
+            <View
+              accessibilityElementsHidden
+              importantForAccessibility="no"
+              style={[
+                styles.swatch,
+                { backgroundColor: category?.color ?? colors.borderSubtle },
+              ]}
+            />
+          )}
           <Text numberOfLines={1} style={styles.categoryLabel}>
             {category?.name ?? "Catégorie indisponible"}
           </Text>

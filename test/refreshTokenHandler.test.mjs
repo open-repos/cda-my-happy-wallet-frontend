@@ -45,9 +45,12 @@ assert.strictEqual(await noUserHandler(noUserRequest), noUserRequest);
 assert.deepStrictEqual(noUserRequest.headers, {});
 
 let validTokenDispatchCount = 0;
-const validTokenStore = createStore(createUser("valid.access.token"), async () => {
-  validTokenDispatchCount += 1;
-});
+const validTokenStore = createStore(
+  createUser("valid.access.token"),
+  async () => {
+    validTokenDispatchCount += 1;
+  }
+);
 const validTokenHandler = createRefreshTokenHandler({
   store: validTokenStore,
   decodeToken: () => ({ exp: 200 }),
@@ -118,11 +121,52 @@ const refusedRefreshHandler = createRefreshTokenHandler({
 });
 const refusedRefreshRequest = createRequest();
 
-await refusedRefreshHandler(refusedRefreshRequest);
-
-assert.strictEqual(
-  refusedRefreshRequest.headers.Authorization,
-  "Bearer expired.access.token"
+await assert.rejects(
+  refusedRefreshHandler(refusedRefreshRequest),
+  /Session renewal failed/
 );
 assert.strictEqual(refusedRefreshRequest.withCredentials, undefined);
 assert.strictEqual(storageReadCount, 1);
+
+let concurrentDispatchCount = 0;
+let releaseRefresh;
+const refreshGate = new Promise((resolve) => {
+  releaseRefresh = resolve;
+});
+const concurrentStore = createStore(
+  createUser("expired.access.token"),
+  async () => {
+    concurrentDispatchCount += 1;
+    await refreshGate;
+    return createUser("shared.refreshed.access.token");
+  }
+);
+const concurrentHandler = createRefreshTokenHandler({
+  store: concurrentStore,
+  decodeToken: (token) => ({
+    exp: token === "expired.access.token" ? 50 : 200,
+  }),
+  createRefreshAction: refreshAction,
+  getStoredUser: () => null,
+  now: () => 100000,
+});
+const firstConcurrentRequest = createRequest();
+const secondConcurrentRequest = createRequest();
+const firstRefresh = concurrentHandler(firstConcurrentRequest);
+const secondRefresh = concurrentHandler(secondConcurrentRequest);
+
+await Promise.resolve();
+assert.strictEqual(concurrentDispatchCount, 1);
+releaseRefresh();
+await Promise.all([firstRefresh, secondRefresh]);
+
+assert.strictEqual(
+  firstConcurrentRequest.headers.Authorization,
+  "Bearer shared.refreshed.access.token"
+);
+assert.strictEqual(
+  secondConcurrentRequest.headers.Authorization,
+  "Bearer shared.refreshed.access.token"
+);
+assert.strictEqual(firstConcurrentRequest.withCredentials, true);
+assert.strictEqual(secondConcurrentRequest.withCredentials, true);

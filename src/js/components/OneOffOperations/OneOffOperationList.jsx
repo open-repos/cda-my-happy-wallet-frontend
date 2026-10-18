@@ -1,5 +1,6 @@
 import React from "react";
 import editIcon from "../../../assets/icons/edit.svg";
+import { CategoryLabel } from "../Categories/CategoryLabel";
 
 const formatAmount = (amount, currency) => {
   const value = Number(amount);
@@ -13,16 +14,6 @@ const formatDate = (date) =>
   new Intl.DateTimeFormat("fr-FR", { timeZone: "UTC" }).format(
     new Date(`${date}T00:00:00.000Z`)
   );
-const CategoryLabel = ({ category }) => (
-  <span className="one-off-category">
-    <span
-      className="one-off-category__swatch"
-      style={{ backgroundColor: category?.color || "transparent" }}
-      aria-hidden="true"
-    />
-    {category?.name || "Catégorie indisponible"}
-  </span>
-);
 
 export const OneOffOperationList = ({ categories, operations, onEdit }) => {
   const categoryById = new Map(

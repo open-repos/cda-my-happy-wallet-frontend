@@ -1,0 +1,22 @@
+name: my-happy-wallet-mobile-dev
+
+services:
+  metro:
+    image: node:22-bookworm
+    init: true
+    network_mode: host
+    user: "${MHW_HOST_UID:-1000}:${MHW_HOST_GID:-1000}"
+    working_dir: /app
+    environment:
+      EXPO_PUBLIC_API_ORIGIN: ${EXPO_PUBLIC_API_ORIGIN:-http://127.0.0.1:4200}
+      EXPO_UNSTABLE_HEADLESS: "1"
+      HOME: /tmp
+      npm_config_cache: /tmp/npm-cache
+    volumes:
+      - ./:/app
+      - metro_npm_cache:/tmp/npm-cache
+    command: npm run start:dev-client -- --localhost --port 8081
+    stop_grace_period: 10s
+
+volumes:
+  metro_npm_cache:

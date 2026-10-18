@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   authState: {},
   dispatch: vi.fn(),
   navigate: vi.fn(),
+  searchParams: new URLSearchParams(),
   setSearchParams: vi.fn(),
   toastError: vi.fn(),
   toastSuccess: vi.fn(),
@@ -26,9 +27,12 @@ vi.mock("react-router-dom", async (importOriginal) => {
 
   return {
     ...actual,
-    useLocation: () => ({ search: "", state: null }),
+    useLocation: () => ({
+      search: mocks.searchParams.toString(),
+      state: null,
+    }),
     useNavigate: () => mocks.navigate,
-    useSearchParams: () => [new URLSearchParams(), mocks.setSearchParams],
+    useSearchParams: () => [mocks.searchParams, mocks.setSearchParams],
   };
 });
 
@@ -54,6 +58,7 @@ const renderForm = (component) => {
 };
 
 beforeEach(() => {
+  mocks.searchParams = new URLSearchParams();
   mocks.authState = {
     isAuthenticated: false,
     isEmailSent: false,
@@ -104,6 +109,82 @@ describe("authentication forms", () => {
     });
   });
 
+  it.each([
+    [
+      "already-used",
+      "Ce lien de confirmation a déjà été utilisé. Vous pouvez vous connecter.",
+    ],
+    [
+      "invalid-or-expired",
+      "Ce lien de confirmation est invalide ou a expiré. Recommencez l’inscription pour recevoir un nouveau lien.",
+    ],
+  ])(
+    "shows and consumes the %s confirmation result",
+    (code, expectedMessage) => {
+      mocks.searchParams = new URLSearchParams({
+        confirmation: code,
+        source: "email",
+      });
+
+      const view = renderForm(<Login />);
+
+      mocks.searchParams = new URLSearchParams({ source: "email" });
+      view.rerender(
+        <MemoryRouter>
+          <Login />
+        </MemoryRouter>
+      );
+
+      expect(mocks.toastError).toHaveBeenCalledTimes(1);
+      expect(mocks.toastError).toHaveBeenCalledWith(expectedMessage, {
+        toastId: `registration-confirmation-${code}`,
+      });
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      expect(mocks.setSearchParams).toHaveBeenCalledTimes(1);
+      const [cleanedSearchParams, options] =
+        mocks.setSearchParams.mock.calls[0];
+      expect(cleanedSearchParams.get("confirmation")).toBeNull();
+      expect(cleanedSearchParams.get("source")).toBe("email");
+      expect(options).toEqual({ replace: true });
+    }
+  );
+
+  it("ignores an unknown confirmation result while cleaning the URL", () => {
+    mocks.searchParams = new URLSearchParams({ confirmation: "unexpected" });
+
+    renderForm(<Login />);
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    const [cleanedSearchParams] = mocks.setSearchParams.mock.calls[0];
+    expect(cleanedSearchParams.has("confirmation")).toBe(false);
+  });
+
+  it("keeps the existing registration success feedback and cleans its query", () => {
+    mocks.searchParams = new URLSearchParams({
+      success: "true",
+      message: "registrationok",
+    });
+
+    const view = renderForm(<Login />);
+
+    mocks.searchParams = new URLSearchParams();
+    view.rerender(
+      <MemoryRouter>
+        <Login />
+      </MemoryRouter>
+    );
+
+    expect(mocks.toastSuccess).toHaveBeenCalledTimes(1);
+    expect(mocks.toastSuccess).toHaveBeenCalledWith(
+      "Votre compte a bien été créé !",
+      { toastId: "registration-confirmation-success" }
+    );
+    const [cleanedSearchParams, options] = mocks.setSearchParams.mock.calls[0];
+    expect(cleanedSearchParams.has("success")).toBe(false);
+    expect(cleanedSearchParams.has("message")).toBe(false);
+    expect(options).toEqual({ replace: true });
+  });
+
   it("dispatches matching registration data", () => {
     renderForm(<Register />);
 
@@ -132,6 +213,36 @@ describe("authentication forms", () => {
         confirmpassword: "secret",
       },
     });
+  });
+
+  it("keeps accepted registration feedback generic", () => {
+    mocks.authState = {
+      ...mocks.authState,
+      isSuccess: true,
+    };
+
+    renderForm(<Register />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Demande d’inscription prise en compte",
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Si cette adresse peut être utilisée pour une inscription, vous recevrez un email de confirmation."
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Vous allez recevoir/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "connecter" })).toHaveAttribute(
+      "href",
+      "/login"
+    );
+    expect(
+      screen.getByRole("link", {
+        name: "réinitialiser votre mot de passe",
+      })
+    ).toHaveAttribute("href", "/forgot-password");
   });
 
   it("dispatches a password reset request", () => {
@@ -174,4 +285,64 @@ describe("authentication forms", () => {
       },
     });
   });
+});
+
+describe("accessible authentication controls", () => {
+  it.each([
+    [
+      "login",
+      Login,
+      [
+        ["Adresse email", "username"],
+        ["Mot de passe", "current-password"],
+      ],
+    ],
+    [
+      "register",
+      Register,
+      [
+        ["Prénom", "given-name"],
+        ["Nom", "family-name"],
+        ["Adresse email", "email"],
+        ["Mot de passe", "new-password"],
+        ["Confirmer le mot de passe", "new-password"],
+      ],
+    ],
+    ["forgot password", ForgotPassword, [["Adresse email", "email"]]],
+    [
+      "new password",
+      NewPassword,
+      [
+        ["Nouveau mot de passe", "new-password"],
+        ["Confirmer le nouveau mot de passe", "new-password"],
+      ],
+    ],
+  ])(
+    "provides persistent labels and autocomplete on %s",
+    (_name, Component, fields) => {
+      const { container } = renderForm(<Component />);
+      expect(screen.getAllByRole("main")).toHaveLength(1);
+      for (const [label, autocomplete] of fields) {
+        const input = screen.getByLabelText(label, { exact: true });
+        expect(input).toBeVisible();
+        expect(input).toHaveAttribute("autocomplete", autocomplete);
+        expect(
+          container.querySelector(`label[for="${input.id}"]`)
+        ).toBeVisible();
+      }
+      for (const image of container.querySelectorAll("img"))
+        expect(image).toHaveAttribute("alt");
+    }
+  );
+  it.each([Login, Register, ForgotPassword])(
+    "announces loading inside the page landmark",
+    (Component) => {
+      mocks.authState.isLoading = true;
+      renderForm(<Component />);
+      expect(screen.getByRole("main")).toContainElement(
+        screen.getByRole("status", { name: "Chargement en cours" })
+      );
+      expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");
+    }
+  );
 });

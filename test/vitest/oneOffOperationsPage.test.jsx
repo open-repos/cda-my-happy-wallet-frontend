@@ -1,8 +1,10 @@
 import React from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import ListeOperations from "../../src/js/pages/ListeOperations";
 import { useOneOffOperations } from "../../src/js/hooks/useOneOffOperations";
+import { captureLiveRegions, expectAnnouncedIn } from "./liveRegions";
 
 vi.mock("../../src/js/hooks/useOneOffOperations", () => ({
   useOneOffOperations: vi.fn(),
@@ -45,7 +47,7 @@ afterEach(cleanup);
 
 describe("ListeOperations", () => {
   it("renders the populated Figma state and requests the next cursor page", () => {
-    render(<ListeOperations />);
+    render(<ListeOperations />, { wrapper: MemoryRouter });
     expect(
       screen.getByRole("heading", {
         name: "Ensemble des opérations effectuées",
@@ -56,13 +58,37 @@ describe("ListeOperations", () => {
     expect(actions.loadMore).toHaveBeenCalledTimes(1);
   });
 
+  it("announces loading and failure in regions mounted beforehand (#164)", async () => {
+    const { rerender } = render(<ListeOperations />, { wrapper: MemoryRouter });
+    const captured = captureLiveRegions();
+
+    useOneOffOperations.mockReturnValue({
+      ...successfulState,
+      status: "loading",
+    });
+    rerender(<ListeOperations />);
+    await expectAnnouncedIn(captured, "status", "Chargement des opérations…");
+
+    useOneOffOperations.mockReturnValue({
+      ...successfulState,
+      status: "error",
+      message: "Impossible de charger vos opérations.",
+    });
+    rerender(<ListeOperations />);
+    await expectAnnouncedIn(
+      captured,
+      "alert",
+      "Impossible de charger vos opérations."
+    );
+  });
+
   it("renders loading, empty and recoverable error states", () => {
     useOneOffOperations.mockReturnValue({
       ...successfulState,
       status: "loading",
       operations: [],
     });
-    const { rerender } = render(<ListeOperations />);
+    const { rerender } = render(<ListeOperations />, { wrapper: MemoryRouter });
     expect(
       screen.getByRole("heading", { name: "Chargement des opérations…" })
     ).toBeInTheDocument();
@@ -90,7 +116,7 @@ describe("ListeOperations", () => {
   });
 
   it("validates and submits a new operation without owner data", async () => {
-    render(<ListeOperations />);
+    render(<ListeOperations />, { wrapper: MemoryRouter });
     fireEvent.click(
       screen.getByRole("button", { name: "Ajouter une opération" })
     );
@@ -133,7 +159,7 @@ describe("ListeOperations", () => {
   });
 
   it("opens editing and requires explicit deletion confirmation", () => {
-    render(<ListeOperations />);
+    render(<ListeOperations />, { wrapper: MemoryRouter });
     fireEvent.click(screen.getByRole("button", { name: "Modifier Courses" }));
     expect(
       screen.getByRole("heading", { name: "Modifier l’opération" })

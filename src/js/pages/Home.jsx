@@ -10,15 +10,7 @@ function Home() {
   // const search = useLocation().search;
   const { isEmptyOpFixe } = useOperationsFixes();
 
-  return (
-    <>
-      {isEmptyOpFixe ? (
-        <CaseOpFixeEmpty />
-      ) : (
-       <CaseShowRaV/>
-      )}
-    </>
-  );
+  return <main>{isEmptyOpFixe ? <CaseOpFixeEmpty /> : <CaseShowRaV />}</main>;
 }
 
 export default Home;

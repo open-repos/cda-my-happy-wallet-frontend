@@ -1,0 +1,62 @@
+name: Mobile quality
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+  push:
+    branches:
+      - develop
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Mobile format, lint, test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Check formatting
+        run: npm run format
+      - name: Lint
+        run: npm run lint
+      - name: Type-check
+        run: npm run type-check
+      - name: Run unit tests
+        run: npm test
+      - name: Check Expo dependencies
+        run: npm run doctor
+      - name: Build Expo Web bundle
+        run: npm run build:web
+      - name: Install visual test browser
+        run: npx playwright install --with-deps chromium
+      - name: Run visual regression tests
+        run: npm run test:visual
+      - name: Preserve failed visual test evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-visual-failure
+          path: mobile/test-results/
+          retention-days: 3
+          if-no-files-found: ignore

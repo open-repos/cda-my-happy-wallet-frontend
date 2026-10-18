@@ -53,7 +53,8 @@ export class FetchAuthGateway implements AuthGateway {
 
   public constructor(
     apiBaseUrl: string,
-    private readonly fetchImplementation: FetchImplementation = fetch,
+    private readonly fetchImplementation: FetchImplementation = (...args) =>
+      fetch(...args),
   ) {
     this.apiBaseUrl = apiBaseUrl.replace(/\/+$/, "");
   }

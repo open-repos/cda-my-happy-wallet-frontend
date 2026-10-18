@@ -19,11 +19,13 @@
   margin: 0 auto;
 }
 
+/* En-tête posé sur la coque verte : rôles de texte « sur coque ». */
 .one-off-header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--ds-primitive-space-6);
+  color: var(--ds-color-text-on-shell);
 }
 
 .one-off-header h1 {
@@ -36,15 +38,34 @@
   line-height: var(--ds-primitive-line-height-tight);
 }
 
+/* Contrôles posés sur la coque : anneau de focus contrasté avec elle. */
+.one-off-header :is(a, button, input, select):focus-visible {
+  outline-color: var(--ds-color-focus-ring-on-shell);
+}
+
 .one-off-header p:not(.one-off-eyebrow) {
   max-width: 44rem;
   margin-top: var(--ds-primitive-space-2);
-  color: var(--ds-color-text-muted);
+  color: var(--ds-color-text-on-shell-muted);
+}
+
+/* Lien secondaire de l'en-tête, posé sur la coque. */
+.one-off-header-link {
+  color: inherit;
+  font-weight: var(--ds-primitive-font-weight-semibold);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.one-off-header-link:focus-visible {
+  outline: var(--ds-border-width-focus) solid
+    var(--ds-color-focus-ring-on-shell);
+  outline-offset: 2px;
 }
 
 .one-off-eyebrow {
   margin-bottom: var(--ds-primitive-space-2);
-  color: var(--ds-color-text-secondary);
+  color: var(--ds-color-text-on-shell-muted);
   font-size: var(--ds-primitive-font-size-sm);
   font-weight: var(--ds-primitive-font-weight-bold);
   letter-spacing: 0.08em;
@@ -174,6 +195,21 @@
   border-collapse: collapse;
 }
 
+.one-off-table thead {
+  display: table-header-group;
+}
+
+.one-off-table tr {
+  display: table-row;
+}
+
+.one-off-table tbody {
+  display: table-row-group;
+  max-height: none;
+  overflow: visible;
+  background: var(--ds-color-background-surface);
+}
+
 .one-off-table th,
 .one-off-table td {
   padding: var(--ds-primitive-space-3);
@@ -198,7 +234,10 @@
   text-align: right;
 }
 
-.one-off-category,
+.one-off-table .category-label {
+  white-space: nowrap;
+}
+
 .one-off-kind {
   display: inline-flex;
   align-items: center;
@@ -206,16 +245,11 @@
   white-space: nowrap;
 }
 
-.one-off-category__swatch,
 .one-off-kind::before {
   width: 0.75rem;
   height: 0.75rem;
   flex: 0 0 0.75rem;
   border-radius: var(--ds-primitive-radius-pill);
-}
-
-.one-off-category__swatch {
-  border: var(--ds-border-width-default) solid var(--ds-color-border-strong);
 }
 
 .one-off-kind::before {

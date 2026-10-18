@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 afterEach(cleanup);
 
-describe("React 17 testing environment", () => {
+describe("React 18 testing environment", () => {
   it("renders accessible content", () => {
     render(<h1>My Happy Wallet</h1>);
 

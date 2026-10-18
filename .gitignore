@@ -10,6 +10,8 @@ lerna-debug.log*
 
 node_modules
 dist
+dist-e2e
+dist-visual
 dist-ssr
 playwright-report
 test-results

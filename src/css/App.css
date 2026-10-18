@@ -74,6 +74,29 @@ h5,
 h6 {
   font-family: var(--ds-typography-heading-family);
   font-weight: var(--ds-typography-heading-weight);
+  overflow-wrap: anywhere;
+}
+
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 10000;
+  transform: translateY(-200%);
+  padding: 0.75rem 1rem;
+  background: var(--ds-color-action-primary-background);
+  color: var(--ds-color-action-primary-text);
+  border-radius: 0.25rem;
+}
+
+.skip-link:focus {
+  transform: none;
+  color: var(--ds-color-action-primary-text);
+  outline-color: var(--ds-color-focus-ring-on-shell);
+}
+
+.protected-layout__content:focus-visible {
+  outline-color: var(--ds-color-focus-ring-on-shell);
 }
 
 #root {

@@ -45,6 +45,20 @@ avec des adaptateurs distincts.
 - données financières et séries de graphiques ;
 - navigation, cartes, champs et contrôles.
 
+Les catégories sans couleur propre utilisent la palette `dataCategory1` à
+`dataCategory6` (`--ds-color-data-category1` à `6`), propre à chaque thème :
+contraste d'au moins 3:1 sur `backgroundSurface`, vérifié par le générateur,
+et écart perçu CIEDE2000 d'au moins 15 entre ses couleurs et avec celles du
+sélecteur de catégorie (`test/vitest/categoryPalette.test.js`). Une catégorie
+prend la couleur de son rang, par identifiant, parmi les catégories sans
+couleur (`src/js/utils/categoryPalette.js`). La règle est la même sur
+l'accueil, les analyses et le mobile (#172). Les analyses lisent les
+catégories une fois par page et ne tracent qu'ensuite; si cette lecture
+échoue, elles suivent l'ordre d'affichage. Limites connues : au-delà de six
+catégories sans couleur, les couleurs se répètent; supprimer ou colorer une
+catégorie décale le rang des suivantes; les catégories inconnues partagent un
+rang.
+
 Les noms décrivent un rôle (`--color-text-primary`) et non une valeur
 (`--dark-green`). Les thèmes clair et sombre redéfinissent les tokens
 sémantiques sans modifier les composants consommateurs.
@@ -68,12 +82,46 @@ Les styles calculés, dimensions dépendantes des données et contraintes propre
 à un composant peuvent rester locaux. L'objectif est de centraliser les
 décisions de design partagées, pas chaque nombre présent dans le CSS.
 
+### Texte sur la coque historique
+
+Les pages protégées reposent encore sur la coque verte historique (alias
+`--background`, `green700`), identique dans les deux thèmes. Le texte posé
+directement dessus utilise les rôles dédiés, également identiques dans les
+deux thèmes et contrôlés par `contrastPairs` :
+
+| Rôle                | Variable CSS                     | Valeur       | Contraste |
+| ------------------- | -------------------------------- | ------------ | --------- |
+| `backgroundShell`   | `--ds-color-background-shell`    | `green700`   | —         |
+| `textOnShell`       | `--ds-color-text-on-shell`       | `neutral100` | 7,56:1    |
+| `textOnShellMuted`  | `--ds-color-text-on-shell-muted` | `green200`   | 5,55:1    |
+| `focusRingOnShell`  | `--ds-color-focus-ring-on-shell` | `neutral100` | 7,56:1    |
+| `backgroundSidebar` | `--ds-color-background-sidebar`  | `neutral900` | —         |
+
+Titres d'en-tête sur la coque en `textOnShell`; sur-titres et sous-titres en
+`textOnShellMuted`; anneau de focus des contrôles posés sur la coque (en-têtes,
+bouton menu) et des liens de la barre latérale (fond historique
+`backgroundSidebar`, alias `--dark-secondary-color`) en `focusRingOnShell`
+(minimum 3:1, 11,56:1 sur la barre latérale), toujours avec un décalage
+d'au moins 2 px : en sombre, le fond des boutons d'action est trop proche de
+la coque pour qu'une seule couleur contraste avec les deux, l'anneau ne doit
+donc toucher que la coque. Les cartes de surface gardent les rôles `text*`. Un
+contrôle Playwright mesure le contraste réel de tout texte visible posé sur la
+coque, sur chaque page protégée et dans les deux thèmes.
+
 ## Accessibilité et qualité
 
 - les combinaisons texte/fond et états interactifs respectent au minimum le
   niveau de contraste retenu par l'audit d'accessibilité ;
 - le focus reste visible dans chaque thème ;
 - une information ne dépend jamais uniquement de la couleur ;
+- un message de page après une action (succès ou erreur) et un état de
+  chargement ou d'échec passent par le composant Web `LiveMessage` : ses
+  régions `role=status` et `role=alert` restent montées, hors du flux, et
+  reçoivent le texte; au premier rendu elles sont montées vides et reçoivent
+  le texte au tick suivant. Une région montée en même temps que son texte
+  n'est pas toujours annoncée (#151, #164). `visible={false}` annonce sans
+  copie visible quand l'écran affiche déjà l'état (titre de chargement,
+  `SectionState` de l'accueil) ;
 - le zoom, les préférences de réduction des animations et les tailles de texte
   restent utilisables ;
 - les tokens générés sont déterministes et couverts par des tests ;

@@ -1,0 +1,122 @@
+/* Objectifs financiers : cartes avec anneau ECharts et prévision. */
+
+.objectives-page-title {
+  color: var(--ds-color-text-on-shell);
+  width: 100%;
+  max-width: 76rem;
+  margin: 0 auto;
+  font-size: clamp(
+    var(--ds-primitive-font-size-2xl),
+    4vw,
+    var(--ds-primitive-font-size-3xl)
+  );
+  line-height: var(--ds-primitive-line-height-tight);
+}
+
+.goals-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-primitive-space-4);
+  width: 100%;
+  max-width: 76rem;
+  margin: 0 auto;
+}
+
+.goals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: var(--ds-primitive-space-4);
+}
+
+.goal-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-primitive-space-3);
+  min-width: 0;
+  padding: var(--ds-space-card);
+  border-radius: var(--ds-radius-card);
+  background: var(--ds-color-background-surface);
+  box-shadow: var(--ds-shadow-card);
+  color: var(--ds-color-text-primary);
+}
+
+.goal-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ds-primitive-space-2);
+}
+
+.goal-card__header h3 {
+  margin: 0;
+  font-size: var(--ds-primitive-font-size-lg);
+  overflow-wrap: anywhere;
+}
+
+.goal-card__ring {
+  height: 9rem;
+}
+
+.goal-card__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ds-primitive-space-2);
+  margin: 0;
+}
+
+.goal-card__facts dt {
+  color: var(--ds-color-text-secondary);
+  font-size: var(--ds-primitive-font-size-xs);
+}
+
+.goal-card__facts dd {
+  margin: 0;
+  font-weight: var(--ds-primitive-font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.goal-card__forecast {
+  margin: 0;
+  color: var(--ds-color-text-secondary);
+  font-size: var(--ds-primitive-font-size-sm);
+}
+
+.goal-card .monthly-event-button {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+.goal-status {
+  flex-shrink: 0;
+  padding: var(--ds-primitive-space-1) var(--ds-primitive-space-2);
+  border-radius: var(--ds-primitive-radius-pill);
+  font-size: var(--ds-primitive-font-size-xs);
+  font-weight: var(--ds-primitive-font-weight-semibold);
+}
+
+.goal-status--REACHED,
+.goal-status--ON_TRACK {
+  background: var(--ds-color-status-success-surface);
+  color: var(--ds-color-status-success-text);
+}
+
+.goal-status--NO_DEADLINE {
+  background: var(--ds-color-status-info-surface);
+  color: var(--ds-color-status-info-text);
+}
+
+.goal-status--BEHIND {
+  background: var(--ds-color-status-warning-surface);
+  color: var(--ds-color-status-warning-text);
+}
+
+.goal-status--MISSED {
+  background: var(--ds-color-status-error-surface);
+  color: var(--ds-color-status-error-text);
+}
+
+.monthly-events-header h2 {
+  margin: 0;
+  font-size: var(--ds-primitive-font-size-xl);
+  line-height: var(--ds-primitive-line-height-tight);
+}

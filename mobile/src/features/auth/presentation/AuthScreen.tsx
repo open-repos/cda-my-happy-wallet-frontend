@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { primitives, semantic, themes } from "@/src/design/tokens";
+import { FeedbackBanner, FeedbackState } from "@/src/design/FeedbackState";
 
 const colors = themes.light.color;
 const semibold = primitives.fontWeight.semibold.toString() as "600";
@@ -175,15 +176,9 @@ interface AuthMessageProps {
 }
 
 export const AuthMessage = ({ children, kind }: AuthMessageProps) => (
-  <Text
-    accessibilityLiveRegion="polite"
-    style={[
-      styles.message,
-      kind === "error" ? styles.errorMessage : styles.successMessage,
-    ]}
-  >
-    {children}
-  </Text>
+  <View style={styles.message}>
+    <FeedbackBanner kind={kind}>{children}</FeedbackBanner>
+  </View>
 );
 
 interface AuthLinkRowProps {
@@ -212,13 +207,12 @@ interface AuthSuccessProps {
 
 export const AuthSuccess = ({ message, title }: AuthSuccessProps) => (
   <View style={styles.successCard}>
-    <View style={styles.successIcon}>
-      <Ionicons color={colors.statusSuccessText} name="mail-open" size={34} />
-    </View>
-    <Text accessibilityRole="header" style={styles.successTitle}>
-      {title}
-    </Text>
-    <Text style={styles.successText}>{message}</Text>
+    <FeedbackState
+      description={message}
+      icon="mail-open"
+      kind="success"
+      title={title}
+    />
   </View>
 );
 
@@ -338,19 +332,7 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.8 },
   disabled: { opacity: 0.55 },
   message: {
-    borderRadius: semantic.radius.control,
-    fontSize: primitives.fontSize.sm,
-    lineHeight: 20,
     marginTop: primitives.space["4"],
-    padding: primitives.space["3"],
-  },
-  errorMessage: {
-    backgroundColor: colors.statusErrorSurface,
-    color: colors.statusErrorText,
-  },
-  successMessage: {
-    backgroundColor: colors.statusSuccessSurface,
-    color: colors.statusSuccessText,
   },
   linkRow: {
     alignItems: "center",
@@ -368,30 +350,6 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   successCard: {
-    alignItems: "center",
     marginTop: primitives.space["8"],
-    paddingVertical: primitives.space["5"],
-  },
-  successIcon: {
-    alignItems: "center",
-    backgroundColor: colors.statusSuccessSurface,
-    borderRadius: primitives.radius.pill,
-    height: 64,
-    justifyContent: "center",
-    width: 64,
-  },
-  successTitle: {
-    color: colors.textPrimary,
-    fontSize: primitives.fontSize.lg,
-    fontWeight: bold,
-    marginTop: primitives.space["4"],
-    textAlign: "center",
-  },
-  successText: {
-    color: colors.textSecondary,
-    fontSize: primitives.fontSize.md,
-    lineHeight: 24,
-    marginTop: primitives.space["2"],
-    textAlign: "center",
   },
 });

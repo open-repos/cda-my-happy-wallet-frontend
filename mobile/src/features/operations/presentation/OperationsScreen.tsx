@@ -1,17 +1,23 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   FlatList,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+// Barre d'état Android comme encoche iOS : le `SafeAreaView` de React Native
+// n'agit que sur iOS (#147).
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { TAB_SCREEN_EDGES } from "@/src/design/safeArea";
 
 import { primitives, semantic, themes } from "@/src/design/tokens";
+import { FeedbackBanner, FeedbackState } from "@/src/design/FeedbackState";
 import { useAuth } from "@/src/features/auth/presentation/AuthProvider";
 import {
   OneOffOperation,
@@ -26,6 +32,7 @@ const colors = themes.light.color;
 const semibold = `${primitives.fontWeight.semibold}` as "600";
 
 export const OperationsScreen = () => {
+  const router = useRouter();
   const { httpClient } = useAuth();
   const gateway = useMemo(
     () => new HttpOneOffOperationsGateway(httpClient),
@@ -79,25 +86,36 @@ export const OperationsScreen = () => {
 
   if (state.status === "loading") {
     return (
-      <CenteredState
-        icon="wallet-outline"
-        label="Chargement des opérations…"
-        loading
-      />
+      <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
+        <View style={styles.centeredState}>
+          <FeedbackState
+            description="Vos entrées et dépenses sont en cours de chargement."
+            kind="loading"
+            title="Chargement des opérations"
+          />
+        </View>
+      </SafeAreaView>
     );
   }
   if (state.status === "error") {
     return (
-      <CenteredState
-        icon="cloud-offline-outline"
-        label="La liste est momentanément indisponible. Vos données restent inchangées."
-        onRetry={() => void state.retry()}
-      />
+      <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
+        <View style={styles.centeredState}>
+          <FeedbackState
+            actions={[
+              { label: "Réessayer", onPress: () => void state.retry() },
+            ]}
+            description="Vos données restent inchangées. Vérifiez votre connexion puis réessayez."
+            kind="error"
+            title="Opérations indisponibles"
+          />
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
       <FlatList
         contentContainerStyle={[
           styles.content,
@@ -133,34 +151,46 @@ export const OperationsScreen = () => {
               />
               <Text style={styles.addLabel}>Ajouter une opération</Text>
             </Pressable>
+            <Pressable
+              accessibilityRole="link"
+              onPress={() => router.navigate("/(app)/categories")}
+              style={({ pressed }) => [
+                styles.categoriesLink,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Ionicons
+                color={colors.actionSecondaryText}
+                name="pricetags-outline"
+                size={20}
+              />
+              <Text style={styles.categoriesLabel}>Gérer les catégories</Text>
+            </Pressable>
             {state.message ? (
-              <Text
-                accessibilityLiveRegion="polite"
-                style={[
-                  styles.message,
+              <FeedbackBanner
+                kind={
                   state.mutationStatus === "error" ||
                   state.pageStatus === "error"
-                    ? styles.errorMessage
-                    : styles.successMessage,
-                ]}
+                    ? "error"
+                    : "success"
+                }
               >
                 {state.message}
-              </Text>
+              </FeedbackBanner>
             ) : null}
           </View>
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Ionicons
-              color={colors.textSecondary}
-              name="receipt-outline"
-              size={42}
+            <FeedbackState
+              actions={[
+                { label: "Ajouter une opération", onPress: openCreate },
+              ]}
+              description="Ajoutez votre première entrée ou dépense pour commencer à suivre votre budget."
+              icon="receipt-outline"
+              kind="empty"
+              title="Pas encore d’opération"
             />
-            <Text style={styles.emptyTitle}>Pas encore d’opération</Text>
-            <Text style={styles.emptyText}>
-              Ajoutez votre première entrée ou dépense pour commencer à suivre
-              votre budget.
-            </Text>
           </View>
         }
         ListFooterComponent={
@@ -212,43 +242,6 @@ export const OperationsScreen = () => {
   );
 };
 
-interface CenteredStateProps {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  loading?: boolean;
-  onRetry?: () => void;
-}
-
-const CenteredState = ({
-  icon,
-  label,
-  loading = false,
-  onRetry,
-}: CenteredStateProps) => (
-  <SafeAreaView style={styles.safeArea}>
-    <View style={styles.centeredState}>
-      {loading ? (
-        <ActivityIndicator color={colors.statusInfoText} size="large" />
-      ) : (
-        <Ionicons color={colors.statusErrorText} name={icon} size={42} />
-      )}
-      <Text accessibilityLiveRegion="polite" style={styles.centeredLabel}>
-        {label}
-      </Text>
-      {onRetry ? (
-        <Pressable
-          accessibilityRole="button"
-          onPress={onRetry}
-          style={styles.addButton}
-        >
-          <Ionicons color={colors.actionPrimaryText} name="refresh" size={20} />
-          <Text style={styles.addLabel}>Réessayer</Text>
-        </Pressable>
-      ) : null}
-    </View>
-  </SafeAreaView>
-);
-
 const styles = StyleSheet.create({
   safeArea: { backgroundColor: colors.backgroundCanvas, flex: 1 },
   content: {
@@ -283,10 +276,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: primitives.space["2"],
     justifyContent: "center",
-    marginBottom: primitives.space["6"],
+    marginBottom: primitives.space["3"],
     marginTop: primitives.space["5"],
     minHeight: semantic.size.controlMinHeight,
     paddingHorizontal: semantic.space.controlInline,
+  },
+  categoriesLink: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    gap: primitives.space["2"],
+    marginBottom: primitives.space["6"],
+    minHeight: semantic.size.controlMinHeight,
+  },
+  categoriesLabel: {
+    color: colors.actionSecondaryText,
+    fontSize: primitives.fontSize.md,
+    fontWeight: semibold,
+    textDecorationLine: "underline",
   },
   addLabel: {
     color: colors.actionPrimaryText,
@@ -296,41 +303,8 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.8 },
   disabled: { opacity: 0.55 },
   separator: { height: primitives.space["3"] },
-  message: {
-    borderRadius: semantic.radius.control,
-    fontSize: primitives.fontSize.sm,
-    marginBottom: primitives.space["4"],
-    padding: primitives.space["3"],
-  },
-  successMessage: {
-    backgroundColor: colors.statusSuccessSurface,
-    color: colors.statusSuccessText,
-  },
-  errorMessage: {
-    backgroundColor: colors.statusErrorSurface,
-    color: colors.statusErrorText,
-  },
   emptyState: {
-    alignItems: "center",
-    backgroundColor: colors.backgroundSurface,
-    borderColor: colors.borderSubtle,
-    borderRadius: semantic.radius.card,
-    borderWidth: semantic.borderWidth.default,
     marginTop: primitives.space["6"],
-    padding: semantic.space.card,
-  },
-  emptyTitle: {
-    color: colors.textPrimary,
-    fontSize: primitives.fontSize.lg,
-    fontWeight: semibold,
-    marginTop: primitives.space["3"],
-  },
-  emptyText: {
-    color: colors.textSecondary,
-    fontSize: primitives.fontSize.md,
-    lineHeight: 24,
-    marginTop: primitives.space["2"],
-    textAlign: "center",
   },
   footer: { alignItems: "center", paddingTop: primitives.space["6"] },
   loadMoreButton: {
@@ -347,17 +321,8 @@ const styles = StyleSheet.create({
     fontWeight: semibold,
   },
   centeredState: {
-    alignItems: "center",
     flex: 1,
     justifyContent: "center",
     padding: primitives.space["6"],
-  },
-  centeredLabel: {
-    color: colors.textSecondary,
-    fontSize: primitives.fontSize.md,
-    lineHeight: 24,
-    marginTop: primitives.space["4"],
-    maxWidth: primitives.size.contentSm,
-    textAlign: "center",
   },
 });
