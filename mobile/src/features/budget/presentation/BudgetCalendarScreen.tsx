@@ -172,7 +172,7 @@ export const BudgetCalendarScreen = () => {
             return (
               <Pressable
                 accessibilityRole="radio"
-                accessibilityState={{ checked }}
+                aria-checked={checked}
                 key={option.value}
                 onPress={() => setMode(option.value)}
                 style={[styles.mode, checked && styles.modeActive]}

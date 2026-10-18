@@ -175,6 +175,47 @@ test("manages categories from the operations screen", async ({ page }) => {
   await categoriesReloaded;
 });
 
+test("exposes the checked state of every radio option", async ({ page }) => {
+  // Date figée : la file des événements du calendrier est déterministe.
+  await page.clock.setFixedTime(new Date("2026-10-11T10:00:00+02:00"));
+  await signIn(page);
+
+  // Formulaire d'opération : type et catégorie (#148).
+  await page.getByRole("tab", { name: "Opérations ponctuelles" }).click();
+  await page.getByRole("button", { name: "Ajouter une opération" }).click();
+  await expect(page.getByRole("radio", { name: "Dépense" })).toBeChecked();
+  await page.getByRole("radio", { name: "Entrée" }).click();
+  await expect(page.getByRole("radio", { name: "Entrée" })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "Dépense" })).not.toBeChecked();
+  await page.getByRole("radio", { name: "Alimentation" }).click();
+  await expect(page.getByRole("radio", { name: "Alimentation" })).toBeChecked();
+  await page.getByRole("button", { name: "Fermer le formulaire" }).click();
+
+  // Mode du calendrier et conversion d'un événement.
+  await page.getByRole("tab", { name: "Calendrier" }).click();
+  await expect(page.getByRole("radio", { name: "Repères" })).toBeChecked();
+  await page.getByRole("radio", { name: "Dépenses" }).click();
+  await expect(page.getByRole("radio", { name: "Dépenses" })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "Repères" })).not.toBeChecked();
+  await page
+    .getByRole("button", { name: /^Convertir Loyer du 5 octobre/ })
+    .click();
+  const category = page.getByRole("radio", { name: "Alimentation" });
+  await category.click();
+  await expect(category).toBeChecked();
+  await page.getByRole("button", { name: "Fermer le formulaire" }).click();
+
+  // Formulaire du budget fixe.
+  await page.getByRole("tab", { name: "Tableau de bord" }).click();
+  await page.getByRole("button", { name: /Budget fixe/ }).click();
+  await page
+    .getByRole("button", { name: "Ajouter une charge" })
+    .first()
+    .click();
+  await expect(page.getByRole("radio", { name: "Charge" })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "Revenu" })).not.toBeChecked();
+});
+
 test("captures the budget calendar and its day filter", async ({ page }) => {
   // Date figée : la grille et sa capture ne dépendent pas du jour d'exécution.
   await page.clock.setFixedTime(new Date("2026-10-11T10:00:00+02:00"));
