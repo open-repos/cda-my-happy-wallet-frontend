@@ -43,7 +43,14 @@ async function seed() {
   try {
     const password = await argon2.hash(process.env.E2E_PASSWORD);
     for (const project of ["mobile", "tablet", "desktop"]) {
-      for (const journey of ["operations", "events", "recovery", "session"]) {
+      for (const journey of [
+        "operations",
+        "events",
+        "recovery",
+        "session",
+        "privacy-a",
+        "privacy-b",
+      ]) {
         const email = `${project}-${journey}@example.com`;
         const user = await prisma.utilisateur.upsert({
           where: { email },
