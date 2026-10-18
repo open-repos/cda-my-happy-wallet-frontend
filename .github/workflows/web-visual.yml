@@ -26,8 +26,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      # Temporary draft-PR bootstrap; replaced by comparison before merge.
-      - run: npm run test:visual:update
+      - run: npm run test:visual
+      - name: Run responsive and navigation scenarios
+        run: npm run test:e2e
       - name: Preserve synthetic visual references and differences
         if: always()
         uses: actions/upload-artifact@v4
