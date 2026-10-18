@@ -50,3 +50,19 @@ Les tokens et les fichiers de l'application mobile restent inchangés.
 Pour revenir en arrière, révoquer le commit de la PR puis exécuter les validations
 Web et la stack E2E avant une éventuelle livraison manuelle. Les tests isolent
 les comportements (titre/focus, libellés, retour du focus) pour signaler leur retrait.
+
+## Messages de page persistants (#151)
+
+Les confirmations et erreurs d’Opérations, Catégories, Calendrier, Événements et
+Objectifs financiers utilisent `LiveFeedback`. Ses deux paragraphes restent montés
+avec leurs rôles stables `status` et `alert` ; seul leur texte change. La région
+inactive reste vide et visuellement masquée sans `display: none`, `hidden` ou
+`aria-hidden`, pour ne pas ajouter de bannière ou d’espace entre les panneaux.
+`aria-atomic` fait relire le message complet. Les confirmations de suppression et
+les erreurs associées aux champs restent dans les formulaires.
+
+Les tests Vitest gardent une référence aux nœuds initiaux sur les cinq écrans et
+vérifient succès, erreur et remise à zéro. Le parcours Playwright Catégories
+vérifie ces mêmes nœuds avant et après une création puis un refus de suppression,
+sur trois tailles d’écran. Il vérifie la structure nécessaire aux annonces ; une
+recette avec un lecteur d’écran reste utile pour écouter le résultat réel.

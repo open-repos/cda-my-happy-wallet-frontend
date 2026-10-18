@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { LiveFeedback } from "../components/LiveFeedback";
 import { formatEventAmount } from "../components/MonthlyEvents/MonthlyEventList";
 import { OneOffOperationForm } from "../components/OneOffOperations/OneOffOperationForm";
 import { BudgetSummary } from "../components/BudgetCalendar/BudgetSummary";
@@ -195,18 +196,11 @@ function Calendrier() {
         </div>
       </header>
 
-      {budget.message.text && (
-        <p
-          className={`monthly-events-message${
-            budget.message.tone === "error"
-              ? " monthly-events-message--error"
-              : ""
-          }`}
-          role={budget.message.tone === "error" ? "alert" : "status"}
-        >
-          {budget.message.text}
-        </p>
-      )}
+      <LiveFeedback
+        message={budget.message.text}
+        isError={budget.message.tone === "error"}
+        className="monthly-events-message"
+      />
 
       <BudgetSummary
         summary={budget.summary}

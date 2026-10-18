@@ -182,9 +182,9 @@ describe("FinancialGoalsSection", () => {
       screen.getByRole("button", { name: "Modifier l’objectif Vélo" })
     );
     fireEvent.click(screen.getByRole("button", { name: "Supprimer" }));
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      "Supprimer cet objectif ?"
-    );
+    expect(
+      screen.getByText("Supprimer cet objectif ?").closest('[role="alert"]')
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Oui, supprimer" }));
     await waitFor(() => expect(current.deleteGoal).toHaveBeenCalledWith(3));
   });

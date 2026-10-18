@@ -241,7 +241,9 @@ for (const viewport of viewports) {
     await page.getByLabel("Titre", { exact: true }).fill("Vacances");
     await page.getByLabel(/^Montant cible/).fill("1500");
     await page.getByRole("button", { name: "Enregistrer" }).click();
-    await expect(page.getByRole("status")).toContainText("Objectif ajouté.");
+    await expect(
+      page.locator(".goals-section").getByRole("status")
+    ).toContainText("Objectif ajouté.");
     await expect(page.getByRole("article", { name: "Vacances" })).toBeVisible();
 
     await expect(
@@ -296,6 +298,14 @@ for (const viewport of viewports) {
     await expect(
       page.getByRole("heading", { name: "Catégories d’opérations", level: 1 })
     ).toBeVisible();
+    const successRegion = page.locator(
+      ".categories-container > [role='status']"
+    );
+    const errorRegion = page.locator(".categories-container > [role='alert']");
+    await expect(successRegion).toBeEmpty();
+    await expect(errorRegion).toBeEmpty();
+    const originalSuccess = await successRegion.elementHandle();
+    const originalError = await errorRegion.elementHandle();
     await page.getByRole("button", { name: "Ajouter une catégorie" }).click();
     await page.getByLabel("Nom", { exact: true }).fill("Loisirs");
     await page.getByRole("radio", { name: "Bleu" }).check();
@@ -306,7 +316,14 @@ for (const viewport of viewports) {
       page.getByRole("img", { name: "Aperçu : Loisirs, icône film (plein)" })
     ).toBeVisible();
     await page.getByRole("button", { name: "Enregistrer" }).click();
-    await expect(page.getByRole("status")).toContainText("Catégorie ajoutée.");
+    await expect(successRegion).toContainText("Catégorie ajoutée.");
+    expect(
+      await originalSuccess.evaluate(
+        (node) =>
+          node.isConnected && node.textContent.includes("Catégorie ajoutée.")
+      )
+    ).toBe(true);
+    await expect(errorRegion).toBeEmpty();
     const list = page.getByRole("list", { name: "Vos catégories" });
     await expect(list.getByText("Loisirs")).toBeVisible();
     // Icônes décoratives dessinées dans la couleur de chaque catégorie.
@@ -315,9 +332,18 @@ for (const viewport of viewports) {
     await page.getByRole("button", { name: "Modifier Alimentation" }).click();
     await page.getByRole("button", { name: "Supprimer" }).click();
     await page.getByRole("button", { name: "Oui, supprimer" }).click();
-    await expect(page.getByRole("alert").first()).toContainText(
+    await expect(errorRegion).toContainText(
       "Cette catégorie est utilisée par des opérations"
     );
+
+    expect(
+      await originalError.evaluate(
+        (node) =>
+          node.isConnected &&
+          node.textContent.includes("Cette catégorie est utilisée")
+      )
+    ).toBe(true);
+    await expect(successRegion).toBeEmpty();
 
     const hasHorizontalOverflow = await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth

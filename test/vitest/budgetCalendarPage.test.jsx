@@ -170,9 +170,9 @@ describe("budget calendar page", () => {
       screen.getByRole("heading", { name: /^Bilan d/ })
     ).toBeInTheDocument();
     expect(screen.getByText("Positif")).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent(
-      /Bilan corrigé le 11 octobre 2026/
-    );
+    expect(
+      screen.getByText(/Bilan corrigé le/).closest('[role="status"]')
+    ).toHaveTextContent(/Bilan corrigé le 11 octobre 2026/);
     expect(
       screen.getByText(/1 événement de ce mois n’a pas été traité/)
     ).toBeInTheDocument();

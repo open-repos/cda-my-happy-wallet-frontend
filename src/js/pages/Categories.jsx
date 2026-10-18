@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { LiveFeedback } from "../components/LiveFeedback";
 import { Link } from "react-router-dom";
 import addIcon from "../../assets/icons/add.svg";
 import { CategoryForm } from "../components/Categories/CategoryForm";
@@ -11,7 +12,6 @@ function Categories() {
   const [editedCategory, setEditedCategory] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const state = useCategories();
-  const isError = state.status === "error" || state.mutationStatus === "error";
   const addButtonRef = useRef(null);
   const triggerRef = useRef(null);
   const wasOpen = useRef(false);
@@ -84,16 +84,11 @@ function Categories() {
           Ajouter une catégorie
         </button>
       </header>
-      {state.message && (
-        <p
-          className={`one-off-message ${
-            isError ? "one-off-message--error" : ""
-          }`}
-          role={isError ? "alert" : "status"}
-        >
-          {state.message}
-        </p>
-      )}
+      <LiveFeedback
+        message={state.message}
+        isError={state.status === "error" || state.mutationStatus === "error"}
+        className="one-off-message"
+      />
       {isFormOpen && (
         <CategoryForm
           key={editedCategory?.id || "new"}

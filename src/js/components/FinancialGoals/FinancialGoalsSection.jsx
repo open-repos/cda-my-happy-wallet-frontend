@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { LiveFeedback } from "../LiveFeedback";
 import addIcon from "../../../assets/icons/add.svg";
 import { useFinancialGoals } from "../../hooks/useFinancialGoals";
 import { FinancialGoalCard } from "./FinancialGoalCard";
@@ -60,22 +61,11 @@ export const FinancialGoalsSection = () => {
           </button>
         )}
       </header>
-      {state.message && (
-        <p
-          className={`monthly-events-message ${
-            state.status === "error" || state.mutationStatus === "error"
-              ? "monthly-events-message--error"
-              : ""
-          }`}
-          role={
-            state.status === "error" || state.mutationStatus === "error"
-              ? "alert"
-              : "status"
-          }
-        >
-          {state.message}
-        </p>
-      )}
+      <LiveFeedback
+        message={state.message}
+        isError={state.status === "error" || state.mutationStatus === "error"}
+        className="monthly-events-message"
+      />
       {state.status === "loading" && (
         <div className="monthly-events-state" aria-live="polite">
           <span className="monthly-events-loader" aria-hidden="true" />

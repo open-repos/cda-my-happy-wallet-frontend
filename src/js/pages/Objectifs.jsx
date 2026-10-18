@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { LiveFeedback } from "../components/LiveFeedback";
 import addIcon from "../../assets/icons/add.svg";
 import { FinancialGoalsSection } from "../components/FinancialGoals/FinancialGoalsSection";
 import { MonthlyEventForm } from "../components/MonthlyEvents/MonthlyEventForm";
@@ -53,22 +54,11 @@ function Objectifs() {
           Ajouter un événement
         </button>
       </header>
-      {state.message && (
-        <p
-          className={`monthly-events-message ${
-            state.status === "error" || state.mutationStatus === "error"
-              ? "monthly-events-message--error"
-              : ""
-          }`}
-          role={
-            state.status === "error" || state.mutationStatus === "error"
-              ? "alert"
-              : "status"
-          }
-        >
-          {state.message}
-        </p>
-      )}
+      <LiveFeedback
+        message={state.message}
+        isError={state.status === "error" || state.mutationStatus === "error"}
+        className="monthly-events-message"
+      />
       {state.status === "loading" && (
         <section className="monthly-events-state" aria-live="polite">
           <span className="monthly-events-loader" aria-hidden="true" />
