@@ -1,6 +1,10 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { ReactNode } from "react";
-import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+// Barre d'état Android comme encoche iOS (#147).
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { TAB_SCREEN_EDGES } from "@/src/design/safeArea";
 
 import { AppIconName } from "@/src/navigation/appDestinations";
 import { primitives, semantic, themes } from "@/src/design/tokens";
@@ -21,7 +25,7 @@ export const DestinationScreen = ({
   icon,
   title,
 }: DestinationScreenProps) => (
-  <SafeAreaView style={styles.safeArea}>
+  <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
     <ScrollView contentContainerStyle={styles.content}>
       <View style={styles.iconContainer}>
         <Ionicons color={colors.navigationText} name={icon} size={24} />

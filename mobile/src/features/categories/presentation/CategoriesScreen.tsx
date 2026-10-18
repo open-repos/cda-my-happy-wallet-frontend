@@ -6,6 +6,8 @@ import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 // React Native ne gère que iOS).
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { TAB_SCREEN_EDGES } from "@/src/design/safeArea";
+
 import { FeedbackBanner, FeedbackState } from "@/src/design/FeedbackState";
 import { primitives, semantic, themes } from "@/src/design/tokens";
 import { useAuth } from "@/src/features/auth/presentation/AuthProvider";
@@ -70,7 +72,7 @@ export const CategoriesScreen = () => {
 
   if (state.status === "loading" || state.status === "error") {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
         <View style={styles.centeredState}>
           {backToOperations}
           {state.status === "loading" ? (
@@ -95,7 +97,7 @@ export const CategoriesScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
       <FlatList
         contentContainerStyle={[
           styles.content,
