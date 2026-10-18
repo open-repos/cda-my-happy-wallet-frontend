@@ -202,7 +202,7 @@ export const RealizeOccurrenceModal = ({
                     <Pressable
                       key={category.id}
                       accessibilityRole="radio"
-                      accessibilityState={{ checked: selected }}
+                      aria-checked={selected}
                       disabled={busy}
                       onPress={() => update("categoryId", category.id)}
                       style={[

@@ -111,10 +111,9 @@ export const FixedOperationFormModal = ({
                     <Pressable
                       key={type}
                       accessibilityRole="radio"
-                      accessibilityState={{
-                        checked: selected,
-                        disabled: operation != null,
-                      }}
+                      // `aria-checked` : exposé sur Android, iOS et le Web (#148).
+                      // L'état désactivé vient de la prop `disabled`.
+                      aria-checked={selected}
                       disabled={isSaving || operation != null}
                       onPress={() => update("type", type)}
                       style={[

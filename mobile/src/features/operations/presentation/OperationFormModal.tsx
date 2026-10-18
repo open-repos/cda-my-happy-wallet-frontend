@@ -151,7 +151,7 @@ export const OperationFormModal = ({
                     <Pressable
                       key={kind}
                       accessibilityRole="radio"
-                      accessibilityState={{ checked: selected }}
+                      aria-checked={selected}
                       disabled={isSaving}
                       onPress={() => update("kind", kind)}
                       style={[
@@ -185,7 +185,7 @@ export const OperationFormModal = ({
                     <Pressable
                       key={category.id}
                       accessibilityRole="radio"
-                      accessibilityState={{ checked: selected }}
+                      aria-checked={selected}
                       disabled={isSaving}
                       onPress={() => update("categoryId", category.id)}
                       style={[
