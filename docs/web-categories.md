@@ -79,10 +79,14 @@ relisent les catégories à leur ouverture et reflètent donc les changements.
 
 ## Navigation
 
-L'entrée « Catégories » porte la navigation latérale à six liens. Les
-espacements de la liste et des liens sont bornés par la hauteur de l'écran
-(`clamp(..., vh, ...)`) pour que le dernier lien reste au-dessus du bouton du
-profil dès 720 px de haut (test Playwright à 1366×768, 1280×720 et 1024×768).
+L'entrée « Catégories » porte la navigation latérale à six liens. Aux hauteurs
+courantes, les espacements de la liste et des liens sont bornés par la hauteur
+de l'écran (`clamp(..., vh, ...)`). Jusqu'à 740 px de haut (#150), ils sont
+resserrés et la liste est bornée au-dessus du bouton du profil; elle ne défile
+qu'en dernier recours, sans coins arrondis et avec une marge horizontale de
+4 px, pour que l'anneau de focus reste entier. Test Playwright à 1366×768,
+1280×720, 1024×768, 1440×600 et 375×667 (tiroir ouvert) : liste au-dessus du
+profil, aucun défilement, anneau de focus contenu, dernier lien atteignable.
 
 La page réutilise la mise en page et les boutons des opérations
 (`Operations.css`); `Categories.css` ajoute la liste et le choix de couleur.

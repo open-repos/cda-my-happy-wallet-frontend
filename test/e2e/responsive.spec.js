@@ -495,12 +495,14 @@ test("the icon picker recovers after the icon file fails to download", async ({
   expect(attempts).toBe(2);
 });
 
-// Hauteurs courantes de portables : la navigation à six entrées tient sans
-// que le dernier lien passe sous le bouton du profil.
+// La navigation à six entrées ne passe jamais sous le bouton du profil : sur
+// un écran bas, sa liste défile et le dernier lien reste atteignable (#150).
 for (const size of [
   { width: 1366, height: 768 },
   { width: 1280, height: 720 },
   { width: 1024, height: 768 },
+  { width: 1440, height: 600 },
+  { width: 375, height: 667 },
 ]) {
   test(`navigation links stay above the profile at ${size.width}x${size.height}`, async ({
     page,
@@ -508,17 +510,47 @@ for (const size of [
     await page.setViewportSize(size);
     await prepareProtectedPage(page);
     await page.goto("/home");
+    if (size.width < 768) {
+      await page.getByRole("button", { name: "Ouvrir le menu" }).click();
+    }
     const navigation = page.getByRole("navigation", {
       name: "Navigation principale",
     });
-    const last = await navigation
-      .getByRole("link", { name: "Analyses" })
-      .boundingBox();
     const profile = await navigation
       .getByRole("button", { name: "Afficher le profil" })
       .boundingBox();
-    expect(last.y + last.height).toBeLessThanOrEqual(profile.y);
-    expect(last.y + last.height).toBeLessThanOrEqual(size.height);
+    const list = await navigation.getByRole("list").first().boundingBox();
+    expect(list.y + list.height).toBeLessThanOrEqual(profile.y);
+    expect(profile.y + profile.height).toBeLessThanOrEqual(size.height);
+
+    // Le défilement reste un dernier recours : les six entrées tiennent.
+    const [scrollHeight, clientHeight] = await navigation
+      .getByRole("list")
+      .first()
+      .evaluate((element) => [element.scrollHeight, element.clientHeight]);
+    expect(scrollHeight).toBeLessThanOrEqual(clientHeight);
+    // L'anneau de focus (2px + 2px de décalage) tient dans la liste, qui
+    // rogne ce qui dépasse quand elle défile.
+    if (size.height <= 740) {
+      const first = await navigation
+        .getByRole("link", { name: "Calendrier" })
+        .boundingBox();
+      expect(first.x - 4).toBeGreaterThanOrEqual(list.x);
+      expect(first.x + first.width + 4).toBeLessThanOrEqual(
+        list.x + list.width
+      );
+    }
+
+    const lastLink = navigation.getByRole("link", { name: "Analyses" });
+    await lastLink.scrollIntoViewIfNeeded();
+    const last = await lastLink.boundingBox();
+    expect(last.y + last.height).toBeLessThanOrEqual(list.y + list.height + 1);
+    // Le point au centre du lien appartient bien au lien, pas au profil.
+    const hit = await page.evaluate(
+      ({ x, y }) => document.elementFromPoint(x, y)?.closest("a")?.textContent,
+      { x: last.x + last.width / 2, y: last.y + last.height / 2 }
+    );
+    expect(hit).toContain("Analyses");
   });
 }
 
