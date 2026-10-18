@@ -60,8 +60,13 @@ function Objectifs() {
         className="monthly-events-message"
         errorClassName="monthly-events-message--error"
       />
+      {/* Chargement annoncé par une région live toujours montée (#164). */}
+      <LiveMessage
+        message={state.status === "loading" ? "Chargement des événements…" : ""}
+        visible={false}
+      />
       {state.status === "loading" && (
-        <section className="monthly-events-state" aria-live="polite">
+        <section className="monthly-events-state">
           <span className="monthly-events-loader" aria-hidden="true" />
           <h2>Chargement des événements…</h2>
         </section>

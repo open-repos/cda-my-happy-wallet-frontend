@@ -101,8 +101,13 @@ function Categories() {
           onDelete={remove}
         />
       )}
+      {/* Chargement annoncé par une région live toujours montée (#164). */}
+      <LiveMessage
+        message={state.status === "loading" ? "Chargement des catégories…" : ""}
+        visible={false}
+      />
       {state.status === "loading" && (
-        <section className="one-off-state" aria-live="polite">
+        <section className="one-off-state">
           <span className="one-off-loader" aria-hidden="true" />
           <h2>Chargement des catégories…</h2>
         </section>

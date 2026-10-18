@@ -11,6 +11,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { FinancialGoalsSection } from "../../src/js/components/FinancialGoals/FinancialGoalsSection";
 import { validateGoal } from "../../src/js/components/FinancialGoals/FinancialGoalForm";
 import { useFinancialGoals } from "../../src/js/hooks/useFinancialGoals";
+import { captureLiveRegions, expectAnnouncedIn } from "./liveRegions";
 
 vi.mock("../../src/js/hooks/useFinancialGoals", () => ({
   useFinancialGoals: vi.fn(),
@@ -74,6 +75,22 @@ describe("FinancialGoalsSection", () => {
     );
   });
 
+  it("announces loading and failure in regions mounted beforehand (#164)", async () => {
+    useFinancialGoals.mockReturnValue(state());
+    const { rerender } = render(<FinancialGoalsSection />);
+    const captured = captureLiveRegions();
+
+    useFinancialGoals.mockReturnValue(state({ status: "loading", goals: [] }));
+    rerender(<FinancialGoalsSection />);
+    await expectAnnouncedIn(captured, "status", "Chargement des objectifs…");
+
+    useFinancialGoals.mockReturnValue(
+      state({ status: "error", goals: [], message: "Impossible" })
+    );
+    rerender(<FinancialGoalsSection />);
+    await expectAnnouncedIn(captured, "alert", "Impossible");
+  });
+
   it("shows loading, error with retry and the first-goal empty state", () => {
     useFinancialGoals.mockReturnValue(state({ status: "loading", goals: [] }));
     const { rerender } = render(<FinancialGoalsSection />);
@@ -84,7 +101,7 @@ describe("FinancialGoalsSection", () => {
     const failed = state({ status: "error", goals: [], message: "Impossible" });
     useFinancialGoals.mockReturnValue(failed);
     rerender(<FinancialGoalsSection />);
-    expect(screen.getByRole("alert")).toHaveTextContent("Impossible");
+    expect(screen.getByText("Impossible")).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Réessayer" }));
     expect(failed.retry).toHaveBeenCalledTimes(1);
 

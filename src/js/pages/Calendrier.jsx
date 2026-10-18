@@ -203,6 +203,17 @@ function Calendrier() {
         errorClassName="monthly-events-message--error"
       />
 
+      <LiveMessage
+        message={
+          budget.summaryStatus === "loading"
+            ? "Calcul de votre budget…"
+            : budget.summaryStatus === "error"
+            ? "Votre budget n’a pas pu être calculé."
+            : ""
+        }
+        isError={budget.summaryStatus === "error"}
+        visible={false}
+      />
       <BudgetSummary
         summary={budget.summary}
         status={budget.summaryStatus}
@@ -396,11 +407,23 @@ function Calendrier() {
             </button>
           </div>
         </div>
+        {/* Annonces dans des régions live toujours montées (#164). */}
+        <LiveMessage
+          message={
+            budget.operationsStatus === "loading"
+              ? "Chargement des opérations…"
+              : budget.operationsStatus === "error"
+              ? "Les opérations n’ont pas pu être chargées."
+              : ""
+          }
+          isError={budget.operationsStatus === "error"}
+          visible={false}
+        />
         {budget.operationsStatus === "loading" && (
-          <p aria-live="polite">Chargement des opérations…</p>
+          <p>Chargement des opérations…</p>
         )}
         {budget.operationsStatus === "error" && (
-          <p role="alert">Les opérations n’ont pas pu être chargées.</p>
+          <p>Les opérations n’ont pas pu être chargées.</p>
         )}
         {budget.operationsStatus !== "loading" &&
           budget.operationsStatus !== "error" &&
