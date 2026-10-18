@@ -170,9 +170,14 @@ describe("budget calendar page", () => {
       screen.getByRole("heading", { name: /^Bilan d/ })
     ).toBeInTheDocument();
     expect(screen.getByText("Positif")).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent(
-      /Bilan corrigé le 11 octobre 2026/
-    );
+    // Plusieurs régions de statut : la page garde aussi sa région live (#151).
+    expect(
+      screen
+        .getAllByRole("status")
+        .some((element) =>
+          /Bilan corrigé le 11 octobre 2026/.test(element.textContent)
+        )
+    ).toBe(true);
     expect(
       screen.getByText(/1 événement de ce mois n’a pas été traité/)
     ).toBeInTheDocument();

@@ -142,7 +142,11 @@ test("converts a planned event into a persisted operation without counting it tw
   const created = apiResponse(page, "/v1/events", "POST");
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   expect((await created).status()).toBe(201);
-  await expect(page.getByText("Événement ajouté.")).toBeVisible();
+  // Région live toujours montée (#151) : le message y est annoncé, la copie
+  // visible est masquée aux lecteurs d'écran.
+  await expect(
+    page.getByRole("status").filter({ hasText: "Événement ajouté." })
+  ).toHaveCount(1);
   await navigate(page, "Calendrier");
   await expect(realBalance(page)).toHaveText(/1\s*200,00\s*€/);
   await expect(forecastBalance(page)).toHaveText(/1\s*080,00\s*€/);

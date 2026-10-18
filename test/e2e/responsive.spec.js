@@ -241,7 +241,10 @@ for (const viewport of viewports) {
     await page.getByLabel("Titre", { exact: true }).fill("Vacances");
     await page.getByLabel(/^Montant cible/).fill("1500");
     await page.getByRole("button", { name: "Enregistrer" }).click();
-    await expect(page.getByRole("status")).toContainText("Objectif ajouté.");
+    // Région live toujours montée (#151) : le message y est annoncé.
+    await expect(
+      page.getByRole("status").filter({ hasText: "Objectif ajouté." })
+    ).toHaveCount(1);
     await expect(page.getByRole("article", { name: "Vacances" })).toBeVisible();
 
     await expect(
@@ -306,7 +309,10 @@ for (const viewport of viewports) {
       page.getByRole("img", { name: "Aperçu : Loisirs, icône film (plein)" })
     ).toBeVisible();
     await page.getByRole("button", { name: "Enregistrer" }).click();
-    await expect(page.getByRole("status")).toContainText("Catégorie ajoutée.");
+    // Région live toujours montée (#151) : le message y est annoncé.
+    await expect(
+      page.getByRole("status").filter({ hasText: "Catégorie ajoutée." })
+    ).toHaveCount(1);
     const list = page.getByRole("list", { name: "Vos catégories" });
     await expect(list.getByText("Loisirs")).toBeVisible();
     // Icônes décoratives dessinées dans la couleur de chaque catégorie.

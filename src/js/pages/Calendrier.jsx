@@ -6,6 +6,7 @@ import { CalendarModeToggle } from "../components/BudgetCalendar/CalendarModeTog
 import { PendingOccurrences } from "../components/BudgetCalendar/PendingOccurrences";
 import { RealizeOccurrenceForm } from "../components/BudgetCalendar/RealizeOccurrenceForm";
 import { CategoryLabel } from "../components/Categories/CategoryLabel";
+import { LiveMessage } from "../components/LiveMessage";
 import {
   formatCompact,
   formatMoney,
@@ -195,18 +196,12 @@ function Calendrier() {
         </div>
       </header>
 
-      {budget.message.text && (
-        <p
-          className={`monthly-events-message${
-            budget.message.tone === "error"
-              ? " monthly-events-message--error"
-              : ""
-          }`}
-          role={budget.message.tone === "error" ? "alert" : "status"}
-        >
-          {budget.message.text}
-        </p>
-      )}
+      <LiveMessage
+        message={budget.message.text}
+        isError={budget.message.tone === "error"}
+        className="monthly-events-message"
+        errorClassName="monthly-events-message--error"
+      />
 
       <BudgetSummary
         summary={budget.summary}

@@ -87,6 +87,8 @@ export const useBudgetCalendar = (month, selectedDate) => {
   const loadMoreOperations = async () => {
     if (!operationsMeta?.hasNext || operationsStatus === "paging") return;
     setOperationsStatus("paging");
+    // Message vidé : un nouvel échec identique est de nouveau annoncé (#151).
+    setMessage({ tone: "info", text: "" });
     try {
       const page = await oneOffOperationsService.listOperations(
         operationsMeta.nextCursor,
