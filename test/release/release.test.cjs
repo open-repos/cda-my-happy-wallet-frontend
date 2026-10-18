@@ -5,10 +5,12 @@ const os = require("node:os");
 const path = require("node:path");
 const {
   bumpVersion,
+  composeNotes,
   extractNotes,
   insertRelease,
   parseFragment,
   renderBody,
+  renderUserNotes,
   requiredBump,
   updateLinks,
 } = require("../../scripts/release.cjs");
@@ -19,7 +21,53 @@ const fragment = (type, issue, text) =>
 // Fragment parsing
 assert.deepStrictEqual(
   parseFragment(fragment("fixed", 12, "Fixed a\nwrapped line."), "12.md"),
-  { type: "fixed", issue: 12, text: "Fixed a wrapped line." }
+  { type: "fixed", issue: 12, text: "Fixed a wrapped line.", user: null }
+);
+const withUser = (user) =>
+  `---\ntype: added\nissue: 4\nuser: ${user}\n---\n\nAdded goals.\n`;
+assert.equal(
+  parseFragment(withUser("Suivez vos objectifs : épargne et date."), "4.md")
+    .user,
+  "Suivez vos objectifs : épargne et date."
+);
+assert.equal(
+  parseFragment(withUser('"Texte entre guillemets."'), "4.md").user,
+  "Texte entre guillemets."
+);
+assert.throws(() => parseFragment(withUser('""'), "4.md"), /empty user line/);
+
+// User notes keep only French user lines, grouped and ordered by issue
+assert.equal(
+  renderUserNotes([
+    { type: "security", issue: 9, user: "Reconnectez-vous." },
+    { type: "added", issue: 21, user: "Objectifs." },
+    { type: "fixed", issue: 3, user: null },
+    { type: "added", issue: 2, user: "Calendrier." },
+    { type: "removed", issue: 5, user: "Ancien export retiré." },
+  ]),
+  [
+    "### Nouveautés",
+    "",
+    "- Calendrier.",
+    "- Objectifs.",
+    "",
+    "### Sécurité",
+    "",
+    "- Reconnectez-vous.",
+    "",
+    "### À savoir",
+    "",
+    "- Ancien export retiré.",
+  ].join("\n")
+);
+assert.equal(
+  renderUserNotes([{ type: "fixed", issue: 1, user: null }]),
+  "Aucun changement visible pour les utilisateurs dans cette version."
+);
+assert.equal(composeNotes("### Fixed\n\n- A.", null), "### Fixed\n\n- A.");
+assert.equal(
+  composeNotes("### Fixed\n\n- A.", "### Corrections\n\n- B.\n"),
+  "## Pour les utilisateurs\n\n### Corrections\n\n- B.\n\n## Détail technique\n\n### Fixed\n\n- A."
 );
 assert.throws(() => parseFragment("no front matter", "x.md"), /front matter/);
 assert.throws(
@@ -187,6 +235,10 @@ try {
   assert.notEqual(badDate.status, 0);
   assert.match(badDate.stderr, /YYYY-MM-DD/);
 
+  fs.writeFileSync(
+    path.join(root, "changes", "unreleased", "6-fix.md"),
+    "---\ntype: fixed\nissue: 6\nuser: Les soldes sont justes.\n---\n\nFixed balances.\n"
+  );
   const written = run("prepare", "--date", "2026-10-18");
   assert.equal(written.status, 0, written.stderr);
   assert.equal(
@@ -200,13 +252,37 @@ try {
       plain,
       "1.2.0",
       "2026-10-18",
-      "### Added\n\n- Added a thing (#5)."
+      "### Added\n\n- Added a thing (#5).\n\n### Fixed\n\n- Fixed balances (#6)."
     )
+  );
+  assert.equal(
+    fs.readFileSync(path.join(root, "changes", "releases", "1.2.0.md"), "utf8"),
+    "### Corrections\n\n- Les soldes sont justes.\n"
+  );
+  const notes = run("notes", "1.2.0");
+  assert.equal(notes.status, 0, notes.stderr);
+  assert.match(
+    notes.stdout,
+    /^## Pour les utilisateurs\n\n### Corrections\n\n- Les soldes sont justes\.\n\n## Détail technique\n\n### Added/
   );
   assert.deepStrictEqual(
     fs.readdirSync(path.join(root, "changes", "unreleased")),
     []
   );
+
+  const technicalOnly = run("notes", "1.1.0");
+  assert.equal(technicalOnly.status, 0, technicalOnly.stderr);
+  assert.equal(technicalOnly.stdout, "### Added\n\n- Old.\n");
+
+  fs.writeFileSync(
+    path.join(root, "changes", "unreleased", "7-next.md"),
+    fragment("fixed", 7, "Fixed next.")
+  );
+  fs.writeFileSync(path.join(root, "changes", "releases", "1.2.1.md"), "x\n");
+  const existingNotes = run("prepare", "--dry-run");
+  assert.notEqual(existingNotes.status, 0);
+  assert.match(existingNotes.stderr, /1\.2\.1\.md already exists/);
+  fs.unlinkSync(path.join(root, "changes", "unreleased", "7-next.md"));
 
   const nothingLeft = run("prepare");
   assert.notEqual(nothingLeft.status, 0);
