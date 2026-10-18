@@ -2,8 +2,8 @@
 
 ## Executable Web test stack
 
-The Web application uses Vite 6, React 17, Vitest 4 and jsdom 26. Testing
-Library 12 exercises React 17 components and hooks. Versions are pinned by
+The Web application uses Vite 6, React 18, Vitest 4 and jsdom 26. Testing
+Library 16 exercises React 18 components and hooks. Versions are pinned by
 `package-lock.json`; use `npm ci` rather than installing another test runner.
 GitHub's Web quality workflow runs on Node 22. See
 [`AGENTS.md`](../AGENTS.md) for the complete validation contract.
@@ -87,14 +87,19 @@ Do not hide failures with arbitrary sleeps, retries or snapshots of internals.
 - `npm run test:e2e` runs the separate Playwright suite. The isolated full-stack
   journeys run with `npm run test:e2e:stack`; see the
   [isolated stack guide](web-e2e-stack.md) delivered by #60.
-- Accessibility audit [#58](https://github.com/open-repos/cda-my-happy-wallet-frontend/issues/58)
-  and native integration tests [#57](https://github.com/open-repos/cda-my-happy-wallet-frontend/issues/57)
-  remain separate work; passing Web unit tests does not close them.
+- The [accessibility checks](web-accessibility.md) and
+  [visual comparisons](web-visual-regression.md) complement unit tests. Native
+  integration tests [#57](https://github.com/open-repos/cda-my-happy-wallet-frontend/issues/57)
+  remain separate work; passing Web tests does not close them.
 
-## Rollback
+## Runtime compatibility and rollback
 
-This test-only change adds three hook suites, isolates the existing events page
-suite from the real API and updates this document. Revert its commit to restore
-the previous coverage. It changes no runtime code,
-dependency, configuration, API contract or database and requires no deployment
-or migration.
+[The runtime dependency guide](web-runtime-dependencies.md) records the React 18,
+Router 7 and Axios compatibility boundaries and the production dependency audit.
+The new router tests cover mixed separators and rejected external navigation;
+Axios adapter tests exercise real headers and the existing session interceptor.
+
+Revert the affected PR and run the full validation contract before delivery.
+Testing-only commits require no data migration. Runtime updates may restore
+known advisory exposure when reverted; keep that rollback temporary and retain
+the audit evidence. Production deployment is a separate manual operation.
