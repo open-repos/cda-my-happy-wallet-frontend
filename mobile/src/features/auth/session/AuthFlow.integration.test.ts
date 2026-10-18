@@ -3,19 +3,38 @@ import { describe, expect, it } from "vitest";
 import { AuthGatewayError } from "@/src/features/auth/session/AuthGateway";
 import { AuthSessionManager } from "@/src/features/auth/session/AuthSessionManager";
 import { FetchAuthGateway } from "@/src/infrastructure/auth/FetchAuthGateway";
+import { FetchPublicAccountGateway } from "@/src/infrastructure/auth/FetchPublicAccountGateway";
 import { AuthorizedHttpClient } from "@/src/infrastructure/http/AuthorizedHttpClient";
 import { EphemeralSessionVault } from "@/src/infrastructure/session/EphemeralSessionVault";
 
 class FakeNativeAuthServer {
+  public registrationRequests = 0;
+  public verificationRequests = 0;
   public refreshRequests = 0;
   public protectedRequests = 0;
   public revokedTokens: string[] = [];
   public online = true;
 
+  private readonly requireVerifiedRegistration: boolean;
   private tokenVersion = 0;
   private activeAccessToken: string | null = null;
   private activeRefreshToken: string | null = null;
   private expiredAccessToken: string | null = null;
+  private account:
+    | {
+        id: string;
+        email: string;
+        firstname: string;
+        lastname: string;
+        password: string;
+        verificationToken: string;
+        verified: boolean;
+      }
+    | undefined;
+
+  public constructor(requireVerifiedRegistration = false) {
+    this.requireVerifiedRegistration = requireVerifiedRegistration;
+  }
 
   public readonly fetch: typeof fetch = async (input, init) => {
     if (!this.online) {
@@ -23,8 +42,14 @@ class FakeNativeAuthServer {
     }
 
     const url = String(input);
+    if (url.endsWith("/users/register")) {
+      return this.register(init);
+    }
+    if (url.includes("/users/verify/")) {
+      return this.verifyRegistration(url);
+    }
     if (url.endsWith("/auth/native/sessions")) {
-      return this.createSession();
+      return this.createSession(init);
     }
     if (url.endsWith("/auth/native/sessions/refresh")) {
       return this.refreshSession(init);
@@ -42,7 +67,64 @@ class FakeNativeAuthServer {
     this.expiredAccessToken = this.activeAccessToken;
   }
 
-  private createSession(): Response {
+  public getVerificationUrl(): string {
+    if (this.account == null) {
+      throw new Error("No registration is awaiting verification");
+    }
+
+    return `https://api.example.test/v1/users/verify/${this.account.id}/${this.account.verificationToken}`;
+  }
+
+  private register(init?: RequestInit): Response {
+    this.registrationRequests += 1;
+    const body = this.readBody(init);
+    if (
+      typeof body.email !== "string" ||
+      typeof body.firstname !== "string" ||
+      typeof body.lastname !== "string" ||
+      typeof body.password !== "string"
+    ) {
+      return new Response(null, { status: 422 });
+    }
+
+    this.account = {
+      id: "registered-user",
+      email: body.email,
+      firstname: body.firstname,
+      lastname: body.lastname,
+      password: body.password,
+      verificationToken: "single-use-verification-token",
+      verified: false,
+    };
+    return new Response(null, { status: 201 });
+  }
+
+  private verifyRegistration(url: string): Response {
+    this.verificationRequests += 1;
+    if (this.account == null || url !== this.getVerificationUrl()) {
+      return new Response(null, { status: 401 });
+    }
+    if (this.account.verified) {
+      return new Response(null, { status: 409 });
+    }
+
+    this.account.verified = true;
+    return new Response(null, { status: 201 });
+  }
+
+  private createSession(init?: RequestInit): Response {
+    if (this.requireVerifiedRegistration) {
+      const credentials = this.readBody(init);
+      if (
+        this.account == null ||
+        !this.account.verified ||
+        credentials.email !== this.account.email ||
+        credentials.password !== this.account.password
+      ) {
+        return new Response(null, { status: 401 });
+      }
+    }
+
     this.issueTokens();
     return this.sessionResponse();
   }
@@ -97,11 +179,20 @@ class FakeNativeAuthServer {
   }
 
   private sessionResponse(): Response {
+    const user = this.account ?? {
+      email: "user@example.com",
+      firstname: "Test",
+      lastname: "User",
+    };
     return new Response(
       JSON.stringify({
         success: true,
         payload: {
-          user: { email: "user@example.com" },
+          user: {
+            email: user.email,
+            firstname: user.firstname,
+            lastname: user.lastname,
+          },
           accessToken: this.activeAccessToken,
           accessTokenExpiresIn: 300,
           refreshToken: this.activeRefreshToken,
@@ -134,10 +225,71 @@ const createSystem = (
     manager,
     server.fetch,
   );
-  return { client, manager, vault };
+  const accountGateway = new FetchPublicAccountGateway(
+    "https://api.example.test/v1",
+    server.fetch,
+  );
+  return { accountGateway, client, manager, vault };
 };
 
 describe("native authentication flow", () => {
+  it("registers, confirms, signs in, refreshes and logs out", async () => {
+    const server = new FakeNativeAuthServer(true);
+    const { accountGateway, client, manager, vault } = createSystem(server);
+    const credentials = {
+      email: "new.user@example.com",
+      password: "Password!1",
+    };
+
+    await accountGateway.register({
+      firstname: " New ",
+      lastname: " User ",
+      email: " NEW.USER@Example.com ",
+      password: credentials.password,
+      confirmpassword: credentials.password,
+    });
+
+    expect(server.registrationRequests).toBe(1);
+    await expect(manager.signIn(credentials)).rejects.toMatchObject({
+      kind: "unauthorized",
+      status: 401,
+    });
+    await expect(vault.readRefreshToken()).resolves.toBeNull();
+
+    const verificationUrl = server.getVerificationUrl();
+    await expect(server.fetch(verificationUrl)).resolves.toMatchObject({
+      status: 201,
+    });
+    await expect(server.fetch(verificationUrl)).resolves.toMatchObject({
+      status: 409,
+    });
+    expect(server.verificationRequests).toBe(2);
+
+    await manager.signIn(credentials);
+    await expect(vault.readRefreshToken()).resolves.toBe("refresh-1");
+    expect(manager.getSnapshot()).toMatchObject({
+      status: "authenticated",
+      user: {
+        email: credentials.email,
+        firstname: "New",
+        lastname: "User",
+      },
+    });
+
+    server.expireAccessToken();
+    await expect(client.request("/operations")).resolves.toMatchObject({
+      status: 200,
+    });
+    expect(server.refreshRequests).toBe(1);
+    await expect(vault.readRefreshToken()).resolves.toBe("refresh-2");
+
+    await manager.signOut();
+
+    expect(server.revokedTokens).toEqual(["refresh-2"]);
+    await expect(vault.readRefreshToken()).resolves.toBeNull();
+    expect(manager.getSnapshot()).toEqual({ status: "anonymous" });
+  });
+
   it("logs in, shares one rotation between requests and logs out", async () => {
     const server = new FakeNativeAuthServer();
     const { client, manager, vault } = createSystem(server);
