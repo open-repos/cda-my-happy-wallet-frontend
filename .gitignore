@@ -27,3 +27,6 @@ test-results
 *.njsproj
 *.sln
 *.sw?
+
+# Disposable GitLab E2E recovery metadata (no secrets)
+.mhw-e2e-project.env
