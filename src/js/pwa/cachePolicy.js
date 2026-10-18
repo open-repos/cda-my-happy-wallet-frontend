@@ -112,11 +112,15 @@ export const createCachePolicy = ({ origin, assets }) => {
         ?.split(";")[0]
         .trim()
         .toLowerCase();
+      const expected = allowed.get(new URL(request.url).pathname);
+      const validType =
+        type === expected ||
+        (expected === "application/javascript" && type === "text/javascript");
       return (
         response.status === 200 &&
         ["basic", "default"].includes(response.type) &&
         !response.redirected &&
-        type === allowed.get(new URL(request.url).pathname) &&
+        validType &&
         !/\b(no-store|private)\b/i.test(
           response.headers.get("cache-control") || ""
         ) &&

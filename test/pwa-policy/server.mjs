@@ -10,6 +10,10 @@ const policy = await readFile(
   new URL("../../src/js/pwa/cachePolicy.js", import.meta.url),
   "utf8"
 );
+const runtime = await readFile(
+  new URL("../../src/js/pwa/publicWorker.js", import.meta.url),
+  "utf8"
+);
 const page =
   '<!doctype html><html lang="fr"><title>Preuve de politique PWA</title><h1>En ligne</h1><p>synthetic-private-page</p></html>';
 const offline =
@@ -47,7 +51,9 @@ const server = createServer(async (req, res) => {
       "application/javascript",
       worker.replace("__BUILD__", build).replace("__PREVIOUS__", previous)
     );
-  if (url.pathname === "/cache-policy.js")
+  if (url.pathname === "/public-worker.js")
+    return send(200, "application/javascript", runtime);
+  if (["/cache-policy.js", "/cachePolicy.js"].includes(url.pathname))
     return send(200, "application/javascript", policy);
   if (/^\/assets\/proof-[a-f0-9]{16}\.js$/.test(url.pathname)) {
     if (failInstall) return send(503, "text/plain", "Synthetic asset failure");

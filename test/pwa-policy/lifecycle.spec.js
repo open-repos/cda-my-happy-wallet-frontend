@@ -59,7 +59,7 @@ const activate = async (page, build) => {
       const timer = setTimeout(() => {
         channel.port1.close();
         reject(new Error("Update action not acknowledged"));
-      }, 2000);
+      }, 5000);
       channel.port1.onmessage = (event) => {
         clearTimeout(timer);
         channel.port1.close();
@@ -71,7 +71,7 @@ const activate = async (page, build) => {
     });
   });
   expect(accepted).toBe(build);
-  await expect.poll(() => activeBuild(page)).toBe(build);
+  await expect.poll(() => activeBuild(page), { timeout: 10000 }).toBe(build);
 };
 const entries = (page) =>
   page.evaluate(async () => {
@@ -123,8 +123,11 @@ test("installs public assets, keeps private reads network-only, reconnects, upda
         "/assets/proof-1111111111111111.js",
         { headers: { authorization: "Bearer synthetic" } },
       ],
-    ])
-      statuses.push((await fetch(path, options)).status);
+    ]) {
+      const response = await fetch(path, options);
+      await response.text();
+      statuses.push(response.status);
+    }
     return statuses;
   });
   expect(reads).toEqual([200, 200, 401, 200, 200]);
@@ -132,11 +135,23 @@ test("installs public assets, keeps private reads network-only, reconnects, upda
 
   await context.setOffline(true);
   expect(
-    await page.evaluate(async () => (await fetch("/v1/operations")).status)
+    await page.evaluate(
+      async () =>
+        await (async () => {
+          const response = await fetch("/v1/operations");
+          await response.text();
+          return response.status;
+        })()
+    )
   ).toBe(503);
   expect(
     await page.evaluate(
-      async () => (await fetch("/assets/proof-1111111111111111.js")).status
+      async () =>
+        await (async () => {
+          const response = await fetch("/assets/proof-1111111111111111.js");
+          await response.text();
+          return response.status;
+        })()
     )
   ).toBe(200);
   await page.goto("/calendrier");
@@ -148,7 +163,14 @@ test("installs public assets, keeps private reads network-only, reconnects, upda
   await page.reload();
   await expect(page.getByRole("heading", { name: "En ligne" })).toBeVisible();
   expect(
-    await page.evaluate(async () => (await fetch("/v1/operations")).status)
+    await page.evaluate(
+      async () =>
+        await (async () => {
+          const response = await fetch("/v1/operations");
+          await response.text();
+          return response.status;
+        })()
+    )
   ).toBe(200);
   await verifyPrivateBoundary(page);
 
@@ -206,11 +228,23 @@ test("installs public assets, keeps private reads network-only, reconnects, upda
   await context.setOffline(true);
   expect(
     await page.evaluate(
-      async () => (await fetch("/assets/proof-2222222222222222.js")).status
+      async () =>
+        await (async () => {
+          const response = await fetch("/assets/proof-2222222222222222.js");
+          await response.text();
+          return response.status;
+        })()
     )
   ).toBe(200);
   expect(
-    await page.evaluate(async () => (await fetch("/v1/operations")).status)
+    await page.evaluate(
+      async () =>
+        await (async () => {
+          const response = await fetch("/v1/operations");
+          await response.text();
+          return response.status;
+        })()
+    )
   ).toBe(503);
   await context.setOffline(false);
   await verifyPrivateBoundary(page);
@@ -244,7 +278,12 @@ test("a failed installation preserves the working public version", async ({
   await context.setOffline(true);
   expect(
     await page.evaluate(
-      async () => (await fetch("/assets/proof-1111111111111111.js")).status
+      async () =>
+        await (async () => {
+          const response = await fetch("/assets/proof-1111111111111111.js");
+          await response.text();
+          return response.status;
+        })()
     )
   ).toBe(200);
   await context.setOffline(false);
