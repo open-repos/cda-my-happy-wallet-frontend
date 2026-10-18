@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { resolve, join } from "node:path";
 import { buildPwaWorker } from "../../scripts/build-pwa-worker.mjs";
 import { build } from "vite";
+import { createPrivacyFixture } from "./privacy-fixture.mjs";
 
 const source = resolve("dist");
 const temporary = await mkdtemp(join(tmpdir(), "mhw-generated-worker-"));
@@ -32,6 +33,7 @@ await build({
 });
 const updateScript = await readFile(join(uiDirectory, "updates.js"));
 const updateStyle = await readFile(join(uiDirectory, "updates.css"));
+const privacyFixture = createPrivacyFixture();
 const versions = {};
 const bodies = new Map();
 const publish = async (name, directory, metadata, probe) => {
@@ -94,10 +96,11 @@ const mime = (path) =>
     : "image/x-icon";
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, "http://127.0.0.1:4176");
-  const send = (status, type, body, control = "no-store") => {
+  const send = (status, type, body, control = "no-store", headers = {}) => {
     res.writeHead(status, {
       "content-type": type === "text/html" ? "text/html; charset=utf-8" : type,
       "cache-control": control,
+      ...headers,
     });
     res.end(body);
   };
@@ -147,6 +150,7 @@ const server = createServer(async (req, res) => {
     const { worker, ...publicMetadata } = version;
     return send(200, "application/json", JSON.stringify(publicMetadata));
   }
+  if (await privacyFixture({ req, url, send, version })) return;
   if (bodies.has(url.pathname)) {
     if (broken && url.pathname === version.probe)
       return send(503, "text/plain", "Synthetic asset failure");
