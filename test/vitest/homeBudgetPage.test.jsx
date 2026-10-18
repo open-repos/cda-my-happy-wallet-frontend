@@ -10,6 +10,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CaseShowRaV from "../../src/js/components/HomeComponents/CaseShowRaV";
 import { useHomeBudget } from "../../src/js/hooks/useHomeBudget";
+import { captureLiveRegions, expectAnnouncedIn } from "./liveRegions";
 
 vi.mock("../../src/js/hooks/useHomeBudget", () => ({
   HOME_CURRENCY: "EUR",
@@ -215,14 +216,65 @@ describe("Home reste à vivre", () => {
     );
     renderHome();
 
-    expect(screen.getByRole("status", { name: "" }).textContent).toBe(
-      "Chargement du reste à vivre…"
-    );
+    expect(screen.getByText("Chargement du reste à vivre…")).toBeVisible();
     expect(screen.getByText(/^Loisirs :/)).toBeInTheDocument();
-    const alert = screen.getByRole("alert");
-    expect(alert).toHaveTextContent("Les objectifs n’ont pas pu être chargés.");
-    fireEvent.click(within(alert).getByRole("button", { name: "Réessayer" }));
+    const goals = screen.getByRole("article", { name: "Mes objectifs" });
+    expect(
+      within(goals).getByText("Les objectifs n’ont pas pu être chargés.")
+    ).toBeVisible();
+    fireEvent.click(within(goals).getByRole("button", { name: "Réessayer" }));
     expect(failed.reload).toHaveBeenCalledTimes(1);
+  });
+
+  it("announces each block in live regions mounted beforehand (#164)", async () => {
+    const { rerender } = renderHome();
+    const captured = captureLiveRegions();
+    const rerenderHome = () =>
+      rerender(
+        <MemoryRouter>
+          <CaseShowRaV />
+        </MemoryRouter>
+      );
+
+    useHomeBudget.mockReturnValue(
+      state({
+        summary: section(null, "loading"),
+        expenses: section(null, "loading"),
+        goals: section(null, "error"),
+      })
+    );
+    rerenderHome();
+    await expectAnnouncedIn(captured, "status", "Chargement du reste à vivre…");
+    await expectAnnouncedIn(captured, "status", "Chargement des dépenses…");
+    await expectAnnouncedIn(
+      captured,
+      "alert",
+      "Les objectifs n’ont pas pu être chargés."
+    );
+
+    useHomeBudget.mockReturnValue(
+      state({
+        summary: section(null, "error"),
+        expenses: section(null, "error"),
+      })
+    );
+    rerenderHome();
+    await expectAnnouncedIn(
+      captured,
+      "alert",
+      "Le reste à vivre n’a pas pu être chargé."
+    );
+    await expectAnnouncedIn(
+      captured,
+      "alert",
+      "Les dépenses du mois n’ont pas pu être chargées."
+    );
+
+    // Retour au succès : mêmes régions, vidées.
+    useHomeBudget.mockReturnValue(state());
+    rerenderHome();
+    expect(captureLiveRegions()).toEqual(captured);
+    for (const region of captured) expect(region).toBeEmptyDOMElement();
   });
 });
 

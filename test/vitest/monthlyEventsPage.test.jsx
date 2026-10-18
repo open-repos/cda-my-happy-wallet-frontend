@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Calendrier from "../../src/js/pages/Calendrier";
 import Objectifs from "../../src/js/pages/Objectifs";
 import { useMonthlyEvents } from "../../src/js/hooks/useMonthlyEvents";
+import { captureLiveRegions, expectAnnouncedIn } from "./liveRegions";
 import { useBudgetCalendar } from "../../src/js/hooks/useBudgetCalendar";
 import { useFinancialGoals } from "../../src/js/hooks/useFinancialGoals";
 
@@ -144,6 +145,15 @@ describe("monthly event pages", () => {
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Mois suivant" }));
     expect(useMonthlyEvents).toHaveBeenCalled();
+  });
+
+  it("announces the events loading in a region mounted beforehand (#164)", async () => {
+    const { rerender } = render(<Objectifs />);
+    const captured = captureLiveRegions();
+
+    useMonthlyEvents.mockReturnValue({ ...state, status: "loading" });
+    rerender(<Objectifs />);
+    await expectAnnouncedIn(captured, "status", "Chargement des événements…");
   });
 
   it("renders recoverable loading, empty and error states", () => {

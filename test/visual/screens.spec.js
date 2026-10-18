@@ -172,11 +172,11 @@ for (const theme of ["light", "dark"]) {
         await expect(
           page.getByRole("heading", { name: heading })
         ).toBeVisible();
+        // Chargement annoncé par une région live toujours montée (#164).
         if (state === "loading")
-          await expect(page.locator(".one-off-state")).toHaveAttribute(
-            "aria-live",
-            "polite"
-          );
+          await expect(
+            page.getByRole("status").filter({ hasText: heading })
+          ).toHaveCount(1);
         if (state === "error")
           await expect(
             page.getByRole("button", { name: "Réessayer" })

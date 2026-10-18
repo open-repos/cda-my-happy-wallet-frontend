@@ -117,10 +117,8 @@ const ForecastCard = ({ summary }) => {
 export const BudgetSummary = ({ summary, status, month, onRetry }) => {
   if (status === "loading") {
     return (
-      <section
-        className="budget-summary budget-summary--state"
-        aria-live="polite"
-      >
+      // Annonce faite par la page, dans une région toujours montée (#164).
+      <section className="budget-summary budget-summary--state">
         <p>Calcul de votre budget…</p>
       </section>
     );

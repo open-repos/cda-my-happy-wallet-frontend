@@ -9,7 +9,7 @@ import {
 } from "../BudgetCalendar/BudgetSummary";
 import { formatMoney } from "../BudgetCalendar/budgetFormat";
 import { periodRemaining } from "../../utils/homeBudget";
-import { SectionState } from "./SectionState";
+import { SectionAnnouncement, SectionState } from "./SectionState";
 
 export const HOME_PERIODS = [
   { value: "mois", label: "Mois", caption: "Reste à vivre du mois" },
@@ -88,16 +88,28 @@ const ShareHelp = ({ summary, share, period }) => {
   );
 };
 
+const TEXTS = {
+  loadingText: "Chargement du reste à vivre…",
+  errorText: "Le reste à vivre n’a pas pu être chargé.",
+};
+
 /** Montant principal de l'accueil et explication du calcul pour la période. */
 export const RemainingToLive = ({ section, period }) => {
+  // Premier enfant identique dans chaque rendu : React garde ces régions
+  // live montées d'un état à l'autre (#164).
+  const announcement = (
+    <SectionAnnouncement status={section.status} {...TEXTS} />
+  );
   if (section.status !== "success") {
     return (
-      <SectionState
-        status={section.status}
-        loadingText="Chargement du reste à vivre…"
-        errorText="Le reste à vivre n’a pas pu être chargé."
-        onRetry={section.reload}
-      />
+      <>
+        {announcement}
+        <SectionState
+          status={section.status}
+          {...TEXTS}
+          onRetry={section.reload}
+        />
+      </>
     );
   }
   const summary = section.data;
@@ -108,37 +120,40 @@ export const RemainingToLive = ({ section, period }) => {
       ? option.cappedCaption(share.days)
       : option.caption;
   return (
-    <section
-      className="home-budget__remaining"
-      aria-labelledby="home-rav-title"
-    >
-      <h1 id="home-rav-title" className="home-budget__caption">
-        {caption}
-      </h1>
-      <p
-        className={`home-budget__amount budget-amount--${
-          share.amount === null ? "neutral" : toneOf(share.amount)
-        }`}
-        aria-live="polite"
+    <>
+      {announcement}
+      <section
+        className="home-budget__remaining"
+        aria-labelledby="home-rav-title"
       >
-        {share.amount === null
-          ? "—"
-          : formatMoney(share.amount, summary.currency)}
-      </p>
-      <div className="home-budget__explanation">
-        {period === "mois" ? (
-          <>
-            <RealBreakdown summary={summary} />
-            <CarryHelp summary={summary} />
-          </>
-        ) : (
-          <ShareHelp summary={summary} share={share} period={period} />
-        )}
-      </div>
-      <Link className="home-budget__edit" to="/home/operations-fixes">
-        Modifier vos charges et revenus{" "}
-        <FontAwesomeIcon icon={faEdit} aria-hidden="true" />
-      </Link>
-    </section>
+        <h1 id="home-rav-title" className="home-budget__caption">
+          {caption}
+        </h1>
+        <p
+          className={`home-budget__amount budget-amount--${
+            share.amount === null ? "neutral" : toneOf(share.amount)
+          }`}
+          aria-live="polite"
+        >
+          {share.amount === null
+            ? "—"
+            : formatMoney(share.amount, summary.currency)}
+        </p>
+        <div className="home-budget__explanation">
+          {period === "mois" ? (
+            <>
+              <RealBreakdown summary={summary} />
+              <CarryHelp summary={summary} />
+            </>
+          ) : (
+            <ShareHelp summary={summary} share={share} period={period} />
+          )}
+        </div>
+        <Link className="home-budget__edit" to="/home/operations-fixes">
+          Modifier vos charges et revenus{" "}
+          <FontAwesomeIcon icon={faEdit} aria-hidden="true" />
+        </Link>
+      </section>
+    </>
   );
 };

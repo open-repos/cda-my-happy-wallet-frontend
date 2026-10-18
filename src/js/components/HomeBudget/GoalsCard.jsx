@@ -4,7 +4,7 @@ import { formatMoney } from "../BudgetCalendar/budgetFormat";
 import { EChart } from "../charts/EChart";
 import { goalsRingOption } from "../charts/homeChartOptions";
 import { useChartTokens } from "../charts/useChartTokens";
-import { SectionState } from "./SectionState";
+import { SectionAnnouncement, SectionState } from "./SectionState";
 
 /** Anneau d'atteinte (ECharts) : le conteneur porte un libellé complet. */
 const ProgressRing = ({ progress, currency }) => {
@@ -25,14 +25,19 @@ const ProgressRing = ({ progress, currency }) => {
   );
 };
 
+const TEXTS = {
+  loadingText: "Chargement des objectifs…",
+  errorText: "Les objectifs n’ont pas pu être chargés.",
+};
+
 export const GoalsCard = ({ section, currency }) => (
   <article className="home-budget__card" aria-labelledby="home-goals-title">
     <h2 id="home-goals-title">Mes objectifs</h2>
+    <SectionAnnouncement status={section.status} {...TEXTS} />
     {section.status !== "success" ? (
       <SectionState
         status={section.status}
-        loadingText="Chargement des objectifs…"
-        errorText="Les objectifs n’ont pas pu être chargés."
+        {...TEXTS}
         onRetry={section.reload}
       />
     ) : section.data === null ? (

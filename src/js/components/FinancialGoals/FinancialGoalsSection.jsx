@@ -67,8 +67,13 @@ export const FinancialGoalsSection = () => {
         className="monthly-events-message"
         errorClassName="monthly-events-message--error"
       />
+      {/* Chargement annoncé par une région live toujours montée (#164). */}
+      <LiveMessage
+        message={state.status === "loading" ? "Chargement des objectifs…" : ""}
+        visible={false}
+      />
       {state.status === "loading" && (
-        <div className="monthly-events-state" aria-live="polite">
+        <div className="monthly-events-state">
           <span className="monthly-events-loader" aria-hidden="true" />
           <h3>Chargement des objectifs…</h3>
         </div>

@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import ListeOperations from "../../src/js/pages/ListeOperations";
 import { useOneOffOperations } from "../../src/js/hooks/useOneOffOperations";
+import { captureLiveRegions, expectAnnouncedIn } from "./liveRegions";
 
 vi.mock("../../src/js/hooks/useOneOffOperations", () => ({
   useOneOffOperations: vi.fn(),
@@ -55,6 +56,30 @@ describe("ListeOperations", () => {
     expect(screen.getByRole("row", { name: /Courses/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Afficher la suite" }));
     expect(actions.loadMore).toHaveBeenCalledTimes(1);
+  });
+
+  it("announces loading and failure in regions mounted beforehand (#164)", async () => {
+    const { rerender } = render(<ListeOperations />, { wrapper: MemoryRouter });
+    const captured = captureLiveRegions();
+
+    useOneOffOperations.mockReturnValue({
+      ...successfulState,
+      status: "loading",
+    });
+    rerender(<ListeOperations />);
+    await expectAnnouncedIn(captured, "status", "Chargement des opérations…");
+
+    useOneOffOperations.mockReturnValue({
+      ...successfulState,
+      status: "error",
+      message: "Impossible de charger vos opérations.",
+    });
+    rerender(<ListeOperations />);
+    await expectAnnouncedIn(
+      captured,
+      "alert",
+      "Impossible de charger vos opérations."
+    );
   });
 
   it("renders loading, empty and recoverable error states", () => {
