@@ -66,14 +66,48 @@ readlink -- "$1/current" || true
 REMOTE
 )"
 
-ssh "$ssh_target" bash -s -- "$DEPLOY_PATH" "$CI_COMMIT_SHA" <<'REMOTE'
+# Open tabs and a service worker in transition still request the previous
+# version's hashed assets. Carry over only the files listed by the live
+# pwa-build.json, so exactly one previous version stays reachable.
+retained_assets=()
+if live_metadata="$(
+  curl --fail --location --silent --show-error --max-time 10 \
+    "${healthcheck_url%/}/pwa-build.json"
+)"; then
+  mapfile -t retained_assets < <(
+    grep -oE '"/assets/[A-Za-z0-9._-]+"' <<<"$live_metadata" | tr -d '"' | sort -u
+  )
+else
+  echo "Live asset list unavailable; previous assets are not retained." >&2
+fi
+
+# ssh re-splits its arguments remotely: an empty value would vanish, so the
+# first deployment passes the "none" sentinel, rejected by the remote check.
+ssh "$ssh_target" bash -s -- "$DEPLOY_PATH" "$CI_COMMIT_SHA" "${previous_release:-none}" "${retained_assets[@]}" <<'REMOTE'
 set -Eeuo pipefail
 deploy_path="$1"
 commit_sha="$2"
+previous_release="$3"
+shift 3
 release_path="$deploy_path/releases/$commit_sha"
 next_link="$deploy_path/.current-$commit_sha"
 
 test -s "$release_path/index.html"
+
+retained=0
+if [[ "$previous_release" =~ ^releases/[A-Za-z0-9._-]+$ && "$previous_release" != "releases/$commit_sha" ]]; then
+  for asset in "$@"; do
+    [[ "$asset" =~ ^/assets/[A-Za-z0-9._-]+$ ]] || continue
+    source_file="$deploy_path/$previous_release$asset"
+    target_file="$release_path$asset"
+    if [[ -f "$source_file" && ! -L "$source_file" && ! -e "$target_file" ]]; then
+      cp -p -- "$source_file" "$target_file"
+      retained=$((retained + 1))
+    fi
+  done
+fi
+echo "Previous assets retained: $retained"
+
 rm -f -- "$next_link"
 ln -s "releases/$commit_sha" "$next_link"
 mv -Tf -- "$next_link" "$deploy_path/current"
