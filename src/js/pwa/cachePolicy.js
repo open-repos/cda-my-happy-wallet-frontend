@@ -19,6 +19,12 @@ export const publicCacheName = (build) => {
   return `${PREFIX}${build}`;
 };
 
+/** True only for this application's public cache namespace. */
+export const isPublicCacheName = (name) =>
+  typeof name === "string" &&
+  name.length === PREFIX.length + 16 &&
+  CACHE.test(name);
+
 /** Only our exact namespace is disposable. Keep current + previous after activation. */
 export const obsoletePublicCaches = (
   names,
@@ -26,10 +32,7 @@ export const obsoletePublicCaches = (
   previous = null,
   pending = []
 ) => {
-  const valid = (name) =>
-    typeof name === "string" &&
-    name.length === PREFIX.length + 16 &&
-    CACHE.test(name);
+  const valid = isPublicCacheName;
   if (
     !valid(current) ||
     (previous !== null && !valid(previous)) ||

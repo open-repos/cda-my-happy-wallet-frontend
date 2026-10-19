@@ -11,15 +11,25 @@ worker. Le manifeste et les icônes restent utilisables indépendamment.
 configuration publique incorporée au build, pas un secret. Le serveur de
 développement ne l’active pas.
 
-**Conserver la valeur false tant que #50/backend #98 et la recette intégrée en
-staging ne sont pas validés.** Cette livraison n’active aucune instance réelle,
-ne configure aucun environnement et ne déploie pas en production. La recette
-physique iOS/Android/desktop de #54 reste distincte des profils navigateur.
+#50 et backend #98 sont livrés. Faute d’environnement de staging, le
+propriétaire a choisi d’activer la PWA directement en production, une fois le
+retrait explicite (ci-dessous), la rétention des assets du déploiement
+([CI/CD](ci-cd.md)) et les en-têtes Nginx de `/sw.js` et du manifeste en place.
+La recette physique iOS/Android/desktop de #54 se fait alors sur la production.
+Vérifier avant toute inscription les exigences MIME, historique de version et
+rétention d’assets de [la livraison du worker](pwa-versioned-worker.md).
 
-Une fois ces prérequis satisfaits, le build de staging peut être produit avec la
-valeur `true`, puis testé avec son vrai hébergement HTTPS et son contrat HTTP.
-Vérifier les exigences MIME, historique de version et rétention d’assets de
-[la livraison du worker](pwa-versioned-worker.md) avant toute inscription.
+Les deux drapeaux sont lus **au build**. Dans GitLab, les définir comme
+variables CI/CD de type Variable avec la portée d’environnement `All (*)` :
+le job `build` n’a pas d’environnement et ne voit pas une variable limitée à
+`production`. Les protéger les réserve aux branches protégées, dont `main` : les
+pipelines de merge request construisent donc toujours sans PWA.
+
+| `VITE_PWA_ENABLED` | `VITE_PWA_RETIRE` | Effet du build déployé                                     |
+| ------------------ | ----------------- | ---------------------------------------------------------- |
+| absent ou `false`  | absent ou `false` | Aucune inscription ; un worker installé reste              |
+| `true`             | indifférent       | Inscription et avis de mise à jour                         |
+| absent ou `false`  | `true`            | Retrait du worker `/sw.js` et des caches `mhw-public-v1-*` |
 
 ## Comportement
 
@@ -87,15 +97,29 @@ worker. Aucun compte ou donnée réelle n’est nécessaire.
 ## Retour arrière et limites
 
 Avant la première inscription, conserver `false` et revenir sur cette PR suffit
-à retirer l’interface. **Désactiver le drapeau ne désinscrit pas un worker déjà
-installé.** Après activation réelle, revenir à un ensemble cohérent d’assets et
-de worker selon la procédure versionnée ; le même parcours explicite présente
-une version de rollback. Ne pas effacer des caches ou inscriptions d’autres
-applications. Une suppression définitive d’un worker déjà livré exige une
-procédure de retrait sur son origine et sa portée, puis sa vérification sur les
-clients concernés ; elle ne se fait pas en retirant simplement `sw.js` du serveur.
+à retirer l’interface. Après activation réelle, deux retours arrière existent :
 
-Le cache privé HTTP avant contrôle du worker dépend toujours du backend #98.
+- **Revenir à une version précédente de la PWA** : redéployer un ensemble
+  cohérent d’assets et de worker selon la procédure versionnée ; le même
+  parcours explicite présente une version de rollback.
+- **Retirer la PWA** : redéployer un build avec `VITE_PWA_ENABLED` absent ou
+  différent de `true` **et** `VITE_PWA_RETIRE=true`. Un drapeau simplement
+  absent ne retire rien, pour qu’une variable oubliée ne désinstalle pas la PWA
+  chez tous les clients. Au chargement, `retirePwa`
+  (`src/js/pwa/retireWorker.js`) désinscrit uniquement le worker `/sw.js` de
+  l’origine courante et supprime uniquement les caches `mhw-public-v1-*`. Il
+  n’affiche rien et ignore les refus du navigateur. La page déjà ouverte reste
+  contrôlée jusqu’à son prochain chargement ; un onglet resté sur l’ancien
+  build actif peut afficher « mise à jour indisponible » jusqu’à son
+  rechargement. Vérifier ensuite dans les outils du navigateur qu’aucun worker
+  ni cache `mhw-public-v1-*` ne subsiste. Garder `VITE_PWA_RETIRE=true` tant que
+  des clients peuvent revenir, puis le retirer.
+
+Ne pas effacer des caches ou inscriptions d’autres applications. Retirer
+simplement `sw.js` du serveur ne désinscrit pas un worker déjà installé : le
+retrait passe par le build désactivé, chargé au moins une fois par chaque client.
+
+Le cache privé HTTP avant contrôle du worker repose sur le contrat du backend #98 (`Cache-Control: private, no-store`), à revérifier après chaque changement du proxy.
 La synchronisation hors ligne, les notifications push, les modifications des
 formulaires métier et la recette des appareils physiques ne font pas partie de
 cette unité. Le navigateur reste libre d’évincer le cache public.
