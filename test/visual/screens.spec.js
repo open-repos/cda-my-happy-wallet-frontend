@@ -31,6 +31,32 @@ async function ready(page, theme, authenticated = true) {
   await prepareProtectedPage(page, { authenticated });
 }
 
+/**
+ * A visible canvas can still be redrawn: theme and category colours trigger a
+ * second render. ECharts' "finished" event never fires here because the fixed
+ * clock stops zrender's timeline, so wait until every chart canvas stays
+ * identical across two reads instead.
+ */
+async function stableCharts(page) {
+  await page.waitForLoadState("networkidle");
+  const snapshot = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll("main canvas")]
+        .map((canvas) => canvas.toDataURL())
+        .join("|")
+    );
+  await expect
+    .poll(
+      async () => {
+        const before = await snapshot();
+        await page.waitForTimeout(250);
+        return before === (await snapshot());
+      },
+      { timeout: 10_000 }
+    )
+    .toBe(true);
+}
+
 async function layout(page) {
   await page.evaluate(() => document.fonts.ready);
   await expect(page.getByRole("main")).toHaveCount(1);
@@ -85,8 +111,10 @@ for (const theme of ["light", "dark"]) {
       await page.goto(definition.path);
       await expect(page.locator(definition.ready).first()).toBeVisible();
       // Chart imports are asynchronous; a visible empty wrapper is not ready.
-      if (definition.chart)
+      if (definition.chart) {
         await expect(page.locator("main canvas").first()).toBeVisible();
+        await stableCharts(page);
+      }
       if (definition.name === "events-goals")
         await expect(page.getByText("Vélo", { exact: true })).toBeVisible();
       if (definition.name === "operations") {
