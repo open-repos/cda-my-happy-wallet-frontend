@@ -8,9 +8,13 @@ import {
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PwaUpdates } from "../../src/js/pwa/PwaUpdates.jsx";
+import { retirePwa } from "../../src/js/pwa/retireWorker.js";
 import { createPwaUpdates } from "../../src/js/pwa/updateClient.js";
 vi.mock("../../src/js/pwa/updateClient.js", () => ({
   createPwaUpdates: vi.fn(),
+}));
+vi.mock("../../src/js/pwa/retireWorker.js", () => ({
+  retirePwa: vi.fn().mockResolvedValue({ workers: 0, caches: 0 }),
 }));
 afterEach(() => {
   cleanup();
@@ -22,6 +26,21 @@ describe("PWA update notice", () => {
     const { container } = render(<PwaUpdates />);
     expect(container).toBeEmptyDOMElement();
     expect(createPwaUpdates).not.toHaveBeenCalled();
+  });
+  it("never retires an installed worker without the explicit rollback flag", () => {
+    render(<PwaUpdates enabled={false} />);
+    expect(retirePwa).not.toHaveBeenCalled();
+  });
+  it("retires the installed worker in an explicit rollback build", () => {
+    const { container } = render(<PwaUpdates enabled={false} retire />);
+    expect(container).toBeEmptyDOMElement();
+    expect(retirePwa).toHaveBeenCalledOnce();
+    expect(createPwaUpdates).not.toHaveBeenCalled();
+  });
+  it("keeps the worker when the build is enabled, even with the rollback flag", () => {
+    createPwaUpdates.mockReturnValue({ start: vi.fn(), dispose: vi.fn() });
+    render(<PwaUpdates enabled retire />);
+    expect(retirePwa).not.toHaveBeenCalled();
   });
   it("keeps a stable announcement and exposes explicit actions through disposal", () => {
     const client = {

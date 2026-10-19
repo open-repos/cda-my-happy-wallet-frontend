@@ -12,6 +12,15 @@ precedente si le marqueur public `deployment-sha.txt` ne correspond pas au SHA
 attendu. Les cinq releases les plus recentes et la release active sont
 conservees.
 
+Avant la bascule, le script lit le `pwa-build.json` public de la version en
+ligne et copie dans la nouvelle release les assets haches qu'il liste et qui
+manquent, depuis la release courante. Les onglets deja ouverts et un service
+worker en transition trouvent ainsi encore les fichiers de la version
+precedente. Seule cette version est reportee : un asset plus ancien, non liste,
+n'est pas recopie, et un fichier deja present dans la nouvelle release n'est
+jamais remplace. Si la liste est indisponible, le deploiement continue sans
+report et l'indique dans le journal.
+
 ## Variables GitLab
 
 Configurer ces variables avec la portee d'environnement `production` et

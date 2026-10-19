@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import "../../css/PwaUpdates.css";
+import { retirePwa } from "./retireWorker.js";
 import { createPwaUpdates } from "./updateClient.js";
 
 const messages = {
@@ -19,11 +20,16 @@ const reasons = {
 
 export function PwaUpdates({
   enabled = import.meta.env.PROD && import.meta.env.VITE_PWA_ENABLED === "true",
+  retire = import.meta.env.PROD && import.meta.env.VITE_PWA_RETIRE === "true",
 }) {
   const client = useRef(null);
   const [state, setState] = useState({ phase: "idle", reason: null });
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      // Rollback build only: an absent flag never removes installed workers.
+      if (retire) retirePwa();
+      return;
+    }
     const current = createPwaUpdates({ enabled, onState: setState });
     client.current = current;
     current.start();
@@ -31,7 +37,7 @@ export function PwaUpdates({
       client.current = null;
       current.dispose();
     };
-  }, [enabled]);
+  }, [enabled, retire]);
   if (!enabled) return null;
   const message = reasons[state.reason] || messages[state.phase] || "";
   return (
