@@ -50,7 +50,10 @@ réécrit une référence manquante : il échoue. Aucun retry ne masque un écar
 
 La locale française, le fuseau de Paris, la date fixe du 18 octobre 2026, le
 facteur de pixels 1 et le mouvement réduit stabilisent le rendu. Les polices sont
-attendues et les graphiques doivent avoir créé leur canvas avant capture. Une
+attendues et les graphiques doivent avoir créé leur canvas avant capture, puis
+garder des pixels identiques entre deux lectures espacées de 250 ms après le
+repos réseau : le thème et les couleurs de catégories peuvent déclencher un
+second rendu, et l'horloge figée empêche ECharts d'émettre `finished`. Une
 faible tolérance de 0,2 % de pixels (seuil par pixel 0,15) absorbe l'anticrénelage ;
 les contrôles géométriques restent indépendants de cette tolérance.
 
