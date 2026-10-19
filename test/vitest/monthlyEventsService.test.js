@@ -24,9 +24,25 @@ const page = (
   meta = { limit: 100, hasNext: false, nextCursor: null }
 ) => ({ data: { data, meta } });
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => vi.resetAllMocks());
 
 describe("monthlyEventsService", () => {
+  it.each(["HEBDOMADAIRE", "TRIMESTRIELLE", "ANNUELLE"])(
+    "preserves %s rules and every dated occurrence returned by the API",
+    async (recurrence) => {
+      const rule = { ...event, recurrence, endDate: "2028-09-20" };
+      const occurrences = (
+        recurrence === "HEBDOMADAIRE"
+          ? ["2026-09-20", "2026-09-27"]
+          : ["2026-09-20"]
+      ).map((occurrenceDate) => ({ ...rule, occurrenceDate }));
+      apiPrivate.get.mockResolvedValueOnce(page(occurrences));
+      expect(parseMonthlyEvent(rule)).toEqual(rule);
+      await expect(
+        monthlyEventsService.listOccurrences("2026-09")
+      ).resolves.toEqual(occurrences);
+    }
+  );
   it("loads every opaque cursor page and validates event occurrences", async () => {
     apiPrivate.get
       .mockResolvedValueOnce(

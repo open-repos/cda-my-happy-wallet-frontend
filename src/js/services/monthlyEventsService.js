@@ -1,4 +1,5 @@
 import { apiPrivate } from "../../utils/axiosHelper";
+import { isEventRecurrence } from "../utils/eventRecurrences";
 
 export const MONTHLY_EVENTS_PAGE_LIMIT = 100;
 
@@ -20,7 +21,7 @@ export const parseMonthlyEvent = (event) => {
     !/^[A-Z]{3}$/.test(event?.currency || "") ||
     !["DEPENSE", "ENTREE"].includes(event?.kind) ||
     !isDate(event?.startDate) ||
-    !["AUCUNE", "MENSUELLE"].includes(event?.recurrence) ||
+    !isEventRecurrence(event?.recurrence) ||
     (event?.endDate !== null && !isDate(event?.endDate))
   ) {
     throw new Error("Invalid monthly event response");
