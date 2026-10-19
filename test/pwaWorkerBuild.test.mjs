@@ -137,3 +137,27 @@ test("rejects a build with no public JavaScript entry", () =>
     await writeFile(join(outDir, "assets/private.json"), "synthetic-private");
     await assert.rejects(buildPwaWorker({ outDir }), /public JavaScript asset/);
   }));
+
+test("build log reports the real registration flag", async () => {
+  const { registrationStatus } = await import(
+    "../scripts/build-pwa-worker.mjs"
+  );
+  assert.equal(
+    registrationStatus({ VITE_PWA_ENABLED: "true" }),
+    "application registration enabled (VITE_PWA_ENABLED=true)"
+  );
+  assert.equal(
+    registrationStatus({ VITE_PWA_ENABLED: "true", VITE_PWA_RETIRE: "true" }),
+    "application registration enabled (VITE_PWA_ENABLED=true)"
+  );
+  assert.equal(
+    registrationStatus({ VITE_PWA_RETIRE: "true" }),
+    "application registration disabled; rollback build retires installed workers (VITE_PWA_RETIRE=true)"
+  );
+  for (const value of [undefined, "false", "TRUE", "true "]) {
+    assert.equal(
+      registrationStatus({ VITE_PWA_ENABLED: value }),
+      "application registration disabled"
+    );
+  }
+});
