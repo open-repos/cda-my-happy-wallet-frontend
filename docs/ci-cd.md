@@ -6,6 +6,14 @@ Les branches et merge requests executent le formatage, le lint, les tests, le
 type-check et le build. Le contenu exact de l'artefact `dist/` valide est
 deployable manuellement uniquement depuis la branche protegee `main`.
 
+`deploy_production` est propose apres un push sur `main` (merge) et pour un
+pipeline lance a la main sur `main` (« Run pipeline », source `web`). Les
+variables `VITE_*` etant lues au build, changer l'une d'elles (par exemple
+`VITE_PWA_ENABLED`) demande un nouveau pipeline sur `main`, puis son
+`deploy_production` : relancer seulement le deploiement d'un ancien pipeline
+reutiliserait l'artefact construit avec l'ancienne valeur. Le log du job
+`build` indique si l'inscription PWA est activee.
+
 Chaque deploiement copie l'artefact dans `releases/$CI_COMMIT_SHA`, puis bascule
 atomiquement le lien `current`. Un healthcheck HTTP restaure la release
 precedente si le marqueur public `deployment-sha.txt` ne correspond pas au SHA
