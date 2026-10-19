@@ -1,5 +1,9 @@
 import React from "react";
 import editIcon from "../../../assets/icons/edit.svg";
+import {
+  eventRecurrenceLabel,
+  isRepeatingEvent,
+} from "../../utils/eventRecurrences";
 
 export const formatEventAmount = (amount, currency) =>
   new Intl.NumberFormat("fr-FR", { style: "currency", currency }).format(
@@ -33,13 +37,10 @@ export const MonthlyEventList = ({ events, onEdit }) => (
         <strong>{formatEventAmount(event.amount, event.currency)}</strong>
         <p>À partir du {formatEventDate(event.startDate)}</p>
         <p>
-          {event.recurrence === "MENSUELLE"
-            ? `Chaque mois${
-                event.endDate
-                  ? ` jusqu’au ${formatEventDate(event.endDate)}`
-                  : ""
-              }`
-            : "Une seule fois"}
+          {eventRecurrenceLabel(event.recurrence)}
+          {isRepeatingEvent(event.recurrence) && event.endDate
+            ? ` jusqu’au ${formatEventDate(event.endDate)}`
+            : ""}
         </p>
       </article>
     ))}

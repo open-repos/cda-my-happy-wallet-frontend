@@ -129,6 +129,67 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("budget calendar page", () => {
+  it("announces an event load error and disables its creation action", async () => {
+    useMonthlyEvents.mockReturnValue({
+      occurrences: [],
+      status: "error",
+      mutationStatus: "idle",
+      message: "Les événements n’ont pas pu être chargés.",
+    });
+    render(<Calendrier />);
+    fireEvent.click(screen.getByRole("button", { name: /reste prévisionnel/ }));
+    expect(
+      screen.getByRole("button", { name: "Ajouter un événement prévu" })
+    ).toBeDisabled();
+    await waitFor(() =>
+      expect(
+        screen
+          .getAllByRole("alert")
+          .some(
+            (region) =>
+              region.textContent === "Les événements n’ont pas pu être chargés."
+          )
+      ).toBe(true)
+    );
+  });
+  it("creates a recurring planned event on the selected day and refreshes the budget", async () => {
+    const createEvent = vi.fn().mockResolvedValue(true);
+    useMonthlyEvents.mockReturnValue({
+      occurrences: [],
+      status: "success",
+      mutationStatus: "idle",
+      message: "",
+      createEvent,
+    });
+    render(<Calendrier />);
+    fireEvent.click(screen.getByRole("button", { name: /reste prévisionnel/ }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Ajouter un événement prévu" })
+    );
+    expect(screen.getByLabelText("Date de début")).toHaveValue(`${month}-02`);
+    fireEvent.change(screen.getByLabelText("Titre"), {
+      target: { value: "Assurance trimestrielle" },
+    });
+    fireEvent.change(screen.getByLabelText(/^Montant/), {
+      target: { value: "80.00" },
+    });
+    fireEvent.change(screen.getByLabelText("Récurrence"), {
+      target: { value: "TRIMESTRIELLE" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+    await waitFor(() =>
+      expect(createEvent).toHaveBeenCalledWith({
+        title: "Assurance trimestrielle",
+        amount: "80.00",
+        currency: "EUR",
+        kind: "DEPENSE",
+        startDate: `${month}-02`,
+        recurrence: "TRIMESTRIELLE",
+        endDate: null,
+      })
+    );
+    expect(actions.retry).toHaveBeenCalled();
+  });
   it("shows the carry on its own named line and explains it", () => {
     render(<Calendrier />);
     const real = screen

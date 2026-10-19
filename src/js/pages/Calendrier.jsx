@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { formatEventAmount } from "../components/MonthlyEvents/MonthlyEventList";
+import { MonthlyEventForm } from "../components/MonthlyEvents/MonthlyEventForm";
 import { OneOffOperationForm } from "../components/OneOffOperations/OneOffOperationForm";
 import { BudgetSummary } from "../components/BudgetCalendar/BudgetSummary";
 import { CalendarModeToggle } from "../components/BudgetCalendar/CalendarModeToggle";
@@ -142,7 +143,8 @@ function Calendrier() {
     [budget.categories]
   );
   const currency = budget.summary?.currency || "EUR";
-  const isSaving = budget.mutationStatus === "loading";
+  const isSaving =
+    budget.mutationStatus === "loading" || events.mutationStatus === "loading";
 
   const changeMonth = (offset) => {
     setMonth(shiftMonth(month, offset));
@@ -199,6 +201,12 @@ function Calendrier() {
       <LiveMessage
         message={budget.message.text}
         isError={budget.message.tone === "error"}
+        className="monthly-events-message"
+        errorClassName="monthly-events-message--error"
+      />
+      <LiveMessage
+        message={events.message || ""}
+        isError={events.status === "error" || events.mutationStatus === "error"}
         className="monthly-events-message"
         errorClassName="monthly-events-message--error"
       />
@@ -376,6 +384,19 @@ function Calendrier() {
           }}
         />
       )}
+      {form?.type === "create-event" && (
+        <MonthlyEventForm
+          initialDate={defaultOperationDate}
+          isSaving={isSaving}
+          onCancel={closeForm}
+          onSave={async (event) => {
+            if (await events.createEvent(event)) {
+              await budget.retry();
+              closeForm();
+            }
+          }}
+        />
+      )}
 
       <section
         className="budget-operations"
@@ -388,6 +409,16 @@ function Calendrier() {
               : `Opérations de ${monthLabel(month)}`}
           </h2>
           <div className="budget-operations__actions">
+            {selectedDate && (
+              <button
+                type="button"
+                className="monthly-event-button monthly-event-button--secondary"
+                onClick={() => setForm({ type: "create-event" })}
+                disabled={isSaving || events.status !== "success"}
+              >
+                Ajouter un événement prévu
+              </button>
+            )}
             {selectedDate && (
               <button
                 type="button"
