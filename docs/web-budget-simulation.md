@@ -48,6 +48,11 @@ zone de formulaire/confirmation est active à la fois. Le focus entre dans le
 formulaire ou l'annulation de confirmation et revient au déclencheur, ou au
 contenu si celui-ci a disparu.
 
+Après un premier chargement réussi, l’ajout d’un événement prévu reste disponible
+pendant les actualisations de la liste : le bouton de retour du focus ne devient
+pas désactivé au moment de fermer le formulaire. Les écritures en cours restent
+bloquantes pour éviter une double soumission.
+
 Après une action, les lecteurs concernés sont invalidés : liste des hypothèses,
 synthèse, grille, prévision, comparaison et capacité d'épargne. Le retour sur la
 fenêtre ou l'onglet recharge aussi les données, notamment pour refléter une
@@ -80,7 +85,7 @@ le backend compatible avec le statut. Ne pas revenir à un backend antérieur à
 
 ## Preuves de validation
 
-Les 447 tests unitaires passent localement. Les contrôles npm de AGENTS.md,
+Les 448 tests unitaires passent localement. Les contrôles npm de AGENTS.md,
 les deux builds et les quatre parcours Playwright sur build figé ont réussi.
 MySQL/Redis ne sont pas disponibles localement.
 

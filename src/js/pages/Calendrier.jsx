@@ -131,6 +131,11 @@ function Calendrier() {
     !simulation.available || simulation.activeForm === "calendar" ? form : null;
   const budget = useBudgetCalendar(month, selectedDate);
   const events = useMonthlyEvents(month);
+  // Garder le déclencheur focalisable pendant les actualisations suivantes.
+  const [eventsLoaded, setEventsLoaded] = useState(false);
+  useEffect(() => {
+    if (events.status === "success") setEventsLoaded(true);
+  }, [events.status]);
   const days = useMemo(() => calendarDays(month), [month]);
 
   useEffect(() => {
@@ -485,7 +490,7 @@ function Calendrier() {
               onEvent={() => setForm({ type: "create-event" })}
               onPotential={() => setForm({ type: "create-potential" })}
               disabled={isSaving}
-              eventDisabled={isSaving || events.status !== "success"}
+              eventDisabled={isSaving || !eventsLoaded}
             />
             {selectedDate && (
               <button
