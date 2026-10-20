@@ -1,6 +1,7 @@
 import React from "react";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import Home from "../../src/js/pages/Home";
 
 const mocks = vi.hoisted(() => ({
@@ -28,9 +29,12 @@ describe("Home", () => {
   it("renders the empty state when no fixed operation exists", () => {
     mocks.useOperationsFixes.mockReturnValue({ isEmptyOpFixe: true });
 
-    render(<Home />);
+    render(<Home />, { wrapper: MemoryRouter });
 
     expect(screen.getByText("Empty operations state")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Voir les prochains mois" })
+    ).toHaveAttribute("href", "/prochains-mois");
     expect(
       screen.queryByText("Available reste à vivre")
     ).not.toBeInTheDocument();
@@ -39,10 +43,12 @@ describe("Home", () => {
   it("renders the reste à vivre state when operations exist", () => {
     mocks.useOperationsFixes.mockReturnValue({ isEmptyOpFixe: false });
 
-    render(<Home />);
+    render(<Home />, { wrapper: MemoryRouter });
 
     expect(screen.getByText("Available reste à vivre")).toBeInTheDocument();
-    expect(screen.queryByText("Empty operations state")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Empty operations state")
+    ).not.toBeInTheDocument();
   });
 
   it("keeps the empty state while empty operations are loading", () => {
@@ -51,7 +57,7 @@ describe("Home", () => {
       isLoading: true,
     });
 
-    render(<Home />);
+    render(<Home />, { wrapper: MemoryRouter });
 
     expect(screen.getByText("Empty operations state")).toBeInTheDocument();
   });

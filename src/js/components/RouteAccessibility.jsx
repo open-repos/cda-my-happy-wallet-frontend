@@ -11,6 +11,7 @@ const titles = {
   "/new-password": "Nouveau mot de passe",
   "/operations": "Opérations",
   "/calendrier": "Calendrier",
+  "/prochains-mois": "Prochains mois",
   "/objectifs-evenements": "Objectifs et événements",
   "/categories": "Catégories",
   "/analyses": "Analyses",

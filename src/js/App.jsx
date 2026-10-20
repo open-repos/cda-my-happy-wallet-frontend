@@ -6,6 +6,7 @@ import { RouteAccessibility } from "./components/RouteAccessibility";
 import { ProtectedLayout } from "./components/ProtectedLayout";
 //Pages
 import Calendrier from "./pages/Calendrier";
+import UpcomingMonths from "./pages/UpcomingMonths";
 import ListeOperations from "./pages/ListeOperations";
 import Objectifs from "./pages/Objectifs";
 import Profil from "./pages/Profil";
@@ -68,6 +69,14 @@ function App() {
               }
             />
             <Route path="/" element={<Navigate replace to="/home" />} />
+            <Route
+              path="/prochains-mois"
+              element={
+                <ProtectedLayout>
+                  <UpcomingMonths />
+                </ProtectedLayout>
+              }
+            />
 
             <Route
               path="/calendrier"

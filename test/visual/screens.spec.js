@@ -7,6 +7,12 @@ const definitions = [
   { name: "home", path: "/home", ready: ".home-budget__amount", chart: true },
   { name: "calendar", path: "/calendrier", ready: ".budget-day" },
   {
+    name: "budget-forecast",
+    path: "/prochains-mois",
+    ready: ".budget-forecast__table",
+    chart: true,
+  },
+  {
     name: "events-goals",
     path: "/objectifs-evenements",
     ready: "text=Assurance",

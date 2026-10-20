@@ -2,12 +2,13 @@ import React from "react";
 import {
   cleanup,
   fireEvent,
-  render,
+  render as renderComponent,
   screen,
   waitFor,
   within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import Calendrier from "../../src/js/pages/Calendrier";
 import { useBudgetCalendar } from "../../src/js/hooks/useBudgetCalendar";
 import { useMonthlyEvents } from "../../src/js/hooks/useMonthlyEvents";
@@ -119,6 +120,7 @@ const state = (overrides = {}) => ({
 });
 
 const text = (element) => element.textContent.replace(/\s/g, " ");
+const render = (ui) => renderComponent(ui, { wrapper: MemoryRouter });
 
 beforeEach(() => {
   Object.values(actions).forEach((action) => action.mockClear());

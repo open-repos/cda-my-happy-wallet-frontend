@@ -3,16 +3,18 @@ import {
   act,
   cleanup,
   fireEvent,
-  render,
+  render as renderComponent,
   screen,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import Calendrier from "../../src/js/pages/Calendrier";
 import Objectifs from "../../src/js/pages/Objectifs";
 import { useMonthlyEvents } from "../../src/js/hooks/useMonthlyEvents";
 import { captureLiveRegions, expectAnnouncedIn } from "./liveRegions";
 import { useBudgetCalendar } from "../../src/js/hooks/useBudgetCalendar";
 import { useFinancialGoals } from "../../src/js/hooks/useFinancialGoals";
+const render = (ui) => renderComponent(ui, { wrapper: MemoryRouter });
 
 // Objectifs also mounts the financial goals section. Its hook and UI have
 // dedicated suites; keep this page test independent from the real API.

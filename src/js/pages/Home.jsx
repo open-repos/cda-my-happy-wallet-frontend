@@ -1,8 +1,10 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "../../css/Home.css";
 import CaseOpFixeEmpty from "../components/HomeComponents/CaseOpFixeEmpty";
 import CaseShowRaV from "../components/HomeComponents/CaseShowRaV";
 import { useOperationsFixes } from "../hooks/useOperationsFixes";
+import "../../css/BudgetForecast.css";
 function Home() {
   // let navigate = useNavigate();
   // let location = useLocation();
@@ -10,7 +12,14 @@ function Home() {
   // const search = useLocation().search;
   const { isEmptyOpFixe } = useOperationsFixes();
 
-  return <main>{isEmptyOpFixe ? <CaseOpFixeEmpty /> : <CaseShowRaV />}</main>;
+  return (
+    <main>
+      {isEmptyOpFixe ? <CaseOpFixeEmpty /> : <CaseShowRaV />}
+      <Link className="home-forecast-link" to="/prochains-mois">
+        Voir les prochains mois
+      </Link>
+    </main>
+  );
 }
 
 export default Home;
