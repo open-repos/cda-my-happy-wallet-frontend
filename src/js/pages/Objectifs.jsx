@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import addIcon from "../../assets/icons/add.svg";
 import { FinancialGoalsSection } from "../components/FinancialGoals/FinancialGoalsSection";
 import { MonthlyEventForm } from "../components/MonthlyEvents/MonthlyEventForm";
@@ -10,6 +11,8 @@ import "../../css/MonthlyEvents.css";
 const currentMonth = () => new Date().toISOString().slice(0, 7);
 
 function Objectifs() {
+  const [search] = useSearchParams();
+  const adjustedGoalId = Number(search.get("ajuster"));
   const month = useMemo(currentMonth, []);
   const state = useMonthlyEvents(month);
   const [editedEvent, setEditedEvent] = useState(null);
@@ -32,7 +35,7 @@ function Objectifs() {
   return (
     <main className="objEv-container monthly-events-page">
       <h1 className="objectives-page-title">Objectifs et événements</h1>
-      <FinancialGoalsSection />
+      <FinancialGoalsSection initialGoalId={adjustedGoalId} />
       <header className="monthly-events-header">
         <div>
           <p className="monthly-events-eyebrow">Prévisions</p>

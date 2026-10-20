@@ -7,6 +7,12 @@ import Home from "../../src/js/pages/Home";
 const mocks = vi.hoisted(() => ({
   useOperationsFixes: vi.fn(),
 }));
+vi.mock(
+  "../../src/js/components/FinancialGoals/SavingsCapacitySection",
+  () => ({
+    SavingsCapacitySection: () => <div>Capacity overview</div>,
+  })
+);
 
 vi.mock("../../src/js/hooks/useOperationsFixes", () => ({
   useOperationsFixes: mocks.useOperationsFixes,

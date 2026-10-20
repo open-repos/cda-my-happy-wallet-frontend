@@ -18,13 +18,13 @@ const amountFields = [
 const invalid = () => {
   throw new Error("Invalid budget forecast response");
 };
-const isAmount = (value) => {
+export const isForecastAmount = (value) => {
   if (typeof value !== "string" || !/^-?(0|[1-9]\d{0,13})\.\d{2}$/.test(value))
     return false;
   const [whole, fraction] = value.replace(/^-/, "").split(".");
   return Number.isSafeInteger(Number(whole) * 100 + Number(fraction));
 };
-const isDate = (value) => {
+export const isForecastDate = (value) => {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value))
     return false;
   const date = new Date(`${value}T00:00:00.000Z`);
@@ -37,8 +37,8 @@ export const parseBudgetForecast = (data) => {
   if (
     !isForecastMonth(data?.from) ||
     !/^[A-Z]{3}$/.test(data?.currency || "") ||
-    !isDate(data?.referenceDate) ||
-    !isAmount(data?.currentRealRemaining) ||
+    !isForecastDate(data?.referenceDate) ||
+    !isForecastAmount(data?.currentRealRemaining) ||
     !Array.isArray(data?.months) ||
     data.months.length > 24
   )
@@ -46,7 +46,7 @@ export const parseBudgetForecast = (data) => {
   const months = data.months.map((month, index) => {
     if (
       month?.month !== shiftForecastMonth(data.from, index) ||
-      !amountFields.every((field) => isAmount(month[field])) ||
+      !amountFields.every((field) => isForecastAmount(month[field])) ||
       !Number.isInteger(month.remainingDays) ||
       month.remainingDays < 1 ||
       month.remainingDays > 31
