@@ -77,3 +77,17 @@ Aucune migration, variable ou dépendance frontend supplémentaire. Retour arri�
 par revert de la PR frontend ; les règles déjà enregistrées restent gérées par
 le backend compatible avec le statut. Ne pas revenir à un backend antérieur à
 #112 tant que des potentiels existent, conformément à sa documentation.
+
+## Preuves de validation
+
+Les 447 tests unitaires passent localement. Les contrôles npm de AGENTS.md,
+les deux builds et les quatre parcours Playwright sur build figé ont réussi.
+MySQL/Redis ne sont pas disponibles localement.
+
+Le banc d’intégration est fixé au commit de fusion backend #112
+`1b419b82b1b30954d03b21a2d1b344f88a5c48f4`. La révision précédente refusait
+la création de potentiels (422). Les 24 références existantes de Home, Calendrier,
+Prochains mois et Objectifs proviennent du run CI `39397488349`, après revue aux
+trois tailles et deux thèmes. Les six nouvelles références Simulation restent
+à finaliser : l’environnement cloud s’est déconnecté avant leur récupération.
+Aucun seuil ni assertion de disposition n’est assoupli.
