@@ -88,6 +88,7 @@ Le banc d’intégration est fixé au commit de fusion backend #112
 `1b419b82b1b30954d03b21a2d1b344f88a5c48f4`. La révision précédente refusait
 la création de potentiels (422). Les 24 références existantes de Home, Calendrier,
 Prochains mois et Objectifs proviennent du run CI `39397488349`, après revue aux
-trois tailles et deux thèmes. Les six nouvelles références Simulation restent
-à finaliser : l’environnement cloud s’est déconnecté avant leur récupération.
+trois tailles et deux thèmes. Les six nouvelles références Simulation couvrent
+l’état activé aux mêmes tailles et dans les deux thèmes. Le run Web
+`39400164759` valide les 30 parcours avec le vrai backend, MySQL et Redis.
 Aucun seuil ni assertion de disposition n’est assoupli.
