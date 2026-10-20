@@ -46,6 +46,7 @@ async function seed() {
       for (const journey of [
         "operations",
         "events",
+        "simulation",
         "recovery",
         "session",
         "privacy-a",

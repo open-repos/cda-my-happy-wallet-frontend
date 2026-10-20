@@ -1,4 +1,5 @@
 import { apiPrivate } from "../../utils/axiosHelper";
+import { scenarioParams } from "../utils/budgetSimulation";
 
 export const PENDING_PAGE_LIMIT = 100;
 
@@ -158,9 +159,9 @@ export const budgetErrorCode = (error) => {
 };
 
 export const budgetService = {
-  async getSummary(month, currency = "EUR") {
+  async getSummary(month, currency = "EUR", scenario = "standard") {
     const response = await apiPrivate.get(`/budget-periods/${month}/summary`, {
-      params: { currency },
+      params: { currency, ...scenarioParams(scenario) },
       withCredentials: true,
     });
     return parseBudgetSummary(response.data?.data);

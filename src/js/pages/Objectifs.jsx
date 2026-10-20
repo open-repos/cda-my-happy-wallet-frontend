@@ -6,6 +6,7 @@ import { MonthlyEventForm } from "../components/MonthlyEvents/MonthlyEventForm";
 import { MonthlyEventList } from "../components/MonthlyEvents/MonthlyEventList";
 import { useMonthlyEvents } from "../hooks/useMonthlyEvents";
 import { LiveMessage } from "../components/LiveMessage";
+import { SimulationControls } from "../components/Simulation/SimulationControls";
 import "../../css/MonthlyEvents.css";
 
 const currentMonth = () => new Date().toISOString().slice(0, 7);
@@ -35,6 +36,7 @@ function Objectifs() {
   return (
     <main className="objEv-container monthly-events-page">
       <h1 className="objectives-page-title">Objectifs et événements</h1>
+      <SimulationControls />
       <FinancialGoalsSection initialGoalId={adjustedGoalId} />
       <header className="monthly-events-header">
         <div>

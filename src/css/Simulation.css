@@ -1,0 +1,104 @@
+.simulation-surface {
+  width: 100%;
+  max-width: 76rem;
+  margin: 1.5rem auto;
+  padding: var(--ds-space-card);
+  border-radius: var(--ds-radius-card);
+  background: var(--ds-color-background-surface);
+  color: var(--ds-color-text-primary);
+  box-shadow: var(--ds-shadow-card);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-primitive-space-4);
+}
+.simulation-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--ds-color-text-primary);
+  font-weight: 600;
+}
+.simulation-toggle input {
+  width: 1.5rem;
+  height: 1.5rem;
+  accent-color: var(--ds-color-action-primary-background);
+}
+.simulation-toggle p,
+.simulation-potential p {
+  color: var(--ds-color-text-muted);
+}
+.simulation-comparison {
+  border-left: 3px solid var(--ds-color-data-forecast);
+  padding-left: 1rem;
+}
+.simulation-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: 1rem;
+  list-style: none;
+  padding: 0;
+}
+.simulation-potential {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  border: 2px dashed var(--ds-color-data-forecast);
+  border-radius: var(--ds-radius-control);
+  padding: 1rem;
+}
+.simulation-badge {
+  background: var(--ds-color-status-info-surface);
+  color: var(--ds-color-status-info-text);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--ds-primitive-radius-pill);
+}
+.simulation-confirmation {
+  border: 2px solid var(--ds-color-border-strong);
+  padding: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.simulation-confirmation p {
+  flex-basis: 100%;
+}
+.planning-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.planning-date {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--ds-color-text-primary);
+  max-width: 20rem;
+}
+.planning-date input {
+  max-width: 100%;
+  min-height: var(--ds-size-control-min-height);
+  padding: 0.75rem;
+  background: var(--ds-color-field-background);
+  color: var(--ds-color-field-text);
+  border: 1px solid var(--ds-color-field-border);
+  border-radius: var(--ds-radius-control);
+  font: inherit;
+}
+.simulation-surface :is(button, input, a):focus-visible {
+  outline: var(--ds-border-width-focus) solid var(--ds-color-focus-ring);
+  outline-offset: 2px;
+}
+.budget-marker--potential {
+  background: transparent;
+  border: 2px dashed var(--ds-color-data-forecast);
+  transform: rotate(45deg);
+}
+@media (max-width: 48rem) {
+  .simulation-surface {
+    padding: var(--ds-primitive-space-4);
+  }
+}

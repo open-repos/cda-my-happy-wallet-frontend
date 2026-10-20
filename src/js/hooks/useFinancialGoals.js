@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { goalsService } from "../services/goalsService";
+import { useSimulation } from "../components/Simulation/SimulationContext";
 
 const loadError =
   "Impossible de charger vos objectifs. Vérifiez votre connexion puis réessayez.";
 
 /** Liste et commandes des objectifs financiers de la personne connectée. */
 export const useFinancialGoals = () => {
+  const { invalidate } = useSimulation();
   const [goals, setGoals] = useState([]);
   const [status, setStatus] = useState("loading");
   const [mutationStatus, setMutationStatus] = useState("idle");
@@ -41,6 +43,7 @@ export const useFinancialGoals = () => {
           ? successMessage
           : "La modification est enregistrée, mais l’affichage n’a pas pu être actualisé."
       );
+      invalidate();
       return true;
     } catch (error) {
       setMutationStatus("error");

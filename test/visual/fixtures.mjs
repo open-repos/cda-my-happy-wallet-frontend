@@ -106,8 +106,17 @@ export const prepareProtectedPage = async (
       },
     });
   });
-  await page.route(/\/v1\/events(?:\?.*)?$/, (route) =>
-    route.fulfill({
+  await page.route(/\/v1\/events(?:\?.*)?$/, (route) => {
+    if (
+      new URL(route.request().url()).searchParams.get("status") === "POTENTIEL"
+    )
+      return route.fulfill({
+        json: {
+          data: [],
+          meta: { limit: 100, hasNext: false, nextCursor: null },
+        },
+      });
+    return route.fulfill({
       contentType: "application/json",
       json: {
         data: [
@@ -124,8 +133,8 @@ export const prepareProtectedPage = async (
         ],
         meta: { limit: 100, hasNext: false, nextCursor: null },
       },
-    })
-  );
+    });
+  });
   await page.route(/\/v1\/event-occurrences(?:\?.*)?$/, (route) => {
     const month = new URL(route.request().url()).searchParams.get("month");
     return route.fulfill({

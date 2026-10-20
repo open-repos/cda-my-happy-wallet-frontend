@@ -56,6 +56,8 @@ export const MonthlyEventForm = ({
   onCancel,
   onDelete,
   onSave,
+  formTitle,
+  minStartDate,
 }) => {
   const [values, setValues] = useState(() =>
     event
@@ -89,6 +91,9 @@ export const MonthlyEventForm = ({
   const submit = async (submitEvent) => {
     submitEvent.preventDefault();
     const nextErrors = validate(values);
+    if (minStartDate && values.startDate && values.startDate < minStartDate)
+      nextErrors.startDate =
+        "Un élément potentiel doit commencer dans le mois courant ou un mois futur.";
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) {
       submitEvent.currentTarget.elements
@@ -120,7 +125,8 @@ export const MonthlyEventForm = ({
     >
       <div className="monthly-event-form-panel__header">
         <h2 id="monthly-event-form-title">
-          {event ? "Modifier l’événement" : "Ajouter un événement"}
+          {formTitle ||
+            (event ? "Modifier l’événement" : "Ajouter un événement")}
         </h2>
         <button
           type="button"
@@ -167,6 +173,7 @@ export const MonthlyEventForm = ({
           <input
             id="monthly-event-start-date"
             type="date"
+            min={minStartDate}
             name="startDate"
             value={values.startDate}
             onChange={update}
