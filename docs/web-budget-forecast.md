@@ -34,3 +34,13 @@ Les parcours Playwright limitent les liens au contenu principal lorsque le menu
 présente le même libellé. Les références incluent les nouveaux liens sur
 l'accueil et le calendrier, ainsi que le tableau et le graphique dans les deux
 thèmes, sur téléphone, tablette et bureau.
+
+Les références de l'accueil et des prochains mois ont été relues dans l'artefact
+`web-visual-evidence` du run GitHub `39378873124`, puis reprises depuis ce runner
+Ubuntu 24.04 et Chromium 149.0.7827.55. Une génération cloud avec Liberation 1
+avait produit des écarts de glyphes et de métriques ; Liberation 2.1.5 (version du
+runner) reproduit le texte et les montants, mais les polices de repli du canvas
+peuvent encore différer selon la configuration système. Une comparaison locale
+verte ne suffit donc pas à approuver de nouvelles références : utiliser le
+runner CI de référence et relire les images. La tolérance et les assertions de
+géométrie restent inchangées.
