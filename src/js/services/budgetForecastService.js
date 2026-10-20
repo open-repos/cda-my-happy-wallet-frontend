@@ -1,5 +1,6 @@
 import { apiPrivate } from "../../utils/axiosHelper";
 import { isForecastMonth, shiftForecastMonth } from "../utils/budgetForecast";
+import { scenarioParams } from "../utils/budgetSimulation";
 
 const amountFields = [
   "fixedIncome",
@@ -68,7 +69,12 @@ export const parseBudgetForecast = (data) => {
 };
 
 export const budgetForecastService = {
-  async forecast({ from, months = 12, currency = "EUR" }) {
+  async forecast({
+    from,
+    months = 12,
+    currency = "EUR",
+    scenario = "standard",
+  }) {
     if (
       !isForecastMonth(from) ||
       !Number.isInteger(months) ||
@@ -78,7 +84,7 @@ export const budgetForecastService = {
     )
       invalid();
     const response = await apiPrivate.get("/budget-forecast", {
-      params: { from, months, currency },
+      params: { from, months, currency, ...scenarioParams(scenario) },
       withCredentials: true,
     });
     const forecast = parseBudgetForecast(response.data?.data);

@@ -5,7 +5,7 @@
 `npm run test:e2e:stack` construit et lance une stack Docker Compose jetable :
 
 - le backend réel du dépôt `open-repos/cda-my-happy-wallet-backend`, fixé au
-  commit `9a2444a26fc2cc063feeeb95329ab20170003785` dans `compose.e2e.yml` ;
+  commit `1b419b82b1b30954d03b21a2d1b344f88a5c48f4` dans `compose.e2e.yml` ;
 - MySQL 8.0, avec une base `mhw_e2e` exclusivement en mémoire et un utilisateur
   limité à cette base, ainsi que Redis 8.2.1 ;
 - le build Web Vite et Chromium de la version Playwright du lockfile, exécutés
@@ -13,7 +13,7 @@
 
 Aucun dépôt backend voisin n'est nécessaire ou modifié. Les migrations du commit
 fixé sont appliquées dans cette base neuve. Le seed de production du backend
-n'est jamais appelé : `test/full-stack/seed.cjs` crée uniquement dix-huit comptes
+n'est jamais appelé : `test/full-stack/seed.cjs` crée uniquement vingt et un comptes
 `@example.com`, leurs catégories et deux opérations fixes donnant une base
 mensuelle de 1 200 EUR. Chaque couple parcours/viewport dispose de son compte.
 Le bootstrap exécute le seed deux fois pour vérifier sa répétabilité.
@@ -28,8 +28,8 @@ utilise les contrats implémentés ; elle ne transforme pas Figma en règle mét
 ## Parcours et preuves
 
 Chaque parcours tourne aux formats téléphone tactile, tablette et ordinateur,
-avec 24 tests existants dans `test/full-stack/journeys/wallet.spec.js`, puis
-trois parcours de confidentialité dans `pwaPrivacy.spec.js` (#50), soit 27 tests :
+avec 27 tests dans `test/full-stack/journeys/wallet.spec.js`, puis
+trois parcours de confidentialité dans `pwaPrivacy.spec.js` (#50), soit 30 tests :
 
 | Parcours    | États et effets vérifiés                                                                                                                                                                                     |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -95,7 +95,7 @@ npm run test:e2e:stack
 Ne pas lancer directement `docker compose up` : le script prépare des secrets
 neufs et un nom de projet unique `mhw-e2e-<suffixe>`, puis construit, attend la
 readiness réelle de l'API et lance le navigateur. Le script propage le code de
-sortie des tests. Résultat attendu : 27 tests réussis et code `0`.
+sortie des tests. Résultat attendu : 30 tests réussis et code `0`.
 
 Le contrôle GitHub existant
 [`Web format, lint, test and build`](../.github/workflows/web-quality.yml)
@@ -111,7 +111,7 @@ npx vite build --config test/full-stack/vite.config.mjs
 MHW_E2E=1 E2E_PASSWORD=discovery-only npx playwright test --config playwright.full-stack.config.js --list
 ```
 
-La découverte seule ne prouve pas les 27 parcours ; leur validation complète
+La découverte seule ne prouve pas les 30 parcours ; leur validation complète
 est fournie par la CI Docker. L'ancienne commande `npm run test:e2e` garde les
 parcours publics et les contrôles responsive avec API simulée de `test/e2e/`.
 Le ticket #61 reste distinct pour l'intégration optionnelle dans GitLab CI.

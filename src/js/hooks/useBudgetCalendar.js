@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { budgetErrorCode, budgetService } from "../services/budgetService";
 import { oneOffOperationsService } from "../services/oneOffOperationsService";
+import { useSimulation } from "../components/Simulation/SimulationContext";
 
 const CURRENCY = "EUR";
 
@@ -28,6 +29,12 @@ const mutationErrors = {
  * traiter, opérations du mois ou du jour sélectionné et commandes associées.
  */
 export const useBudgetCalendar = (month, selectedDate) => {
+  const { scenario, revision, invalidate } = useSimulation();
+  const queryKey = `${month}:${scenario}:${revision}`;
+  const activeKey = useRef(queryKey);
+  activeKey.current = queryKey;
+  const [summaryKey, setSummaryKey] = useState(null);
+  const latestSummary = useRef(0);
   const [summary, setSummary] = useState(null);
   const [summaryStatus, setSummaryStatus] = useState("loading");
   const [pending, setPending] = useState([]);
@@ -39,26 +46,40 @@ export const useBudgetCalendar = (month, selectedDate) => {
   const [message, setMessage] = useState({ tone: "info", text: "" });
 
   const loadMonth = useCallback(async () => {
+    if (activeKey.current !== queryKey) return false;
+    const request = ++latestSummary.current;
+    setSummaryKey(queryKey);
     setSummaryStatus("loading");
+    setSummary(null);
     try {
       const [nextSummary, nextPending, nextCategories] = await Promise.all([
-        budgetService.getSummary(month, CURRENCY).catch((error) => {
-          if (budgetErrorCode(error) === "FUTURE_PERIOD") return null;
-          throw error;
-        }),
+        budgetService
+          .getSummary(
+            month,
+            CURRENCY,
+            ...(scenario === "simulation" ? [scenario] : [])
+          )
+          .catch((error) => {
+            if (budgetErrorCode(error) === "FUTURE_PERIOD") return null;
+            throw error;
+          }),
         budgetService.listPending(monthEnd(month)),
         oneOffOperationsService.listAllCategories(),
       ]);
+      if (request !== latestSummary.current || activeKey.current !== queryKey)
+        return false;
       setSummary(nextSummary);
       setPending(nextPending);
       setCategories(nextCategories);
       setSummaryStatus(nextSummary === null ? "future" : "success");
       return true;
     } catch {
+      if (request !== latestSummary.current || activeKey.current !== queryKey)
+        return false;
       setSummaryStatus("error");
       return false;
     }
-  }, [month]);
+  }, [month, scenario, queryKey]);
 
   const loadOperations = useCallback(async () => {
     setOperationsStatus("loading");
@@ -79,10 +100,13 @@ export const useBudgetCalendar = (month, selectedDate) => {
 
   useEffect(() => {
     loadMonth();
-  }, [loadMonth]);
+    return () => {
+      latestSummary.current += 1;
+    };
+  }, [loadMonth, revision]);
   useEffect(() => {
     loadOperations();
-  }, [loadOperations]);
+  }, [loadOperations, revision]);
 
   const loadMoreOperations = async () => {
     if (!operationsMeta?.hasNext || operationsStatus === "paging") return;
@@ -124,6 +148,7 @@ export const useBudgetCalendar = (month, selectedDate) => {
             ? successText
             : "C’est enregistré, mais l’affichage n’a pas pu être actualisé.",
       });
+      invalidate();
       return true;
     } catch (error) {
       const code = budgetErrorCode(error);
@@ -140,8 +165,8 @@ export const useBudgetCalendar = (month, selectedDate) => {
   };
 
   return {
-    summary,
-    summaryStatus,
+    summary: summaryKey === queryKey ? summary : null,
+    summaryStatus: summaryKey === queryKey ? summaryStatus : "loading",
     pending,
     categories,
     operations,

@@ -15,6 +15,9 @@ import { LiveMessage } from "../components/LiveMessage";
 import { EChart } from "../components/charts/EChart";
 import { useChartTokens } from "../components/charts/useChartTokens";
 import { budgetForecastChartOption } from "../components/charts/budgetForecastChartOptions";
+import { SimulationPanel } from "../components/Simulation/SimulationPanel";
+import { ForecastPlanning } from "../components/Simulation/PlanningActions";
+import { useSimulation } from "../components/Simulation/SimulationContext";
 import "../../css/MonthlyEvents.css";
 import "../../css/BudgetCalendar.css";
 import "../../css/BudgetForecast.css";
@@ -31,6 +34,7 @@ const columns = [
 ];
 
 export default function UpcomingMonths() {
+  const simulation = useSimulation();
   const today = forecastToday();
   const [from, setFrom] = useState(today.slice(0, 7));
   const [months, setMonths] = useState(12);
@@ -82,6 +86,7 @@ export default function UpcomingMonths() {
               id="forecast-from"
               type="month"
               value={from}
+              disabled={simulation.mutationStatus === "loading"}
               min={today.slice(0, 7)}
               max={shiftForecastMonth(today.slice(0, 7), 23)}
               onChange={(event) => setFrom(event.target.value)}
@@ -94,6 +99,7 @@ export default function UpcomingMonths() {
             <select
               id="forecast-months"
               value={months}
+              disabled={simulation.mutationStatus === "loading"}
               onChange={(event) => setMonths(Number(event.target.value))}
             >
               {[3, 6, 12, 24].map((count) => (
@@ -110,6 +116,8 @@ export default function UpcomingMonths() {
           actuels de vos objectifs.
         </p>
       </section>
+      <SimulationPanel month={from} />
+      <ForecastPlanning key={from} month={from} />
       <LiveMessage
         message={message}
         isError={Boolean(problem) || forecast.status === "error"}

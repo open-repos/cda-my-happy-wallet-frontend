@@ -131,6 +131,32 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("budget calendar page", () => {
+  it("keeps the creation trigger focusable during a background refresh, but blocks duplicate writes", () => {
+    const events = {
+      occurrences: [],
+      status: "success",
+      mutationStatus: "idle",
+      message: "",
+    };
+    useMonthlyEvents.mockReturnValue(events);
+    const { rerender } = render(<Calendrier />);
+    const add = screen.getByRole("button", {
+      name: "Ajouter un événement prévu",
+    });
+    add.focus();
+    useMonthlyEvents.mockReturnValue({ ...events, status: "loading" });
+    rerender(<Calendrier />);
+    expect(add).not.toBeDisabled();
+    expect(add).toHaveFocus();
+
+    useMonthlyEvents.mockReturnValue({
+      ...events,
+      status: "loading",
+      mutationStatus: "loading",
+    });
+    rerender(<Calendrier />);
+    expect(add).toBeDisabled();
+  });
   it("announces an event load error and disables its creation action", async () => {
     useMonthlyEvents.mockReturnValue({
       occurrences: [],

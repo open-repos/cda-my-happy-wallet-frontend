@@ -1,5 +1,6 @@
 import { apiPrivate } from "../../utils/axiosHelper";
 import { isForecastMonth } from "../utils/budgetForecast";
+import { scenarioParams } from "../utils/budgetSimulation";
 import {
   budgetForecastService,
   isForecastAmount,
@@ -93,9 +94,9 @@ export const parseSavingsCapacity = (data) => {
 };
 
 export const savingsCapacityService = {
-  async overview({ from, currency = "EUR" }) {
+  async overview({ from, currency = "EUR", scenario = "standard" }) {
     if (!isForecastMonth(from) || !/^[A-Z]{3}$/.test(currency)) invalid();
-    const query = { from, months: 1, currency };
+    const query = { from, months: 1, currency, ...scenarioParams(scenario) };
     const [response, projection] = await Promise.all([
       apiPrivate.get("/savings-capacity", {
         params: query,
