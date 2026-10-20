@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { formatEventAmount } from "../components/MonthlyEvents/MonthlyEventList";
 import { MonthlyEventForm } from "../components/MonthlyEvents/MonthlyEventForm";
 import { OneOffOperationForm } from "../components/OneOffOperations/OneOffOperationForm";
@@ -196,6 +197,12 @@ function Calendrier() {
             </button>
           )}
         </div>
+        <Link
+          className="monthly-event-button monthly-event-button--secondary"
+          to="/prochains-mois"
+        >
+          Prochains mois
+        </Link>
       </header>
 
       <LiveMessage

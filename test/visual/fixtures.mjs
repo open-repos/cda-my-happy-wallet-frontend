@@ -1,3 +1,5 @@
+import { forecastFixture } from "./forecastFixture.mjs";
+
 // Synthetic, read-only browser fixtures shared by responsive and visual tests.
 const storedUser = {
   payload: {
@@ -209,6 +211,9 @@ export const prepareProtectedPage = async (
       },
     });
   });
+  await page.route(/\/v1\/budget-forecast(?:\?.*)?$/, (route) =>
+    route.fulfill({ json: { data: forecastFixture(route.request().url()) } })
+  );
   const goals = [
     {
       id: 1,
