@@ -16,6 +16,7 @@ const definitions = [
     name: "events-goals",
     path: "/objectifs-evenements",
     ready: "text=Assurance",
+    chart: true,
   },
   { name: "operations", path: "/operations", ready: "text=Courses" },
   { name: "categories", path: "/categories", ready: ".categories-list__item" },

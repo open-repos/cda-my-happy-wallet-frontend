@@ -47,3 +47,8 @@ ou la page Objectifs. Le titre d'objectif est recherché dans sa carte pour ne
 pas confondre la progression et la synthèse d'effort. Les références sont relues
 dans le runner canonique selon la méthode documentée pour #193 ; les seuils de
 comparaison restent inchangés.
+
+Les douze références de l'accueil et des objectifs (clair/sombre aux trois
+largeurs) ont été relues dans l'artefact `web-visual-evidence` du run canonique
+GitHub `39391623409`. La présence du canvas et sa stabilisation sont attendues
+avant capture des cartes graphiques.
