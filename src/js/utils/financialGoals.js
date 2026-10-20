@@ -34,10 +34,10 @@ export const forecastMessage = ({ forecast, currency }) => {
         : "À ce rythme, objectif atteint avant la date souhaitée.";
     case "BEHIND":
       return forecast.requiredMonthlyContribution
-        ? `Pour tenir la date, versez ${formatMoney(
+        ? `Le versement mensuel calculé pour tenir la date est de ${formatMoney(
             forecast.requiredMonthlyContribution,
             currency
-          )} par mois.`
+          )}.`
         : "Le versement prévu ne suffit pas pour tenir la date.";
     case "MISSED":
       return "La date souhaitée est passée ou tombe ce mois-ci : plus aucun versement n’est possible avant elle.";

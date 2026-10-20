@@ -116,13 +116,22 @@ for (const theme of ["light", "dark"]) {
       );
       await page.goto(definition.path);
       await expect(page.locator(definition.ready).first()).toBeVisible();
+      if (["home", "events-goals"].includes(definition.name)) {
+        await expect(
+          page
+            .getByRole("region", { name: "Capacité d’épargne" })
+            .getByText("Indéterminé", { exact: true })
+        ).toBeVisible();
+      }
       // Chart imports are asynchronous; a visible empty wrapper is not ready.
       if (definition.chart) {
         await expect(page.locator("main canvas").first()).toBeVisible();
         await stableCharts(page);
       }
       if (definition.name === "events-goals")
-        await expect(page.getByText("Vélo", { exact: true })).toBeVisible();
+        await expect(
+          page.getByRole("article", { name: "Vélo", exact: true })
+        ).toBeVisible();
       if (definition.name === "operations") {
         const ratio = await page
           .locator(".one-off-table tbody th")

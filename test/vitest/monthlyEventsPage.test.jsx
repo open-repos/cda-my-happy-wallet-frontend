@@ -21,6 +21,12 @@ const render = (ui) => renderComponent(ui, { wrapper: MemoryRouter });
 vi.mock("../../src/js/hooks/useFinancialGoals", () => ({
   useFinancialGoals: vi.fn(),
 }));
+vi.mock(
+  "../../src/js/components/FinancialGoals/SavingsCapacitySection",
+  () => ({
+    SavingsCapacitySection: () => null,
+  })
+);
 
 vi.mock("../../src/js/hooks/useMonthlyEvents", () => ({
   useMonthlyEvents: vi.fn(),

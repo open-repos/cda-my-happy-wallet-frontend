@@ -41,7 +41,7 @@ describe("forecastMessage", () => {
           goal("BEHIND", { requiredMonthlyContribution: "180.00" })
         )
       )
-    ).toBe("Pour tenir la date, versez 180,00 € par mois.");
+    ).toBe("Le versement mensuel calculé pour tenir la date est de 180,00 €.");
     expect(forecastMessage(goal("MISSED"))).toMatch(
       /passée ou tombe ce mois-ci/
     );
