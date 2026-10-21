@@ -78,3 +78,47 @@ sudo -u mhw-frontend ln -s releases/legacy "$base/current"
 Modifier ensuite la directive `root` Nginx, valider avec `sudo nginx -t`,
 recharger Nginx et verifier le site avant de retirer les anciens fichiers a la
 racine. Le compte `mhw-frontend` ne doit appartenir ni a `sudo` ni a `docker`.
+
+## Compression Et Cache Des Ressources
+
+Mesure du 2026-10-21 en production (`curl -H 'Accept-Encoding: gzip'`),
+Nginx 1.18 :
+
+| Ressource                      | `Content-Type`           | `Content-Encoding` | Transfert                   |
+| ------------------------------ | ------------------------ | ------------------ | --------------------------- |
+| `/` (`index.html`)             | `text/html`              | `gzip`             | 478 o                       |
+| `assets/index-*.js`            | `application/javascript` | aucun              | 674 Ko                      |
+| `assets/index-*.css`           | `text/css`               | aucun              | 84 Ko                       |
+| `assets/category-icons-*.json` | `application/json`       | aucun              | 1,19 Mo (403 Ko en gzip -6) |
+
+Les ressources hachées de `assets/` portent bien
+`Cache-Control: public, max-age=31536000, immutable`. En revanche, seul le
+HTML est compressé : c'est le réglage par défaut d'Ubuntu (`gzip on;` sans
+`gzip_types`). Le fichier des icônes de catégorie (#131, #153) est donc
+transféré en entier.
+
+Réglage à ajouter par le propriétaire dans le bloc `server` du site (ou dans
+`http` de `/etc/nginx/nginx.conf`), puis `sudo nginx -t` et rechargement :
+
+```nginx
+gzip on;
+gzip_vary on;
+gzip_comp_level 6;
+gzip_min_length 1024;
+gzip_proxied any;
+gzip_types application/javascript application/json application/manifest+json
+  image/svg+xml text/css text/plain;
+```
+
+Brotli exige un module absent du paquet Nginx 1.18 d'Ubuntu : gzip suffit.
+`gzip_vary` ajoute `Vary: Accept-Encoding` pour les caches intermédiaires ;
+les en-têtes `Cache-Control` existants (`/sw.js`, manifeste, `assets/`)
+restent inchangés. Vérification après rechargement :
+
+```bash
+curl -s -o /dev/null -D - -H 'Accept-Encoding: gzip' \
+  https://myhappywallet.andriacapai.com/assets/<category-icons-hash>.json \
+  | grep -iE 'content-encoding|cache-control'
+```
+
+Attendu : `Content-Encoding: gzip` et le même `Cache-Control` immuable.
