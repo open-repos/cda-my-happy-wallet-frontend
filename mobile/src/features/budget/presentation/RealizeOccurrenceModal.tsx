@@ -254,7 +254,8 @@ export const RealizeOccurrenceModal = ({
                 <Pressable
                   accessibilityLabel="Enregistrer l’opération"
                   accessibilityRole="button"
-                  accessibilityState={{ busy, disabled: busy }}
+                  aria-busy={busy}
+                  accessibilityState={{ disabled: busy }}
                   disabled={busy}
                   onPress={submit}
                   style={[

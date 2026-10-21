@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -220,7 +221,7 @@ export const BudgetCalendarScreen = () => {
               ))}
             </View>
             <View
-              accessibilityState={{ busy: state.summaryStatus === "loading" }}
+              aria-busy={state.summaryStatus === "loading"}
               style={styles.grid}
             >
               {weeks.map((week) => (
@@ -258,6 +259,9 @@ export const BudgetCalendarScreen = () => {
                         }`}
                         accessibilityRole="button"
                         accessibilityState={{ selected }}
+                        {...(Platform.OS === "web"
+                          ? { "aria-pressed": selected }
+                          : {})}
                         key={cell.date}
                         onPress={() =>
                           setSelectedDate(selected ? null : cell.date)
