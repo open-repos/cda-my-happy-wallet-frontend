@@ -279,8 +279,15 @@ describe("Categories page", () => {
     fireEvent.click(screen.getByRole("button", { name: "Modifier Ancien" }));
     const icons = screen.getByRole("group", { name: "Icône" });
     expect(
-      await within(icons).findByRole("radio", { name: "zz retired (plein)" })
+      await within(icons).findByRole("radio", {
+        name: "icône indisponible, pastille de couleur",
+      })
     ).toBeChecked();
+    expect(
+      within(icons).getByRole("img", {
+        name: "Aperçu : Ancien, icône indisponible, pastille de couleur",
+      })
+    ).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Nom"), {
       target: { value: "Ancien nom" },
@@ -292,6 +299,32 @@ describe("Categories page", () => {
       name: "Ancien nom",
       color: null,
     });
+  });
+
+  it("counts search matches without counting the pinned current icon", async () => {
+    useCategories.mockReturnValue({
+      ...successfulState,
+      categories: [
+        { id: 7, name: "Santé", color: null, icon: "solid:heart-pulse" },
+      ],
+    });
+    renderPage();
+    fireEvent.click(screen.getByRole("button", { name: "Modifier Santé" }));
+    const icons = screen.getByRole("group", { name: "Icône" });
+    const current = await within(icons).findByRole("radio", {
+      name: "heart pulse (plein)",
+    });
+    const search = within(icons).getByLabelText("Rechercher une icône");
+    fireEvent.change(search, { target: { value: "courses" } });
+    expect(within(icons).getByRole("status")).toHaveTextContent(
+      "1 icône proposée."
+    );
+    expect(current).toBeChecked();
+    fireEvent.change(search, { target: { value: "zzzz-none" } });
+    expect(within(icons).getByRole("status")).toHaveTextContent(
+      "Aucune icône ne correspond à « zzzz-none »."
+    );
+    expect(current).toBeChecked();
   });
 
   it("keeps Enter and Escape inside the icon search", async () => {
