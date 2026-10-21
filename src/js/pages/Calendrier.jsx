@@ -9,6 +9,7 @@ import { PendingOccurrences } from "../components/BudgetCalendar/PendingOccurren
 import { RealizeOccurrenceForm } from "../components/BudgetCalendar/RealizeOccurrenceForm";
 import { CategoryLabel } from "../components/Categories/CategoryLabel";
 import { LiveMessage } from "../components/LiveMessage";
+import { useAnnouncesLoading } from "../hooks/useAnnouncesLoading";
 import {
   formatCompact,
   formatMoney,
@@ -131,6 +132,14 @@ function Calendrier() {
     !simulation.available || simulation.activeForm === "calendar" ? form : null;
   const budget = useBudgetCalendar(month, selectedDate);
   const events = useMonthlyEvents(month);
+  const announcesSummaryLoading = useAnnouncesLoading(
+    budget.summaryStatus,
+    month
+  );
+  const announcesOperationsLoading = useAnnouncesLoading(
+    budget.operationsStatus,
+    `${month}:${selectedDate}`
+  );
   // Garder le déclencheur focalisable pendant les actualisations suivantes.
   const [eventsLoaded, setEventsLoaded] = useState(false);
   useEffect(() => {
@@ -249,9 +258,11 @@ function Calendrier() {
         errorClassName="monthly-events-message--error"
       />
 
+      {/* Une actualisation n'annonce que son résultat, pas le chargement
+          (#171). */}
       <LiveMessage
         message={
-          budget.summaryStatus === "loading"
+          announcesSummaryLoading
             ? "Calcul de votre budget…"
             : budget.summaryStatus === "error"
             ? "Votre budget n’a pas pu être calculé."
@@ -506,7 +517,7 @@ function Calendrier() {
         {/* Annonces dans des régions live toujours montées (#164). */}
         <LiveMessage
           message={
-            budget.operationsStatus === "loading"
+            announcesOperationsLoading
               ? "Chargement des opérations…"
               : budget.operationsStatus === "error"
               ? "Les opérations n’ont pas pu être chargées."

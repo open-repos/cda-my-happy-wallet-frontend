@@ -1,5 +1,6 @@
 import React from "react";
 import { useSimulation } from "./SimulationContext";
+import { useAnnouncesLoading } from "../../hooks/useAnnouncesLoading";
 import { useSimulationComparison } from "../../hooks/useSimulationComparison";
 import { forecastToday } from "../../utils/budgetForecast";
 import { formatMoney, monthLabel } from "../BudgetCalendar/budgetFormat";
@@ -34,6 +35,12 @@ export const SimulationToggle = () => {
 const Comparison = ({ month }) => {
   const { enabled } = useSimulation();
   const state = useSimulationComparison(month);
+  // Le calcul d’un mois ou d’une activation de la Simulation est
+  // annoncé, pas l'actualisation après une modification (#171).
+  const announcesLoading = useAnnouncesLoading(
+    state.status,
+    `${month}:${enabled}`
+  );
   const message =
     state.status === "loading"
       ? "Calcul de l’écart de simulation…"
@@ -43,7 +50,7 @@ const Comparison = ({ month }) => {
   return (
     <>
       <LiveMessage
-        message={message}
+        message={state.status === "loading" && !announcesLoading ? "" : message}
         isError={state.status === "error"}
         visible={false}
       />

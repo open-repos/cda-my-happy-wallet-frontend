@@ -2,6 +2,7 @@ import React from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { captureLiveRegions, expectAnnouncedIn } from "./liveRegions";
 import ForgotPassword from "../../src/js/pages/ForgotPassword";
 import Login from "../../src/js/pages/Login";
 import NewPassword from "../../src/js/pages/NewPassword";
@@ -336,13 +337,16 @@ describe("accessible authentication controls", () => {
   );
   it.each([Login, Register, ForgotPassword])(
     "announces loading inside the page landmark",
-    (Component) => {
+    async (Component) => {
       mocks.authState.isLoading = true;
       renderForm(<Component />);
+      // Spinner passe par LiveMessage : région montée vide, texte au tick
+      // suivant (#164, #171).
+      const captured = captureLiveRegions();
+      await expectAnnouncedIn(captured, "status", "Chargement en cours");
       expect(screen.getByRole("main")).toContainElement(
-        screen.getByRole("status", { name: "Chargement en cours" })
+        screen.getByRole("status")
       );
-      expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");
     }
   );
 });

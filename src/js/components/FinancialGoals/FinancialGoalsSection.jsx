@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import addIcon from "../../../assets/icons/add.svg";
+import { useAnnouncesLoading } from "../../hooks/useAnnouncesLoading";
 import { useFinancialGoals } from "../../hooks/useFinancialGoals";
 import { FinancialGoalCard } from "./FinancialGoalCard";
 import { FinancialGoalForm } from "./FinancialGoalForm";
@@ -10,6 +11,7 @@ import "../../../css/FinancialGoals.css";
 /** Section « Objectifs financiers » : liste, états et formulaire. */
 export const FinancialGoalsSection = ({ initialGoalId = null }) => {
   const state = useFinancialGoals();
+  const announcesLoading = useAnnouncesLoading(state.status, "goals");
   const [edited, setEdited] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const opener = useRef(null);
@@ -83,9 +85,10 @@ export const FinancialGoalsSection = ({ initialGoalId = null }) => {
         className="monthly-events-message"
         errorClassName="monthly-events-message--error"
       />
-      {/* Chargement annoncé par une région live toujours montée (#164). */}
+      {/* Chargement annoncé par une région live toujours montée (#164), sauf
+          pour une actualisation : seul son résultat est annoncé (#171). */}
       <LiveMessage
-        message={state.status === "loading" ? "Chargement des objectifs…" : ""}
+        message={announcesLoading ? "Chargement des objectifs…" : ""}
         visible={false}
       />
       {state.status === "loading" && (

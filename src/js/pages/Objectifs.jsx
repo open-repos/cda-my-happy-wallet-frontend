@@ -6,6 +6,7 @@ import { MonthlyEventForm } from "../components/MonthlyEvents/MonthlyEventForm";
 import { MonthlyEventList } from "../components/MonthlyEvents/MonthlyEventList";
 import { useMonthlyEvents } from "../hooks/useMonthlyEvents";
 import { LiveMessage } from "../components/LiveMessage";
+import { useAnnouncesLoading } from "../hooks/useAnnouncesLoading";
 import { SimulationControls } from "../components/Simulation/SimulationControls";
 import "../../css/MonthlyEvents.css";
 
@@ -16,6 +17,7 @@ function Objectifs() {
   const adjustedGoalId = Number(search.get("ajuster"));
   const month = useMemo(currentMonth, []);
   const state = useMonthlyEvents(month);
+  const announcesLoading = useAnnouncesLoading(state.status, month);
   const [editedEvent, setEditedEvent] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const closeForm = () => {
@@ -65,9 +67,10 @@ function Objectifs() {
         className="monthly-events-message"
         errorClassName="monthly-events-message--error"
       />
-      {/* Chargement annoncé par une région live toujours montée (#164). */}
+      {/* Chargement annoncé par une région live toujours montée (#164), sauf
+          pour une actualisation : seul son résultat est annoncé (#171). */}
       <LiveMessage
-        message={state.status === "loading" ? "Chargement des événements…" : ""}
+        message={announcesLoading ? "Chargement des événements…" : ""}
         visible={false}
       />
       {state.status === "loading" && (

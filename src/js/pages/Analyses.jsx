@@ -8,6 +8,7 @@ import {
 } from "../components/charts/analyticsChartOptions";
 import { useChartTokens } from "../components/charts/useChartTokens";
 import { AnalyticsTable } from "../components/Analytics/AnalyticsTable";
+import { LiveMessage } from "../components/LiveMessage";
 import { useAnalytics } from "../hooks/useAnalytics";
 import { useCategoryRanks } from "../hooks/useCategoryRanks";
 import {
@@ -27,6 +28,8 @@ import {
 } from "../utils/analyticsExplorer";
 import "../../css/Analyses.css";
 
+const LOADING = "Chargement du graphique…";
+const EMPTY = "Aucune opération sur cette période.";
 const ERRORS = {
   ANALYTICS_RANGE_TOO_LARGE:
     "Trop de points à afficher pour cette période : réduisez la période ou choisissez un regroupement plus large.",
@@ -105,6 +108,19 @@ const Analyses = () => {
   const palette = useCategoryRanks();
   const status =
     result.status === "success" && !palette.settled ? "loading" : result.status;
+  const errorText =
+    ERRORS[result.code] ??
+    "Le graphique n’a pas pu être chargé. Vérifiez votre connexion puis réessayez.";
+  const announcement =
+    status === "loading"
+      ? LOADING
+      : result.status === "invalid"
+      ? result.message
+      : result.status === "error"
+      ? errorText
+      : result.status === "empty"
+      ? EMPTY
+      : "";
 
   // Les dates saisies remplacent l'entrée d'historique au lieu d'en ajouter.
   const update = (changes, { replace = false } = {}) => {
@@ -208,23 +224,27 @@ const Analyses = () => {
         )}
       </form>
 
-      <section className="analytics__result" aria-live="polite">
+      {/* États annoncés par des régions live toujours montées (#164, #171) ;
+          les copies visibles sont masquées aux lecteurs d'écran. */}
+      <LiveMessage
+        message={announcement}
+        isError={result.status === "invalid" || result.status === "error"}
+        visible={false}
+      />
+      <section className="analytics__result">
         {status === "loading" && (
-          <p className="analytics__state" role="status">
-            Chargement du graphique…
+          <p className="analytics__state" aria-hidden="true">
+            {LOADING}
           </p>
         )}
         {result.status === "invalid" && (
-          <p className="analytics__state" role="alert">
+          <p className="analytics__state" aria-hidden="true">
             {result.message}
           </p>
         )}
         {result.status === "error" && (
-          <div className="analytics__state" role="alert">
-            <p>
-              {ERRORS[result.code] ??
-                "Le graphique n’a pas pu être chargé. Vérifiez votre connexion puis réessayez."}
-            </p>
+          <div className="analytics__state">
+            <p aria-hidden="true">{errorText}</p>
             {/* Un refus métier se reproduirait : seule l'erreur réseau se relance. */}
             {result.code === null && (
               <button
@@ -238,8 +258,8 @@ const Analyses = () => {
           </div>
         )}
         {result.status === "empty" && (
-          <p className="analytics__state">
-            Aucune opération sur cette période.
+          <p className="analytics__state" aria-hidden="true">
+            {EMPTY}
           </p>
         )}
         {status === "success" && (

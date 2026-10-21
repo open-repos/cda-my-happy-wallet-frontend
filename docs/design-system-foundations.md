@@ -121,7 +121,16 @@ coque, sur chaque page protégée et dans les deux thèmes.
   le texte au tick suivant. Une région montée en même temps que son texte
   n'est pas toujours annoncée (#151, #164). `visible={false}` annonce sans
   copie visible quand l'écran affiche déjà l'état (titre de chargement,
-  `SectionState` de l'accueil) ;
+  `SectionState` de l'accueil). Le `Spinner` et les états de la page
+  Analyses passent aussi par `LiveMessage`, leurs copies visibles étant
+  masquées aux lecteurs d'écran. Un chargement n'est annoncé que si la vue
+  n'a encore rien affiché (premier chargement, autre mois ou jour, relance
+  après un échec) : une actualisation de données déjà affichées (après une
+  modification, `invalidate()` ou un retour sur l'onglet) n'annonce que son
+  résultat (`useAnnouncesLoading`, #171). La règle couvre Calendrier,
+  Objectifs (événements, objectifs, capacité d'épargne) et la Simulation
+  (écart, éléments potentiels). Le délai de remplissage
+  (`setTimeout(0)`) reste à confirmer par un test NVDA et VoiceOver réel ;
 - le zoom, les préférences de réduction des animations et les tailles de texte
   restent utilisables ;
 - les tokens générés sont déterministes et couverts par des tests ;

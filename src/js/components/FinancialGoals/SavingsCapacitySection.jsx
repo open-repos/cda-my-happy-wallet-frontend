@@ -1,6 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useAnnouncesLoading } from "../../hooks/useAnnouncesLoading";
 import { useSavingsCapacity } from "../../hooks/useSavingsCapacity";
+import { useSimulation } from "../Simulation/SimulationContext";
 import { forecastToday } from "../../utils/budgetForecast";
 import { formatMoney, monthLabel } from "../BudgetCalendar/budgetFormat";
 import { LiveMessage } from "../LiveMessage";
@@ -32,6 +34,13 @@ export const SavingsCapacitySection = ({
 }) => {
   const from = forecastToday().slice(0, 7);
   const state = useSavingsCapacity(from, refreshKey);
+  // Une actualisation (objectifs modifiés, invalidate()) n'annonce que son
+  // résultat ; un autre mois ou scénario est annoncé (#171).
+  const { scenario } = useSimulation();
+  const announcesLoading = useAnnouncesLoading(
+    state.status,
+    `${from}:${scenario}`
+  );
   const data = state.data;
   const money = (value) =>
     value === null ? "Non calculable" : formatMoney(value, data.currency);
@@ -48,11 +57,7 @@ export const SavingsCapacitySection = ({
       <h2 id="savings-capacity-title">Capacité d’épargne</h2>
       <LiveMessage
         message={
-          state.status === "loading"
-            ? loading
-            : state.status === "error"
-            ? error
-            : ""
+          announcesLoading ? loading : state.status === "error" ? error : ""
         }
         isError={state.status === "error"}
         visible={false}
