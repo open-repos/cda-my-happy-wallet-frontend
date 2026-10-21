@@ -24,6 +24,13 @@ Les couleurs, espacements, tailles et rayons viennent des tokens générés. Les
 icônes Ionicons déjà embarquées évitent toute URL Figma temporaire. Chaque
 onglet et action conserve une cible tactile d'au moins 48 px.
 
+Sur téléphone, les libellés d'onglets suivent la taille de police du système
+jusqu'à 1,3 (`maxFontSizeMultiplier`), puis rétrécissent pour tenir sur une
+ligne au lieu d'être tronqués (`src/navigation/tabLabel.ts`, #155). Le nom
+accessible complet reste porté par `tabBarAccessibilityLabel`. Sur iOS, le
+libellé grossit désormais jusqu'à 1,3 au lieu de rester fixe ; le Large
+Content Viewer reste disponible.
+
 ## Session et sécurité
 
 Les onglets ne sont montés que pour une session authentifiée ou en cours de
