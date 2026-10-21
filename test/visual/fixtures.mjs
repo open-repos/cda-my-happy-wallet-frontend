@@ -1,3 +1,6 @@
+import { forecastFixture } from "./forecastFixture.mjs";
+import { savingsCapacityFixture } from "./savingsCapacityFixture.mjs";
+
 // Synthetic, read-only browser fixtures shared by responsive and visual tests.
 const storedUser = {
   payload: {
@@ -103,8 +106,17 @@ export const prepareProtectedPage = async (
       },
     });
   });
-  await page.route(/\/v1\/events(?:\?.*)?$/, (route) =>
-    route.fulfill({
+  await page.route(/\/v1\/events(?:\?.*)?$/, (route) => {
+    if (
+      new URL(route.request().url()).searchParams.get("status") === "POTENTIEL"
+    )
+      return route.fulfill({
+        json: {
+          data: [],
+          meta: { limit: 100, hasNext: false, nextCursor: null },
+        },
+      });
+    return route.fulfill({
       contentType: "application/json",
       json: {
         data: [
@@ -121,8 +133,8 @@ export const prepareProtectedPage = async (
         ],
         meta: { limit: 100, hasNext: false, nextCursor: null },
       },
-    })
-  );
+    });
+  });
   await page.route(/\/v1\/event-occurrences(?:\?.*)?$/, (route) => {
     const month = new URL(route.request().url()).searchParams.get("month");
     return route.fulfill({
@@ -209,6 +221,25 @@ export const prepareProtectedPage = async (
       },
     });
   });
+  await page.route(/\/v1\/budget-forecast(?:\?.*)?$/, (route) => {
+    const forecast = forecastFixture(route.request().url());
+    // Adjust the one-month fixture after goal edits, using the same capacity snapshot.
+    if (forecast.months.length === 1) {
+      const capacity = savingsCapacityFixture(route.request().url(), goals);
+      const month = forecast.months[0];
+      const value = Number(capacity.months[0].afterPlanned);
+      Object.assign(month, {
+        forecastRemaining: value.toFixed(2),
+        prudentMonthlyAllowance: value.toFixed(2),
+        prudentDailyAllowance: (value / month.remainingDays).toFixed(2),
+        prudentWeeklyAllowance: (
+          (value * Math.min(7, month.remainingDays)) /
+          month.remainingDays
+        ).toFixed(2),
+      });
+    }
+    return route.fulfill({ json: { data: forecast } });
+  });
   const goals = [
     {
       id: 1,
@@ -228,8 +259,19 @@ export const prepareProtectedPage = async (
       },
     },
   ];
+  await page.route(/\/v1\/savings-capacity(?:\?.*)?$/, (route) =>
+    route.fulfill({
+      json: { data: savingsCapacityFixture(route.request().url(), goals) },
+    })
+  );
   await page.route(/\/v1\/goals(?:\/\d+)?(?:\?.*)?$/, (route) => {
     const request = route.request();
+    if (request.method() === "PUT") {
+      const id = Number(new URL(request.url()).pathname.split("/").pop());
+      const index = goals.findIndex((goal) => goal.id === id);
+      goals[index] = { ...goals[index], ...request.postDataJSON() };
+      return route.fulfill({ json: { data: goals[index] } });
+    }
     if (request.method() === "POST") {
       const body = request.postDataJSON();
       const created = {

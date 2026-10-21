@@ -1,5 +1,10 @@
 import { useFormFocus } from "../../hooks/useFormFocus";
 import React, { useEffect, useRef, useState } from "react";
+import {
+  EVENT_RECURRENCE_OPTIONS,
+  isEventRecurrence,
+  isRepeatingEvent,
+} from "../../utils/eventRecurrences";
 
 const emptyEvent = {
   title: "",
@@ -32,24 +37,32 @@ const validate = (event) => {
     errors.amount = "Saisissez un montant positif avec deux décimales maximum.";
   if (!isDate(event.startDate))
     errors.startDate = "Choisissez une date valide.";
+  if (!isEventRecurrence(event.recurrence))
+    errors.recurrence = "Choisissez une répétition valide.";
   if (
-    event.recurrence === "MENSUELLE" &&
+    isRepeatingEvent(event.recurrence) &&
     event.endDate &&
     (!isDate(event.endDate) || event.endDate < event.startDate)
   )
-    errors.endDate = "La date de fin doit être postérieure à la date de début.";
+    errors.endDate =
+      "Choisissez une date de fin valide, au plus tôt à la date de début.";
   return errors;
 };
 
 export const MonthlyEventForm = ({
   event,
+  initialDate = "",
   isSaving,
   onCancel,
   onDelete,
   onSave,
+  formTitle,
+  minStartDate,
 }) => {
   const [values, setValues] = useState(() =>
-    event ? { ...event, endDate: event.endDate || "" } : emptyEvent
+    event
+      ? { ...event, endDate: event.endDate || "" }
+      : { ...emptyEvent, startDate: initialDate }
   );
   const [errors, setErrors] = useState({});
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -67,18 +80,36 @@ export const MonthlyEventForm = ({
       [name]: value,
       ...(name === "recurrence" && value === "AUCUNE" ? { endDate: "" } : {}),
     }));
-    setErrors((current) => ({ ...current, [name]: undefined }));
+    setErrors((current) => ({
+      ...current,
+      [name]: undefined,
+      ...(name === "recurrence" && value === "AUCUNE"
+        ? { endDate: undefined }
+        : {}),
+    }));
   };
   const submit = async (submitEvent) => {
     submitEvent.preventDefault();
     const nextErrors = validate(values);
+    if (minStartDate && values.startDate && values.startDate < minStartDate)
+      nextErrors.startDate =
+        "Un élément potentiel doit commencer dans le mois courant ou un mois futur.";
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length) return;
+    if (Object.keys(nextErrors).length) {
+      submitEvent.currentTarget.elements
+        .namedItem(Object.keys(nextErrors)[0])
+        ?.focus();
+      return;
+    }
     await onSave({
-      ...values,
       title: values.title.trim(),
+      amount: values.amount,
+      currency: values.currency,
+      kind: values.kind,
+      startDate: values.startDate,
+      recurrence: values.recurrence,
       endDate:
-        values.recurrence === "MENSUELLE" && values.endDate
+        isRepeatingEvent(values.recurrence) && values.endDate
           ? values.endDate
           : null,
     });
@@ -94,7 +125,8 @@ export const MonthlyEventForm = ({
     >
       <div className="monthly-event-form-panel__header">
         <h2 id="monthly-event-form-title">
-          {event ? "Modifier l’événement" : "Ajouter un événement"}
+          {formTitle ||
+            (event ? "Modifier l’événement" : "Ajouter un événement")}
         </h2>
         <button
           type="button"
@@ -141,6 +173,7 @@ export const MonthlyEventForm = ({
           <input
             id="monthly-event-start-date"
             type="date"
+            min={minStartDate}
             name="startDate"
             value={values.startDate}
             onChange={update}
@@ -157,19 +190,27 @@ export const MonthlyEventForm = ({
             name="recurrence"
             value={values.recurrence}
             onChange={update}
+            {...field("recurrence")}
           >
-            <option value="AUCUNE">Une seule fois</option>
-            <option value="MENSUELLE">Tous les mois</option>
+            {EVENT_RECURRENCE_OPTIONS.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
           </select>
+          {errors.recurrence && (
+            <span id="recurrence-error">{errors.recurrence}</span>
+          )}
         </label>
-        {values.recurrence === "MENSUELLE" && (
+        {isRepeatingEvent(values.recurrence) && (
           <label htmlFor="monthly-event-end-date">
-            Date de fin <span className="sr-only">facultative</span>
+            Date de fin <span>(facultative)</span>
             <input
               id="monthly-event-end-date"
               type="date"
               name="endDate"
               value={values.endDate}
+              min={values.startDate || undefined}
               onChange={update}
               {...field("endDate")}
             />

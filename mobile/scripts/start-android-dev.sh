@@ -17,7 +17,11 @@ avd_name=""
 build_stack=false
 install_app=false
 api_origin="${EXPO_PUBLIC_API_ORIGIN:-http://127.0.0.1:4200}"
-metro_status_url="http://localhost:8081/status"
+# Adresse vue par l'emulateur via `adb reverse` : un Metro joignable seulement
+# en IPv6 ne doit pas passer pour disponible (#222).
+metro_status_url="http://127.0.0.1:8081/status"
+# Le controle de port deja pris interroge aussi ::1 (curl essaie les deux).
+metro_busy_url="http://localhost:8081/status"
 
 usage() {
   cat <<'EOF'
@@ -194,7 +198,7 @@ fi
 echo "Ports ADB inverses:"
 "$adb_bin" reverse --list
 
-if [[ "$(curl --silent --fail --max-time 1 "$metro_status_url" 2>/dev/null || true)" == "packager-status:running" ]]; then
+if [[ "$(curl --silent --fail --max-time 1 "$metro_busy_url" 2>/dev/null || true)" == "packager-status:running" ]]; then
   echo "Erreur: un serveur Metro utilise deja le port 8081." >&2
   echo "Reutilise son terminal ou arrete uniquement son conteneur identifie." >&2
   exit 1

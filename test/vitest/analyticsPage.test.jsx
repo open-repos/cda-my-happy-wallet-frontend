@@ -14,6 +14,7 @@ import {
   useNavigationType,
 } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { captureLiveRegions, expectAnnouncedIn } from "./liveRegions";
 import Analyses from "../../src/js/pages/Analyses";
 import { useAnalytics } from "../../src/js/hooks/useAnalytics";
 
@@ -172,7 +173,7 @@ describe("Analyses", () => {
     expect(screen.getByTestId("navigation").textContent).toBe("REPLACE");
   });
 
-  it("explains a range the API would refuse without calling it", () => {
+  it("explains a range the API would refuse without calling it", async () => {
     useAnalytics.mockImplementation((_, problem) => ({
       status: "invalid",
       message: problem,
@@ -182,15 +183,18 @@ describe("Analyses", () => {
       "?groupBy=day&chart=bar&period=custom&from=2025-01-01&to=2026-06-30"
     );
 
-    expect(screen.getByRole("alert")).toHaveTextContent(/366 jours au plus/);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /366 jours au plus/
+    );
   });
 
-  it("shows loading, empty and coded error states with retry", () => {
+  it("shows loading, empty and coded error states with retry", async () => {
     useAnalytics.mockReturnValue(result({ status: "loading", data: null }));
     const { rerender } = renderAt("?groupBy=month&chart=bar");
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "Chargement du graphique"
-    );
+    // Page ouverte pendant le chargement : la région, montée vide, reçoit
+    // le texte au tick suivant (#164).
+    let captured = captureLiveRegions();
+    await expectAnnouncedIn(captured, "status", "Chargement du graphique…");
 
     useAnalytics.mockReturnValue(result({ status: "empty", data: null }));
     rerender(
@@ -198,9 +202,20 @@ describe("Analyses", () => {
         <Analyses />
       </MemoryRouter>
     );
+    // Arbre de rendu différent : la page est remontée une fois, régions
+    // comprises ; les rendus suivants gardent ces régions.
+    captured = captureLiveRegions();
+    await expectAnnouncedIn(
+      captured,
+      "status",
+      "Aucune opération sur cette période."
+    );
+    // La copie visible n'est pas lue une seconde fois (#171).
     expect(
-      screen.getByText("Aucune opération sur cette période.")
-    ).toBeInTheDocument();
+      screen
+        .getAllByText("Aucune opération sur cette période.")
+        .find((element) => element.getAttribute("aria-hidden") === "true")
+    ).toBeDefined();
 
     const failed = result({
       status: "error",
@@ -213,7 +228,11 @@ describe("Analyses", () => {
         <Analyses />
       </MemoryRouter>
     );
-    expect(screen.getByRole("alert")).toHaveTextContent(/Trop de points/);
+    await expectAnnouncedIn(
+      captured,
+      "alert",
+      "Trop de points à afficher pour cette période : réduisez la période ou choisissez un regroupement plus large."
+    );
     // Un refus métier se reproduirait : pas de relance proposée.
     expect(
       screen.queryByRole("button", { name: "Réessayer" })

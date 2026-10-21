@@ -1,18 +1,36 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import addIcon from "../../../assets/icons/add.svg";
+import { useAnnouncesLoading } from "../../hooks/useAnnouncesLoading";
 import { useFinancialGoals } from "../../hooks/useFinancialGoals";
 import { FinancialGoalCard } from "./FinancialGoalCard";
 import { FinancialGoalForm } from "./FinancialGoalForm";
 import { LiveMessage } from "../LiveMessage";
+import { SavingsCapacitySection } from "./SavingsCapacitySection";
 import "../../../css/FinancialGoals.css";
 
 /** Section « Objectifs financiers » : liste, états et formulaire. */
-export const FinancialGoalsSection = () => {
+export const FinancialGoalsSection = ({ initialGoalId = null }) => {
   const state = useFinancialGoals();
+  const announcesLoading = useAnnouncesLoading(state.status, "goals");
   const [edited, setEdited] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const opener = useRef(null);
   const heading = useRef(null);
+  const openedGoal = useRef(null);
+  useEffect(() => {
+    if (
+      state.status !== "success" ||
+      !initialGoalId ||
+      openedGoal.current === initialGoalId
+    )
+      return;
+    const goal = state.goals.find((goal) => goal.id === initialGoalId);
+    if (goal) {
+      openedGoal.current = initialGoalId;
+      setEdited(goal);
+      setFormOpen(true);
+    }
+  }, [state.status, state.goals, initialGoalId]);
   // Le focus revient au bouton d'origine à la fermeture du formulaire; il
   // est pris sur l'événement car Safari ne focalise pas un bouton cliqué.
   const open = (goal, trigger) => {
@@ -67,9 +85,10 @@ export const FinancialGoalsSection = () => {
         className="monthly-events-message"
         errorClassName="monthly-events-message--error"
       />
-      {/* Chargement annoncé par une région live toujours montée (#164). */}
+      {/* Chargement annoncé par une région live toujours montée (#164), sauf
+          pour une actualisation : seul son résultat est annoncé (#171). */}
       <LiveMessage
-        message={state.status === "loading" ? "Chargement des objectifs…" : ""}
+        message={announcesLoading ? "Chargement des objectifs…" : ""}
         visible={false}
       />
       {state.status === "loading" && (
@@ -114,6 +133,16 @@ export const FinancialGoalsSection = () => {
           ))}
         </div>
       )}
+      <SavingsCapacitySection
+        refreshKey={JSON.stringify(state.goals)}
+        adjustDisabled={
+          state.status !== "success" || state.mutationStatus === "loading"
+        }
+        onAdjust={(id, trigger) => {
+          const goal = state.goals.find((goal) => goal.id === id);
+          if (goal && state.mutationStatus !== "loading") open(goal, trigger);
+        }}
+      />
       {formOpen && (
         <FinancialGoalForm
           key={edited?.id || "new"}

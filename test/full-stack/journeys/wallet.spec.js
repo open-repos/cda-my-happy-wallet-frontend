@@ -175,6 +175,105 @@ test("converts a planned event into a persisted operation without counting it tw
   await expect(page.getByRole("row", { name: /Assurance E2E/ })).toHaveCount(1);
 });
 
+test("keeps potential events out of real balances, confirms them and clears only the simulation", async ({
+  page,
+}, testInfo) => {
+  await login(page, testInfo.project.name, "simulation");
+  await navigate(page, "Calendrier");
+  await expect(realBalance(page)).toHaveText(/1\s*200,00\s*€/);
+  await expect(forecastBalance(page)).toHaveText(/1\s*200,00\s*€/);
+  await page
+    .getByRole("button", { name: "Ajouter un élément potentiel", exact: true })
+    .click();
+  await expect(page.getByLabel("Date de début", { exact: true })).toHaveValue(
+    today()
+  );
+  await page.getByLabel("Titre", { exact: true }).fill("Voyage potentiel E2E");
+  await page.getByLabel(/^Montant/).fill("300.00");
+  const created = apiResponse(page, "/v1/events", "POST");
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  const response = await created;
+  expect(response.status()).toBe(201);
+  const event = (await response.json()).data;
+  expect(event.status).toBe("POTENTIEL");
+  await expect(
+    page.getByRole("button", {
+      name: "Confirmer Voyage potentiel E2E",
+      exact: true,
+    })
+  ).toBeVisible();
+  await expect(forecastBalance(page)).toHaveText(/1\s*200,00\s*€/);
+  await page.getByRole("switch", { name: "Simulation", exact: true }).check();
+  await expect(forecastBalance(page)).toHaveText(/900,00\s*€/);
+  await expect(realBalance(page)).toHaveText(/1\s*200,00\s*€/);
+  await navigate(page, "Home");
+  const capacity = page.getByRole("region", {
+    name: "Capacité d’épargne",
+    exact: true,
+  });
+  const allowance = capacity
+    .getByText("Disponible par mois après objectifs", { exact: true })
+    .locator("..");
+  await expect(allowance).toContainText(/900,00\s*€/);
+  await page.getByRole("switch", { name: "Simulation", exact: true }).uncheck();
+  await expect(allowance).toContainText(/1\s*200,00\s*€/);
+  await page
+    .getByRole("link", { name: "Voir les prochains mois", exact: true })
+    .click();
+  await page.getByRole("switch", { name: "Simulation", exact: true }).check();
+  await page
+    .getByRole("button", {
+      name: "Confirmer Voyage potentiel E2E",
+      exact: true,
+    })
+    .click();
+  const confirmed = apiResponse(page, `/v1/events/${event.id}/confirm`, "POST");
+  await page
+    .getByRole("button", { name: "Oui, confirmer", exact: true })
+    .click();
+  const confirmation = await confirmed;
+  expect(confirmation.status()).toBe(200);
+  expect((await confirmation.json()).data.status).toBe("CONFIRME");
+  await expect(
+    page.getByText("Votre simulation est vide.", { exact: true })
+  ).toBeVisible();
+  await page.getByRole("switch", { name: "Simulation", exact: true }).uncheck();
+  const firstRow = page
+    .getByRole("table", { name: "Prévisions mensuelles" })
+    .getByRole("row")
+    .nth(1);
+  await expect(firstRow).toContainText(/900,00\s*€/);
+  await page
+    .getByRole("button", { name: "Ajouter un élément potentiel", exact: true })
+    .click();
+  await page
+    .getByLabel("Titre", { exact: true })
+    .fill("Matériel potentiel E2E");
+  await page.getByLabel(/^Montant/).fill("50.00");
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Vider la simulation", exact: true })
+    .click();
+  const cleared = apiResponse(page, "/v1/simulation/events", "DELETE");
+  await page
+    .getByRole("button", { name: "Oui, vider la simulation", exact: true })
+    .click();
+  expect((await cleared).status()).toBe(204);
+  await expect(
+    page.getByText("Votre simulation est vide.", { exact: true })
+  ).toBeVisible();
+  await expect(firstRow).toContainText(/900,00\s*€/);
+  await page
+    .getByRole("main")
+    .getByRole("link", { name: "Calendrier", exact: true })
+    .click();
+  await expect(realBalance(page)).toHaveText(/1\s*200,00\s*€/);
+  await expect(forecastBalance(page)).toHaveText(/900,00\s*€/);
+  await expect(
+    page.getByRole("button", { name: /^Convertir Voyage potentiel E2E/ })
+  ).toBeVisible();
+});
+
 test("shows invalid credentials and recovers from a failed API read", async ({
   page,
 }, testInfo) => {

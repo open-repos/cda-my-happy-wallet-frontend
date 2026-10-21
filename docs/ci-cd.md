@@ -6,6 +6,14 @@ Les branches et merge requests executent le formatage, le lint, les tests, le
 type-check et le build. Le contenu exact de l'artefact `dist/` valide est
 deployable manuellement uniquement depuis la branche protegee `main`.
 
+`deploy_production` est propose apres un push sur `main` (merge) et pour un
+pipeline lance a la main sur `main` (« Run pipeline », source `web`). Les
+variables `VITE_*` etant lues au build, changer l'une d'elles (par exemple
+`VITE_PWA_ENABLED`) demande un nouveau pipeline sur `main`, puis son
+`deploy_production` : relancer seulement le deploiement d'un ancien pipeline
+reutiliserait l'artefact construit avec l'ancienne valeur. Le log du job
+`build` indique si l'inscription PWA est activee.
+
 Chaque deploiement copie l'artefact dans `releases/$CI_COMMIT_SHA`, puis bascule
 atomiquement le lien `current`. Un healthcheck HTTP restaure la release
 precedente si le marqueur public `deployment-sha.txt` ne correspond pas au SHA
@@ -70,3 +78,47 @@ sudo -u mhw-frontend ln -s releases/legacy "$base/current"
 Modifier ensuite la directive `root` Nginx, valider avec `sudo nginx -t`,
 recharger Nginx et verifier le site avant de retirer les anciens fichiers a la
 racine. Le compte `mhw-frontend` ne doit appartenir ni a `sudo` ni a `docker`.
+
+## Compression Et Cache Des Ressources
+
+Mesure du 2026-10-21 en production (`curl -H 'Accept-Encoding: gzip'`),
+Nginx 1.18 :
+
+| Ressource                      | `Content-Type`           | `Content-Encoding` | Transfert                   |
+| ------------------------------ | ------------------------ | ------------------ | --------------------------- |
+| `/` (`index.html`)             | `text/html`              | `gzip`             | 478 o                       |
+| `assets/index-*.js`            | `application/javascript` | aucun              | 674 Ko                      |
+| `assets/index-*.css`           | `text/css`               | aucun              | 84 Ko                       |
+| `assets/category-icons-*.json` | `application/json`       | aucun              | 1,19 Mo (403 Ko en gzip -6) |
+
+Les ressources hachées de `assets/` portent bien
+`Cache-Control: public, max-age=31536000, immutable`. En revanche, seul le
+HTML est compressé : c'est le réglage par défaut d'Ubuntu (`gzip on;` sans
+`gzip_types`). Le fichier des icônes de catégorie (#131, #153) est donc
+transféré en entier.
+
+Réglage à ajouter par le propriétaire dans le bloc `server` du site (ou dans
+`http` de `/etc/nginx/nginx.conf`), puis `sudo nginx -t` et rechargement :
+
+```nginx
+gzip on;
+gzip_vary on;
+gzip_comp_level 6;
+gzip_min_length 1024;
+gzip_proxied any;
+gzip_types application/javascript application/json application/manifest+json
+  image/svg+xml text/css text/plain;
+```
+
+Brotli exige un module absent du paquet Nginx 1.18 d'Ubuntu : gzip suffit.
+`gzip_vary` ajoute `Vary: Accept-Encoding` pour les caches intermédiaires ;
+les en-têtes `Cache-Control` existants (`/sw.js`, manifeste, `assets/`)
+restent inchangés. Vérification après rechargement :
+
+```bash
+curl -s -o /dev/null -D - -H 'Accept-Encoding: gzip' \
+  https://myhappywallet.andriacapai.com/assets/<category-icons-hash>.json \
+  | grep -iE 'content-encoding|cache-control'
+```
+
+Attendu : `Content-Encoding: gzip` et le même `Cache-Control` immuable.

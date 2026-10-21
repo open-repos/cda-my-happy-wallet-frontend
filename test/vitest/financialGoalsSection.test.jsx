@@ -16,6 +16,12 @@ import { captureLiveRegions, expectAnnouncedIn } from "./liveRegions";
 vi.mock("../../src/js/hooks/useFinancialGoals", () => ({
   useFinancialGoals: vi.fn(),
 }));
+vi.mock(
+  "../../src/js/components/FinancialGoals/SavingsCapacitySection",
+  () => ({
+    SavingsCapacitySection: () => null,
+  })
+);
 vi.mock("../../src/js/components/charts/EChart", () => ({
   EChart: ({ label }) => <div role="img" aria-label={label} />,
 }));
@@ -59,6 +65,16 @@ afterEach(() => {
 });
 
 describe("FinancialGoalsSection", () => {
+  it("opens the requested goal from the home action only once", () => {
+    useFinancialGoals.mockReturnValue(state());
+    const { rerender } = render(<FinancialGoalsSection initialGoalId={3} />);
+    expect(screen.getByLabelText("Titre")).toHaveValue("Vélo");
+    expect(screen.getByLabelText("Titre")).toHaveFocus();
+    fireEvent.click(screen.getByRole("button", { name: "Annuler" }));
+    rerender(<FinancialGoalsSection initialGoalId={3} />);
+    expect(screen.queryByLabelText("Titre")).not.toBeInTheDocument();
+  });
+
   it("renders a goal card with its ring, amounts and forecast", () => {
     useFinancialGoals.mockReturnValue(state());
     render(<FinancialGoalsSection />);
@@ -71,7 +87,7 @@ describe("FinancialGoalsSection", () => {
     expect(normalize(card.textContent)).toContain("Montant visé1 200,00 €");
     expect(normalize(card.textContent)).toContain("Date souhaitée15 mars 2027");
     expect(normalize(card.textContent)).toContain(
-      "Pour tenir la date, versez 180,00 € par mois."
+      "Le versement mensuel calculé pour tenir la date est de 180,00 €."
     );
   });
 

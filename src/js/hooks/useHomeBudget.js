@@ -4,6 +4,7 @@ import { goalsService } from "../services/goalsService";
 import { oneOffOperationsService } from "../services/oneOffOperationsService";
 import { monthEnd } from "./useBudgetCalendar";
 import { expensesByCategory, goalsProgress } from "../utils/homeBudget";
+import { useSimulation } from "../components/Simulation/SimulationContext";
 
 export const HOME_CURRENCY = "EUR";
 
@@ -26,31 +27,43 @@ const useSection = (load) => {
   // Seule la dernière requête lancée peut mettre à jour l'état du bloc.
   const reload = useCallback(async () => {
     const request = ++latestRequest.current;
-    setState({ status: "loading", data: null });
+    setState({ status: "loading", data: null, loader: load });
     try {
       const data = await load();
       if (request === latestRequest.current) {
-        setState({ status: "success", data });
+        setState({ status: "success", data, loader: load });
       }
     } catch {
       if (request === latestRequest.current) {
-        setState({ status: "error", data: null });
+        setState({ status: "error", data: null, loader: load });
       }
     }
   }, [load]);
 
   useEffect(() => {
     reload();
+    return () => {
+      latestRequest.current += 1;
+    };
   }, [reload]);
 
-  return { ...state, reload };
+  return {
+    ...(state.loader === load ? state : { status: "loading", data: null }),
+    reload,
+  };
 };
 
 /** Synthèse du mois courant, dépenses par catégorie et progression des objectifs. */
 export const useHomeBudget = (month = currentParisMonth()) => {
+  const { scenario, revision } = useSimulation();
   const loadSummary = useCallback(
-    () => budgetService.getSummary(month, HOME_CURRENCY),
-    [month]
+    () =>
+      budgetService.getSummary(
+        month,
+        HOME_CURRENCY,
+        ...(scenario === "simulation" ? [scenario] : [])
+      ),
+    [month, scenario, revision]
   );
   const loadExpenses = useCallback(async () => {
     const [operations, categories] = await Promise.all([

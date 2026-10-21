@@ -1,0 +1,100 @@
+.budget-forecast__panel {
+  width: 100%;
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: var(--ds-primitive-space-6);
+  border-radius: var(--ds-radius-card);
+  background: var(--ds-color-background-surface);
+  box-shadow: var(--ds-shadow-card);
+}
+.budget-forecast__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-primitive-space-4);
+  margin-bottom: var(--ds-primitive-space-4);
+}
+.budget-forecast__filters label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-primitive-space-2);
+  font-weight: var(--ds-primitive-font-weight-semibold);
+  color: var(--ds-color-text-primary);
+}
+.budget-forecast__filters select {
+  min-width: 8rem;
+}
+.budget-forecast__filters :is(input, select) {
+  min-height: var(--ds-size-control-min-height);
+  max-width: 100%;
+  padding: var(--ds-space-control-block) var(--ds-space-control-inline);
+  border: var(--ds-border-width-default) solid var(--ds-color-field-border);
+  border-radius: var(--ds-radius-control);
+  background: var(--ds-color-field-background);
+  color: var(--ds-color-field-text);
+  font: inherit;
+}
+.budget-forecast__chart {
+  height: 20rem;
+  width: 100%;
+}
+.budget-forecast__scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  margin-top: var(--ds-primitive-space-4);
+}
+.budget-forecast__scroll:focus-visible,
+.budget-forecast__filters :is(input, select):focus-visible {
+  outline: var(--ds-border-width-focus) solid var(--ds-color-focus-ring);
+  outline-offset: 2px;
+}
+.budget-forecast__table {
+  width: 100%;
+  min-width: 64rem;
+  border-collapse: collapse;
+}
+.budget-forecast__table :is(th, td) {
+  padding: var(--ds-primitive-space-3);
+  border-bottom: var(--ds-border-width-default) solid
+    var(--ds-color-border-subtle);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.budget-forecast__table th:first-child {
+  text-align: left;
+}
+.budget-forecast__table td {
+  white-space: nowrap;
+}
+.budget-forecast__table thead {
+  color: var(--ds-color-text-secondary);
+}
+.budget-forecast__warning {
+  display: block;
+  margin-top: var(--ds-primitive-space-1);
+  color: var(--ds-color-data-expense);
+  font-size: var(--ds-primitive-font-size-sm);
+}
+.budget-forecast__negative-note {
+  color: var(--ds-color-data-expense);
+  margin-top: var(--ds-primitive-space-4);
+}
+.home-forecast-link {
+  display: block;
+  width: fit-content;
+  margin: var(--ds-primitive-space-4) auto;
+  color: var(--ds-color-text-on-shell);
+  font-weight: var(--ds-primitive-font-weight-semibold);
+}
+.home-forecast-link:focus-visible {
+  outline: var(--ds-border-width-focus) solid
+    var(--ds-color-focus-ring-on-shell);
+  outline-offset: 2px;
+}
+@media (max-width: 48rem) {
+  .budget-forecast__panel {
+    padding: var(--ds-primitive-space-4);
+  }
+  .budget-forecast__filters {
+    flex-direction: column;
+  }
+}

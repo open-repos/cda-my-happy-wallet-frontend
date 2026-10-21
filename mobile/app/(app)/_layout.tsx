@@ -1,12 +1,18 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Tabs } from "expo-router";
-import { Platform, useWindowDimensions, type ColorValue } from "react-native";
+import { Tabs, useTheme } from "expo-router";
+import {
+  Platform,
+  Text,
+  useWindowDimensions,
+  type ColorValue,
+} from "react-native";
 
 import {
   APP_DESTINATIONS,
   AppDestination,
 } from "@/src/navigation/appDestinations";
 import { primitives, semantic, themes } from "@/src/design/tokens";
+import { TAB_LABEL_TEXT_PROPS } from "@/src/navigation/tabLabel";
 
 const colors = themes.light.color;
 const desktopNavigationBreakpoint = 1024;
@@ -15,8 +21,36 @@ const desktopNavigationBreakpoint = 1024;
 const tabletBreakpoint = 768;
 const semiboldFontWeight = `${primitives.fontWeight.semibold}` as "600";
 
-const createTabOptions = (destination: AppDestination) => ({
+type TabLabelProps = {
+  color: ColorValue;
+  children: string;
+};
+
+// Libellé sous l'icône borné avec les grandes polices (#155) ; le nom
+// accessible complet reste `tabBarAccessibilityLabel`. La police du thème
+// est celle du libellé par défaut de React Navigation.
+const BoundedTabLabel = ({ color, children }: TabLabelProps) => {
+  const { fonts } = useTheme();
+  return (
+    <Text
+      {...TAB_LABEL_TEXT_PROPS}
+      style={[fonts.medium, styles.tabLabel, { color }]}
+    >
+      {children}
+    </Text>
+  );
+};
+
+const renderBoundedTabLabel = (props: TabLabelProps) => (
+  <BoundedTabLabel {...props} />
+);
+
+const createTabOptions = (
+  destination: AppDestination,
+  labelBelowIcon: boolean,
+) => ({
   title: destination.label,
+  ...(labelBelowIcon ? { tabBarLabel: renderBoundedTabLabel } : {}),
   tabBarAccessibilityLabel: destination.accessibilityLabel,
   tabBarIcon: ({ color, focused, size }: TabIconProps) => (
     <Ionicons
@@ -37,6 +71,7 @@ export default function AppLayout() {
   const { width } = useWindowDimensions();
   const usesDesktopNavigation =
     Platform.OS === "web" && width >= desktopNavigationBreakpoint;
+  const labelBelowIcon = !usesDesktopNavigation && width < tabletBreakpoint;
 
   return (
     <Tabs
@@ -50,7 +85,7 @@ export default function AppLayout() {
           ? styles.desktopTabItem
           : styles.tabItem,
         tabBarLabelPosition:
-          usesDesktopNavigation || width < tabletBreakpoint
+          usesDesktopNavigation || labelBelowIcon
             ? "below-icon"
             : "beside-icon",
         tabBarLabelStyle: styles.tabLabel,
@@ -66,7 +101,7 @@ export default function AppLayout() {
         <Tabs.Screen
           key={destination.route}
           name={destination.route}
-          options={createTabOptions(destination)}
+          options={createTabOptions(destination, labelBelowIcon)}
         />
       ))}
       <Tabs.Screen name="fixed-budget" options={{ href: null }} />
@@ -100,5 +135,6 @@ const styles = {
   tabLabel: {
     fontSize: primitives.fontSize.xs,
     fontWeight: semiboldFontWeight,
+    textAlign: "center",
   },
 } as const;

@@ -113,6 +113,14 @@ export const buildPwaWorker = async ({
   return metadata;
 };
 
+/** Same rule as PwaUpdates: only the exact string "true" enables registration. */
+export const registrationStatus = (env = process.env) =>
+  env.VITE_PWA_ENABLED === "true"
+    ? "application registration enabled (VITE_PWA_ENABLED=true)"
+    : env.VITE_PWA_RETIRE === "true"
+    ? "application registration disabled; rollback build retires installed workers (VITE_PWA_RETIRE=true)"
+    : "application registration disabled";
+
 if (
   process.argv[1] &&
   resolve(process.argv[1]) === fileURLToPath(import.meta.url)
@@ -130,6 +138,8 @@ if (
     : null;
   const result = await buildPwaWorker({ previous });
   console.log(
-    `Generated public worker ${result.build} (${result.assets.length} assets); application registration remains disabled.`
+    `Generated public worker ${result.build} (${
+      result.assets.length
+    } assets); ${registrationStatus()}.`
   );
 }

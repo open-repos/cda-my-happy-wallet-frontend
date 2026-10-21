@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { prepareProtectedPage } from "./fixtures.mjs";
+import { prepareSimulationPage } from "../e2e/simulationFixture.mjs";
 
 const definitions = [
   { name: "login", path: "/login", ready: ".login_form" },
@@ -7,9 +8,22 @@ const definitions = [
   { name: "home", path: "/home", ready: ".home-budget__amount", chart: true },
   { name: "calendar", path: "/calendrier", ready: ".budget-day" },
   {
+    name: "simulation-calendar",
+    path: "/calendrier",
+    ready: ".budget-day",
+    simulation: true,
+  },
+  {
+    name: "budget-forecast",
+    path: "/prochains-mois",
+    ready: ".budget-forecast__table",
+    chart: true,
+  },
+  {
     name: "events-goals",
     path: "/objectifs-evenements",
     ready: "text=Assurance",
+    chart: true,
   },
   { name: "operations", path: "/operations", ready: "text=Courses" },
   { name: "categories", path: "/categories", ready: ".categories-list__item" },
@@ -22,13 +36,40 @@ const definitions = [
   { name: "profile", path: "/profil", ready: ".theme-selector" },
 ];
 
-async function ready(page, theme, authenticated = true) {
+async function ready(page, theme, authenticated = true, simulation = false) {
   await page.clock.setFixedTime(new Date("2026-10-18T10:00:00Z"));
   await page.addInitScript(
     (theme) => localStorage.setItem("mhw-theme", theme),
     theme
   );
-  await prepareProtectedPage(page, { authenticated });
+  if (simulation) await prepareSimulationPage(page, { seedPotential: true });
+  else await prepareProtectedPage(page, { authenticated });
+}
+
+/**
+ * A visible canvas can still be redrawn: theme and category colours trigger a
+ * second render. ECharts' "finished" event never fires here because the fixed
+ * clock stops zrender's timeline, so wait until every chart canvas stays
+ * identical across two reads instead.
+ */
+async function stableCharts(page) {
+  await page.waitForLoadState("networkidle");
+  const snapshot = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll("main canvas")]
+        .map((canvas) => canvas.toDataURL())
+        .join("|")
+    );
+  await expect
+    .poll(
+      async () => {
+        const before = await snapshot();
+        await page.waitForTimeout(250);
+        return before === (await snapshot());
+      },
+      { timeout: 10_000 }
+    )
+    .toBe(true);
 }
 
 async function layout(page) {
@@ -80,15 +121,50 @@ for (const theme of ["light", "dark"]) {
       await ready(
         page,
         theme,
-        !["/login", "/register"].includes(definition.path)
+        !["/login", "/register"].includes(definition.path),
+        definition.simulation
       );
       await page.goto(definition.path);
       await expect(page.locator(definition.ready).first()).toBeVisible();
+      if (definition.simulation) {
+        await page
+          .getByRole("switch", { name: "Simulation", exact: true })
+          .check();
+        await expect(
+          page.getByRole("region", { name: "Comparaison de la Simulation" })
+        ).toContainText("467,50");
+        await expect(
+          page
+            .getByRole("article", { name: "Reste prévisionnel", exact: true })
+            .locator(".budget-card__value")
+        ).toContainText("467,50");
+        await expect(
+          page.getByRole("button", { name: "Confirmer Voyage", exact: true })
+        ).toBeVisible();
+        // Interacting below the fold scrolls the page. Keep fixed navigation
+        // at the top of the full-page reference, as on the other screens.
+        await page.evaluate(() => window.scrollTo(0, 0));
+      } else if (["calendar", "budget-forecast"].includes(definition.name)) {
+        await expect(
+          page.getByText("Votre simulation est vide.", { exact: true })
+        ).toBeVisible();
+      }
+      if (["home", "events-goals"].includes(definition.name)) {
+        await expect(
+          page
+            .getByRole("region", { name: "Capacité d’épargne" })
+            .getByText("Indéterminé", { exact: true })
+        ).toBeVisible();
+      }
       // Chart imports are asynchronous; a visible empty wrapper is not ready.
-      if (definition.chart)
+      if (definition.chart) {
         await expect(page.locator("main canvas").first()).toBeVisible();
+        await stableCharts(page);
+      }
       if (definition.name === "events-goals")
-        await expect(page.getByText("Vélo", { exact: true })).toBeVisible();
+        await expect(
+          page.getByRole("article", { name: "Vélo", exact: true })
+        ).toBeVisible();
       if (definition.name === "operations") {
         const ratio = await page
           .locator(".one-off-table tbody th")

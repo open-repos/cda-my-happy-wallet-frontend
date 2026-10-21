@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { formatEventAmount } from "../components/MonthlyEvents/MonthlyEventList";
+import { MonthlyEventForm } from "../components/MonthlyEvents/MonthlyEventForm";
 import { OneOffOperationForm } from "../components/OneOffOperations/OneOffOperationForm";
 import { BudgetSummary } from "../components/BudgetCalendar/BudgetSummary";
 import { CalendarModeToggle } from "../components/BudgetCalendar/CalendarModeToggle";
@@ -7,6 +9,7 @@ import { PendingOccurrences } from "../components/BudgetCalendar/PendingOccurren
 import { RealizeOccurrenceForm } from "../components/BudgetCalendar/RealizeOccurrenceForm";
 import { CategoryLabel } from "../components/Categories/CategoryLabel";
 import { LiveMessage } from "../components/LiveMessage";
+import { useAnnouncesLoading } from "../hooks/useAnnouncesLoading";
 import {
   formatCompact,
   formatMoney,
@@ -15,6 +18,10 @@ import {
 } from "../components/BudgetCalendar/budgetFormat";
 import { useBudgetCalendar } from "../hooks/useBudgetCalendar";
 import { useMonthlyEvents } from "../hooks/useMonthlyEvents";
+import { useSimulation } from "../components/Simulation/SimulationContext";
+import { SimulationPanel } from "../components/Simulation/SimulationPanel";
+import { PlanningActions } from "../components/Simulation/PlanningActions";
+import { monthlyEventsService } from "../services/monthlyEventsService";
 import "../../css/MonthlyEvents.css";
 import "../../css/Operations.css";
 import "../../css/BudgetCalendar.css";
@@ -77,7 +84,14 @@ const cellValue = (mode, day) => {
     : formatCompact(day.forecastRemaining);
 };
 
-const cellLabel = (date, day, pendingCount, overdueCount, currency) => {
+const cellLabel = (
+  date,
+  day,
+  pendingCount,
+  overdueCount,
+  currency,
+  potentialCount = 0
+) => {
   const parts = [longDate(date)];
   if (day && Number(day.expense) > 0)
     parts.push(`dépenses ${formatMoney(day.expense, currency)}`);
@@ -90,6 +104,12 @@ const cellLabel = (date, day, pendingCount, overdueCount, currency) => {
       }`
     );
   if (overdueCount > 0) parts.push(`${overdueCount} en retard`);
+  if (potentialCount > 0)
+    parts.push(
+      `${potentialCount} élément${potentialCount > 1 ? "s" : ""} potentiel${
+        potentialCount > 1 ? "s" : ""
+      }`
+    );
   if (day && day.forecastRemaining !== null)
     parts.push(
       `reste prévisionnel ${formatMoney(day.forecastRemaining, currency)}`
@@ -98,13 +118,33 @@ const cellLabel = (date, day, pendingCount, overdueCount, currency) => {
 };
 
 function Calendrier() {
+  const simulation = useSimulation();
   const today = parisToday();
   const [month, setMonth] = useState(today.slice(0, 7));
   const [selectedDate, setSelectedDate] = useState(null);
   const [mode, setMode] = useState(readMode);
-  const [form, setForm] = useState(null);
+  const [form, setFormValue] = useState(null);
+  const setForm = (value) => {
+    setFormValue(value);
+    simulation.setActiveForm(value ? "calendar" : null);
+  };
+  const visibleForm =
+    !simulation.available || simulation.activeForm === "calendar" ? form : null;
   const budget = useBudgetCalendar(month, selectedDate);
   const events = useMonthlyEvents(month);
+  const announcesSummaryLoading = useAnnouncesLoading(
+    budget.summaryStatus,
+    month
+  );
+  const announcesOperationsLoading = useAnnouncesLoading(
+    budget.operationsStatus,
+    `${month}:${selectedDate}`
+  );
+  // Garder le déclencheur focalisable pendant les actualisations suivantes.
+  const [eventsLoaded, setEventsLoaded] = useState(false);
+  useEffect(() => {
+    if (events.status === "success") setEventsLoaded(true);
+  }, [events.status]);
   const days = useMemo(() => calendarDays(month), [month]);
 
   useEffect(() => {
@@ -142,7 +182,10 @@ function Calendrier() {
     [budget.categories]
   );
   const currency = budget.summary?.currency || "EUR";
-  const isSaving = budget.mutationStatus === "loading";
+  const isSaving =
+    budget.mutationStatus === "loading" ||
+    events.mutationStatus === "loading" ||
+    simulation.mutationStatus === "loading";
 
   const changeMonth = (offset) => {
     setMonth(shiftMonth(month, offset));
@@ -194,6 +237,12 @@ function Calendrier() {
             </button>
           )}
         </div>
+        <Link
+          className="monthly-event-button monthly-event-button--secondary"
+          to="/prochains-mois"
+        >
+          Prochains mois
+        </Link>
       </header>
 
       <LiveMessage
@@ -202,10 +251,18 @@ function Calendrier() {
         className="monthly-events-message"
         errorClassName="monthly-events-message--error"
       />
+      <LiveMessage
+        message={events.message || ""}
+        isError={events.status === "error" || events.mutationStatus === "error"}
+        className="monthly-events-message"
+        errorClassName="monthly-events-message--error"
+      />
 
+      {/* Une actualisation n'annonce que son résultat, pas le chargement
+          (#171). */}
       <LiveMessage
         message={
-          budget.summaryStatus === "loading"
+          announcesSummaryLoading
             ? "Calcul de votre budget…"
             : budget.summaryStatus === "error"
             ? "Votre budget n’a pas pu être calculé."
@@ -220,6 +277,7 @@ function Calendrier() {
         month={month}
         onRetry={budget.retry}
       />
+      <SimulationPanel month={month} disabled={isSaving} />
 
       <div className="budget-calendar__layout">
         <section
@@ -237,6 +295,11 @@ function Calendrier() {
               const day = summaryDays.get(date);
               const inMonth = date.startsWith(month);
               const pendingItems = pendingByDate.get(date) || [];
+              const potentialCount = simulation.enabled
+                ? (occurrencesByDate.get(date) || []).filter(
+                    (item) => item.status === "POTENTIEL"
+                  ).length
+                : 0;
               const overdueCount = pendingItems.filter(
                 (item) => item.overdue
               ).length;
@@ -244,6 +307,7 @@ function Calendrier() {
               const plannedCount = budget.summary
                 ? Math.max(pendingItems.length, day?.plannedCount ?? 0)
                 : (occurrencesByDate.get(date) || []).length;
+              const confirmedCount = Math.max(0, plannedCount - potentialCount);
               const hasOperation =
                 day && (Number(day.expense) > 0 || Number(day.income) > 0);
               const value = inMonth ? cellValue(mode, day) : null;
@@ -266,9 +330,10 @@ function Calendrier() {
                   aria-label={cellLabel(
                     date,
                     inMonth ? day : null,
-                    plannedCount,
+                    confirmedCount,
                     overdueCount,
-                    currency
+                    currency,
+                    potentialCount
                   )}
                 >
                   <span className="budget-day__number">
@@ -290,8 +355,11 @@ function Calendrier() {
                     {hasOperation && inMonth && (
                       <span className="budget-marker budget-marker--real" />
                     )}
-                    {plannedCount > 0 && inMonth && (
+                    {confirmedCount > 0 && inMonth && (
                       <span className="budget-marker budget-marker--planned" />
+                    )}
+                    {potentialCount > 0 && inMonth && (
+                      <span className="budget-marker budget-marker--potential" />
                     )}
                     {overdueCount > 0 && (
                       <span className="budget-marker budget-marker--overdue">
@@ -304,6 +372,15 @@ function Calendrier() {
             })}
           </div>
           <ul className="budget-legend" aria-label="Légende">
+            {simulation.enabled && (
+              <li>
+                <span
+                  className="budget-marker budget-marker--potential"
+                  aria-hidden="true"
+                />
+                Élément potentiel
+              </li>
+            )}
             <li>
               <span
                 className="budget-marker budget-marker--real"
@@ -348,7 +425,7 @@ function Calendrier() {
         </section>
       </div>
 
-      {form?.type === "realize" && (
+      {visibleForm?.type === "realize" && (
         <RealizeOccurrenceForm
           occurrence={form.occurrence}
           categories={budget.categories}
@@ -365,7 +442,7 @@ function Calendrier() {
           }}
         />
       )}
-      {form?.type === "create" && (
+      {visibleForm?.type === "create" && (
         <OneOffOperationForm
           categories={budget.categories}
           initialDate={defaultOperationDate}
@@ -373,6 +450,37 @@ function Calendrier() {
           onCancel={closeForm}
           onSave={async (operation) => {
             if (await budget.createOperation(operation)) closeForm();
+          }}
+        />
+      )}
+      {visibleForm?.type === "create-event" && (
+        <MonthlyEventForm
+          initialDate={defaultOperationDate}
+          isSaving={isSaving}
+          onCancel={closeForm}
+          onSave={async (event) => {
+            if (await events.createEvent(event)) {
+              await budget.retry();
+              closeForm();
+            }
+          }}
+        />
+      )}
+      {visibleForm?.type === "create-potential" && (
+        <MonthlyEventForm
+          initialDate={defaultOperationDate}
+          formTitle="Ajouter un élément potentiel"
+          minStartDate={`${today.slice(0, 7)}-01`}
+          isSaving={isSaving}
+          onCancel={closeForm}
+          onSave={async (event) => {
+            if (
+              await simulation.mutate(
+                () => monthlyEventsService.createPotentialEvent(event),
+                "Élément potentiel enregistré. Activez la Simulation pour voir son effet."
+              )
+            )
+              closeForm();
           }}
         />
       )}
@@ -388,6 +496,13 @@ function Calendrier() {
               : `Opérations de ${monthLabel(month)}`}
           </h2>
           <div className="budget-operations__actions">
+            <PlanningActions
+              onOperation={() => setForm({ type: "create" })}
+              onEvent={() => setForm({ type: "create-event" })}
+              onPotential={() => setForm({ type: "create-potential" })}
+              disabled={isSaving}
+              eventDisabled={isSaving || !eventsLoaded}
+            />
             {selectedDate && (
               <button
                 type="button"
@@ -397,20 +512,12 @@ function Calendrier() {
                 Tout le mois
               </button>
             )}
-            <button
-              type="button"
-              className="monthly-event-button"
-              onClick={() => setForm({ type: "create" })}
-              disabled={isSaving}
-            >
-              Ajouter une opération
-            </button>
           </div>
         </div>
         {/* Annonces dans des régions live toujours montées (#164). */}
         <LiveMessage
           message={
-            budget.operationsStatus === "loading"
+            announcesOperationsLoading
               ? "Chargement des opérations…"
               : budget.operationsStatus === "error"
               ? "Les opérations n’ont pas pu être chargées."
