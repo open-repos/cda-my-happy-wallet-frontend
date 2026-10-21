@@ -164,9 +164,19 @@ export const useBudgetCalendar = (
     // `reload` : « Réessayer » relance aussi les catégories après un échec.
   }, [operations, reload]);
 
-  // Retour sur l'onglet : catégories relues sans bruit (modifiées depuis
-  // l'écran des catégories). Le premier focus suit le chargement initial.
+  // Retour sur l'onglet : catégories, synthèse et file relues sans bruit
+  // (catégories modifiées, événements créés ou supprimés depuis un autre
+  // écran, #225). L'affichage reste en place ; un échec garde les données
+  // déjà affichées. Le premier focus suit le chargement initial.
   const hasFocused = useRef(false);
+  // Lus via des refs : l'effet ne doit se relancer qu'au retour sur
+  // l'onglet, pas à chaque changement de mois ou relance.
+  const focusedMonth = useRef(month);
+  const focusedSummaryKey = useRef(summaryKey);
+  useEffect(() => {
+    focusedMonth.current = month;
+    focusedSummaryKey.current = summaryKey;
+  }, [month, summaryKey]);
   useFocusEffect(
     useCallback(() => {
       if (!hasFocused.current) {
@@ -180,10 +190,30 @@ export const useBudgetCalendar = (
           if (isActive) setCategories(next);
         })
         .catch(() => {});
+      const refreshedKey = focusedSummaryKey.current;
+      Promise.all([
+        budget.getMonth(focusedMonth.current),
+        occurrences.listPending(monthBounds(focusedMonth.current).to),
+      ])
+        .then(([summary, pending]) => {
+          if (!isActive) return;
+          setSummaryResult((current) =>
+            current?.key === refreshedKey
+              ? {
+                  ...current,
+                  status: summary === null ? "future" : "success",
+                  summary,
+                  pending,
+                  pendingError: false,
+                }
+              : current,
+          );
+        })
+        .catch(() => {});
       return () => {
         isActive = false;
       };
-    }, [operations]),
+    }, [budget, occurrences, operations]),
   );
 
   const current =
