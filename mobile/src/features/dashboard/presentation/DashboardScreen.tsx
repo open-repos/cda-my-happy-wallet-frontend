@@ -176,6 +176,12 @@ export const DashboardScreen = () => {
             onPress={() => router.push("/(app)/operations")}
           />
           <ActionCard
+            description="Anticipez le solde et le disponible des mois à venir."
+            icon="trending-up-outline"
+            label="Prochains mois"
+            onPress={() => router.push("/(app)/upcoming-months")}
+          />
+          <ActionCard
             description="Préparez vos projets et suivez leur avancement."
             icon="radio-button-on-outline"
             label="Objectifs"
