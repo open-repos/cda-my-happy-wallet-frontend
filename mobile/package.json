@@ -59,7 +59,7 @@
     "expo-doctor": "1.20.1",
     "prettier": "3.6.2",
     "typescript": "~6.0.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   },
   "private": true
 }
