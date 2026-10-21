@@ -57,12 +57,23 @@ const testApiResponse = (pathname, searchParams) => {
   if (pathname.endsWith("/goals")) {
     return {
       data: [
+        // DTO complet (#226) : l'écran Objectifs lit aussi la prévision.
         {
           id: 1,
           title: "Voyage",
           currency: "EUR",
           savedAmount: "250.00",
           targetAmount: "1000.00",
+          monthlyContribution: "150.00",
+          targetDate: "2027-06-30",
+          forecast: {
+            contributionsNeeded: 5,
+            estimatedReachMonth: "2027-03",
+            referenceMonth: "2026-10",
+            remainingAmount: "750.00",
+            requiredMonthlyContribution: "150.00",
+            status: "ON_TRACK",
+          },
         },
       ],
       meta: noNextPage,
@@ -334,11 +345,64 @@ const handleEventCommand = (request, response, pathname) => {
   return true;
 };
 
+/**
+ * Commandes des objectifs (#226), sans état : la création et la
+ * modification renvoient le corps reçu avec une prévision ; un titre
+ * « Panne » échoue côté serveur, « Refus » est refusé (422).
+ */
+const handleGoalCommand = (request, response, pathname) => {
+  const match = /\/v1\/goals(?:\/(\d+))?$/.exec(pathname);
+  if (match == null || !["POST", "PUT", "DELETE"].includes(request.method)) {
+    return false;
+  }
+  const id = match[1] == null ? null : Number(match[1]);
+  if (request.method === "DELETE") {
+    sendJson(response, 204, null);
+    return true;
+  }
+  const chunks = [];
+  request.on("data", (chunk) => chunks.push(chunk));
+  request.on("end", () => {
+    let body;
+    try {
+      body = JSON.parse(Buffer.concat(chunks).toString() || "{}");
+    } catch {
+      sendJson(response, 422, { error: { type: "ValidationFailed" } });
+      return;
+    }
+    if (body.title === "Panne") {
+      sendJson(response, 500, { error: { type: "InternalServerError" } });
+      return;
+    }
+    // Refus de validation backend (#226) : un titre « Refus » renvoie 422.
+    if (body.title === "Refus") {
+      sendJson(response, 422, { error: { type: "ValidationFailed" } });
+      return;
+    }
+    sendJson(response, request.method === "POST" ? 201 : 200, {
+      data: {
+        id: id ?? 40,
+        ...body,
+        forecast: {
+          contributionsNeeded: null,
+          estimatedReachMonth: null,
+          referenceMonth: "2026-10",
+          remainingAmount: body.targetAmount,
+          requiredMonthlyContribution: null,
+          status: "NO_DEADLINE",
+        },
+      },
+    });
+  });
+  return true;
+};
+
 createServer((request, response) => {
   const url = new URL(request.url ?? "/", "http://localhost");
   const pathname = url.pathname;
   if (handleCategoryCommand(request, response, pathname)) return;
   if (handleEventCommand(request, response, pathname)) return;
+  if (handleGoalCommand(request, response, pathname)) return;
   if (pathname === "/health/ready") {
     response.writeHead(200, {
       "Cache-Control": "no-store",

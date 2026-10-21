@@ -417,3 +417,104 @@ test("manages monthly events from the objectives tab (#225)", async ({
   await expect(page.getByText("Événement supprimé.")).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
+
+test("manages financial goals from the objectives tab (#226)", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.getByRole("tab", { name: "Objectifs et événements" }).click();
+  await expect(
+    page.getByText("Objectifs financiers", { exact: true }),
+  ).toBeVisible();
+  // Progression exposée en valeur, pas seulement par la barre.
+  const progress = page.getByRole("progressbar", {
+    name: /^25 % de l’objectif Voyage atteint/,
+  });
+  await expect(progress).toHaveAttribute("aria-valuenow", "25");
+  await expect(progress).toHaveAttribute("aria-valuemax", "100");
+  await expect(
+    page.getByText(
+      "À ce rythme, objectif atteint en mars 2027, avant la date souhaitée.",
+    ),
+  ).toBeVisible();
+  await expect(page.getByText("Dans les temps", { exact: true })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  await page.getByRole("button", { name: "Ajouter un objectif" }).click();
+  await page.getByLabel("Titre", { exact: true }).fill("A");
+  await page.getByLabel("Montant cible en euros").fill("0");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(
+    page.getByText("Le titre doit contenir entre 2 et 50 caractères."),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "Saisissez un montant cible positif, par exemple 1200 ou 1200,50.",
+    ),
+  ).toBeVisible();
+  await page.getByLabel("Titre", { exact: true }).fill("Vélo");
+  await page.getByLabel("Montant cible en euros").fill("1200,5");
+  await page.getByLabel("Versement mensuel prévu en euros").fill("75");
+  await expect(page.getByRole("radio", { name: "Sans date" })).toBeChecked();
+  const created = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" &&
+      new URL(request.url()).pathname.endsWith("/goals"),
+  );
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  expect((await created).postDataJSON()).toEqual({
+    title: "Vélo",
+    targetAmount: "1200.50",
+    savedAmount: "0.00",
+    monthlyContribution: "75.00",
+    currency: "EUR",
+    targetDate: null,
+  });
+  await expect(page.getByText("Objectif ajouté.")).toBeVisible();
+
+  // Échec affiché dans le formulaire, qui reste ouvert.
+  await page
+    .getByRole("button", { name: "Modifier l’objectif Voyage" })
+    .click();
+  await expect(
+    page.getByRole("radio", { name: "Avant une date" }),
+  ).toBeChecked();
+  await page.getByLabel("Titre", { exact: true }).fill("Panne");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(
+    page.getByText("L’objectif n’a pas pu être enregistré. Réessayez."),
+  ).toBeVisible();
+  // Refus de validation du backend : expliqué comme sur le Web.
+  await page.getByLabel("Titre", { exact: true }).fill("Refus");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(
+    page.getByText(
+      "Certaines valeurs sont refusées : vérifiez les montants et la date.",
+    ),
+  ).toBeVisible();
+  await page.getByLabel("Titre", { exact: true }).fill("Voyage");
+  const updated = page.waitForRequest(
+    (request) =>
+      request.method() === "PUT" &&
+      new URL(request.url()).pathname.endsWith("/goals/1"),
+  );
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  expect((await updated).postDataJSON()).toMatchObject({
+    title: "Voyage",
+    targetDate: "2027-06-30",
+  });
+  await expect(page.getByText("Objectif modifié.")).toBeVisible();
+
+  await page
+    .getByRole("button", { name: "Modifier l’objectif Voyage" })
+    .click();
+  await page.getByRole("button", { name: "Supprimer", exact: true }).click();
+  const deleted = page.waitForRequest(
+    (request) =>
+      request.method() === "DELETE" &&
+      new URL(request.url()).pathname.endsWith("/goals/1"),
+  );
+  await page.getByRole("button", { name: "Oui, supprimer" }).click();
+  await deleted;
+  await expect(page.getByText("Objectif supprimé.")).toBeVisible();
+});

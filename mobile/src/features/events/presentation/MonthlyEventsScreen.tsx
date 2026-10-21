@@ -1,5 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useMemo, useState } from "react";
+import { useLocalSearchParams } from "expo-router";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 // Barre d'état Android comme encoche iOS (#147).
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -12,6 +13,7 @@ import {
   EventDraft,
   MonthlyEvent,
 } from "@/src/features/events/domain/monthlyEvent";
+import { FinancialGoalsSection } from "@/src/features/goals/presentation/FinancialGoalsSection";
 import { HttpMonthlyEventsGateway } from "@/src/features/events/infrastructure/HttpMonthlyEventsGateway";
 import { MonthlyEventCard } from "@/src/features/events/presentation/MonthlyEventCard";
 import { MonthlyEventFormModal } from "@/src/features/events/presentation/MonthlyEventFormModal";
@@ -21,10 +23,12 @@ const colors = themes.light.color;
 const semibold = `${primitives.fontWeight.semibold}` as "600";
 
 /**
- * Onglet « Objectifs et événements » : événements mensuels (#225). Les
- * objectifs financiers rejoindront cet écran avec #226.
+ * Onglet « Objectifs et événements » : objectifs financiers (#226) puis
+ * événements mensuels (#225). `ajuster` ouvre un objectif en modification.
  */
 export const MonthlyEventsScreen = () => {
+  const { ajuster } = useLocalSearchParams<{ ajuster?: string }>();
+  const adjustedGoalId = Number(ajuster) > 0 ? Number(ajuster) : null;
   const { httpClient } = useAuth();
   const gateway = useMemo(
     () => new HttpMonthlyEventsGateway(httpClient),
@@ -63,36 +67,6 @@ export const MonthlyEventsScreen = () => {
     if (await state.deleteEvent(editedEvent.id)) closeForm();
   };
 
-  if (state.status === "loading" && state.events.length === 0) {
-    return (
-      <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
-        <View style={styles.centeredState}>
-          <FeedbackState
-            description="Vos événements mensuels sont en cours de chargement."
-            kind="loading"
-            title="Chargement des événements"
-          />
-        </View>
-      </SafeAreaView>
-    );
-  }
-  if (state.status === "error" && state.events.length === 0) {
-    return (
-      <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
-        <View style={styles.centeredState}>
-          <FeedbackState
-            actions={[
-              { label: "Réessayer", onPress: () => void state.retry() },
-            ]}
-            description={state.loadError}
-            kind="error"
-            title="Événements indisponibles"
-          />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
       <FlatList
@@ -111,6 +85,10 @@ export const MonthlyEventsScreen = () => {
             </Text>
             <Text style={styles.subtitle}>
               Anticipez les entrées et dépenses qui influenceront votre budget.
+            </Text>
+            <FinancialGoalsSection initialGoalId={adjustedGoalId} />
+            <Text accessibilityRole="header" style={styles.sectionTitle}>
+              Événements mensuels
             </Text>
             <Pressable
               accessibilityRole="button"
@@ -136,19 +114,35 @@ export const MonthlyEventsScreen = () => {
                 {state.message}
               </FeedbackBanner>
             ) : null}
-            <Text accessibilityRole="header" style={styles.sectionTitle}>
-              Événements mensuels
-            </Text>
           </View>
         }
+        // États des événements dans la liste : les objectifs, au-dessus,
+        // restent visibles pendant un chargement ou un échec.
         ListEmptyComponent={
-          <FeedbackState
-            actions={[{ label: "Ajouter un événement", onPress: openCreate }]}
-            description="Ajoutez un loyer, une assurance ou une rentrée prévue : elle apparaîtra dans votre calendrier."
-            icon="calendar-outline"
-            kind="empty"
-            title="Aucun événement prévu"
-          />
+          state.status === "loading" ? (
+            <FeedbackState
+              description="Vos événements mensuels sont en cours de chargement."
+              kind="loading"
+              title="Chargement des événements"
+            />
+          ) : state.status === "error" ? (
+            <FeedbackState
+              actions={[
+                { label: "Réessayer", onPress: () => void state.retry() },
+              ]}
+              description={state.loadError}
+              kind="error"
+              title="Événements indisponibles"
+            />
+          ) : (
+            <FeedbackState
+              actions={[{ label: "Ajouter un événement", onPress: openCreate }]}
+              description="Ajoutez un loyer, une assurance ou une rentrée prévue : elle apparaîtra dans votre calendrier."
+              icon="calendar-outline"
+              kind="empty"
+              title="Aucun événement prévu"
+            />
+          )
         }
         renderItem={({ item }) => (
           <MonthlyEventCard event={item} onEdit={openEdit} />
@@ -223,9 +217,4 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.8 },
   separator: { height: primitives.space["3"] },
-  centeredState: {
-    flex: 1,
-    justifyContent: "center",
-    padding: primitives.space["6"],
-  },
 });
