@@ -79,6 +79,41 @@ const testApiResponse = (pathname, searchParams) => {
       meta: noNextPage,
     };
   }
+  // Analyses (#215) : catégories et mois ; les entrées du mois sont vides.
+  if (pathname.endsWith("/analytics/operations")) {
+    const groupBy = searchParams.get("groupBy") ?? "category";
+    const kind = searchParams.get("kind");
+    const empty = kind === "ENTREE";
+    const totals = (key, label, color, expense, income) => ({
+      color,
+      count: empty ? 0 : 2,
+      expense: empty ? "0.00" : expense,
+      income: empty ? "0.00" : income,
+      key,
+      label,
+      net: empty ? "0.00" : (Number(income) - Number(expense)).toFixed(2),
+    });
+    const buckets =
+      groupBy === "category"
+        ? [
+            totals("5", "Transport", null, "12.00", "0.00"),
+            totals("4", "Alimentation", "#EA7C69", "42.50", "0.00"),
+          ]
+        : [
+            totals("2026-08", null, null, "120.00", "200.00"),
+            totals("2026-09", null, null, "300.00", "150.00"),
+          ];
+    return {
+      data: {
+        buckets,
+        currency: "EUR",
+        from: searchParams.get("from"),
+        groupBy,
+        to: searchParams.get("to"),
+        ...(kind ? { kind } : {}),
+      },
+    };
+  }
   // Prochains mois (#214) : mois construits à partir de la requête ; le
   // deuxième mois est en solde négatif.
   if (pathname.endsWith("/budget-forecast")) {
