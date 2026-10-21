@@ -7,6 +7,25 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-21
+
+### Added
+
+- Added explicit budget simulation across forecasts and savings capacity, with potential event management, confirmation and automatic expiry information (#130).
+- Added weekly, quarterly and annual event choices with optional inclusive end dates and preserved the dated occurrences returned by the API (#192).
+- Added a twelve-month budget forecast with an accessible chart and data table, explicit negative balances and links from the home page and calendar (#193).
+- Added a savings capacity summary with backend sustainability explanations, monthly/weekly/daily allowances and direct goal editing (#194).
+
+### Fixed
+
+- Corrected unavailable icon descriptions and search result counts in the Web and mobile category icon pickers (#152).
+- Fixed truncated mobile tab bar labels with large system font sizes: labels now scale up to 1.3 and shrink to fit on one line (#155).
+- Fixed screen-reader announcements on the calendar, objectives and simulation sections: refreshing data that is already displayed (after a change, a simulation update or a return to the tab) now announces only its outcome, and the spinner and Analyses states use always-mounted live regions (#171).
+
+### Security
+
+- Updated transitive mobile dependencies (shell-quote, js-yaml, @xmldom/xmldom, brace-expansion, source-map-js and the vite development server) to their latest compatible patch or minor versions (#205).
+
 ## [1.1.1] - 2026-10-19
 
 ### Fixed
@@ -101,7 +120,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Replaced dynamic SSH host discovery with a pre-verified `known_hosts` file.
 - Isolated SSH credentials from validation and build jobs.
 
-[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.1.1...develop
+[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.2.0...develop
+[1.2.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.1.1...v1.2.0
 [1.1.1]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.1.0...v1.1.1
 [1.1.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.0.0...v1.1.0
 [1.0.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/commits/v1.0.0
