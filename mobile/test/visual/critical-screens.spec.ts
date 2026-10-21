@@ -518,3 +518,44 @@ test("manages financial goals from the objectives tab (#226)", async ({
   await deleted;
   await expect(page.getByText("Objectif supprimé.")).toBeVisible();
 });
+
+test("shows upcoming months from the dashboard and the calendar (#214)", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.getByRole("button", { name: /Prochains mois/ }).click();
+  // Les onglets restent montés : « Prochains mois » existe aussi sur
+  // l'accueil, d'où un texte propre à l'écran.
+  await expect(
+    page.getByText("Horizon de prévision", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("radio", { name: "6 mois" })).toBeChecked();
+  await expect(
+    page.getByText("Reste de fin de mois", { exact: true }),
+  ).toHaveCount(6);
+  // Mois négatif : signalé par un texte, pas seulement par la couleur.
+  await expect(page.getByText("Solde négatif", { exact: true })).toHaveCount(1);
+  await expect(page.getByText(/^-35,50\s€$/)).toBeVisible();
+  await expect(
+    page.getByText(/^Les mois signalés « Solde négatif »/),
+  ).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  const shorter = page.waitForRequest(
+    (request) =>
+      new URL(request.url()).pathname.endsWith("/budget-forecast") &&
+      new URL(request.url()).searchParams.get("months") === "3",
+  );
+  await page.getByRole("radio", { name: "3 mois" }).click();
+  await shorter;
+  await expect(
+    page.getByText("Reste de fin de mois", { exact: true }),
+  ).toHaveCount(3);
+
+  await page.getByRole("link", { name: "Retour" }).click();
+  await page.getByRole("tab", { name: "Calendrier" }).click();
+  await page.getByRole("link", { name: "Prochains mois" }).click();
+  await expect(
+    page.getByText("Horizon de prévision", { exact: true }),
+  ).toBeVisible();
+});

@@ -79,6 +79,44 @@ const testApiResponse = (pathname, searchParams) => {
       meta: noNextPage,
     };
   }
+  // Prochains mois (#214) : mois construits à partir de la requête ; le
+  // deuxième mois est en solde négatif.
+  if (pathname.endsWith("/budget-forecast")) {
+    const from = searchParams.get("from") ?? "2026-10";
+    const count = Number(searchParams.get("months") ?? 12);
+    const shift = (offset) => {
+      const index =
+        Number(from.slice(0, 4)) * 12 + Number(from.slice(5, 7)) - 1 + offset;
+      return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}`;
+    };
+    return {
+      data: {
+        currency: "EUR",
+        currentRealRemaining: "1337.50",
+        from,
+        months: Array.from({ length: count }, (_, index) => {
+          const negative = index === 1;
+          return {
+            base: "1300.00",
+            carryIn: index === 0 ? "1337.50" : "420.00",
+            fixedExpense: "1200.00",
+            fixedIncome: "2500.00",
+            forecastRemaining: negative ? "-35.50" : "1430.00",
+            forecastResult: negative ? "-455.50" : "1030.00",
+            goalSavings: "150.00",
+            month: shift(index),
+            plannedExpense: negative ? "1605.50" : "120.00",
+            plannedIncome: "0.00",
+            prudentDailyAllowance: negative ? "0.00" : "46.12",
+            prudentMonthlyAllowance: negative ? "0.00" : "1430.00",
+            prudentWeeklyAllowance: negative ? "0.00" : "322.84",
+            remainingDays: 30,
+          };
+        }),
+        referenceDate: `${from}-01`,
+      },
+    };
+  }
   const summary = /\/budget-periods\/(\d{4}-\d{2})\/summary$/.exec(pathname);
   if (summary != null) {
     return {
