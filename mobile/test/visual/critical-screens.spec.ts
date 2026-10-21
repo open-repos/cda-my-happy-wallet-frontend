@@ -178,6 +178,48 @@ test("manages categories from the operations screen", async ({ page }) => {
   await categoriesReloaded;
 });
 
+test("describes retired icons and counts only search matches", async ({
+  page,
+}) => {
+  await page.route("**/operation-categories?*", async (route) => {
+    await route.fulfill({
+      json: {
+        data: [
+          { color: "#EA7C69", icon: "solid:zz-retired", id: 4, name: "Ancien" },
+          { color: null, icon: "solid:bus", id: 5, name: "Transport" },
+        ],
+        meta: { hasNext: false, limit: 100, nextCursor: null },
+      },
+    });
+  });
+  await signIn(page);
+  await page.getByRole("tab", { name: "Opérations ponctuelles" }).click();
+  await page.getByRole("link", { name: "Gérer les catégories" }).click();
+  await page.getByRole("button", { name: "Modifier Ancien" }).click();
+  await expect(
+    page.getByLabel("Aperçu : Ancien, icône indisponible, pastille de couleur"),
+  ).toBeVisible();
+  const retired = page.getByRole("radio", {
+    name: "icône indisponible, pastille de couleur",
+  });
+  await expect(retired).toBeChecked();
+  await page.getByLabel("Rechercher une icône").fill("zzzz-none");
+  await expect(
+    page.getByText("Aucune icône ne correspond à « zzzz-none ».", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(retired).toBeChecked();
+
+  await page.getByRole("button", { name: "Fermer le formulaire" }).click();
+  await page.getByRole("button", { name: "Modifier Transport" }).click();
+  await page.getByLabel("Rechercher une icône").fill("courses");
+  await expect(
+    page.getByText("1 icône proposée.", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("radio", { name: "bus (plein)" })).toBeChecked();
+});
+
 test("exposes the checked state of every radio option", async ({ page }) => {
   // Date figée : la file des événements du calendrier est déterministe.
   await page.clock.setFixedTime(new Date("2026-10-11T10:00:00+02:00"));
