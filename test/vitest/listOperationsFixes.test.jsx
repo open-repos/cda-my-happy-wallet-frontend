@@ -4,11 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useDispatch, useSelector } from "react-redux";
 import ListOperationsFIxes from "../../src/js/components/OperationsFixes/ListOperationsFIxes";
 
-// L'avertissement defaultProps de react-fontawesome 0.1 est traité à part :
-// ce test vérifie le composant et son tableau (#211).
-vi.mock("@fortawesome/react-fontawesome", () => ({
-  FontAwesomeIcon: () => <svg aria-hidden="true" />,
-}));
 vi.mock("react-redux", () => ({
   useDispatch: vi.fn(),
   useSelector: vi.fn(),
