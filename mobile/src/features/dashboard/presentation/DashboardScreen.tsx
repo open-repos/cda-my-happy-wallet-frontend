@@ -182,6 +182,12 @@ export const DashboardScreen = () => {
             onPress={() => router.push("/(app)/upcoming-months")}
           />
           <ActionCard
+            description="Explorez vos dépenses et entrées par catégorie ou dans le temps."
+            icon="bar-chart-outline"
+            label="Analyses"
+            onPress={() => router.push("/(app)/analyses")}
+          />
+          <ActionCard
             description="Préparez vos projets et suivez leur avancement."
             icon="radio-button-on-outline"
             label="Objectifs"

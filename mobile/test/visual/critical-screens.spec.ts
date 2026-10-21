@@ -559,3 +559,42 @@ test("shows upcoming months from the dashboard and the calendar (#214)", async (
     page.getByText("Horizon de prévision", { exact: true }),
   ).toBeVisible();
 });
+
+test("explores analytics from the dashboard (#215)", async ({ page }) => {
+  await signIn(page);
+  await page.getByRole("button", { name: /Analyses/ }).click();
+  await expect(page.getByText("Indicateur", { exact: true })).toBeVisible();
+  await expect(page.getByRole("radio", { name: "Dépenses" })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "Catégorie" })).toBeChecked();
+  // Liste textuelle : catégories triées par montant, équivalent du graphique.
+  // Limitée au résultat : les onglets restent montés et l'accueil affiche
+  // aussi « Alimentation : 42,50 € ».
+  const result = page.getByTestId("analytics-result");
+  const details = result.getByText(/^(Alimentation|Transport) : /);
+  await expect(details).toHaveText([
+    /^Alimentation : 42,50\s€$/,
+    /^Transport : 12,00\s€$/,
+  ]);
+  await expectNoHorizontalOverflow(page);
+
+  // Solde net par mois : valeurs signées, ordre chronologique.
+  const byMonth = page.waitForRequest((request) => {
+    const url = new URL(request.url());
+    return (
+      url.pathname.endsWith("/analytics/operations") &&
+      url.searchParams.get("groupBy") === "month" &&
+      !url.searchParams.has("kind")
+    );
+  });
+  await page.getByRole("radio", { name: "Solde net" }).click();
+  await page.getByRole("radio", { name: "Mois", exact: true }).click();
+  await byMonth;
+  await expect(result.getByText(/^août 2026 : 80,00\s€$/)).toBeVisible();
+  await expect(result.getByText(/^sept\.? 2026 : -150,00\s€$/)).toBeVisible();
+
+  // Entrées sans opération : état vide.
+  await page.getByRole("radio", { name: "Entrées" }).click();
+  await expect(
+    page.getByText("Aucune opération sur cette période.", { exact: true }),
+  ).toBeVisible();
+});

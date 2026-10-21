@@ -107,6 +107,7 @@ export default function AppLayout() {
       <Tabs.Screen name="fixed-budget" options={{ href: null }} />
       <Tabs.Screen name="categories" options={{ href: null }} />
       <Tabs.Screen name="upcoming-months" options={{ href: null }} />
+      <Tabs.Screen name="analyses" options={{ href: null }} />
     </Tabs>
   );
 }
