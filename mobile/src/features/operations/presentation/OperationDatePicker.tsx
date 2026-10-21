@@ -16,6 +16,8 @@ import {
 interface OperationDatePickerProps {
   disabled: boolean;
   invalid: boolean;
+  /** Nom lu par les lecteurs d'écran, « Date » par défaut. */
+  label?: string;
   value: string;
   onChange(value: string): void;
 }
@@ -27,6 +29,7 @@ const semibold = `${primitives.fontWeight.semibold}` as "600";
 export const OperationDatePicker = ({
   disabled,
   invalid,
+  label = "Date",
   value,
   onChange,
 }: OperationDatePickerProps) => {
@@ -64,7 +67,7 @@ export const OperationDatePicker = ({
     <>
       <View style={styles.fieldRow}>
         <Pressable
-          accessibilityLabel={`Date : ${longDate ?? "non renseignée"}. Ouvrir le calendrier`}
+          accessibilityLabel={`${label} : ${longDate ?? "non renseignée"}. Ouvrir le calendrier`}
           accessibilityRole="button"
           disabled={disabled}
           onPress={open}

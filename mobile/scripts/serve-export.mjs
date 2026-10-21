@@ -150,6 +150,37 @@ const testApiResponse = (pathname, searchParams) => {
       meta: noNextPage,
     };
   }
+  // Événements mensuels (#225) : l'annuel, créé sur le Web, doit garder sa
+  // répétition dans le formulaire mobile.
+  if (pathname.endsWith("/events")) {
+    return {
+      data: [
+        {
+          amount: "120.00",
+          currency: "EUR",
+          endDate: null,
+          id: 21,
+          kind: "DEPENSE",
+          recurrence: "MENSUELLE",
+          startDate: "2026-09-20",
+          status: "CONFIRME",
+          title: "Assurance",
+        },
+        {
+          amount: "880.00",
+          currency: "EUR",
+          endDate: "2028-10-15",
+          id: 22,
+          kind: "DEPENSE",
+          recurrence: "ANNUELLE",
+          startDate: "2026-10-15",
+          status: "CONFIRME",
+          title: "Taxe foncière",
+        },
+      ],
+      meta: noNextPage,
+    };
+  }
   if (pathname.endsWith("/operation-categories")) {
     return {
       // « Transport », sans couleur propre, prend la palette du thème (#172).
@@ -267,10 +298,47 @@ const handleCategoryCommand = (request, response, pathname) => {
   return true;
 };
 
+/**
+ * Commandes des événements mensuels (#225), sans état : la création et la
+ * modification renvoient le corps reçu, confirmé.
+ */
+const handleEventCommand = (request, response, pathname) => {
+  const match = /\/v1\/events(?:\/(\d+))?$/.exec(pathname);
+  if (match == null || !["POST", "PUT", "DELETE"].includes(request.method)) {
+    return false;
+  }
+  const id = match[1] == null ? null : Number(match[1]);
+  if (request.method === "DELETE") {
+    sendJson(response, 204, null);
+    return true;
+  }
+  const chunks = [];
+  request.on("data", (chunk) => chunks.push(chunk));
+  request.on("end", () => {
+    let body;
+    try {
+      body = JSON.parse(Buffer.concat(chunks).toString() || "{}");
+    } catch {
+      sendJson(response, 422, { error: { type: "ValidationFailed" } });
+      return;
+    }
+    // Panne simulée : un titre « Panne » échoue côté serveur.
+    if (body.title === "Panne") {
+      sendJson(response, 500, { error: { type: "InternalServerError" } });
+      return;
+    }
+    sendJson(response, request.method === "POST" ? 201 : 200, {
+      data: { id: id ?? 30, status: "CONFIRME", ...body },
+    });
+  });
+  return true;
+};
+
 createServer((request, response) => {
   const url = new URL(request.url ?? "/", "http://localhost");
   const pathname = url.pathname;
   if (handleCategoryCommand(request, response, pathname)) return;
+  if (handleEventCommand(request, response, pathname)) return;
   if (pathname === "/health/ready") {
     response.writeHead(200, {
       "Cache-Control": "no-store",

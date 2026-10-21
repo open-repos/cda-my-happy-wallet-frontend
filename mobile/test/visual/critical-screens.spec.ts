@@ -304,3 +304,116 @@ test("captures the budget calendar and its day filter", async ({ page }) => {
     page.getByText("Opérations du mois", { exact: true }),
   ).toBeVisible();
 });
+
+test("manages monthly events from the objectives tab (#225)", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.getByRole("tab", { name: "Objectifs et événements" }).click();
+  await expect(
+    page.getByText("Événements mensuels", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Assurance", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText(/^Chaque année · Du 15\/10\/2026 au 15\/10\/2028$/),
+  ).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  // Création : validations du Web, puis contrat de l'API.
+  await page.getByRole("button", { name: "Ajouter un événement" }).click();
+  await page.getByLabel("Titre", { exact: true }).fill("A");
+  await page.getByLabel("Montant en euros").fill("0");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(
+    page.getByText("Le titre doit contenir entre 2 et 50 caractères."),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Saisissez un montant positif avec deux décimales maximum."),
+  ).toBeVisible();
+  await page.getByLabel("Titre", { exact: true }).fill("Salaire");
+  await page.getByLabel("Montant en euros").fill("2100,5");
+  await page.getByRole("radio", { name: "Entrée" }).click();
+  await expect(page.getByRole("radio", { name: "Entrée" })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "Chaque mois" })).toBeChecked();
+  // Une fois / chaque mois seulement à la création (#216 pour le reste).
+  await expect(page.getByRole("radio", { name: "Chaque année" })).toHaveCount(
+    0,
+  );
+  await expect(
+    page.getByRole("radio", { name: "Sans date de fin" }),
+  ).toBeChecked();
+  const created = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" &&
+      new URL(request.url()).pathname.endsWith("/events"),
+  );
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  expect((await created).postDataJSON()).toMatchObject({
+    title: "Salaire",
+    amount: "2100.50",
+    currency: "EUR",
+    kind: "ENTREE",
+    recurrence: "MENSUELLE",
+    endDate: null,
+  });
+  await expect(page.getByText("Événement ajouté.")).toBeVisible();
+
+  // Modification d'un événement annuel du Web : sa répétition est conservée.
+  await page.getByRole("button", { name: "Modifier Taxe foncière" }).click();
+  await expect(page.getByRole("radio", { name: "Chaque année" })).toBeChecked();
+  await expect(
+    page.getByRole("radio", { name: "Jusqu’à une date" }),
+  ).toBeChecked();
+  const updated = page.waitForRequest(
+    (request) =>
+      request.method() === "PUT" &&
+      new URL(request.url()).pathname.endsWith("/events/22"),
+  );
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  expect((await updated).postDataJSON()).toMatchObject({
+    recurrence: "ANNUELLE",
+    endDate: "2028-10-15",
+  });
+  await expect(page.getByText("Événement modifié.")).toBeVisible();
+
+  // Un échec d'enregistrement est affiché dans le formulaire, resté ouvert.
+  await page.getByRole("button", { name: "Modifier Taxe foncière" }).click();
+  await page.getByLabel("Titre", { exact: true }).fill("Panne");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(
+    page.getByText("L’événement n’a pas pu être enregistré. Réessayez."),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Fermer le formulaire" }),
+  ).toBeVisible();
+  // « Une seule fois » retire la date de fin de l'envoi.
+  await page.getByLabel("Titre", { exact: true }).fill("Taxe foncière");
+  await page.getByRole("radio", { name: "Une seule fois" }).click();
+  await expect(
+    page.getByRole("radio", { name: "Sans date de fin" }),
+  ).toHaveCount(0);
+  const once = page.waitForRequest(
+    (request) =>
+      request.method() === "PUT" &&
+      new URL(request.url()).pathname.endsWith("/events/22"),
+  );
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  expect((await once).postDataJSON()).toMatchObject({
+    recurrence: "AUCUNE",
+    endDate: null,
+  });
+  await expect(page.getByText("Événement modifié.")).toBeVisible();
+
+  // Suppression confirmée dans le formulaire.
+  await page.getByRole("button", { name: "Modifier Assurance" }).click();
+  await page.getByRole("button", { name: "Supprimer", exact: true }).click();
+  const deleted = page.waitForRequest(
+    (request) =>
+      request.method() === "DELETE" &&
+      new URL(request.url()).pathname.endsWith("/events/21"),
+  );
+  await page.getByRole("button", { name: "Oui, supprimer" }).click();
+  await deleted;
+  await expect(page.getByText("Événement supprimé.")).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});
