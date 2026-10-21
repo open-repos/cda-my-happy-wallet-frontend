@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSimulation } from "./SimulationContext";
 import { SimulationReadout } from "./SimulationControls";
+import { useAnnouncesLoading } from "../../hooks/useAnnouncesLoading";
 import { usePotentialEvents } from "../../hooks/usePotentialEvents";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import { monthlyEventsService } from "../../services/monthlyEventsService";
@@ -55,6 +56,11 @@ const Confirmation = ({ title, label, disabled, onConfirm, onCancel }) => {
 export const SimulationPanel = ({ month, disabled = false }) => {
   const state = useSimulation();
   const potentials = usePotentialEvents();
+  // Une actualisation après modification n'annonce que son résultat (#171).
+  const announcesPotentials = useAnnouncesLoading(
+    potentials.status,
+    "potentials"
+  );
   const [pending, setPending] = useState(null);
   const [edited, setEdited] = useState(null);
   const busy = disabled || state.mutationStatus === "loading";
@@ -102,7 +108,7 @@ export const SimulationPanel = ({ month, disabled = false }) => {
       />
       <LiveMessage
         message={
-          potentials.status === "loading"
+          announcesPotentials
             ? "Chargement des éléments potentiels…"
             : potentials.status === "error"
             ? "Les éléments potentiels n’ont pas pu être chargés."

@@ -155,13 +155,57 @@ describe("monthly event pages", () => {
     expect(useMonthlyEvents).toHaveBeenCalled();
   });
 
-  it("announces the events loading in a region mounted beforehand (#164)", async () => {
+  it("announces the first events loading in a region mounted beforehand (#164)", async () => {
+    // Page ouverte pendant le chargement : la région est montée vide et
+    // reçoit le texte au tick suivant.
+    useMonthlyEvents.mockReturnValue({ ...state, status: "loading" });
     const { rerender } = render(<Objectifs />);
     const captured = captureLiveRegions();
+    await expectAnnouncedIn(captured, "status", "Chargement des événements…");
 
+    // Après un échec, la relance annonce de nouveau le chargement (#171).
+    useMonthlyEvents.mockReturnValue({ ...state, status: "error" });
+    rerender(<Objectifs />);
+    useMonthlyEvents.mockReturnValue({ ...state, status: "success" });
+    rerender(<Objectifs />);
+    useMonthlyEvents.mockReturnValue({ ...state, status: "error" });
+    rerender(<Objectifs />);
     useMonthlyEvents.mockReturnValue({ ...state, status: "loading" });
     rerender(<Objectifs />);
     await expectAnnouncedIn(captured, "status", "Chargement des événements…");
+  });
+
+  it("does not announce the refresh that follows a mutation (#171)", async () => {
+    // Premier chargement, puis données affichées, comme le hook réel.
+    useMonthlyEvents.mockReturnValue({ ...state, status: "loading" });
+    const { rerender } = render(<Objectifs />);
+    const captured = captureLiveRegions();
+    useMonthlyEvents.mockReturnValue(state);
+    rerender(<Objectifs />);
+
+    useMonthlyEvents.mockReturnValue({
+      ...state,
+      status: "loading",
+      mutationStatus: "loading",
+    });
+    rerender(<Objectifs />);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    for (const region of screen.getAllByRole("status"))
+      expect(region).not.toHaveTextContent("Chargement des événements…");
+
+    // Succès rendu dans le même lot que le rechargement relancé par
+    // invalidate() : le hook réel renvoie alors status "loading".
+    useMonthlyEvents.mockReturnValue({
+      ...state,
+      status: "loading",
+      mutationStatus: "success",
+      message: "Événement ajouté.",
+    });
+    rerender(<Objectifs />);
+    await expectAnnouncedIn(captured, "status", "Événement ajouté.");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    for (const region of screen.getAllByRole("status"))
+      expect(region).not.toHaveTextContent("Chargement des événements…");
   });
 
   it("renders recoverable loading, empty and error states", () => {

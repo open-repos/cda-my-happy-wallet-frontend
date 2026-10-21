@@ -321,9 +321,11 @@ describe("budget calendar page", () => {
     const { rerender } = render(<Calendrier />);
     const captured = captureLiveRegions();
 
+    // Un autre mois n'a encore rien affiché : son chargement est annoncé.
     useBudgetCalendar.mockReturnValue(
       state({ summaryStatus: "loading", operationsStatus: "loading" })
     );
+    fireEvent.click(screen.getByRole("button", { name: "Mois suivant" }));
     rerender(<Calendrier />);
     await expectAnnouncedIn(captured, "status", "Calcul de votre budget…");
     await expectAnnouncedIn(captured, "status", "Chargement des opérations…");
@@ -342,6 +344,48 @@ describe("budget calendar page", () => {
       "alert",
       "Les opérations n’ont pas pu être chargées."
     );
+  });
+
+  it("announces only the outcome of a mutation, not the refresh that follows it (#171)", async () => {
+    // Premier chargement, puis données affichées, comme le hook réel.
+    useBudgetCalendar.mockReturnValue(
+      state({ summaryStatus: "loading", operationsStatus: "loading" })
+    );
+    const { rerender } = render(<Calendrier />);
+    const captured = captureLiveRegions();
+    useBudgetCalendar.mockReturnValue(state());
+    rerender(<Calendrier />);
+
+    // Actualisation pendant l'enregistrement : aucun chargement annoncé.
+    useBudgetCalendar.mockReturnValue(
+      state({
+        mutationStatus: "loading",
+        summaryStatus: "loading",
+        operationsStatus: "loading",
+      })
+    );
+    rerender(<Calendrier />);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    for (const region of screen.getAllByRole("status"))
+      expect(region).toHaveTextContent(/^$/);
+
+    // Succès rendu dans le même lot que le rechargement relancé par
+    // invalidate() : les vrais hooks renvoient alors "loading".
+    useBudgetCalendar.mockReturnValue(
+      state({
+        mutationStatus: "success",
+        summaryStatus: "loading",
+        operationsStatus: "loading",
+        message: { tone: "success", text: "Opération ajoutée." },
+      })
+    );
+    rerender(<Calendrier />);
+    await expectAnnouncedIn(captured, "status", "Opération ajoutée.");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    for (const region of screen.getAllByRole("status")) {
+      expect(region).not.toHaveTextContent("Calcul de votre budget…");
+      expect(region).not.toHaveTextContent("Chargement des opérations…");
+    }
   });
 
   it("filters the list by day and returns to the whole month", () => {
