@@ -1,8 +1,8 @@
 # Événements mensuels sur mobile
 
 L'onglet « Objectifs et événements » liste les événements mensuels confirmés
-et permet de les créer, modifier et supprimer (#225). Les objectifs
-financiers rejoindront cet écran avec #226.
+et permet de les créer, modifier et supprimer (#225), sous la section des
+objectifs financiers (#226, `mobile-goals.md`).
 
 ## Contrat
 

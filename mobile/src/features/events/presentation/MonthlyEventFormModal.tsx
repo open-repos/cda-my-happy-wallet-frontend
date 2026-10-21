@@ -15,6 +15,7 @@ import {
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import { FeedbackBanner } from "@/src/design/FeedbackState";
+import { RadioChoice, RadioGroup } from "@/src/design/RadioGroup";
 import { primitives, semantic, themes } from "@/src/design/tokens";
 import {
   EventDraft,
@@ -39,14 +40,9 @@ interface MonthlyEventFormModalProps {
   onSave(draft: EventDraft): void;
 }
 
-interface Choice<T> {
-  value: T;
-  label: string;
-}
-
 const colors = themes.light.color;
 const semibold = `${primitives.fontWeight.semibold}` as "600";
-const KINDS: Choice<EventKind>[] = [
+const KINDS: RadioChoice<EventKind>[] = [
   { value: "DEPENSE", label: "Dépense" },
   { value: "ENTREE", label: "Entrée" },
 ];
@@ -59,51 +55,6 @@ const createDraft = (event: MonthlyEvent | null): EventDraft => ({
   recurrence: event?.recurrence ?? "MENSUELLE",
   endDate: event?.endDate ?? null,
 });
-
-/** Groupe de radios accessible (état coché exposé aussi sur le Web, #148). */
-const RadioGroup = <T extends string>({
-  choices,
-  disabled,
-  label,
-  value,
-  onChange,
-}: {
-  choices: Choice<T>[];
-  disabled: boolean;
-  label: string;
-  value: T;
-  onChange(value: T): void;
-}) => (
-  <View
-    accessibilityLabel={label}
-    accessibilityRole="radiogroup"
-    style={styles.segmented}
-  >
-    {choices.map((choice) => {
-      const selected = choice.value === value;
-      return (
-        <Pressable
-          key={choice.value}
-          accessibilityRole="radio"
-          accessibilityState={{ disabled }}
-          aria-checked={selected}
-          disabled={disabled}
-          onPress={() => onChange(choice.value)}
-          style={[styles.segment, selected && styles.segmentSelected]}
-        >
-          <Text
-            style={[
-              styles.segmentLabel,
-              selected && styles.segmentLabelSelected,
-            ]}
-          >
-            {choice.label}
-          </Text>
-        </Pressable>
-      );
-    })}
-  </View>
-);
 
 export const MonthlyEventFormModal = ({
   errorMessage,
@@ -242,15 +193,12 @@ export const MonthlyEventFormModal = ({
                     disabled={isSaving}
                     label="Fin de la répétition"
                     value={draft.endDate == null ? "none" : "date"}
-                    onChange={(value) => {
-                      // Un nouvel appui sur le choix coché garde la date.
-                      if (value === (draft.endDate == null ? "none" : "date"))
-                        return;
+                    onChange={(value) =>
                       update(
                         "endDate",
                         value === "none" ? null : draft.startDate,
-                      );
-                    }}
+                      )
+                    }
                   />
                   {draft.endDate != null ? (
                     <View style={styles.endDate}>
@@ -402,31 +350,6 @@ const styles = StyleSheet.create({
     fontSize: primitives.fontSize.sm,
     marginTop: primitives.space["1"],
   },
-  segmented: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: primitives.space["2"],
-  },
-  segment: {
-    alignItems: "center",
-    borderColor: colors.fieldBorder,
-    borderRadius: semantic.radius.control,
-    borderWidth: semantic.borderWidth.default,
-    flexGrow: 1,
-    justifyContent: "center",
-    minHeight: semantic.size.controlMinHeight,
-    paddingHorizontal: primitives.space["3"],
-  },
-  segmentSelected: {
-    backgroundColor: colors.actionSecondaryBackground,
-    borderColor: colors.borderStrong,
-  },
-  segmentLabel: {
-    color: colors.textSecondary,
-    fontSize: primitives.fontSize.md,
-    fontWeight: semibold,
-  },
-  segmentLabelSelected: { color: colors.actionSecondaryText },
   endDate: { marginTop: primitives.space["3"] },
   actions: {
     flexDirection: "row",
