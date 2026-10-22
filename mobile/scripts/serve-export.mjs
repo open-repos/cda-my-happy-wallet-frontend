@@ -114,6 +114,42 @@ const testApiResponse = (pathname, searchParams) => {
       },
     };
   }
+  // Capacité d'épargne (#217) : cohérente avec /budget-forecast (même date
+  // de référence, reste après versements prévus = reste de fin de mois).
+  if (pathname.endsWith("/savings-capacity")) {
+    const from = searchParams.get("from") ?? "2026-10";
+    return {
+      data: {
+        currency: "EUR",
+        from,
+        goals: [
+          {
+            id: 1,
+            includedInTotals: true,
+            monthlyContributionGap: "30.00",
+            plannedMonthlyContribution: "150.00",
+            requiredMonthlyContribution: "180.00",
+            status: "BEHIND",
+            targetDate: "2027-06-30",
+            title: "Voyage",
+          },
+        ],
+        months: [
+          {
+            afterPlanned: "1430.00",
+            afterRequired: "1400.00",
+            beforeGoals: "1580.00",
+            month: from,
+            sustainability: "TENABLE",
+          },
+        ],
+        referenceDate: `${from}-01`,
+        totalPlannedMonthlyContribution: "150.00",
+        totalRequiredMonthlyContribution: "180.00",
+        unassessableCount: 0,
+      },
+    };
+  }
   // Prochains mois (#214) : mois construits à partir de la requête ; le
   // deuxième mois est en solde négatif.
   if (pathname.endsWith("/budget-forecast")) {

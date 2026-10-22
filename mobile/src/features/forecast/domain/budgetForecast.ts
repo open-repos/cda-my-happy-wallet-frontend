@@ -44,7 +44,7 @@ export const isForecastAmount = (value: unknown): value is string => {
   return Number.isSafeInteger(Number(whole) * 100 + Number(fraction));
 };
 
-const isForecastDate = (value: unknown): value is string => {
+export const isForecastDate = (value: unknown): value is string => {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value))
     return false;
   const date = new Date(`${value}T00:00:00.000Z`);

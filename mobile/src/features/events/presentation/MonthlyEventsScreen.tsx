@@ -14,6 +14,7 @@ import {
   MonthlyEvent,
 } from "@/src/features/events/domain/monthlyEvent";
 import { FinancialGoalsSection } from "@/src/features/goals/presentation/FinancialGoalsSection";
+import { goalRequest } from "@/src/features/goals/presentation/requestedGoal";
 import { HttpMonthlyEventsGateway } from "@/src/features/events/infrastructure/HttpMonthlyEventsGateway";
 import { MonthlyEventCard } from "@/src/features/events/presentation/MonthlyEventCard";
 import { MonthlyEventFormModal } from "@/src/features/events/presentation/MonthlyEventFormModal";
@@ -27,8 +28,14 @@ const semibold = `${primitives.fontWeight.semibold}` as "600";
  * événements mensuels (#225). `ajuster` ouvre un objectif en modification.
  */
 export const MonthlyEventsScreen = () => {
-  const { ajuster } = useLocalSearchParams<{ ajuster?: string }>();
-  const adjustedGoalId = Number(ajuster) > 0 ? Number(ajuster) : null;
+  const { ajuster, demande } = useLocalSearchParams<{
+    ajuster?: string;
+    demande?: string;
+  }>();
+  const adjustRequest = useMemo(
+    () => goalRequest(ajuster, demande),
+    [ajuster, demande],
+  );
   const { httpClient } = useAuth();
   const gateway = useMemo(
     () => new HttpMonthlyEventsGateway(httpClient),
@@ -86,7 +93,7 @@ export const MonthlyEventsScreen = () => {
             <Text style={styles.subtitle}>
               Anticipez les entrées et dépenses qui influenceront votre budget.
             </Text>
-            <FinancialGoalsSection initialGoalId={adjustedGoalId} />
+            <FinancialGoalsSection adjustRequest={adjustRequest} />
             <Text accessibilityRole="header" style={styles.sectionTitle}>
               Événements mensuels
             </Text>

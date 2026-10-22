@@ -625,3 +625,47 @@ test("explores analytics from the dashboard (#215)", async ({ page }) => {
     page.getByText("Aucune opération sur cette période.", { exact: true }),
   ).toBeVisible();
 });
+
+test("shows the savings capacity and adjusts a goal (#217)", async ({
+  page,
+}) => {
+  await signIn(page);
+  // Accueil : « Ajuster le versement » ouvre l'objectif dans l'onglet
+  // Objectifs par le lien interne `ajuster=<id>` (#226).
+  const homeAdjust = page.getByRole("button", {
+    name: "Ajuster le versement pour Voyage",
+  });
+  await homeAdjust.scrollIntoViewIfNeeded();
+  await expect(
+    page.getByLabel("Versements requis par mois : 180,00 €"),
+  ).toBeVisible();
+  await expect(page.getByText(/^Tenable — /)).toBeVisible();
+  await homeAdjust.click();
+  await expect(
+    page.getByText("Modifier l’objectif", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Titre", { exact: true })).toHaveValue("Voyage");
+  await page.getByRole("button", { name: "Fermer le formulaire" }).click();
+
+  // Même objectif ajusté de nouveau depuis l'accueil : le formulaire
+  // se rouvre (jeton de demande unique, onglets restés montés).
+  await page.getByRole("tab", { name: "Tableau de bord" }).click();
+  await homeAdjust.click();
+  await expect(
+    page.getByText("Modifier l’objectif", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Fermer le formulaire" }).click();
+
+  // Onglet Objectifs : la section ouvre le formulaire directement.
+  await expect(
+    page.getByText("Capacité d’épargne", { exact: true }).last(),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Ajuster le versement pour Voyage" })
+    .last()
+    .click();
+  await expect(
+    page.getByText("Modifier l’objectif", { exact: true }),
+  ).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});
