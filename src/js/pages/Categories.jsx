@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { LiveMessage } from "../components/LiveMessage";
+import { useAnnouncesLoading } from "../hooks/useAnnouncesLoading";
 import addIcon from "../../assets/icons/add.svg";
 import { CategoryForm } from "../components/Categories/CategoryForm";
 import { CategoryMark } from "../components/Categories/CategoryLabel";
@@ -12,6 +13,8 @@ function Categories() {
   const [editedCategory, setEditedCategory] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const state = useCategories();
+  // Une seule liste sans filtre : les commandes ne changent pas sa clé.
+  const announcesLoading = useAnnouncesLoading(state.status, "categories");
   const isError = state.status === "error" || state.mutationStatus === "error";
   const addButtonRef = useRef(null);
   const triggerRef = useRef(null);
@@ -103,13 +106,13 @@ function Categories() {
       )}
       {/* Chargement annoncé par une région live toujours montée (#164). */}
       <LiveMessage
-        message={state.status === "loading" ? "Chargement des catégories…" : ""}
+        message={announcesLoading ? "Chargement des catégories…" : ""}
         visible={false}
       />
       {state.status === "loading" && (
         <section className="one-off-state">
           <span className="one-off-loader" aria-hidden="true" />
-          <h2>Chargement des catégories…</h2>
+          <h2 aria-hidden="true">Chargement des catégories…</h2>
         </section>
       )}
       {state.status === "error" && (

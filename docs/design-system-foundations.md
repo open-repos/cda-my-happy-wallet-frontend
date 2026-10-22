@@ -127,14 +127,46 @@ coque, sur chaque page protégée et dans les deux thèmes.
   n'a encore rien affiché (premier chargement, autre mois ou jour, relance
   après un échec) : une actualisation de données déjà affichées (après une
   modification, `invalidate()` ou un retour sur l'onglet) n'annonce que son
-  résultat (`useAnnouncesLoading`, #171). La règle couvre Calendrier,
-  Objectifs (événements, objectifs, capacité d'épargne) et la Simulation
-  (écart, éléments potentiels). Le délai de remplissage
+  résultat (`useAnnouncesLoading`, #171, #221). La règle couvre Calendrier,
+  Objectifs (événements, objectifs, capacité d'épargne), la Simulation
+  (écart, éléments potentiels), Catégories, la liste des Opérations, Prochains
+  mois et les trois blocs de l'accueil (reste à vivre, dépenses, objectifs).
+  Une liste ou prévision vide compte aussi comme déjà affichée ; après une
+  saisie invalide, la prochaine requête est de nouveau annoncée. Les erreurs
+  restent annoncées, y compris pendant une actualisation silencieuse.
+  Les copies visuelles de chargement et les copies d'erreur identiques des
+  blocs de l'accueil sont masquées aux lecteurs d'écran pour éviter une
+  double lecture en mode parcours. Le délai de remplissage
   (`setTimeout(0)`) reste à confirmer par un test NVDA et VoiceOver réel ;
 - le zoom, les préférences de réduction des animations et les tailles de texte
   restent utilisables ;
 - les tokens générés sont déterministes et couverts par des tests ;
 - aucun secret, URL temporaire Figma ou dépendance réseau n'est embarqué.
+
+### Clés des annonces Web (#221)
+
+L'identité d'une vue exclut les compteurs de révision et l'identité des
+callbacks : `invalidate()` et une nouvelle tentative de lecture ne changent
+pas les filtres de la vue. Chaque composant garde son propre historique ;
+les régions live restent montées à travers les états chargement/erreur/succès.
+
+| Vue                     | Clé                                       | Changement annoncé                                                                      |
+| ----------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------- |
+| Catégories              | `categories`                              | Première lecture ou relance après échec ; liste sans filtre.                            |
+| Liste des opérations    | `operations`                              | Première lecture ou relance après échec ; mutation et pagination gardent la même liste. |
+| Prochains mois          | Mois de départ, horizon, devise, scénario | Nouvelle période, durée ou Simulation ; retour sur l'onglet silencieux.                 |
+| Accueil : reste à vivre | Mois, EUR, scénario                       | Nouveau mois ou scénario ; revision exclue.                                             |
+| Accueil : dépenses      | Mois, EUR                                 | Nouveau mois ; type de graphique purement visuel.                                       |
+| Accueil : objectifs     | EUR                                       | Première lecture ou relance après échec ; liste indépendante du mois affiché.           |
+
+Les clés des blocs sont fournies par `useHomeBudget` à `SectionAnnouncement`.
+Le choix Mois/Semaine/Jour ne recharge pas la synthèse et ne constitue pas
+une nouvelle requête. Les scénarios `webRefreshAnnouncements.test.jsx`
+montent les vrais hooks et le vrai `SimulationProvider`, retiennent les
+réponses et enregistrent les textes des régions live pendant les mutations,
+les invalidations, les changements de clé et les relances. Les scénarios
+Playwright équivalents observent le DOM aux largeurs téléphone/tablette/bureau.
+Ils ne remplacent pas la recette NVDA/VoiceOver réelle toujours suivie dans #171.
 
 ## Documentation attendue de `M02-02`
 

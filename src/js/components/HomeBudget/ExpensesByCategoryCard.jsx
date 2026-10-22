@@ -75,7 +75,11 @@ const TEXTS = {
 export const ExpensesByCategoryCard = ({ section, currency }) => (
   <article className="home-budget__card" aria-labelledby="home-expenses-title">
     <h2 id="home-expenses-title">Mes dépenses du mois par catégories</h2>
-    <SectionAnnouncement status={section.status} {...TEXTS} />
+    <SectionAnnouncement
+      status={section.status}
+      loadingKey={section.loadingKey}
+      {...TEXTS}
+    />
     {section.status !== "success" ? (
       <SectionState
         status={section.status}

@@ -98,7 +98,11 @@ export const RemainingToLive = ({ section, period }) => {
   // Premier enfant identique dans chaque rendu : React garde ces régions
   // live montées d'un état à l'autre (#164).
   const announcement = (
-    <SectionAnnouncement status={section.status} {...TEXTS} />
+    <SectionAnnouncement
+      status={section.status}
+      loadingKey={section.loadingKey}
+      {...TEXTS}
+    />
   );
   if (section.status !== "success") {
     return (

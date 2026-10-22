@@ -304,3 +304,497 @@ test("captures the budget calendar and its day filter", async ({ page }) => {
     page.getByText("Opérations du mois", { exact: true }),
   ).toBeVisible();
 });
+
+test("manages monthly events from the objectives tab (#225)", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.getByRole("tab", { name: "Objectifs et événements" }).click();
+  await expect(
+    page.getByText("Événements mensuels", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Assurance", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText(/^Chaque année · Du 15\/10\/2026 au 15\/10\/2028$/),
+  ).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  // Création : validations du Web, puis contrat de l'API.
+  await page.getByRole("button", { name: "Ajouter un événement" }).click();
+  await page.getByLabel("Titre", { exact: true }).fill("A");
+  await page.getByLabel("Montant en euros").fill("0");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(
+    page.getByText("Le titre doit contenir entre 2 et 50 caractères."),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Saisissez un montant positif avec deux décimales maximum."),
+  ).toBeVisible();
+  await page.getByLabel("Titre", { exact: true }).fill("Salaire");
+  await page.getByLabel("Montant en euros").fill("2100,5");
+  await page.getByRole("radio", { name: "Entrée" }).click();
+  await expect(page.getByRole("radio", { name: "Entrée" })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "Chaque mois" })).toBeChecked();
+  // Les cinq répétitions du Web (#216).
+  for (const name of [
+    "Une seule fois",
+    "Chaque semaine",
+    "Chaque trimestre",
+    "Chaque année",
+  ]) {
+    await expect(page.getByRole("radio", { name })).toBeVisible();
+  }
+  await page.getByRole("radio", { name: "Chaque semaine" }).click();
+  await expect(
+    page.getByRole("radio", { name: "Chaque semaine" }),
+  ).toBeChecked();
+  // Fin incluse : son « Aujourd’hui » se distingue de celui du début.
+  await page.getByRole("radio", { name: "Jusqu’à une date" }).click();
+  await expect(
+    page.getByRole("button", { name: "Date de fin incluse : aujourd’hui" }),
+  ).toBeVisible();
+  // Fin préremplie au début (aujourd’hui) : le mois précédent est entièrement
+  // antérieur au début, donc indisponible.
+  await page
+    .getByRole("button", {
+      name: /^Date de fin incluse : .*Ouvrir le calendrier$/,
+    })
+    .click();
+  await page
+    .getByRole("button", { name: "Mois précédent", exact: true })
+    .last()
+    .click();
+  await expect(
+    page.getByRole("button", { name: /^1 [^\s]+ \d{4}$/ }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "Annuler" }).last().click();
+  await page.getByRole("radio", { name: "Sans date de fin" }).click();
+  const created = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" &&
+      new URL(request.url()).pathname.endsWith("/events"),
+  );
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  expect((await created).postDataJSON()).toMatchObject({
+    title: "Salaire",
+    amount: "2100.50",
+    currency: "EUR",
+    kind: "ENTREE",
+    recurrence: "HEBDOMADAIRE",
+    endDate: null,
+  });
+  await expect(page.getByText("Événement ajouté.")).toBeVisible();
+
+  // Modification d'un événement annuel du Web : sa répétition est conservée.
+  await page.getByRole("button", { name: "Modifier Taxe foncière" }).click();
+  await expect(page.getByRole("radio", { name: "Chaque année" })).toBeChecked();
+  await expect(
+    page.getByRole("radio", { name: "Jusqu’à une date" }),
+  ).toBeChecked();
+  const updated = page.waitForRequest(
+    (request) =>
+      request.method() === "PUT" &&
+      new URL(request.url()).pathname.endsWith("/events/22"),
+  );
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  expect((await updated).postDataJSON()).toMatchObject({
+    recurrence: "ANNUELLE",
+    endDate: "2028-10-15",
+  });
+  await expect(page.getByText("Événement modifié.")).toBeVisible();
+
+  // Un échec d'enregistrement est affiché dans le formulaire, resté ouvert.
+  await page.getByRole("button", { name: "Modifier Taxe foncière" }).click();
+  await page.getByLabel("Titre", { exact: true }).fill("Panne");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(
+    page.getByText("L’événement n’a pas pu être enregistré. Réessayez."),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Fermer le formulaire" }),
+  ).toBeVisible();
+  // « Une seule fois » retire la date de fin de l'envoi.
+  await page.getByLabel("Titre", { exact: true }).fill("Taxe foncière");
+  await page.getByRole("radio", { name: "Une seule fois" }).click();
+  await expect(
+    page.getByRole("radio", { name: "Sans date de fin" }),
+  ).toHaveCount(0);
+  const once = page.waitForRequest(
+    (request) =>
+      request.method() === "PUT" &&
+      new URL(request.url()).pathname.endsWith("/events/22"),
+  );
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  expect((await once).postDataJSON()).toMatchObject({
+    recurrence: "AUCUNE",
+    endDate: null,
+  });
+  await expect(page.getByText("Événement modifié.")).toBeVisible();
+
+  // Suppression confirmée dans le formulaire.
+  await page.getByRole("button", { name: "Modifier Assurance" }).click();
+  await page.getByRole("button", { name: "Supprimer", exact: true }).click();
+  const deleted = page.waitForRequest(
+    (request) =>
+      request.method() === "DELETE" &&
+      new URL(request.url()).pathname.endsWith("/events/21"),
+  );
+  await page.getByRole("button", { name: "Oui, supprimer" }).click();
+  await deleted;
+  await expect(page.getByText("Événement supprimé.")).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});
+
+test("manages financial goals from the objectives tab (#226)", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.getByRole("tab", { name: "Objectifs et événements" }).click();
+  await expect(
+    page.getByText("Objectifs financiers", { exact: true }),
+  ).toBeVisible();
+  // Progression exposée en valeur, pas seulement par la barre.
+  const progress = page.getByRole("progressbar", {
+    name: /^25 % de l’objectif Voyage atteint/,
+  });
+  await expect(progress).toHaveAttribute("aria-valuenow", "25");
+  await expect(progress).toHaveAttribute("aria-valuemax", "100");
+  await expect(
+    page.getByText(
+      "À ce rythme, objectif atteint en mars 2027, avant la date souhaitée.",
+    ),
+  ).toBeVisible();
+  await expect(page.getByText("Dans les temps", { exact: true })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  await page.getByRole("button", { name: "Ajouter un objectif" }).click();
+  await page.getByLabel("Titre", { exact: true }).fill("A");
+  await page.getByLabel("Montant cible en euros").fill("0");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(
+    page.getByText("Le titre doit contenir entre 2 et 50 caractères."),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "Saisissez un montant cible positif, par exemple 1200 ou 1200,50.",
+    ),
+  ).toBeVisible();
+  await page.getByLabel("Titre", { exact: true }).fill("Vélo");
+  await page.getByLabel("Montant cible en euros").fill("1200,5");
+  await page.getByLabel("Versement mensuel prévu en euros").fill("75");
+  await expect(page.getByRole("radio", { name: "Sans date" })).toBeChecked();
+  const created = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" &&
+      new URL(request.url()).pathname.endsWith("/goals"),
+  );
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  expect((await created).postDataJSON()).toEqual({
+    title: "Vélo",
+    targetAmount: "1200.50",
+    savedAmount: "0.00",
+    monthlyContribution: "75.00",
+    currency: "EUR",
+    targetDate: null,
+  });
+  await expect(page.getByText("Objectif ajouté.")).toBeVisible();
+
+  // Échec affiché dans le formulaire, qui reste ouvert.
+  await page
+    .getByRole("button", { name: "Modifier l’objectif Voyage" })
+    .click();
+  await expect(
+    page.getByRole("radio", { name: "Avant une date" }),
+  ).toBeChecked();
+  await page.getByLabel("Titre", { exact: true }).fill("Panne");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(
+    page.getByText("L’objectif n’a pas pu être enregistré. Réessayez."),
+  ).toBeVisible();
+  // Refus de validation du backend : expliqué comme sur le Web.
+  await page.getByLabel("Titre", { exact: true }).fill("Refus");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(
+    page.getByText(
+      "Certaines valeurs sont refusées : vérifiez les montants et la date.",
+    ),
+  ).toBeVisible();
+  await page.getByLabel("Titre", { exact: true }).fill("Voyage");
+  const updated = page.waitForRequest(
+    (request) =>
+      request.method() === "PUT" &&
+      new URL(request.url()).pathname.endsWith("/goals/1"),
+  );
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  expect((await updated).postDataJSON()).toMatchObject({
+    title: "Voyage",
+    targetDate: "2027-06-30",
+  });
+  await expect(page.getByText("Objectif modifié.")).toBeVisible();
+
+  await page
+    .getByRole("button", { name: "Modifier l’objectif Voyage" })
+    .click();
+  await page.getByRole("button", { name: "Supprimer", exact: true }).click();
+  const deleted = page.waitForRequest(
+    (request) =>
+      request.method() === "DELETE" &&
+      new URL(request.url()).pathname.endsWith("/goals/1"),
+  );
+  await page.getByRole("button", { name: "Oui, supprimer" }).click();
+  await deleted;
+  await expect(page.getByText("Objectif supprimé.")).toBeVisible();
+});
+
+test("shows upcoming months from the dashboard and the calendar (#214)", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.getByRole("button", { name: /Prochains mois/ }).click();
+  // Les onglets restent montés : « Prochains mois » existe aussi sur
+  // l'accueil, d'où un texte propre à l'écran.
+  await expect(
+    page.getByText("Horizon de prévision", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("radio", { name: "6 mois" })).toBeChecked();
+  await expect(
+    page.getByText("Reste de fin de mois", { exact: true }),
+  ).toHaveCount(6);
+  // Mois négatif : signalé par un texte, pas seulement par la couleur.
+  await expect(page.getByText("Solde négatif", { exact: true })).toHaveCount(1);
+  await expect(page.getByText(/^-35,50\s€$/)).toBeVisible();
+  await expect(
+    page.getByText(/^Les mois signalés « Solde négatif »/),
+  ).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  const shorter = page.waitForRequest(
+    (request) =>
+      new URL(request.url()).pathname.endsWith("/budget-forecast") &&
+      new URL(request.url()).searchParams.get("months") === "3",
+  );
+  await page.getByRole("radio", { name: "3 mois" }).click();
+  await shorter;
+  await expect(
+    page.getByText("Reste de fin de mois", { exact: true }),
+  ).toHaveCount(3);
+
+  await page.getByRole("link", { name: "Retour" }).click();
+  await page.getByRole("tab", { name: "Calendrier" }).click();
+  await page.getByRole("link", { name: "Prochains mois" }).click();
+  await expect(
+    page.getByText("Horizon de prévision", { exact: true }),
+  ).toBeVisible();
+});
+
+test("explores analytics from the dashboard (#215)", async ({ page }) => {
+  await signIn(page);
+  await page.getByRole("button", { name: /Analyses/ }).click();
+  await expect(page.getByText("Indicateur", { exact: true })).toBeVisible();
+  await expect(page.getByRole("radio", { name: "Dépenses" })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "Catégorie" })).toBeChecked();
+  // Liste textuelle : catégories triées par montant, équivalent du graphique.
+  // Limitée au résultat : les onglets restent montés et l'accueil affiche
+  // aussi « Alimentation : 42,50 € ».
+  const result = page.getByTestId("analytics-result");
+  const details = result.getByText(/^(Alimentation|Transport) : /);
+  await expect(details).toHaveText([
+    /^Alimentation : 42,50\s€$/,
+    /^Transport : 12,00\s€$/,
+  ]);
+  await expectNoHorizontalOverflow(page);
+
+  // Solde net par mois : valeurs signées, ordre chronologique.
+  const byMonth = page.waitForRequest((request) => {
+    const url = new URL(request.url());
+    return (
+      url.pathname.endsWith("/analytics/operations") &&
+      url.searchParams.get("groupBy") === "month" &&
+      !url.searchParams.has("kind")
+    );
+  });
+  await page.getByRole("radio", { name: "Solde net" }).click();
+  await page.getByRole("radio", { name: "Mois", exact: true }).click();
+  await byMonth;
+  await expect(result.getByText(/^août 2026 : 80,00\s€$/)).toBeVisible();
+  await expect(result.getByText(/^sept\.? 2026 : -150,00\s€$/)).toBeVisible();
+
+  // Entrées sans opération : état vide.
+  await page.getByRole("radio", { name: "Entrées" }).click();
+  await expect(
+    page.getByText("Aucune opération sur cette période.", { exact: true }),
+  ).toBeVisible();
+});
+
+test("shows the savings capacity and adjusts a goal (#217)", async ({
+  page,
+}) => {
+  await signIn(page);
+  // Accueil : « Ajuster le versement » ouvre l'objectif dans l'onglet
+  // Objectifs par le lien interne `ajuster=<id>` (#226).
+  const homeAdjust = page.getByRole("button", {
+    name: "Ajuster le versement pour Voyage",
+  });
+  await homeAdjust.scrollIntoViewIfNeeded();
+  await expect(
+    page.getByLabel("Versements requis par mois : 180,00 €"),
+  ).toBeVisible();
+  await expect(page.getByText(/^Tenable — /)).toBeVisible();
+  await homeAdjust.click();
+  await expect(
+    page.getByText("Modifier l’objectif", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Titre", { exact: true })).toHaveValue("Voyage");
+  await page.getByRole("button", { name: "Fermer le formulaire" }).click();
+
+  // Même objectif ajusté de nouveau depuis l'accueil : le formulaire
+  // se rouvre (jeton de demande unique, onglets restés montés).
+  await page.getByRole("tab", { name: "Tableau de bord" }).click();
+  await homeAdjust.click();
+  await expect(
+    page.getByText("Modifier l’objectif", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Fermer le formulaire" }).click();
+
+  // Onglet Objectifs : la section ouvre le formulaire directement.
+  await expect(
+    page.getByText("Capacité d’épargne", { exact: true }).last(),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Ajuster le versement pour Voyage" })
+    .last()
+    .click();
+  await expect(
+    page.getByText("Modifier l’objectif", { exact: true }),
+  ).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});
+
+test("reads the budget with the simulation scenario (#240)", async ({
+  page,
+}) => {
+  const scenarios: string[] = [];
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (/\/(budget-forecast|savings-capacity|summary)$/.test(url.pathname)) {
+      scenarios.push(url.searchParams.get("scenario") ?? "standard");
+    }
+  });
+  await signIn(page);
+  expect(scenarios).not.toContain("simulation");
+
+  await page.getByRole("tab", { name: "Calendrier" }).click();
+  // Onglets montés : l'interrupteur existe aussi sur l'accueil.
+  const toggle = page.getByRole("switch", { name: "Simulation" }).last();
+  await expect(toggle).not.toBeChecked();
+  await expect(
+    page.getByText(/^Les chiffres habituels excluent/).last(),
+  ).toBeVisible();
+
+  await toggle.click();
+  await expect(toggle).toBeChecked();
+  await expect(
+    page
+      .getByText(
+        /Prévision habituelle : 1\s430,00\s€.*Avec la Simulation : 1\s180,00\s€/,
+      )
+      .last(),
+  ).toBeVisible();
+  expect(scenarios).toContain("simulation");
+  await expectNoHorizontalOverflow(page);
+
+  // Partagée par les onglets : la capacité d'épargne suit le scénario.
+  await page.getByRole("tab", { name: "Objectifs" }).click();
+  await expect(
+    page.getByRole("switch", { name: "Simulation" }).last(),
+  ).toBeChecked();
+  await expect(
+    page
+      .getByLabel(/^Disponible par mois après objectifs : 1\s180,00\s€$/)
+      .last(),
+  ).toBeVisible();
+});
+
+test("manages the simulation potentials from the calendar (#241)", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.getByRole("tab", { name: "Calendrier" }).click();
+  await expect(page.getByText("Vélo", { exact: true })).toBeVisible();
+  await expect(page.getByText("Potentiel", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText(/^Expiration : à partir du 1 novembre 2026/),
+  ).toBeVisible();
+  // Ni réalisation ni annulation d'occurrence avant confirmation.
+  await expect(
+    page.getByRole("button", { name: /Réaliser.*Vélo|Annuler.*Vélo/ }),
+  ).toHaveCount(0);
+
+  const confirmed = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" &&
+      new URL(request.url()).pathname.endsWith("/events/40/confirm"),
+  );
+  const reread = page.waitForRequest(
+    (request) =>
+      new URL(request.url()).searchParams.get("status") === "POTENTIEL",
+  );
+  await page.getByRole("button", { name: "Confirmer Vélo" }).click();
+  await expect(
+    page.getByText("Confirmer Vélo comme événement prévu ?", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Oui, confirmer" }).click();
+  await confirmed;
+  await reread;
+  await expect(
+    page.getByText(
+      "Élément confirmé : il fait maintenant partie des prévisions habituelles.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+
+  const cleared = page.waitForRequest(
+    (request) =>
+      request.method() === "DELETE" &&
+      new URL(request.url()).pathname.endsWith("/simulation/events"),
+  );
+  await page.getByRole("button", { name: "Vider la simulation" }).click();
+  await page.getByRole("button", { name: "Oui, vider la simulation" }).click();
+  await cleared;
+  await expect(
+    page.getByText("Simulation vidée.", { exact: true }),
+  ).toBeVisible();
+
+  await page
+    .getByRole("button", { name: "Ajouter un élément potentiel" })
+    .click();
+  await expect(
+    page.getByText("Ajouter un élément potentiel", { exact: true }).last(),
+  ).toBeVisible();
+  await page.getByLabel("Titre", { exact: true }).fill("Expiré");
+  await page.getByLabel("Montant en euros").fill("10");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  // Refus métier expliqué dans la fenêtre, avec la phrase du Web.
+  await expect(
+    page.getByText(/^Le mois de cet élément potentiel est passé/),
+  ).toBeVisible();
+
+  const created = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" &&
+      new URL(request.url()).pathname.endsWith("/v1/events"),
+  );
+  await page.getByLabel("Titre", { exact: true }).fill("Trottinette");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  expect((await created).postDataJSON()).toMatchObject({
+    status: "POTENTIEL",
+    title: "Trottinette",
+  });
+  await expect(
+    page.getByText(
+      "Élément potentiel enregistré. Activez la Simulation pour voir son effet.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});

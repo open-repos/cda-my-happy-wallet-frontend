@@ -1,4 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -42,11 +43,14 @@ import { RealizeOccurrenceModal } from "@/src/features/budget/presentation/Reali
 import { useBudgetCalendar } from "@/src/features/budget/presentation/useBudgetCalendar";
 import { HttpOneOffOperationsGateway } from "@/src/features/operations/infrastructure/HttpOneOffOperationsGateway";
 import { OperationCard } from "@/src/features/operations/presentation/OperationCard";
+import { SimulationPanel } from "@/src/features/simulation/presentation/SimulationPanel";
+import { SimulationReadout } from "@/src/features/simulation/presentation/SimulationReadout";
 
 const colors = themes.light.color;
 
 /** Calendrier budgétaire du mois : grille, modes, détail du jour, opérations. */
 export const BudgetCalendarScreen = () => {
+  const router = useRouter();
   const { httpClient } = useAuth();
   const budgetGateway = useMemo(
     () => new HttpBudgetSummaryGateway(httpClient),
@@ -120,7 +124,24 @@ export const BudgetCalendarScreen = () => {
           <Text accessibilityRole="header" style={styles.title}>
             Calendrier
           </Text>
+          <Pressable
+            accessibilityRole="link"
+            onPress={() => router.push("/(app)/upcoming-months")}
+            style={({ pressed }) => [
+              styles.upcomingLink,
+              pressed && styles.pressed,
+            ]}
+          >
+            <Ionicons
+              color={colors.actionSecondaryText}
+              name="trending-up-outline"
+              size={20}
+            />
+            <Text style={styles.upcomingLabel}>Prochains mois</Text>
+          </Pressable>
         </View>
+
+        <SimulationReadout month={month} />
 
         <View style={styles.monthBar}>
           <Pressable
@@ -426,6 +447,7 @@ export const BudgetCalendarScreen = () => {
             ) : null}
           </View>
         )}
+        <SimulationPanel />
       </ScrollView>
       <RealizeOccurrenceModal
         key={
@@ -469,6 +491,19 @@ const styles = StyleSheet.create({
   heading: { gap: 6 },
   eyebrow: { color: colors.accent, fontSize: 12, fontWeight: "700" },
   title: { color: colors.textPrimary, fontSize: 30, fontWeight: "700" },
+  upcomingLink: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    gap: 8,
+    minHeight: semantic.size.controlMinHeight,
+  },
+  upcomingLabel: {
+    color: colors.actionSecondaryText,
+    fontSize: 16,
+    fontWeight: "600",
+    textDecorationLine: "underline",
+  },
   monthBar: {
     alignItems: "center",
     flexDirection: "row",

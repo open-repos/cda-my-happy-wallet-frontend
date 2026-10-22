@@ -1,4 +1,5 @@
 import { money, toCents } from "@/src/features/budget/domain/budgetSummary";
+import { paletteRanks } from "@/src/features/charts/categoryPalette";
 import type {
   OneOffOperation,
   OperationCategory,
@@ -34,15 +35,8 @@ export const expenseRows = (
         (totals.get(op.categoryId) ?? 0) + toCents(op.amount),
       );
   }
-  // Rang par identifiant parmi les catégories sans couleur propre : la
-  // palette commence pour elles à sa première couleur, et le rang ne dépend
-  // pas des montants (#172).
-  const ranks = new Map(
-    categories
-      .filter((c) => c.color == null)
-      .sort((a, b) => a.id - b.id)
-      .map((c, i) => [c.id, i]),
-  );
+  // Rang par identifiant parmi les catégories sans couleur propre (#172).
+  const ranks = paletteRanks(categories);
   // Ordre stable entre deux montants égaux, comme sur le Web.
   return [...totals]
     .map(([id, cents]) => {

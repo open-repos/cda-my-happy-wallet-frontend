@@ -57,15 +57,146 @@ const testApiResponse = (pathname, searchParams) => {
   if (pathname.endsWith("/goals")) {
     return {
       data: [
+        // DTO complet (#226) : l'écran Objectifs lit aussi la prévision.
         {
           id: 1,
           title: "Voyage",
           currency: "EUR",
           savedAmount: "250.00",
           targetAmount: "1000.00",
+          monthlyContribution: "150.00",
+          targetDate: "2027-06-30",
+          forecast: {
+            contributionsNeeded: 5,
+            estimatedReachMonth: "2027-03",
+            referenceMonth: "2026-10",
+            remainingAmount: "750.00",
+            requiredMonthlyContribution: "150.00",
+            status: "ON_TRACK",
+          },
         },
       ],
       meta: noNextPage,
+    };
+  }
+  // Analyses (#215) : catégories et mois ; les entrées du mois sont vides.
+  if (pathname.endsWith("/analytics/operations")) {
+    const groupBy = searchParams.get("groupBy") ?? "category";
+    const kind = searchParams.get("kind");
+    const empty = kind === "ENTREE";
+    const totals = (key, label, color, expense, income) => ({
+      color,
+      count: empty ? 0 : 2,
+      expense: empty ? "0.00" : expense,
+      income: empty ? "0.00" : income,
+      key,
+      label,
+      net: empty ? "0.00" : (Number(income) - Number(expense)).toFixed(2),
+    });
+    const buckets =
+      groupBy === "category"
+        ? [
+            totals("5", "Transport", null, "12.00", "0.00"),
+            totals("4", "Alimentation", "#EA7C69", "42.50", "0.00"),
+          ]
+        : [
+            totals("2026-08", null, null, "120.00", "200.00"),
+            totals("2026-09", null, null, "300.00", "150.00"),
+          ];
+    return {
+      data: {
+        buckets,
+        currency: "EUR",
+        from: searchParams.get("from"),
+        groupBy,
+        to: searchParams.get("to"),
+        ...(kind ? { kind } : {}),
+      },
+    };
+  }
+  // Simulation (#240) : un potentiel de 250 € réduit le premier mois.
+  const simulated = searchParams.get("scenario") === "simulation";
+  const firstRemaining = simulated ? "1180.00" : "1430.00";
+  // Capacité d'épargne (#217) : cohérente avec /budget-forecast (même date
+  // de référence, reste après versements prévus = reste de fin de mois).
+  if (pathname.endsWith("/savings-capacity")) {
+    const from = searchParams.get("from") ?? "2026-10";
+    return {
+      data: {
+        currency: "EUR",
+        from,
+        goals: [
+          {
+            id: 1,
+            includedInTotals: true,
+            monthlyContributionGap: "30.00",
+            plannedMonthlyContribution: "150.00",
+            requiredMonthlyContribution: "180.00",
+            status: "BEHIND",
+            targetDate: "2027-06-30",
+            title: "Voyage",
+          },
+        ],
+        months: [
+          {
+            afterPlanned: firstRemaining,
+            afterRequired: "1400.00",
+            beforeGoals: "1580.00",
+            month: from,
+            sustainability: "TENABLE",
+          },
+        ],
+        referenceDate: `${from}-01`,
+        totalPlannedMonthlyContribution: "150.00",
+        totalRequiredMonthlyContribution: "180.00",
+        unassessableCount: 0,
+      },
+    };
+  }
+  // Prochains mois (#214) : mois construits à partir de la requête ; le
+  // deuxième mois est en solde négatif.
+  if (pathname.endsWith("/budget-forecast")) {
+    const from = searchParams.get("from") ?? "2026-10";
+    const count = Number(searchParams.get("months") ?? 12);
+    const shift = (offset) => {
+      const index =
+        Number(from.slice(0, 4)) * 12 + Number(from.slice(5, 7)) - 1 + offset;
+      return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}`;
+    };
+    return {
+      data: {
+        currency: "EUR",
+        currentRealRemaining: "1337.50",
+        from,
+        months: Array.from({ length: count }, (_, index) => {
+          const negative = index === 1;
+          return {
+            base: "1300.00",
+            carryIn: index === 0 ? "1337.50" : "420.00",
+            fixedExpense: "1200.00",
+            fixedIncome: "2500.00",
+            forecastRemaining: negative
+              ? "-35.50"
+              : index === 0
+                ? firstRemaining
+                : "1430.00",
+            forecastResult: negative ? "-455.50" : "1030.00",
+            goalSavings: "150.00",
+            month: shift(index),
+            plannedExpense: negative ? "1605.50" : "120.00",
+            plannedIncome: "0.00",
+            prudentDailyAllowance: negative ? "0.00" : "46.12",
+            prudentMonthlyAllowance: negative
+              ? "0.00"
+              : index === 0
+                ? firstRemaining
+                : "1430.00",
+            prudentWeeklyAllowance: negative ? "0.00" : "322.84",
+            remainingDays: 30,
+          };
+        }),
+        referenceDate: `${from}-01`,
+      },
     };
   }
   const summary = /\/budget-periods\/(\d{4}-\d{2})\/summary$/.exec(pathname);
@@ -145,6 +276,59 @@ const testApiResponse = (pathname, searchParams) => {
           currency: "EUR",
           kind: "DEPENSE",
           overdue: false,
+        },
+      ],
+      meta: noNextPage,
+    };
+  }
+  // Éléments potentiels de la Simulation (#241).
+  if (
+    pathname.endsWith("/events") &&
+    searchParams.get("status") === "POTENTIEL"
+  ) {
+    return {
+      data: [
+        {
+          amount: "250.00",
+          currency: "EUR",
+          endDate: null,
+          id: 40,
+          kind: "DEPENSE",
+          recurrence: "AUCUNE",
+          startDate: "2026-10-15",
+          status: "POTENTIEL",
+          title: "Vélo",
+        },
+      ],
+      meta: noNextPage,
+    };
+  }
+  // Événements mensuels (#225) : l'annuel, créé sur le Web, doit garder sa
+  // répétition dans le formulaire mobile.
+  if (pathname.endsWith("/events")) {
+    return {
+      data: [
+        {
+          amount: "120.00",
+          currency: "EUR",
+          endDate: null,
+          id: 21,
+          kind: "DEPENSE",
+          recurrence: "MENSUELLE",
+          startDate: "2026-09-20",
+          status: "CONFIRME",
+          title: "Assurance",
+        },
+        {
+          amount: "880.00",
+          currency: "EUR",
+          endDate: "2028-10-15",
+          id: 22,
+          kind: "DEPENSE",
+          recurrence: "ANNUELLE",
+          startDate: "2026-10-15",
+          status: "CONFIRME",
+          title: "Taxe foncière",
         },
       ],
       meta: noNextPage,
@@ -267,10 +451,132 @@ const handleCategoryCommand = (request, response, pathname) => {
   return true;
 };
 
+/**
+ * Commandes des événements mensuels (#225), sans état : la création et la
+ * modification renvoient le corps reçu, confirmé.
+ */
+const handleEventCommand = (request, response, pathname) => {
+  // Simulation (#241) : confirmation et vidage, sans état.
+  const confirm = /\/v1\/events\/(\d+)\/confirm$/.exec(pathname);
+  if (confirm != null && request.method === "POST") {
+    sendJson(response, 200, {
+      data: {
+        amount: "250.00",
+        currency: "EUR",
+        endDate: null,
+        id: Number(confirm[1]),
+        kind: "DEPENSE",
+        recurrence: "AUCUNE",
+        startDate: "2026-10-15",
+        status: "CONFIRME",
+        title: "Vélo",
+      },
+    });
+    return true;
+  }
+  if (pathname === "/v1/simulation/events" && request.method === "DELETE") {
+    sendJson(response, 204, null);
+    return true;
+  }
+  const match = /\/v1\/events(?:\/(\d+))?$/.exec(pathname);
+  if (match == null || !["POST", "PUT", "DELETE"].includes(request.method)) {
+    return false;
+  }
+  const id = match[1] == null ? null : Number(match[1]);
+  if (request.method === "DELETE") {
+    sendJson(response, 204, null);
+    return true;
+  }
+  const chunks = [];
+  request.on("data", (chunk) => chunks.push(chunk));
+  request.on("end", () => {
+    let body;
+    try {
+      body = JSON.parse(Buffer.concat(chunks).toString() || "{}");
+    } catch {
+      sendJson(response, 422, { error: { type: "ValidationFailed" } });
+      return;
+    }
+    // Refus métier simulé : un potentiel « Expiré » (#241).
+    if (body.title === "Expiré") {
+      sendJson(response, 422, {
+        error: {
+          type: "ValidationFailed",
+          details: { code: "EXPIRED_POTENTIAL" },
+        },
+      });
+      return;
+    }
+    // Panne simulée : un titre « Panne » échoue côté serveur.
+    if (body.title === "Panne") {
+      sendJson(response, 500, { error: { type: "InternalServerError" } });
+      return;
+    }
+    sendJson(response, request.method === "POST" ? 201 : 200, {
+      data: { id: id ?? 30, status: "CONFIRME", ...body },
+    });
+  });
+  return true;
+};
+
+/**
+ * Commandes des objectifs (#226), sans état : la création et la
+ * modification renvoient le corps reçu avec une prévision ; un titre
+ * « Panne » échoue côté serveur, « Refus » est refusé (422).
+ */
+const handleGoalCommand = (request, response, pathname) => {
+  const match = /\/v1\/goals(?:\/(\d+))?$/.exec(pathname);
+  if (match == null || !["POST", "PUT", "DELETE"].includes(request.method)) {
+    return false;
+  }
+  const id = match[1] == null ? null : Number(match[1]);
+  if (request.method === "DELETE") {
+    sendJson(response, 204, null);
+    return true;
+  }
+  const chunks = [];
+  request.on("data", (chunk) => chunks.push(chunk));
+  request.on("end", () => {
+    let body;
+    try {
+      body = JSON.parse(Buffer.concat(chunks).toString() || "{}");
+    } catch {
+      sendJson(response, 422, { error: { type: "ValidationFailed" } });
+      return;
+    }
+    if (body.title === "Panne") {
+      sendJson(response, 500, { error: { type: "InternalServerError" } });
+      return;
+    }
+    // Refus de validation backend (#226) : un titre « Refus » renvoie 422.
+    if (body.title === "Refus") {
+      sendJson(response, 422, { error: { type: "ValidationFailed" } });
+      return;
+    }
+    sendJson(response, request.method === "POST" ? 201 : 200, {
+      data: {
+        id: id ?? 40,
+        ...body,
+        forecast: {
+          contributionsNeeded: null,
+          estimatedReachMonth: null,
+          referenceMonth: "2026-10",
+          remainingAmount: body.targetAmount,
+          requiredMonthlyContribution: null,
+          status: "NO_DEADLINE",
+        },
+      },
+    });
+  });
+  return true;
+};
+
 createServer((request, response) => {
   const url = new URL(request.url ?? "/", "http://localhost");
   const pathname = url.pathname;
   if (handleCategoryCommand(request, response, pathname)) return;
+  if (handleEventCommand(request, response, pathname)) return;
+  if (handleGoalCommand(request, response, pathname)) return;
   if (pathname === "/health/ready") {
     response.writeHead(200, {
       "Cache-Control": "no-store",

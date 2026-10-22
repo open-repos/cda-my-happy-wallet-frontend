@@ -45,6 +45,7 @@ async function seed() {
     for (const project of ["mobile", "tablet", "desktop"]) {
       for (const journey of [
         "operations",
+        "fixed-charges",
         "events",
         "simulation",
         "recovery",

@@ -111,7 +111,7 @@ describe("Categories page", () => {
     useCategories.mockReturnValue({ ...successfulState, status: "loading" });
     const { rerender } = renderPage();
     expect(
-      screen.getByRole("heading", { name: "Chargement des catégories…" })
+      screen.getByText("Chargement des catégories…", { selector: "h2" })
     ).toBeInTheDocument();
 
     useCategories.mockReturnValue({ ...successfulState, categories: [] });

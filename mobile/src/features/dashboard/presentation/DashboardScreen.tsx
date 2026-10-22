@@ -22,6 +22,7 @@ import { HttpFixedBudgetGateway } from "@/src/features/dashboard/infrastructure/
 import { useFixedBudget } from "@/src/features/dashboard/presentation/useFixedBudget";
 import { HttpBudgetSummaryGateway } from "@/src/features/budget/infrastructure/HttpBudgetSummaryGateway";
 import { BudgetSummaryCards } from "@/src/features/budget/presentation/BudgetSummaryCards";
+import { SavingsCapacitySection } from "@/src/features/savings/presentation/SavingsCapacitySection";
 
 const colors = themes.light.color;
 
@@ -161,6 +162,9 @@ export const DashboardScreen = () => {
 
         <DashboardCharts gateway={chartGateway} />
 
+        {/* « Ajuster le versement » ouvre l'objectif dans l'onglet Objectifs. */}
+        <SavingsCapacitySection />
+
         <View style={styles.actions}>
           <Text style={styles.sectionTitle}>Continuez votre suivi</Text>
           <ActionCard
@@ -174,6 +178,18 @@ export const DashboardScreen = () => {
             icon="list-outline"
             label="Opérations"
             onPress={() => router.push("/(app)/operations")}
+          />
+          <ActionCard
+            description="Anticipez le solde et le disponible des mois à venir."
+            icon="trending-up-outline"
+            label="Prochains mois"
+            onPress={() => router.push("/(app)/upcoming-months")}
+          />
+          <ActionCard
+            description="Explorez vos dépenses et entrées par catégorie ou dans le temps."
+            icon="bar-chart-outline"
+            label="Analyses"
+            onPress={() => router.push("/(app)/analyses")}
           />
           <ActionCard
             description="Préparez vos projets et suivez leur avancement."

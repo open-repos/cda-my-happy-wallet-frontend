@@ -12,8 +12,8 @@ vi.mock("../../src/js/components/OperationsFixes/CardOperationFixe", () => ({
   ),
 }));
 
-vi.mock("../../src/js/components/CalculRaV", () => ({
-  default: ({ period }) => <div>RaV period:{period}</div>,
+vi.mock("../../src/js/components/OperationsFixes/FixedBudgetSummary", () => ({
+  FixedBudgetSummary: () => <div>Budget serveur</div>,
 }));
 
 afterEach(cleanup);
@@ -28,10 +28,10 @@ describe("OperationsFixes", () => {
 
     expect(screen.getByText("Mes charges:charges")).toBeInTheDocument();
     expect(screen.getByText("Mes revenus:revenus")).toBeInTheDocument();
-    expect(screen.getByText("RaV period:mois")).toBeInTheDocument();
+    expect(screen.getByText("Budget serveur")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Sauvegarder" })
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: "Sauvegarder" })
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Revenir à la page d'accueil/i })
     ).toHaveAttribute("href", "/home");

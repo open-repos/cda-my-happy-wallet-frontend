@@ -7,6 +7,29 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-22
+
+### Added
+
+- Added the upcoming months forecast to the mobile app, opened from the dashboard and the calendar: month-end balance and allowances per month, week and day, with negative months flagged by text (#214).
+- Added an analytics screen to the mobile app: expenses, income or net balance by category, month, week or day over preset periods, with a chart and an equivalent text list using the dashboard category colours (#215).
+- Added weekly, quarterly and yearly repetitions to the mobile event form; the end date picker no longer offers days before the start date (#216).
+- Added the savings capacity to the mobile dashboard and objectives tab: planned and required contributions, balances and allowances after goals, sustainability indicator and per-goal effort, with an "adjust contribution" shortcut to the goal form (#217).
+- Added monthly events to the mobile app: list, create, edit and delete them from the objectives tab, with the Web validations; the calendar refreshes its summary and pending occurrences when it regains focus (#225).
+- Added financial goals to the mobile app: list them with their progress and backend forecast, and create, edit or delete them from the objectives tab with the Web validations (#226).
+- Added periodic fixed charges with an adjustable personal share, monthly previews and edit/delete controls (#238).
+- Added the Simulation switch to the mobile calendar, upcoming months and savings capacity: budget reads include potential items when it is on, and a comparison shows the usual and simulated month-end balance (#240).
+- Added potential items management to the mobile Simulation: list with expiry date, add and edit with the event form, confirm, delete and clear with explicit confirmation; every affected figure refreshes after a change (#241).
+
+### Fixed
+
+- Verified gzip compression and immutable caching for the public category icon catalogue after the owner updated Nginx (#153).
+- Stopped repeated loading announcements when refreshing already displayed Web lists, forecasts and home sections, while preserving first-load, new-view and error announcements (#221).
+
+### Security
+
+- Updated the Web development server to Vite 6.4.5 to preserve file access restrictions on imports with query parameters (#246).
+
 ## [1.2.0] - 2026-10-21
 
 ### Added
@@ -120,7 +143,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Replaced dynamic SSH host discovery with a pre-verified `known_hosts` file.
 - Isolated SSH credentials from validation and build jobs.
 
-[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.2.0...develop
+[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.3.0...develop
+[1.3.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.2.0...v1.3.0
 [1.2.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.1.1...v1.2.0
 [1.1.1]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.1.0...v1.1.1
 [1.1.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.0.0...v1.1.0
