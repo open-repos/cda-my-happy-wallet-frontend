@@ -20,7 +20,7 @@ export const currentParisMonth = (now = new Date()) =>
  * Charge une section indépendante : son échec n'empêche pas l'affichage des
  * autres blocs de l'accueil.
  */
-const useSection = (load) => {
+const useSection = (load, loadingKey) => {
   const [state, setState] = useState({ status: "loading", data: null });
   const latestRequest = useRef(0);
 
@@ -50,6 +50,7 @@ const useSection = (load) => {
   return {
     ...(state.loader === load ? state : { status: "loading", data: null }),
     reload,
+    loadingKey,
   };
 };
 
@@ -83,8 +84,10 @@ export const useHomeBudget = (month = currentParisMonth()) => {
 
   return {
     month,
-    summary: useSection(loadSummary),
-    expenses: useSection(loadExpenses),
-    goals: useSection(loadGoals),
+    // Clés de vue indépendantes des callbacks et de revision : une
+    // invalidation recharge le même bloc ; mois/scénario changent sa vue.
+    summary: useSection(loadSummary, `${month}:${HOME_CURRENCY}:${scenario}`),
+    expenses: useSection(loadExpenses, `${month}:${HOME_CURRENCY}`),
+    goals: useSection(loadGoals, HOME_CURRENCY),
   };
 };

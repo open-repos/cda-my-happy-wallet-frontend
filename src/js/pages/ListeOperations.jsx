@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { LiveMessage } from "../components/LiveMessage";
+import { useAnnouncesLoading } from "../hooks/useAnnouncesLoading";
 import addIcon from "../../assets/icons/add.svg";
 import { OneOffOperationForm } from "../components/OneOffOperations/OneOffOperationForm";
 import { OneOffOperationList } from "../components/OneOffOperations/OneOffOperationList";
@@ -11,6 +12,8 @@ function ListeOperations() {
   const [editedOperation, setEditedOperation] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const state = useOneOffOperations();
+  // Liste générale sans filtre ; une mutation ou la pagination garde la clé.
+  const announcesLoading = useAnnouncesLoading(state.status, "operations");
   const openCreate = () => {
     setEditedOperation(null);
     setIsFormOpen(true);
@@ -72,13 +75,13 @@ function ListeOperations() {
       />
       {/* Chargement annoncé par une région live toujours montée (#164). */}
       <LiveMessage
-        message={state.status === "loading" ? "Chargement des opérations…" : ""}
+        message={announcesLoading ? "Chargement des opérations…" : ""}
         visible={false}
       />
       {state.status === "loading" && (
         <section className="one-off-state">
           <span className="one-off-loader" aria-hidden="true" />
-          <h2>Chargement des opérations…</h2>
+          <h2 aria-hidden="true">Chargement des opérations…</h2>
         </section>
       )}
       {state.status === "error" && (

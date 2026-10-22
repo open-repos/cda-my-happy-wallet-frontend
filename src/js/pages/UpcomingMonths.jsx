@@ -12,6 +12,7 @@ import {
   monthLabel,
 } from "../components/BudgetCalendar/budgetFormat";
 import { LiveMessage } from "../components/LiveMessage";
+import { useAnnouncesLoading } from "../hooks/useAnnouncesLoading";
 import { EChart } from "../components/charts/EChart";
 import { useChartTokens } from "../components/charts/useChartTokens";
 import { budgetForecastChartOption } from "../components/charts/budgetForecastChartOptions";
@@ -41,6 +42,12 @@ export default function UpcomingMonths() {
   const query = { from, months, currency: "EUR" };
   const problem = forecastQueryProblem(query, today);
   const forecast = useBudgetForecast(query, problem);
+  // Identité de la vue : période, horizon, devise et scénario, sans la
+  // révision d'invalidation qui ne fait qu'actualiser les mêmes données.
+  const announcesLoading = useAnnouncesLoading(
+    forecast.status,
+    JSON.stringify({ ...query, scenario: simulation.scenario })
+  );
   const tokens = useChartTokens();
   const data = forecast.data;
   const option = useMemo(
@@ -54,7 +61,7 @@ export default function UpcomingMonths() {
   );
   const message =
     problem ||
-    (forecast.status === "loading"
+    (announcesLoading
       ? "Chargement des prévisions…"
       : forecast.status === "error"
       ? "Les prévisions n’ont pas pu être chargées."

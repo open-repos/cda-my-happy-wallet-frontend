@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const SETTLED = new Set(["success", "future", "paging"]);
+const SETTLED = new Set(["success", "future", "paging", "empty"]);
 
 /**
  * Vrai quand le chargement de la vue `key` doit être annoncé (#171) : tant
@@ -20,9 +20,10 @@ export const useAnnouncesLoading = (status, key) => {
     if (status === "loading") loadingKey.current = key;
     else if (SETTLED.has(status) && loadingKey.current === key)
       setSettledKey(key);
-    // Après un échec, ou une section masquée (Simulation désactivée), le
-    // prochain chargement est de nouveau annoncé.
-    else if (status === "error" || status === "idle") setSettledKey(null);
+    // Après un échec, une saisie invalide ou une section masquée
+    // (Simulation désactivée), le prochain chargement est de nouveau annoncé.
+    else if (status === "error" || status === "idle" || status === "invalid")
+      setSettledKey(null);
   }, [status, key]);
   return status === "loading" && settledKey !== key;
 };
