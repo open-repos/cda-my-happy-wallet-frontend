@@ -245,9 +245,13 @@ for (const theme of ["light", "dark"]) {
           empty: "Pas encore d’opération",
           error: "La liste est momentanément indisponible",
         }[state];
-        await expect(
-          page.getByRole("heading", { name: heading })
-        ).toBeVisible();
+        const stateHeading =
+          state === "loading"
+            ? page
+                .locator('h2[aria-hidden="true"]')
+                .filter({ hasText: heading })
+            : page.getByRole("heading", { name: heading });
+        await expect(stateHeading).toBeVisible();
         // Chargement annoncé par une région live toujours montée (#164).
         if (state === "loading")
           await expect(

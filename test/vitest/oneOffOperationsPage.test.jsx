@@ -90,7 +90,7 @@ describe("ListeOperations", () => {
     });
     const { rerender } = render(<ListeOperations />, { wrapper: MemoryRouter });
     expect(
-      screen.getByRole("heading", { name: "Chargement des opérations…" })
+      screen.getByText("Chargement des opérations…", { selector: "h2" })
     ).toBeInTheDocument();
 
     useOneOffOperations.mockReturnValue({
