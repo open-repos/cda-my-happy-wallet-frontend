@@ -114,6 +114,9 @@ const testApiResponse = (pathname, searchParams) => {
       },
     };
   }
+  // Simulation (#240) : un potentiel de 250 € réduit le premier mois.
+  const simulated = searchParams.get("scenario") === "simulation";
+  const firstRemaining = simulated ? "1180.00" : "1430.00";
   // Capacité d'épargne (#217) : cohérente avec /budget-forecast (même date
   // de référence, reste après versements prévus = reste de fin de mois).
   if (pathname.endsWith("/savings-capacity")) {
@@ -136,7 +139,7 @@ const testApiResponse = (pathname, searchParams) => {
         ],
         months: [
           {
-            afterPlanned: "1430.00",
+            afterPlanned: firstRemaining,
             afterRequired: "1400.00",
             beforeGoals: "1580.00",
             month: from,
@@ -172,14 +175,22 @@ const testApiResponse = (pathname, searchParams) => {
             carryIn: index === 0 ? "1337.50" : "420.00",
             fixedExpense: "1200.00",
             fixedIncome: "2500.00",
-            forecastRemaining: negative ? "-35.50" : "1430.00",
+            forecastRemaining: negative
+              ? "-35.50"
+              : index === 0
+                ? firstRemaining
+                : "1430.00",
             forecastResult: negative ? "-455.50" : "1030.00",
             goalSavings: "150.00",
             month: shift(index),
             plannedExpense: negative ? "1605.50" : "120.00",
             plannedIncome: "0.00",
             prudentDailyAllowance: negative ? "0.00" : "46.12",
-            prudentMonthlyAllowance: negative ? "0.00" : "1430.00",
+            prudentMonthlyAllowance: negative
+              ? "0.00"
+              : index === 0
+                ? firstRemaining
+                : "1430.00",
             prudentWeeklyAllowance: negative ? "0.00" : "322.84",
             remainingDays: 30,
           };

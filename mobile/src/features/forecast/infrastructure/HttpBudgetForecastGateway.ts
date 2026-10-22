@@ -4,6 +4,10 @@ import {
   isForecastMonth,
   parseBudgetForecast,
 } from "@/src/features/forecast/domain/budgetForecast";
+import {
+  Scenario,
+  withScenario,
+} from "@/src/features/simulation/domain/scenario";
 
 export interface ForecastHttpClient {
   request(path: string, init?: RequestInit): Promise<Response>;
@@ -12,6 +16,8 @@ export interface ForecastHttpClient {
 export interface ForecastQuery {
   from: string;
   months: number;
+  /** Habituel par défaut : la requête reste alors sans paramètre (#240). */
+  scenario?: Scenario;
 }
 
 export interface BudgetForecastGateway {
@@ -34,6 +40,7 @@ export class HttpBudgetForecastGateway implements BudgetForecastGateway {
   public async forecast({
     from,
     months,
+    scenario = "standard",
   }: ForecastQuery): Promise<BudgetForecast> {
     if (
       !isForecastMonth(from) ||
@@ -43,11 +50,10 @@ export class HttpBudgetForecastGateway implements BudgetForecastGateway {
     ) {
       throw new Error("Invalid budget forecast query");
     }
-    const params = new URLSearchParams({
-      from,
-      months: `${months}`,
-      currency: CURRENCY,
-    });
+    const params = withScenario(
+      new URLSearchParams({ from, months: `${months}`, currency: CURRENCY }),
+      scenario,
+    );
     const response = await this.httpClient.request(
       `/budget-forecast?${params.toString()}`,
     );

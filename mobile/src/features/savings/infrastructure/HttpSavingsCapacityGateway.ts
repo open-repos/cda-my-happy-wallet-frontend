@@ -3,13 +3,17 @@ import {
   SavingsOverview,
   parseSavingsCapacity,
 } from "@/src/features/savings/domain/savingsCapacity";
+import {
+  Scenario,
+  withScenario,
+} from "@/src/features/simulation/domain/scenario";
 
 export interface SavingsHttpClient {
   request(path: string, init?: RequestInit): Promise<Response>;
 }
 
 export interface SavingsCapacityGateway {
-  overview(from: string): Promise<SavingsOverview>;
+  overview(from: string, scenario?: Scenario): Promise<SavingsOverview>;
 }
 
 export class SavingsRequestError extends Error {
@@ -32,15 +36,17 @@ export class HttpSavingsCapacityGateway implements SavingsCapacityGateway {
     this.forecast = new HttpBudgetForecastGateway(httpClient);
   }
 
-  public async overview(from: string): Promise<SavingsOverview> {
-    const params = new URLSearchParams({
-      from,
-      months: "1",
-      currency: CURRENCY,
-    });
+  public async overview(
+    from: string,
+    scenario: Scenario = "standard",
+  ): Promise<SavingsOverview> {
+    const params = withScenario(
+      new URLSearchParams({ from, months: "1", currency: CURRENCY }),
+      scenario,
+    );
     const [response, projection] = await Promise.all([
       this.httpClient.request(`/savings-capacity?${params.toString()}`),
-      this.forecast.forecast({ from, months: 1 }),
+      this.forecast.forecast({ from, months: 1, scenario }),
     ]);
     if (!response.ok) throw new SavingsRequestError(response.status);
     const payload: unknown = await response.json();
