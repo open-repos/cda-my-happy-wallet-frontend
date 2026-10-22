@@ -54,18 +54,14 @@ const isRepeating = (recurrence: EventRecurrence) => recurrence !== "AUCUNE";
 export const recurrenceLabel = (recurrence: EventRecurrence): string =>
   RECURRENCE_LABELS[recurrence];
 
-/**
- * Choix proposés par le formulaire mobile : une fois ou chaque mois (#225).
- * Les autres répétitions arrivent avec #216 ; la valeur d'un événement créé
- * sur le Web reste proposée pour ne pas être modifiée à l'insu de la personne.
- */
-export const formRecurrenceOptions = (
-  current: EventRecurrence,
-): EventRecurrence[] =>
-  ["AUCUNE", "MENSUELLE", current].filter(
-    (value, index, values): value is EventRecurrence =>
-      values.indexOf(value) === index,
-  ) as EventRecurrence[];
+/** Choix du formulaire mobile : les cinq répétitions du Web (#216). */
+export const FORM_RECURRENCES: EventRecurrence[] = [
+  "AUCUNE",
+  "HEBDOMADAIRE",
+  "MENSUELLE",
+  "TRIMESTRIELLE",
+  "ANNUELLE",
+];
 
 export const parseMonthlyEvent = (value: unknown): MonthlyEvent => {
   if (

@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 
+// Fuseau très éloigné d'UTC : une grille recalculée en heure locale
+// décalerait les dates civiles et ferait échouer ces tests (#216).
+process.env.TZ = "Pacific/Kiritimati";
+
 import {
   abbreviateAmount,
   dayCell,
+  longDate,
   monthGrid,
   monthTitle,
   shiftMonth,
@@ -35,6 +40,20 @@ describe("monthGrid", () => {
     expect(cells[3]).toMatchObject({ date: "2026-10-01", inMonth: true });
     expect(cells.find((cell) => cell.isToday)?.date).toBe("2026-10-11");
     expect(cells.filter((cell) => cell.inMonth)).toHaveLength(31);
+  });
+
+  // Occurrences hebdomadaires, trimestrielles ou annuelles (#216) : les dates
+  // civiles de l'API restent des textes, sans décalage au changement d'heure.
+  it("keeps civil dates across the October daylight-saving change", () => {
+    const dates = monthGrid("2026-10", "2026-10-11").map((cell) => cell.date);
+    const sunday = dates.indexOf("2026-10-25");
+    expect(dates.slice(sunday - 1, sunday + 2)).toEqual([
+      "2026-10-24",
+      "2026-10-25",
+      "2026-10-26",
+    ]);
+    expect(longDate("2026-10-25")).toBe("25 octobre 2026");
+    expect(longDate("2027-01-20")).toBe("20 janvier 2027");
   });
 
   it("handles leap February", () => {
