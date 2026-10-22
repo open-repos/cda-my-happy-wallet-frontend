@@ -1,8 +1,4 @@
-import { describe, expect, it } from "vitest";
-
-// Fuseau très éloigné d'UTC : une grille recalculée en heure locale
-// décalerait les dates civiles et ferait échouer ces tests (#216).
-process.env.TZ = "Pacific/Kiritimati";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import {
   abbreviateAmount,
@@ -27,6 +23,17 @@ const day = (overrides: Partial<BudgetDay> = {}): BudgetDay => ({
 });
 
 describe("monthGrid", () => {
+  // Fuseau très éloigné d'UTC : une grille recalculée en heure locale
+  // décalerait les dates civiles et ferait échouer ces tests (#216).
+  const originalTimezone = process.env.TZ;
+  beforeAll(() => {
+    process.env.TZ = "Pacific/Kiritimati";
+  });
+  afterAll(() => {
+    if (originalTimezone === undefined) delete process.env.TZ;
+    else process.env.TZ = originalTimezone;
+  });
+
   it("starts on Monday and always has six full weeks", () => {
     const cells = monthGrid("2026-10", "2026-10-11");
     expect(cells).toHaveLength(42);

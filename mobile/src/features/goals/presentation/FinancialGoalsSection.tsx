@@ -12,15 +12,19 @@ import {
 import { HttpFinancialGoalsGateway } from "@/src/features/goals/infrastructure/HttpFinancialGoalsGateway";
 import { FinancialGoalCard } from "@/src/features/goals/presentation/FinancialGoalCard";
 import { FinancialGoalFormModal } from "@/src/features/goals/presentation/FinancialGoalFormModal";
-import { requestedGoal } from "@/src/features/goals/presentation/requestedGoal";
+import {
+  GoalRequest,
+  requestedGoal,
+} from "@/src/features/goals/presentation/requestedGoal";
 import { useFinancialGoals } from "@/src/features/goals/presentation/useFinancialGoals";
+import { SavingsCapacitySection } from "@/src/features/savings/presentation/SavingsCapacitySection";
 
 interface FinancialGoalsSectionProps {
   /**
    * Objectif à ouvrir en modification dès son chargement (« ajuster le
-   * versement », #217), par exemple depuis le paramètre `ajuster` de l'URL.
+   * versement », #217) : paramètres `ajuster` et `demande` de l'URL.
    */
-  initialGoalId?: number | null;
+  adjustRequest?: GoalRequest | null;
 }
 
 const colors = themes.light.color;
@@ -28,7 +32,7 @@ const semibold = `${primitives.fontWeight.semibold}` as "600";
 
 /** Section « Objectifs financiers » de l'onglet Objectifs (#226). */
 export const FinancialGoalsSection = ({
-  initialGoalId = null,
+  adjustRequest = null,
 }: FinancialGoalsSectionProps) => {
   const { httpClient } = useAuth();
   const gateway = useMemo(
@@ -38,13 +42,13 @@ export const FinancialGoalsSection = ({
   const state = useFinancialGoals(gateway);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editedGoal, setEditedGoal] = useState<FinancialGoal | null>(null);
-  // Objectif demandé par `initialGoalId`, ouvert une seule fois dès qu'il est
+  // Objectif demandé par `adjustRequest`, ouvert une seule fois dès qu'il est
   // chargé : dérivé au rendu, seule sa prise en compte est mémorisée.
-  const [handledGoalId, setHandledGoalId] = useState<number | null>(null);
+  const [handledKey, setHandledKey] = useState<string | null>(null);
   const pendingGoal = requestedGoal(
     state.goals,
-    initialGoalId,
-    handledGoalId,
+    adjustRequest,
+    handledKey,
     isFormOpen,
   );
   const formGoal = isFormOpen ? editedGoal : pendingGoal;
@@ -52,13 +56,13 @@ export const FinancialGoalsSection = ({
 
   const open = (goal: FinancialGoal | null) => {
     state.clearMessage();
-    setHandledGoalId(initialGoalId);
+    setHandledKey(adjustRequest?.key ?? null);
     setEditedGoal(goal);
     setIsFormOpen(true);
   };
   const closeForm = () => {
     if (state.mutationStatus !== "loading") {
-      setHandledGoalId(initialGoalId);
+      setHandledKey(adjustRequest?.key ?? null);
       setIsFormOpen(false);
       setEditedGoal(null);
     }
@@ -77,6 +81,8 @@ export const FinancialGoalsSection = ({
   };
 
   const canAdd = state.status === "success" && state.goals.length > 0;
+  // Comme le Web : toute modification d’objectif, titre compris.
+  const goalsKey = JSON.stringify(state.goals);
 
   return (
     <View style={styles.section}>
@@ -142,6 +148,18 @@ export const FinancialGoalsSection = ({
           <FinancialGoalCard key={goal.id} goal={goal} onEdit={open} />
         ))}
       </View>
+
+      {/* Capacité d'épargne (#217) : relue sans bruit quand un objectif
+          change ; « Ajuster le versement » ouvre l'objectif ici. */}
+      {state.status === "success" ? (
+        <SavingsCapacitySection
+          refreshKey={goalsKey}
+          onAdjust={(goalId) => {
+            const goal = state.goals.find(({ id }) => id === goalId);
+            if (goal != null && state.mutationStatus !== "loading") open(goal);
+          }}
+        />
+      ) : null}
 
       {isFormVisible ? (
         <FinancialGoalFormModal

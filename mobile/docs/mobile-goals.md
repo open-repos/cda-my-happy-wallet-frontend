@@ -31,8 +31,9 @@ garde sa lecture souple de `/goals` (`src/features/charts/chartData.ts`).
   les événements, et inversement.
 - Suppression confirmée dans le formulaire ; échecs affichés et annoncés dans
   la fenêtre du formulaire.
-- `ajuster=<id>` dans l'URL de l'onglet ouvre l'objectif en modification,
-  une seule fois : entrée de « Ajuster le versement » (#217).
+- `ajuster=<id>&demande=<jeton>` dans l'URL de l'onglet ouvre l'objectif en
+  modification, une fois par demande : entrée de « Ajuster le versement »
+  (#217). Le jeton rend chaque demande unique, car les onglets restent montés.
 - `src/design/RadioGroup.tsx` est partagé avec le formulaire des événements.
 
 ## Recette

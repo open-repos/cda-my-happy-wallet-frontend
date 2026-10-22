@@ -22,6 +22,7 @@ import { HttpFixedBudgetGateway } from "@/src/features/dashboard/infrastructure/
 import { useFixedBudget } from "@/src/features/dashboard/presentation/useFixedBudget";
 import { HttpBudgetSummaryGateway } from "@/src/features/budget/infrastructure/HttpBudgetSummaryGateway";
 import { BudgetSummaryCards } from "@/src/features/budget/presentation/BudgetSummaryCards";
+import { SavingsCapacitySection } from "@/src/features/savings/presentation/SavingsCapacitySection";
 
 const colors = themes.light.color;
 
@@ -160,6 +161,9 @@ export const DashboardScreen = () => {
         ) : null}
 
         <DashboardCharts gateway={chartGateway} />
+
+        {/* « Ajuster le versement » ouvre l'objectif dans l'onglet Objectifs. */}
+        <SavingsCapacitySection />
 
         <View style={styles.actions}>
           <Text style={styles.sectionTitle}>Continuez votre suivi</Text>
