@@ -22,11 +22,19 @@ validations et messages du Web, montant avec virgule accepté). Passerelle :
 
 ## Répétitions
 
-L'API accepte cinq répétitions et la lecture les accepte toutes. Le
-formulaire mobile propose « Une seule fois » et « Chaque mois » ; un
-événement créé sur le Web avec une autre répétition la garde dans le
-formulaire, pour ne jamais la modifier à l'insu de la personne. Le choix
-complet arrive avec #216.
+Le formulaire propose les cinq répétitions du Web (#216) : une seule fois,
+chaque semaine, chaque mois, chaque trimestre et chaque année, avec une date
+de fin incluse facultative. Le sélecteur de la date de fin refuse les jours
+antérieurs à la date de début, et son bouton « Aujourd’hui » se nomme
+« Date de fin incluse : aujourd’hui » pour le distinguer de celui du début.
+Dans le formulaire des objectifs, il se nomme de même « Date souhaitée :
+aujourd’hui » ; celui des opérations garde le nom « Aujourd’hui ».
+
+Le calendrier mobile ne calcule aucune occurrence : il affiche les jours
+(`plannedCount`) et la file à traiter (`occurrenceDate`) renvoyés par l'API,
+en dates civiles manipulées comme du texte. Les répétitions hebdomadaires,
+trimestrielles et annuelles y apparaissent donc aux dates de l'API, sans
+décalage de fuseau ni au changement d'heure.
 
 ## Comportement
 

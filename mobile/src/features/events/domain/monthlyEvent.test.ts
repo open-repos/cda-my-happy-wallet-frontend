@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   EventDraft,
-  formRecurrenceOptions,
+  FORM_RECURRENCES,
   parseMonthlyEvent,
   recurrenceLabel,
   toEventPayload,
@@ -63,12 +63,13 @@ describe("monthly event domain (#225)", () => {
     expect(() => parseMonthlyEvent({ ...event, endDate: "demain" })).toThrow();
   });
 
-  it("offers once and monthly, plus the current value of an edited event", () => {
-    expect(formRecurrenceOptions("MENSUELLE")).toEqual(["AUCUNE", "MENSUELLE"]);
-    expect(formRecurrenceOptions("ANNUELLE")).toEqual([
-      "AUCUNE",
-      "MENSUELLE",
-      "ANNUELLE",
+  it("offers the five Web repetitions, in the Web order (#216)", () => {
+    expect(FORM_RECURRENCES.map(recurrenceLabel)).toEqual([
+      "Une seule fois",
+      "Chaque semaine",
+      "Chaque mois",
+      "Chaque trimestre",
+      "Chaque année",
     ]);
   });
 

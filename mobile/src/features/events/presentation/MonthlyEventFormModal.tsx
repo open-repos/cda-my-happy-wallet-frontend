@@ -22,7 +22,7 @@ import {
   EventDraftErrors,
   EventKind,
   MonthlyEvent,
-  formRecurrenceOptions,
+  FORM_RECURRENCES,
   recurrenceLabel,
   validateEventDraft,
 } from "@/src/features/events/domain/monthlyEvent";
@@ -173,9 +173,10 @@ export const MonthlyEventFormModal = ({
 
               <Text style={styles.label}>Répétition</Text>
               <RadioGroup
-                choices={formRecurrenceOptions(
-                  event?.recurrence ?? draft.recurrence,
-                ).map((value) => ({ value, label: recurrenceLabel(value) }))}
+                choices={FORM_RECURRENCES.map((value) => ({
+                  value,
+                  label: recurrenceLabel(value),
+                }))}
                 disabled={isSaving}
                 label="Répétition"
                 value={draft.recurrence}
@@ -206,6 +207,7 @@ export const MonthlyEventFormModal = ({
                         disabled={isSaving}
                         invalid={errors.endDate != null}
                         label="Date de fin incluse"
+                        minDate={draft.startDate}
                         onChange={(value) => update("endDate", value)}
                         value={draft.endDate}
                       />

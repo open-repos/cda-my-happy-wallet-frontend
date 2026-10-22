@@ -335,13 +335,40 @@ test("manages monthly events from the objectives tab (#225)", async ({
   await page.getByRole("radio", { name: "Entrée" }).click();
   await expect(page.getByRole("radio", { name: "Entrée" })).toBeChecked();
   await expect(page.getByRole("radio", { name: "Chaque mois" })).toBeChecked();
-  // Une fois / chaque mois seulement à la création (#216 pour le reste).
-  await expect(page.getByRole("radio", { name: "Chaque année" })).toHaveCount(
-    0,
-  );
+  // Les cinq répétitions du Web (#216).
+  for (const name of [
+    "Une seule fois",
+    "Chaque semaine",
+    "Chaque trimestre",
+    "Chaque année",
+  ]) {
+    await expect(page.getByRole("radio", { name })).toBeVisible();
+  }
+  await page.getByRole("radio", { name: "Chaque semaine" }).click();
   await expect(
-    page.getByRole("radio", { name: "Sans date de fin" }),
+    page.getByRole("radio", { name: "Chaque semaine" }),
   ).toBeChecked();
+  // Fin incluse : son « Aujourd’hui » se distingue de celui du début.
+  await page.getByRole("radio", { name: "Jusqu’à une date" }).click();
+  await expect(
+    page.getByRole("button", { name: "Date de fin incluse : aujourd’hui" }),
+  ).toBeVisible();
+  // Fin préremplie au début (aujourd’hui) : le mois précédent est entièrement
+  // antérieur au début, donc indisponible.
+  await page
+    .getByRole("button", {
+      name: /^Date de fin incluse : .*Ouvrir le calendrier$/,
+    })
+    .click();
+  await page
+    .getByRole("button", { name: "Mois précédent", exact: true })
+    .last()
+    .click();
+  await expect(
+    page.getByRole("button", { name: /^1 [^\s]+ \d{4}$/ }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "Annuler" }).last().click();
+  await page.getByRole("radio", { name: "Sans date de fin" }).click();
   const created = page.waitForRequest(
     (request) =>
       request.method() === "POST" &&
@@ -353,7 +380,7 @@ test("manages monthly events from the objectives tab (#225)", async ({
     amount: "2100.50",
     currency: "EUR",
     kind: "ENTREE",
-    recurrence: "MENSUELLE",
+    recurrence: "HEBDOMADAIRE",
     endDate: null,
   });
   await expect(page.getByText("Événement ajouté.")).toBeVisible();
