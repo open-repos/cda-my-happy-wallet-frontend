@@ -38,6 +38,20 @@ describe("HttpBudgetSummaryGateway", () => {
     );
   });
 
+  it("reads the simulation scenario only when asked (#240)", async () => {
+    const request = vi.fn((_path: string) =>
+      Promise.resolve(json(200, { data: summary })),
+    );
+    const gateway = new HttpBudgetSummaryGateway({ request });
+
+    await gateway.getMonth("2026-10", "simulation");
+    await gateway.getMonth("2026-10", "standard");
+    expect(request.mock.calls.map(([path]) => path)).toEqual([
+      "/budget-periods/2026-10/summary?currency=EUR&scenario=simulation",
+      "/budget-periods/2026-10/summary?currency=EUR",
+    ]);
+  });
+
   it("reports the HTTP status of a failed request", async () => {
     const request = vi.fn().mockResolvedValue(json(503, {}));
     const gateway = new HttpBudgetSummaryGateway({ request });

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { BudgetForecast } from "@/src/features/forecast/domain/budgetForecast";
 import { BudgetForecastGateway } from "@/src/features/forecast/infrastructure/HttpBudgetForecastGateway";
+import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
 
 type ForecastStatus = "loading" | "success" | "empty" | "error";
 
@@ -16,7 +17,8 @@ interface ForecastResult {
  * Prévision des `months` mois à partir de `from` (#214). Un résultat périmé
  * est écarté grâce à la clé de sa requête ; au retour sur l'écran, la
  * prévision est relue sans repasser par le chargement (événements ou
- * objectifs modifiés entre-temps).
+ * objectifs modifiés entre-temps). Le scénario de la Simulation fait partie
+ * de la clé : l'autre scénario reste masqué pendant le calcul (#240).
  */
 export const useBudgetForecast = (
   gateway: BudgetForecastGateway,
@@ -25,12 +27,13 @@ export const useBudgetForecast = (
 ) => {
   const [reload, setReload] = useState(0);
   const [result, setResult] = useState<ForecastResult | null>(null);
-  const key = `${from}:${months}:${reload}`;
+  const { scenario, revision } = useSimulation();
+  const key = `${from}:${months}:${scenario}:${revision}:${reload}`;
 
   useEffect(() => {
     let isActive = true;
     gateway
-      .forecast({ from, months })
+      .forecast({ from, months, scenario })
       .then((data) => {
         if (!isActive) return;
         setResult({
@@ -45,14 +48,14 @@ export const useBudgetForecast = (
     return () => {
       isActive = false;
     };
-  }, [from, gateway, key, months]);
+  }, [from, gateway, key, months, scenario]);
 
   // Lus via des refs : l'effet de focus ne se relance qu'au retour sur
   // l'écran, pas à chaque changement d'horizon.
-  const query = useRef({ from, months, key });
+  const query = useRef({ from, months, scenario, key });
   useEffect(() => {
-    query.current = { from, months, key };
-  }, [from, key, months]);
+    query.current = { from, months, scenario, key };
+  }, [from, key, months, scenario]);
   const hasFocused = useRef(false);
   useFocusEffect(
     useCallback(() => {
@@ -63,7 +66,11 @@ export const useBudgetForecast = (
       let isActive = true;
       const current = query.current;
       gateway
-        .forecast({ from: current.from, months: current.months })
+        .forecast({
+          from: current.from,
+          months: current.months,
+          scenario: current.scenario,
+        })
         .then((data) => {
           if (!isActive) return;
           setResult((previous) =>

@@ -17,6 +17,7 @@ import {
 } from "@/src/features/forecast/domain/budgetForecast";
 import { HttpBudgetForecastGateway } from "@/src/features/forecast/infrastructure/HttpBudgetForecastGateway";
 import { useBudgetForecast } from "@/src/features/forecast/presentation/useBudgetForecast";
+import { SimulationReadout } from "@/src/features/simulation/presentation/SimulationReadout";
 
 const colors = themes.light.color;
 const semibold = `${primitives.fontWeight.semibold}` as "600";
@@ -153,6 +154,8 @@ export const UpcomingMonthsScreen = () => {
         <Text style={styles.subtitle}>
           Anticipez vos dépenses et votre épargne, mois après mois.
         </Text>
+
+        <SimulationReadout month={from} />
 
         <Text style={styles.label}>Horizon de prévision</Text>
         <RadioGroup<Horizon>

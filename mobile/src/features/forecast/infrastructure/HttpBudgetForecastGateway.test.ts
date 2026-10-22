@@ -52,6 +52,18 @@ describe("HttpBudgetForecastGateway (#214)", () => {
     );
   });
 
+  it("carries the simulation scenario explicitly (#240)", async () => {
+    const request = vi.fn().mockResolvedValue(json(body([month("2026-10")])));
+    await new HttpBudgetForecastGateway({ request }).forecast({
+      from: "2026-10",
+      months: 1,
+      scenario: "simulation",
+    });
+    expect(request).toHaveBeenCalledWith(
+      "/budget-forecast?from=2026-10&months=1&currency=EUR&scenario=simulation",
+    );
+  });
+
   it("accepts an empty forecast but rejects a partial or foreign one", async () => {
     const empty = vi.fn().mockResolvedValue(json(body([])));
     await expect(

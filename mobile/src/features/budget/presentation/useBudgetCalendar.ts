@@ -19,6 +19,7 @@ import {
   OperationCategory,
 } from "@/src/features/operations/domain/oneOffOperation";
 import { OneOffOperationsGateway } from "@/src/features/operations/infrastructure/HttpOneOffOperationsGateway";
+import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
 
 type SummaryStatus = "loading" | "success" | "future" | "error";
 type OperationsStatus = "loading" | "success" | "paging" | "error";
@@ -49,7 +50,9 @@ export interface DecisionFeedback {
  * Données du calendrier mobile : synthèse du mois (avec ses points
  * journaliers), file des événements à traiter, catégories et opérations du
  * mois ou du jour sélectionné, avec les commandes `realize` et `cancel`.
- * Un résultat périmé est écarté grâce à la clé de sa requête.
+ * Un résultat périmé est écarté grâce à la clé de sa requête. La synthèse
+ * suit le scénario de la Simulation (#240) ; la file reste habituelle : un
+ * potentiel ne se réalise pas avant confirmation.
  */
 export const useBudgetCalendar = (
   budget: BudgetMonthGateway,
@@ -70,8 +73,10 @@ export const useBudgetCalendar = (
   const [categoriesError, setCategoriesError] = useState(false);
   const [decision, setDecision] = useState(false);
   const [feedback, setFeedback] = useState<DecisionFeedback | null>(null);
+  const { scenario, revision } = useSimulation();
 
-  const summaryKey = `${month}:${reload}`;
+  // Le scénario dans la clé masque les montants de l'autre pendant le calcul.
+  const summaryKey = `${month}:${scenario}:${revision}:${reload}`;
   const operationsKey = `${month}:${selectedDate ?? "month"}:${reload}`;
   const filter = useMemo(() => {
     const bounds = monthBounds(month);
@@ -88,7 +93,7 @@ export const useBudgetCalendar = (
     // Synthèse et file rechargées ensemble après une décision; une file
     // indisponible ne masque jamais la synthèse et la grille du mois.
     Promise.all([
-      budget.getMonth(month),
+      budget.getMonth(month, scenario),
       occurrences
         .listPending(through)
         .then((pending) => ({ pending, pendingError: false }))
@@ -116,7 +121,7 @@ export const useBudgetCalendar = (
     return () => {
       isActive = false;
     };
-  }, [budget, month, occurrences, summaryKey]);
+  }, [budget, month, occurrences, scenario, summaryKey]);
 
   useEffect(() => {
     let isActive = true;
@@ -172,11 +177,13 @@ export const useBudgetCalendar = (
   // Lus via des refs : l'effet ne doit se relancer qu'au retour sur
   // l'onglet, pas à chaque changement de mois ou relance.
   const focusedMonth = useRef(month);
+  const focusedScenario = useRef(scenario);
   const focusedSummaryKey = useRef(summaryKey);
   useEffect(() => {
     focusedMonth.current = month;
+    focusedScenario.current = scenario;
     focusedSummaryKey.current = summaryKey;
-  }, [month, summaryKey]);
+  }, [month, scenario, summaryKey]);
   useFocusEffect(
     useCallback(() => {
       if (!hasFocused.current) {
@@ -192,7 +199,7 @@ export const useBudgetCalendar = (
         .catch(() => {});
       const refreshedKey = focusedSummaryKey.current;
       Promise.all([
-        budget.getMonth(focusedMonth.current),
+        budget.getMonth(focusedMonth.current, focusedScenario.current),
         occurrences.listPending(monthBounds(focusedMonth.current).to),
       ])
         .then(([summary, pending]) => {

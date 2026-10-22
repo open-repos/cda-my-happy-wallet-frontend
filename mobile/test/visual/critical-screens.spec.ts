@@ -669,3 +669,48 @@ test("shows the savings capacity and adjusts a goal (#217)", async ({
   ).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
+
+test("reads the budget with the simulation scenario (#240)", async ({
+  page,
+}) => {
+  const scenarios: string[] = [];
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (/\/(budget-forecast|savings-capacity|summary)$/.test(url.pathname)) {
+      scenarios.push(url.searchParams.get("scenario") ?? "standard");
+    }
+  });
+  await signIn(page);
+  expect(scenarios).not.toContain("simulation");
+
+  await page.getByRole("tab", { name: "Calendrier" }).click();
+  // Onglets montés : l'interrupteur existe aussi sur l'accueil.
+  const toggle = page.getByRole("switch", { name: "Simulation" }).last();
+  await expect(toggle).not.toBeChecked();
+  await expect(
+    page.getByText(/^Les chiffres habituels excluent/).last(),
+  ).toBeVisible();
+
+  await toggle.click();
+  await expect(toggle).toBeChecked();
+  await expect(
+    page
+      .getByText(
+        /Prévision habituelle : 1\s430,00\s€.*Avec la Simulation : 1\s180,00\s€/,
+      )
+      .last(),
+  ).toBeVisible();
+  expect(scenarios).toContain("simulation");
+  await expectNoHorizontalOverflow(page);
+
+  // Partagée par les onglets : la capacité d'épargne suit le scénario.
+  await page.getByRole("tab", { name: "Objectifs" }).click();
+  await expect(
+    page.getByRole("switch", { name: "Simulation" }).last(),
+  ).toBeChecked();
+  await expect(
+    page
+      .getByLabel(/^Disponible par mois après objectifs : 1\s180,00\s€$/)
+      .last(),
+  ).toBeVisible();
+});

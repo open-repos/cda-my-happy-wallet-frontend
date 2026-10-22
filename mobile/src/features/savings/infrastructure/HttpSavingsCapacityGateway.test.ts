@@ -81,6 +81,18 @@ describe("HttpSavingsCapacityGateway (#217)", () => {
     );
   });
 
+  it("reads both sources in the simulation scenario (#240)", async () => {
+    const request = route(capacity());
+    await new HttpSavingsCapacityGateway({ request }).overview(
+      "2026-10",
+      "simulation",
+    );
+    expect(request.mock.calls.map(([path]) => path).sort()).toEqual([
+      "/budget-forecast?from=2026-10&months=1&currency=EUR&scenario=simulation",
+      "/savings-capacity?from=2026-10&months=1&currency=EUR&scenario=simulation",
+    ]);
+  });
+
   it("never combines two reads that straddle an edit", async () => {
     await expect(
       new HttpSavingsCapacityGateway({

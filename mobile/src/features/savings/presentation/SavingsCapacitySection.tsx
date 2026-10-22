@@ -9,6 +9,7 @@ import { currentParisMonth } from "@/src/features/budget/domain/budgetSummary";
 import { SUSTAINABILITY } from "@/src/features/savings/domain/savingsCapacity";
 import { HttpSavingsCapacityGateway } from "@/src/features/savings/infrastructure/HttpSavingsCapacityGateway";
 import { useSavingsCapacity } from "@/src/features/savings/presentation/useSavingsCapacity";
+import { SimulationReadout } from "@/src/features/simulation/presentation/SimulationReadout";
 
 interface SavingsCapacitySectionProps {
   /**
@@ -90,6 +91,7 @@ export const SavingsCapacitySection = ({
       <Text accessibilityRole="header" style={styles.title}>
         Capacité d’épargne
       </Text>
+      <SimulationReadout month={from} />
       {state.status === "loading" ? (
         <FeedbackState
           description="Chargement de la capacité d’épargne…"
