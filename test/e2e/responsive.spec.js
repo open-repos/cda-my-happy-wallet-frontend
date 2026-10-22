@@ -339,10 +339,10 @@ for (const viewport of viewports) {
     await page.goto("/home/operations-fixes");
 
     await expect(
-      page.getByRole("heading", { name: "Home - Operations Fixes" })
+      page.getByRole("heading", { name: "Mes charges et revenus fixes" })
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Sauvegarder" })
+      page.getByRole("button", { name: "Ajouter une charge" })
     ).toBeVisible();
 
     const hasHorizontalOverflow = await page.evaluate(

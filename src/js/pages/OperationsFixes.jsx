@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { faChevronCircleLeft } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import CardOperationFixe from "../components/OperationsFixes/CardOperationFixe";
-import CalculRaV from "../components/CalculRaV";
+import { FixedBudgetSummary } from "../components/OperationsFixes/FixedBudgetSummary";
 import "../../css/Operations.css";
 
 const OperationsFixes = () => {
@@ -19,7 +19,7 @@ const OperationsFixes = () => {
           d'accueil{" "}
         </Link>
       </div>
-      <h1>Home - Operations Fixes</h1>
+      <h1>Mes charges et revenus fixes</h1>
       <div className="charge-revenu-container">
         <CardOperationFixe
           name={"Mes charges"}
@@ -32,11 +32,7 @@ const OperationsFixes = () => {
           typeOpFixe={"revenus"}
         />
       </div>
-      {/* {calculRaV()} */}
-      <CalculRaV period={"mois"} />
-      <button type="button" className="btn-save">
-        Sauvegarder
-      </button>
+      <FixedBudgetSummary />
     </main>
   );
 };

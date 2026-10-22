@@ -535,3 +535,97 @@ for (const theme of ["light", "dark"]) {
     await expect(page.locator("#main-content")).toBeFocused();
   });
 }
+
+test("persists periodic shared fixed charges and refreshes server budgets without duplicate events", async ({
+  page,
+}, testInfo) => {
+  await login(page, testInfo.project.name, "fixed-charges");
+  const unexpectedWrites = [];
+  page.on("request", (request) => {
+    if (
+      ["POST", "PUT", "DELETE", "PATCH"].includes(request.method()) &&
+      /\/v1\/(?:operations(?:\/|$)|events(?:\/|$)|event-occurrences(?:\/|$))/.test(
+        new URL(request.url()).pathname
+      )
+    )
+      unexpectedWrites.push(request.method());
+  });
+  await page.goto("/home/operations-fixes");
+  const budget = page.getByRole("region", {
+    name: "Reste à vivre du mois en euros",
+  });
+  await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*200,00/);
+  await page.getByRole("button", { name: "Ajouter une charge" }).click();
+  await page
+    .getByLabel("Titre de la charge")
+    .fill("Abonnement annuel partagé E2E");
+  await page.getByLabel("Montant total par échéance").fill("120");
+  await page.getByLabel("Périodicité").selectOption("ANNUELLE");
+  await page.getByLabel("Ma part de la charge (%)").fill("50");
+  await expect(
+    page.getByRole("region", { name: "Aperçu de la charge" })
+  ).toContainText(/5,00/);
+  const created = apiResponse(page, "/v1/operations-fixes/charges", "POST");
+  await page.getByRole("button", { name: "Enregistrer la charge" }).click();
+  const response = await created;
+  expect(response.status()).toBe(201);
+  const charge = (await response.json()).data;
+  expect(charge).toMatchObject({
+    periodicite: "ANNUELLE",
+    pourcentagePersonnel: 50,
+    montantMensuelPersonnel: "5.00",
+  });
+  expect(Number(charge.montant)).toBe(120);
+  await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*195,00/);
+  await page.reload();
+  await page
+    .getByRole("button", { name: "Modifier Abonnement annuel partagé E2E" })
+    .click();
+  await expect(page.getByLabel("Périodicité")).toHaveValue("ANNUELLE");
+  await expect(page.getByLabel("Ma part de la charge (%)")).toHaveValue("50");
+  await page.getByRole("button", { name: "Annuler", exact: true }).click();
+  await page.getByRole("link", { name: /Revenir à la page d'accueil/ }).click();
+  await expect(page.locator(".home-budget__amount")).toHaveText(/1\s*195,00/);
+  await navigate(page, "Calendrier");
+  await expect(realBalance(page)).toHaveText(/1\s*195,00/);
+  const forecastResponse = apiResponse(page, "/v1/budget-forecast", "GET");
+  await navigate(page, "Prochains mois");
+  expect(
+    (await (await forecastResponse).json()).data.months[0].fixedExpense
+  ).toBe("805.00");
+  const forecast = page.getByRole("table", { name: "Prévisions mensuelles" });
+  await expect(forecast.getByRole("row").nth(1)).toContainText(/1\s*195,00/);
+  await page.goto("/home/operations-fixes");
+  await page
+    .getByRole("button", { name: "Modifier Abonnement annuel partagé E2E" })
+    .click();
+  await page.getByLabel("Ma part de la charge (%)").fill("40");
+  const updated = apiResponse(
+    page,
+    `/v1/operations-fixes/charges/${charge.idOperationFixe}`,
+    "PUT"
+  );
+  await page.getByRole("button", { name: "Enregistrer la charge" }).click();
+  expect((await updated).ok()).toBe(true);
+  await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*196,00/);
+  await page.reload();
+  await expect(
+    page.getByRole("article", { name: "Abonnement annuel partagé E2E" })
+  ).toContainText(/4,00/);
+  await page
+    .getByRole("button", { name: "Supprimer Abonnement annuel partagé E2E" })
+    .click();
+  const deleted = apiResponse(
+    page,
+    `/v1/operations-fixes/charges/${charge.idOperationFixe}`,
+    "DELETE"
+  );
+  await page.getByRole("button", { name: "Confirmer la suppression" }).click();
+  expect((await deleted).ok()).toBe(true);
+  await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*200,00/);
+  await page.reload();
+  await expect(
+    page.getByRole("article", { name: "Abonnement annuel partagé E2E" })
+  ).toHaveCount(0);
+  expect(unexpectedWrites).toEqual([]);
+});
