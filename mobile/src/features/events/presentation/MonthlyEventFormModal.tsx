@@ -33,6 +33,8 @@ interface MonthlyEventFormModalProps {
   /** Échec d'enregistrement ou de suppression, affiché dans la fenêtre. */
   errorMessage: string | null;
   event: MonthlyEvent | null;
+  /** Élément potentiel de la Simulation (#241) : titres et début borné. */
+  potential?: { minStartDate: string } | null;
   isSaving: boolean;
   visible: boolean;
   onCancel(): void;
@@ -59,6 +61,7 @@ const createDraft = (event: MonthlyEvent | null): EventDraft => ({
 export const MonthlyEventFormModal = ({
   errorMessage,
   event,
+  potential = null,
   isSaving,
   visible,
   onCancel,
@@ -76,7 +79,10 @@ export const MonthlyEventFormModal = ({
     setErrors((current) => ({ ...current, [key]: undefined }));
   };
   const submit = () => {
-    const validationErrors = validateEventDraft(draft);
+    const validationErrors = validateEventDraft(
+      draft,
+      potential?.minStartDate ?? null,
+    );
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length === 0) onSave(draft);
   };
@@ -96,9 +102,13 @@ export const MonthlyEventFormModal = ({
             >
               <View style={styles.header}>
                 <Text accessibilityRole="header" style={styles.title}>
-                  {event == null
-                    ? "Ajouter un événement"
-                    : "Modifier l’événement"}
+                  {potential != null
+                    ? event == null
+                      ? "Ajouter un élément potentiel"
+                      : "Modifier l’élément potentiel"
+                    : event == null
+                      ? "Ajouter un événement"
+                      : "Modifier l’événement"}
                 </Text>
                 <Pressable
                   accessibilityLabel="Fermer le formulaire"
@@ -162,6 +172,7 @@ export const MonthlyEventFormModal = ({
                 disabled={isSaving}
                 invalid={errors.startDate != null}
                 label="Date de début"
+                minDate={potential?.minStartDate}
                 onChange={(value) => update("startDate", value)}
                 value={draft.startDate}
               />

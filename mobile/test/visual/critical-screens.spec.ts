@@ -714,3 +714,87 @@ test("reads the budget with the simulation scenario (#240)", async ({
       .last(),
   ).toBeVisible();
 });
+
+test("manages the simulation potentials from the calendar (#241)", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.getByRole("tab", { name: "Calendrier" }).click();
+  await expect(page.getByText("Vélo", { exact: true })).toBeVisible();
+  await expect(page.getByText("Potentiel", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText(/^Expiration : à partir du 1 novembre 2026/),
+  ).toBeVisible();
+  // Ni réalisation ni annulation d'occurrence avant confirmation.
+  await expect(
+    page.getByRole("button", { name: /Réaliser.*Vélo|Annuler.*Vélo/ }),
+  ).toHaveCount(0);
+
+  const confirmed = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" &&
+      new URL(request.url()).pathname.endsWith("/events/40/confirm"),
+  );
+  const reread = page.waitForRequest(
+    (request) =>
+      new URL(request.url()).searchParams.get("status") === "POTENTIEL",
+  );
+  await page.getByRole("button", { name: "Confirmer Vélo" }).click();
+  await expect(
+    page.getByText("Confirmer Vélo comme événement prévu ?", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Oui, confirmer" }).click();
+  await confirmed;
+  await reread;
+  await expect(
+    page.getByText(
+      "Élément confirmé : il fait maintenant partie des prévisions habituelles.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+
+  const cleared = page.waitForRequest(
+    (request) =>
+      request.method() === "DELETE" &&
+      new URL(request.url()).pathname.endsWith("/simulation/events"),
+  );
+  await page.getByRole("button", { name: "Vider la simulation" }).click();
+  await page.getByRole("button", { name: "Oui, vider la simulation" }).click();
+  await cleared;
+  await expect(
+    page.getByText("Simulation vidée.", { exact: true }),
+  ).toBeVisible();
+
+  await page
+    .getByRole("button", { name: "Ajouter un élément potentiel" })
+    .click();
+  await expect(
+    page.getByText("Ajouter un élément potentiel", { exact: true }).last(),
+  ).toBeVisible();
+  await page.getByLabel("Titre", { exact: true }).fill("Expiré");
+  await page.getByLabel("Montant en euros").fill("10");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  // Refus métier expliqué dans la fenêtre, avec la phrase du Web.
+  await expect(
+    page.getByText(/^Le mois de cet élément potentiel est passé/),
+  ).toBeVisible();
+
+  const created = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" &&
+      new URL(request.url()).pathname.endsWith("/v1/events"),
+  );
+  await page.getByLabel("Titre", { exact: true }).fill("Trottinette");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  expect((await created).postDataJSON()).toMatchObject({
+    status: "POTENTIEL",
+    title: "Trottinette",
+  });
+  await expect(
+    page.getByText(
+      "Élément potentiel enregistré. Activez la Simulation pour voir son effet.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});

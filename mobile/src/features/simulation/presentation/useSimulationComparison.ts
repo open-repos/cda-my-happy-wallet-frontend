@@ -1,4 +1,3 @@
-import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { BudgetForecastGateway } from "@/src/features/forecast/infrastructure/HttpBudgetForecastGateway";
@@ -7,6 +6,7 @@ import {
   compareScenarios,
 } from "@/src/features/simulation/domain/scenario";
 import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
+import { useQuietRefresh } from "@/src/features/simulation/presentation/useQuietRefresh";
 
 type ComparisonStatus = "idle" | "loading" | "success" | "error";
 
@@ -26,20 +26,20 @@ const readComparison = async (gateway: BudgetForecastGateway, from: string) => {
 
 /**
  * Reste prévu habituel et avec la Simulation pour le mois `from` (#240),
- * lu seulement quand la Simulation est affichée. Un résultat d'un autre mois,
- * d'une autre activation ou d'une ancienne révision est écarté grâce à la
- * clé de sa requête ; au retour sur l'écran, la comparaison est relue sans
+ * lu seulement quand la Simulation est affichée. Un résultat d'un autre mois
+ * ou d'une autre activation est écarté grâce à la clé de sa requête ; au
+ * retour sur l'écran et après une écriture, la comparaison est relue sans
  * repasser par le chargement.
  */
 export const useSimulationComparison = (
   gateway: BudgetForecastGateway,
   from: string,
 ) => {
-  const { enabled, revision } = useSimulation();
+  const { enabled } = useSimulation();
   const [reload, setReload] = useState(0);
   const [activation, setActivation] = useState(0);
   const [result, setResult] = useState<ComparisonResult | null>(null);
-  const key = `${from}:${activation}:${revision}:${reload}`;
+  const key = `${from}:${activation}:${reload}`;
 
   // Chaque activation a sa clé : l'ancien résultat ne réapparaît pas.
   const [wasEnabled, setWasEnabled] = useState(enabled);
@@ -68,15 +68,10 @@ export const useSimulationComparison = (
   useEffect(() => {
     query.current = { enabled, from, key };
   }, [enabled, from, key]);
-  const hasFocused = useRef(false);
-  useFocusEffect(
+  useQuietRefresh(
     useCallback(() => {
-      if (!hasFocused.current) {
-        hasFocused.current = true;
-        return undefined;
-      }
       const current = query.current;
-      if (!current.enabled) return undefined;
+      if (!current.enabled) return () => {};
       let isActive = true;
       readComparison(gateway, current.from)
         .then((data) => {

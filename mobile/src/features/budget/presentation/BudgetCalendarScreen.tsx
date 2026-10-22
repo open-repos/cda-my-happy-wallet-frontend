@@ -43,6 +43,7 @@ import { RealizeOccurrenceModal } from "@/src/features/budget/presentation/Reali
 import { useBudgetCalendar } from "@/src/features/budget/presentation/useBudgetCalendar";
 import { HttpOneOffOperationsGateway } from "@/src/features/operations/infrastructure/HttpOneOffOperationsGateway";
 import { OperationCard } from "@/src/features/operations/presentation/OperationCard";
+import { SimulationPanel } from "@/src/features/simulation/presentation/SimulationPanel";
 import { SimulationReadout } from "@/src/features/simulation/presentation/SimulationReadout";
 
 const colors = themes.light.color;
@@ -446,6 +447,7 @@ export const BudgetCalendarScreen = () => {
             ) : null}
           </View>
         )}
+        <SimulationPanel />
       </ScrollView>
       <RealizeOccurrenceModal
         key={

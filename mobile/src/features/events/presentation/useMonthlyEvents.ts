@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   EventDraft,
   MonthlyEvent,
 } from "@/src/features/events/domain/monthlyEvent";
 import { MonthlyEventsGateway } from "@/src/features/events/infrastructure/HttpMonthlyEventsGateway";
+import { useQuietRefresh } from "@/src/features/simulation/presentation/useQuietRefresh";
 
 type LoadStatus = "loading" | "success" | "error";
 type MutationStatus = "idle" | "loading" | "error";
@@ -18,18 +19,23 @@ export const useMonthlyEvents = (gateway: MonthlyEventsGateway) => {
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [mutationStatus, setMutationStatus] = useState<MutationStatus>("idle");
   const [message, setMessage] = useState<string | null>(null);
+  // Seule la dernière relecture lancée met la liste à jour.
+  const latest = useRef(0);
 
   // `quiet` : relecture après une écriture, sans repasser par l'état de
   // chargement (la liste et le formulaire restent affichés).
   const load = useCallback(
     async ({ quiet = false } = {}): Promise<boolean> => {
+      const request = ++latest.current;
       if (!quiet) setStatus("loading");
       try {
-        setEvents(await gateway.listAllEvents());
+        const next = await gateway.listAllEvents();
+        if (request !== latest.current) return true;
+        setEvents(next);
         setStatus("success");
         return true;
       } catch {
-        if (!quiet) setStatus("error");
+        if (request === latest.current && !quiet) setStatus("error");
         return false;
       }
     },
@@ -52,6 +58,15 @@ export const useMonthlyEvents = (gateway: MonthlyEventsGateway) => {
       isActive = false;
     };
   }, [gateway]);
+
+  // Potentiel confirmé dans la Simulation, ou retour sur l'onglet : la liste
+  // est relue sans bruit (#241).
+  useQuietRefresh(
+    useCallback(() => {
+      void load({ quiet: true });
+      return () => {};
+    }, [load]),
+  );
 
   const mutate = useCallback(
     async (

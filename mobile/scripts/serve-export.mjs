@@ -281,6 +281,28 @@ const testApiResponse = (pathname, searchParams) => {
       meta: noNextPage,
     };
   }
+  // Éléments potentiels de la Simulation (#241).
+  if (
+    pathname.endsWith("/events") &&
+    searchParams.get("status") === "POTENTIEL"
+  ) {
+    return {
+      data: [
+        {
+          amount: "250.00",
+          currency: "EUR",
+          endDate: null,
+          id: 40,
+          kind: "DEPENSE",
+          recurrence: "AUCUNE",
+          startDate: "2026-10-15",
+          status: "POTENTIEL",
+          title: "Vélo",
+        },
+      ],
+      meta: noNextPage,
+    };
+  }
   // Événements mensuels (#225) : l'annuel, créé sur le Web, doit garder sa
   // répétition dans le formulaire mobile.
   if (pathname.endsWith("/events")) {
@@ -434,6 +456,28 @@ const handleCategoryCommand = (request, response, pathname) => {
  * modification renvoient le corps reçu, confirmé.
  */
 const handleEventCommand = (request, response, pathname) => {
+  // Simulation (#241) : confirmation et vidage, sans état.
+  const confirm = /\/v1\/events\/(\d+)\/confirm$/.exec(pathname);
+  if (confirm != null && request.method === "POST") {
+    sendJson(response, 200, {
+      data: {
+        amount: "250.00",
+        currency: "EUR",
+        endDate: null,
+        id: Number(confirm[1]),
+        kind: "DEPENSE",
+        recurrence: "AUCUNE",
+        startDate: "2026-10-15",
+        status: "CONFIRME",
+        title: "Vélo",
+      },
+    });
+    return true;
+  }
+  if (pathname === "/v1/simulation/events" && request.method === "DELETE") {
+    sendJson(response, 204, null);
+    return true;
+  }
   const match = /\/v1\/events(?:\/(\d+))?$/.exec(pathname);
   if (match == null || !["POST", "PUT", "DELETE"].includes(request.method)) {
     return false;
@@ -451,6 +495,16 @@ const handleEventCommand = (request, response, pathname) => {
       body = JSON.parse(Buffer.concat(chunks).toString() || "{}");
     } catch {
       sendJson(response, 422, { error: { type: "ValidationFailed" } });
+      return;
+    }
+    // Refus métier simulé : un potentiel « Expiré » (#241).
+    if (body.title === "Expiré") {
+      sendJson(response, 422, {
+        error: {
+          type: "ValidationFailed",
+          details: { code: "EXPIRED_POTENTIAL" },
+        },
+      });
       return;
     }
     // Panne simulée : un titre « Panne » échoue côté serveur.

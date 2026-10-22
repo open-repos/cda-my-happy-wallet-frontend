@@ -1,4 +1,3 @@
-import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { monthBounds } from "@/src/features/budget/domain/budgetCalendar";
@@ -20,6 +19,7 @@ import {
 } from "@/src/features/operations/domain/oneOffOperation";
 import { OneOffOperationsGateway } from "@/src/features/operations/infrastructure/HttpOneOffOperationsGateway";
 import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
+import { useQuietRefresh } from "@/src/features/simulation/presentation/useQuietRefresh";
 
 type SummaryStatus = "loading" | "success" | "future" | "error";
 type OperationsStatus = "loading" | "success" | "paging" | "error";
@@ -73,10 +73,10 @@ export const useBudgetCalendar = (
   const [categoriesError, setCategoriesError] = useState(false);
   const [decision, setDecision] = useState(false);
   const [feedback, setFeedback] = useState<DecisionFeedback | null>(null);
-  const { scenario, revision } = useSimulation();
+  const { scenario } = useSimulation();
 
   // Le scénario dans la clé masque les montants de l'autre pendant le calcul.
-  const summaryKey = `${month}:${scenario}:${revision}:${reload}`;
+  const summaryKey = `${month}:${scenario}:${reload}`;
   const operationsKey = `${month}:${selectedDate ?? "month"}:${reload}`;
   const filter = useMemo(() => {
     const bounds = monthBounds(month);
@@ -169,13 +169,12 @@ export const useBudgetCalendar = (
     // `reload` : « Réessayer » relance aussi les catégories après un échec.
   }, [operations, reload]);
 
-  // Retour sur l'onglet : catégories, synthèse et file relues sans bruit
-  // (catégories modifiées, événements créés ou supprimés depuis un autre
-  // écran, #225). L'affichage reste en place ; un échec garde les données
-  // déjà affichées. Le premier focus suit le chargement initial.
-  const hasFocused = useRef(false);
-  // Lus via des refs : l'effet ne doit se relancer qu'au retour sur
-  // l'onglet, pas à chaque changement de mois ou relance.
+  // Retour sur l'onglet ou écriture de la Simulation : catégories, synthèse
+  // et file relues sans bruit (catégories modifiées, événements créés ou
+  // supprimés depuis un autre écran, #225, #241). L'affichage reste en
+  // place ; un échec garde les données déjà affichées.
+  // Lus via des refs : la relecture ne doit pas suivre chaque changement de
+  // mois ou relance.
   const focusedMonth = useRef(month);
   const focusedScenario = useRef(scenario);
   const focusedSummaryKey = useRef(summaryKey);
@@ -184,12 +183,8 @@ export const useBudgetCalendar = (
     focusedScenario.current = scenario;
     focusedSummaryKey.current = summaryKey;
   }, [month, scenario, summaryKey]);
-  useFocusEffect(
+  useQuietRefresh(
     useCallback(() => {
-      if (!hasFocused.current) {
-        hasFocused.current = true;
-        return undefined;
-      }
       let isActive = true;
       operations
         .listAllCategories()
