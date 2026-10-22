@@ -89,6 +89,10 @@ describe("HttpMonthlyEventsGateway (#225)", () => {
     });
     expect(request.mock.calls[1][0]).toBe("/events/4");
     expect(request.mock.calls[1][1]).toMatchObject({ method: "PUT" });
+    // Sans statut : un potentiel modifié reste potentiel (#241).
+    expect(JSON.parse(request.mock.calls[1][1].body)).not.toHaveProperty(
+      "status",
+    );
     await expect(gateway.deleteEvent(4)).resolves.toBeUndefined();
     expect(request).toHaveBeenNthCalledWith(3, "/events/4", {
       method: "DELETE",
@@ -100,5 +104,79 @@ describe("HttpMonthlyEventsGateway (#225)", () => {
     await expect(
       new HttpMonthlyEventsGateway({ request }).createEvent(draft),
     ).rejects.toEqual(new EventRequestError(422));
+  });
+
+  it("keeps the business refusal code of a failed request (#241)", async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValue(
+        json({ error: { details: { code: "EXPIRED_POTENTIAL" } } }, 422),
+      );
+    await expect(
+      new HttpMonthlyEventsGateway({ request }).createPotentialEvent(draft),
+    ).rejects.toMatchObject({ status: 422, code: "EXPIRED_POTENTIAL" });
+  });
+});
+
+describe("HttpMonthlyEventsGateway potentials (#241)", () => {
+  const potential = { ...event, id: 9, status: "POTENTIEL" };
+
+  it("lists every page of potentials only", async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValueOnce(page([potential], "next"))
+      .mockResolvedValueOnce(page([{ ...potential, id: 10 }]));
+    const gateway = new HttpMonthlyEventsGateway({ request });
+    await expect(gateway.listPotentialEvents()).resolves.toHaveLength(2);
+    expect(request.mock.calls.map(([path]) => path)).toEqual([
+      `/events?status=POTENTIEL&limit=${EVENTS_PAGE_LIMIT}`,
+      `/events?status=POTENTIEL&limit=${EVENTS_PAGE_LIMIT}&cursor=next`,
+    ]);
+
+    const confirmed = vi.fn().mockResolvedValue(page([event]));
+    await expect(
+      new HttpMonthlyEventsGateway({
+        request: confirmed,
+      }).listPotentialEvents(),
+    ).rejects.toThrow("Invalid potential event response");
+  });
+
+  it("creates a potential with its status", async () => {
+    const request = vi.fn().mockResolvedValue(json({ data: potential }, 201));
+    await expect(
+      new HttpMonthlyEventsGateway({ request }).createPotentialEvent(draft),
+    ).resolves.toMatchObject({ id: 9, status: "POTENTIEL" });
+    expect(JSON.parse(request.mock.calls[0][1].body)).toMatchObject({
+      status: "POTENTIEL",
+    });
+  });
+
+  it("confirms through the dedicated route and checks the answer", async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValueOnce(
+        json({ data: { ...potential, status: "CONFIRME" } }),
+      )
+      .mockResolvedValueOnce(json({ data: potential }));
+    const gateway = new HttpMonthlyEventsGateway({ request });
+    await expect(gateway.confirmPotentialEvent(9)).resolves.toMatchObject({
+      status: "CONFIRME",
+    });
+    expect(request).toHaveBeenCalledWith("/events/9/confirm", {
+      method: "POST",
+    });
+    await expect(gateway.confirmPotentialEvent(9)).rejects.toThrow(
+      "Invalid confirmed event response",
+    );
+  });
+
+  it("clears the simulation", async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValue(new Response(null, { status: 204 }));
+    await new HttpMonthlyEventsGateway({ request }).clearPotentialEvents();
+    expect(request).toHaveBeenCalledWith("/simulation/events", {
+      method: "DELETE",
+    });
   });
 });

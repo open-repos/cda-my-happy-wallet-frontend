@@ -17,6 +17,7 @@ import {
 } from "@/src/features/forecast/domain/budgetForecast";
 import { HttpBudgetForecastGateway } from "@/src/features/forecast/infrastructure/HttpBudgetForecastGateway";
 import { useBudgetForecast } from "@/src/features/forecast/presentation/useBudgetForecast";
+import { SimulationPanel } from "@/src/features/simulation/presentation/SimulationPanel";
 import { SimulationReadout } from "@/src/features/simulation/presentation/SimulationReadout";
 
 const colors = themes.light.color;
@@ -216,6 +217,7 @@ export const UpcomingMonthsScreen = () => {
             ))}
           </View>
         ) : null}
+        <SimulationPanel />
       </ScrollView>
     </SafeAreaView>
   );

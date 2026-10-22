@@ -1,9 +1,9 @@
-import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { BudgetForecast } from "@/src/features/forecast/domain/budgetForecast";
 import { BudgetForecastGateway } from "@/src/features/forecast/infrastructure/HttpBudgetForecastGateway";
 import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
+import { useQuietRefresh } from "@/src/features/simulation/presentation/useQuietRefresh";
 
 type ForecastStatus = "loading" | "success" | "empty" | "error";
 
@@ -27,8 +27,8 @@ export const useBudgetForecast = (
 ) => {
   const [reload, setReload] = useState(0);
   const [result, setResult] = useState<ForecastResult | null>(null);
-  const { scenario, revision } = useSimulation();
-  const key = `${from}:${months}:${scenario}:${revision}:${reload}`;
+  const { scenario } = useSimulation();
+  const key = `${from}:${months}:${scenario}:${reload}`;
 
   useEffect(() => {
     let isActive = true;
@@ -56,13 +56,8 @@ export const useBudgetForecast = (
   useEffect(() => {
     query.current = { from, months, scenario, key };
   }, [from, key, months, scenario]);
-  const hasFocused = useRef(false);
-  useFocusEffect(
+  useQuietRefresh(
     useCallback(() => {
-      if (!hasFocused.current) {
-        hasFocused.current = true;
-        return undefined;
-      }
       let isActive = true;
       const current = query.current;
       gateway

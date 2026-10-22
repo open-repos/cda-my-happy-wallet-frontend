@@ -33,7 +33,7 @@ describe("monthly event domain (#225)", () => {
   it("keeps only the public event fields", () => {
     expect(
       parseMonthlyEvent({ ...event, ownerId: 9, status: "CONFIRME" }),
-    ).toEqual(event);
+    ).toEqual({ ...event, status: "CONFIRME" });
   });
 
   it("accepts every API recurrence, so Web events stay readable", () => {
@@ -122,5 +122,25 @@ describe("monthly event domain (#225)", () => {
     expect(toEventPayload(draft({ endDate: "2026-12-31" })).endDate).toBe(
       "2026-12-31",
     );
+  });
+
+  it("keeps the simulation status and refuses an unknown one (#241)", () => {
+    expect(parseMonthlyEvent({ ...event, status: "POTENTIEL" })).toMatchObject({
+      status: "POTENTIEL",
+    });
+    expect(parseMonthlyEvent(event)).not.toHaveProperty("status");
+    expect(() => parseMonthlyEvent({ ...event, status: "REALISE" })).toThrow();
+  });
+
+  it("refuses a potential starting in an ended month (#241)", () => {
+    expect(
+      validateEventDraft(draft({ startDate: "2026-09-30" }), "2026-10-01"),
+    ).toEqual({
+      startDate:
+        "Un élément potentiel doit commencer dans le mois courant ou un mois futur.",
+    });
+    expect(
+      validateEventDraft(draft({ startDate: "2026-10-01" }), "2026-10-01"),
+    ).toEqual({});
   });
 });

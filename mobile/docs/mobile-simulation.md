@@ -26,10 +26,9 @@ elles restent inchangées (`withScenario`) :
 La file des événements à traiter et la synthèse de l'accueil restent
 habituelles : un potentiel ne se réalise pas avant confirmation.
 
-Le scénario et la révision font partie de la clé de chaque lecture : une
-réponse d'un autre scénario ou d'une ancienne révision ne remplace jamais la
-vue courante, et les montants de l'autre scénario sont masqués pendant le
-recalcul. La révision augmentera avec les écritures de la Simulation (#241).
+Le scénario fait partie de la clé de chaque lecture : une réponse d'un autre
+scénario ne remplace jamais la vue courante, et les montants de l'autre
+scénario sont masqués pendant le recalcul.
 
 ## Comparaison
 
@@ -40,8 +39,32 @@ Simulation ». Elles doivent avoir mêmes fenêtre, devise et date de référenc
 indique que son bilan reste inchangé. Aucun calcul financier n'est fait sur
 mobile.
 
+## Éléments potentiels (#241)
+
+Le panneau « Éléments potentiels », en bas du calendrier et des prochains
+mois, liste toutes les pages de `GET /events?status=POTENTIEL`. Chaque
+potentiel a un contour pointillé, un libellé « Potentiel » et sa date
+d'expiration : le premier jour du mois suivant `startDate` (mois civil
+Europe/Paris du backend ; une série récurrente expire selon son premier
+mois). Il ne propose ni réalisation ni annulation d'occurrence.
+
+- Ajouter et modifier passent par le formulaire d'événement (#225, #216) ;
+  un potentiel ne peut commencer avant le mois courant (phrase du Web).
+- Confirmer (`POST /events/:id/confirm` seulement), supprimer et vider
+  (`DELETE /simulation/events`) demandent une confirmation dans le panneau.
+- Une seule écriture à la fois (`SimulationProvider.mutate`) ; les refus
+  `EXPIRED_POTENTIAL` et `INVALID_STATUS_TRANSITION` sont expliqués avec les
+  phrases du Web.
+
+Après une écriture, la révision augmente : liste des potentiels, liste des
+événements, calendrier, prévisions, comparaison et capacité d'épargne sont
+relus sans bruit (`useQuietRefresh`), comme au retour sur l'écran. Seuls les
+premiers chargements et les changements de mois ou de scénario sont annoncés
+(#171).
+
 ## Vérification
 
-Tests unitaires `scenario.test.ts` et passerelles ; parcours Playwright
-« reads the budget with the simulation scenario (#240) » sur l'export Web,
-avec un faux backend qui réduit le premier mois de 250 € en Simulation.
+Tests unitaires `scenario.test.ts`, `potential.test.ts` et passerelles ;
+parcours Playwright #240 (lectures en scénario) et #241 (confirmer, vider,
+refus d'un potentiel expiré, création) sur l'export Web, avec un faux
+backend sans état.

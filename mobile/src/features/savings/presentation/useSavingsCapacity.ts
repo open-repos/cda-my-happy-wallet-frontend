@@ -19,7 +19,7 @@ export const useSavingsCapacity = (
   refreshKey = "",
 ) => {
   const { scenario, revision } = useSimulation();
-  const key = `${from}:${scenario}:${revision}`;
+  const key = `${from}:${scenario}`;
   const [status, setStatus] = useState<SavingsStatus>("loading");
   const [data, setData] = useState<{
     key: string;
@@ -49,7 +49,8 @@ export const useSavingsCapacity = (
 
   useEffect(() => {
     void load(loadedKey.current === key);
-  }, [key, load, refreshKey]);
+    // `revision` : écriture de la Simulation, relue sans bruit (#241).
+  }, [key, load, refreshKey, revision]);
 
   const hasFocused = useRef(false);
   useFocusEffect(

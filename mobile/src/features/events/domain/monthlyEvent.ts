@@ -19,7 +19,10 @@ const RECURRENCE_LABELS: Record<EventRecurrence, string> = {
   ANNUELLE: "Chaque année",
 };
 
-/** Événement mensuel confirmé, contrat `GET /v1/events` partagé avec le Web. */
+/** Confirmé : prévu ; potentiel : hypothèse de la Simulation (#241). */
+export type EventStatus = "CONFIRME" | "POTENTIEL";
+
+/** Événement mensuel, contrat `GET /v1/events` partagé avec le Web. */
 export interface MonthlyEvent {
   id: number;
   title: string;
@@ -29,6 +32,8 @@ export interface MonthlyEvent {
   startDate: string;
   recurrence: EventRecurrence;
   endDate: string | null;
+  /** Absent des réponses antérieures au backend #112. */
+  status?: EventStatus;
 }
 
 export interface EventDraft {
@@ -80,7 +85,10 @@ export const parseMonthlyEvent = (value: unknown): MonthlyEvent => {
     !isCalendarDate(value.startDate) ||
     !isRecurrence(value.recurrence) ||
     (value.endDate !== null &&
-      (typeof value.endDate !== "string" || !isCalendarDate(value.endDate)))
+      (typeof value.endDate !== "string" || !isCalendarDate(value.endDate))) ||
+    (value.status !== undefined &&
+      value.status !== "CONFIRME" &&
+      value.status !== "POTENTIEL")
   ) {
     throw new Error("Invalid monthly event response");
   }
@@ -93,13 +101,22 @@ export const parseMonthlyEvent = (value: unknown): MonthlyEvent => {
     startDate: value.startDate,
     recurrence: value.recurrence,
     endDate: value.endDate,
+    ...(value.status !== undefined
+      ? { status: value.status as EventStatus }
+      : {}),
   };
 };
 
 const normalizeAmount = (amount: string) => amount.trim().replace(",", ".");
 
-/** Mêmes règles et messages que le formulaire Web des événements. */
-export const validateEventDraft = (draft: EventDraft): EventDraftErrors => {
+/**
+ * Mêmes règles et messages que le formulaire Web des événements ;
+ * `minStartDate` borne le début d'un élément potentiel (#241).
+ */
+export const validateEventDraft = (
+  draft: EventDraft,
+  minStartDate: string | null = null,
+): EventDraftErrors => {
   const errors: EventDraftErrors = {};
   const title = draft.title.trim();
   if (title.length < 2 || title.length > 50) {
@@ -111,6 +128,9 @@ export const validateEventDraft = (draft: EventDraft): EventDraftErrors => {
   }
   if (!isCalendarDate(draft.startDate)) {
     errors.startDate = "Choisissez une date valide.";
+  } else if (minStartDate != null && draft.startDate < minStartDate) {
+    errors.startDate =
+      "Un élément potentiel doit commencer dans le mois courant ou un mois futur.";
   }
   if (!isRecurrence(draft.recurrence)) {
     errors.recurrence = "Choisissez une répétition valide.";
