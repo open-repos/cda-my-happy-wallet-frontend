@@ -27,6 +27,15 @@ const menuButton = () => screen.getByRole("button", { name: /le menu$/ });
 afterEach(cleanup);
 
 describe("Sidebar drawer", () => {
+  it("names the home destination in French when the menu opens", () => {
+    renderSidebar();
+    fireEvent.click(menuButton());
+    expect(screen.getByRole("link", { name: "Accueil" })).toHaveAttribute(
+      "href",
+      "/home"
+    );
+    expect(screen.queryByRole("link", { name: "Home" })).toBeNull();
+  });
   it("exposes an accessible menu button controlling the navigation", () => {
     renderSidebar();
 

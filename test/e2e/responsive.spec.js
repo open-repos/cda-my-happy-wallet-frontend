@@ -42,6 +42,86 @@ const protectedPages = [
   { path: "/profil", selector: ".profil-container" },
 ];
 
+for (const width of [320, 375, 390, 768, 1440]) {
+  for (const theme of ["light", "dark"]) {
+    test(`sidebar labels fit at ${width}px in ${theme}, including enlarged text`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 844 });
+      await prepareProtectedPage(page);
+      await page.addInitScript(
+        (value) => localStorage.setItem("mhw-theme", value),
+        theme
+      );
+      await page.goto("/home");
+      await page.getByRole("button", { name: "Ouvrir le menu" }).click();
+      const navigation = page.getByRole("navigation", {
+        name: "Navigation principale",
+      });
+      await expect(
+        navigation.getByRole("link", { name: "Accueil", exact: true })
+      ).toBeVisible();
+      for (const zoom of ["100%", "200%"]) {
+        await page.locator("html").evaluate((element, value) => {
+          element.style.fontSize = value;
+        }, zoom);
+        const links = navigation.locator("ul > a");
+        await expect(links).toHaveCount(6);
+        // Wait for the drawer width transition before measuring the text itself.
+        await expect
+          .poll(() =>
+            links
+              .first()
+              .locator("..")
+              .evaluate(
+                (list) => list.getBoundingClientRect().right <= innerWidth
+              )
+          )
+          .toBe(true);
+        for (const link of await links.all()) {
+          await link.scrollIntoViewIfNeeded();
+          await expect
+            .poll(() =>
+              link.evaluate((element) => {
+                const list = element.parentElement;
+                const panel = list.getBoundingClientRect();
+                const bounds = element.getBoundingClientRect();
+                const label = element.querySelector("span");
+                const icon = element
+                  .querySelector("img, svg")
+                  .getBoundingClientRect();
+                const range = document.createRange();
+                range.selectNodeContents(label);
+                const lines = [...range.getClientRects()];
+                return (
+                  bounds.height >= 44 &&
+                  bounds.width >= 44 &&
+                  panel.left >= 0 &&
+                  panel.right <= innerWidth &&
+                  bounds.top >= panel.top - 1 &&
+                  bounds.bottom <= panel.bottom + 1 &&
+                  lines.every(
+                    (line) =>
+                      line.left >= icon.right &&
+                      line.right <= bounds.right + 1 &&
+                      line.top >= bounds.top &&
+                      line.bottom <= bounds.bottom + 1
+                  ) &&
+                  document.documentElement.scrollWidth <= innerWidth
+                );
+              })
+            )
+            .toBe(true);
+        }
+      }
+      await page.keyboard.press("Escape");
+      await expect(
+        page.getByRole("button", { name: "Ouvrir le menu" })
+      ).toBeFocused();
+    });
+  }
+}
+
 for (const viewport of viewports) {
   for (const pageDefinition of pages) {
     test(`${pageDefinition.path} fits the ${viewport.name} viewport`, async ({
@@ -787,7 +867,7 @@ for (const theme of ["light", "dark"]) {
       }
       expect([...reached.keys()]).toEqual(
         expect.arrayContaining([
-          "Home",
+          "Accueil",
           "Calendrier",
           "Objectifs-Évènements",
           "Liste Opérations",
