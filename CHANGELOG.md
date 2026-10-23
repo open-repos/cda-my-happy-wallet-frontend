@@ -7,6 +7,17 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-23
+
+### Changed
+
+- Replaced the update card with a dismissible floating notification that returns when the application is reopened while an update remains pending (#255).
+
+### Fixed
+
+- Fixed sidebar labels wrapping beyond the navigation panel on small screens and translated the home link (#257).
+- Fixed savings summaries and goal cards overflowing narrow viewports with enlarged text (#261).
+
 ## [1.3.0] - 2026-10-22
 
 ### Added
@@ -143,7 +154,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Replaced dynamic SSH host discovery with a pre-verified `known_hosts` file.
 - Isolated SSH credentials from validation and build jobs.
 
-[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.3.0...develop
+[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.4.0...develop
+[1.4.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.3.0...v1.4.0
 [1.3.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.2.0...v1.3.0
 [1.2.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.1.1...v1.2.0
 [1.1.1]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.1.0...v1.1.1
