@@ -45,6 +45,7 @@ test("protects forms and other windows, requires explicit reloads, and recovers 
   await page.waitForFunction(() => !!navigator.serviceWorker.controller);
   await expect(page.getByRole("status")).toHaveText("");
   await expect(notice(page)).toHaveCount(0);
+  const contentBeforeUpdate = await page.locator("h1").boundingBox();
   const initialNavigations = navigations;
   const other = await context.newPage();
   await other.goto("/updates");
@@ -53,6 +54,23 @@ test("protects forms and other windows, requires explicit reloads, and recovers 
 
   await stage(request, "B");
   await check(page);
+  await expect(prepare(page)).toBeVisible();
+  expect(
+    await notice(page).evaluate((element) => getComputedStyle(element).position)
+  ).toBe("fixed");
+  expect(await page.locator("h1").boundingBox()).toEqual(contentBeforeUpdate);
+  await page
+    .getByRole("button", { name: "Fermer la notification de mise à jour" })
+    .click();
+  await expect(notice(page)).toHaveCount(0);
+  await check(page);
+  await expect(notice(page)).toHaveCount(0);
+  // Restore a suspended document without remounting the component.
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new PageTransitionEvent("pageshow", { persisted: true })
+    )
+  );
   await expect(prepare(page)).toBeVisible();
   await addForm(page);
   await prepare(page).click();
@@ -85,7 +103,7 @@ test("protects forms and other windows, requires explicit reloads, and recovers 
     "synthetic unsaved amount"
   );
 
-  // The notice participates in document flow and remains keyboard usable.
+  // The floating toast remains within the viewport and keyboard usable at 200%.
   await expect(notice(page)).toBeVisible();
   expect((await reload(page).boundingBox()).height).toBeGreaterThanOrEqual(44);
   await reload(page).focus();
@@ -100,6 +118,12 @@ test("protects forms and other windows, requires explicit reloads, and recovers 
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)
   ).toBe(false);
+  const toast = await notice(page).boundingBox();
+  const viewport = page.viewportSize();
+  expect(toast.x).toBeGreaterThanOrEqual(0);
+  expect(toast.y).toBeGreaterThanOrEqual(0);
+  expect(toast.x + toast.width).toBeLessThanOrEqual(viewport.width);
+  expect(toast.y + toast.height).toBeLessThanOrEqual(viewport.height);
   await reload(page).click();
   await expect(page.getByRole("status")).toHaveText("");
   await expect(notice(page)).toHaveCount(0);

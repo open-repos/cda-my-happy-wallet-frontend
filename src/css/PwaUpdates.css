@@ -1,6 +1,17 @@
 .pwa-update {
-  margin: calc(var(--layout-top-offset, 0rem) + 1rem) 1rem 1rem
-    calc(var(--layout-sidebar-offset, 0rem) + 1rem);
+  position: fixed;
+  z-index: var(--ds-z-index-toast);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  right: max(1rem, env(safe-area-inset-right, 0px));
+  left: max(1rem, env(safe-area-inset-left, 0px));
+  width: auto;
+  max-width: 26rem;
+  max-height: calc(
+    100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) -
+      2rem
+  );
+  margin-left: auto;
+  overflow-y: auto;
   padding: 1rem;
   border: 1px solid var(--ds-color-border-subtle);
   border-radius: 0.75rem;
@@ -8,12 +19,13 @@
   color: var(--ds-color-text-primary);
   text-align: left;
   overflow-wrap: anywhere;
+  box-shadow: 0 0.25rem 1rem rgb(0 0 0 / 20%);
 }
 
 .pwa-update h2 {
-  font-size: 1.25rem;
+  font-size: 1rem;
   line-height: 1.4;
-  margin: 0 0 0.5rem;
+  margin: 0 2.75rem 0.5rem 0;
 }
 
 .pwa-update p {
@@ -36,6 +48,17 @@
 .pwa-update button:focus-visible {
   outline: 3px solid var(--ds-color-focus-ring);
   outline-offset: 3px;
+}
+
+.pwa-update .pwa-update__close {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  min-width: 2.75rem;
+  padding: 0.25rem;
+  background: transparent;
+  color: inherit;
+  font-size: 1.5rem;
 }
 
 .pwa-update__announcement {
