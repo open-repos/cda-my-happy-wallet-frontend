@@ -192,9 +192,34 @@ const SlickBar = styled.ul`
     }
   }
 
-  width: ${(props) => (props.clicked ? "12rem" : "3.5rem")};
+  width: ${(props) => (props.clicked ? "min(12rem, calc(100vw - 1rem))" : "3.5rem")};
+  ${(props) => props.clicked && `
+    max-height: calc(100% - 10.5rem);
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    padding-left: 4px;
+    padding-right: 4px;
+    border-radius: 0;
+
+    & > a {
+      align-items: center;
+      flex-shrink: 0;
+      min-height: 2.75rem;
+      padding-right: 0.5rem;
+    }
+
+    & > a :is(img, svg) {
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 767px) {
+      top: 3rem;
+      max-height: calc(100% - 7.5rem);
+    }
+  `}
   transition: all 0.5s ease;
-  border-radius: 0 30px 30px 0;
+  border-radius: ${(props) => props.clicked ? "0" : "0 30px 30px 0"};
 `;
 
 const Item = styled(NavLink)`
@@ -236,9 +261,17 @@ const Item = styled(NavLink)`
 
 // fill:${(navData) => (navData.isActive ? "var(--orange)" : "var(--white)")}
 const Text = styled.span`
-  width: ${(props) => (props.clicked ? "100%" : "0")};
+  width: ${(props) => (props.clicked ? "auto" : "0")};
   overflow: hidden;
-  margin-left: ${(props) => (props.clicked ? "1.5rem" : "0")};
+  ${(props) => props.clicked && `
+    flex: 1 1 0%;
+    min-width: 0;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+    text-align: left;
+  `}
+  margin-left: ${(props) => (props.clicked ? "0.75rem" : "0")};
   transition: all 0.3s ease;
 `;
 
@@ -438,7 +471,7 @@ const Sidebar = () => {
             {/* <Icon.Dashboard className={(navData) => (navData.isActive ? 'active' : '')}/> */}
             {/* <HomeIcon succes={(navData) => (navData.isActive)} /> */}
             <img src={Home} alt="" aria-hidden="true" />
-            <Text clicked={click}>Home</Text>
+            <Text clicked={click}>Accueil</Text>
           </Item>
 
           <Item
