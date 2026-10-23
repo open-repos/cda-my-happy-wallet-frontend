@@ -206,7 +206,7 @@ test("keeps potential events out of real balances, confirms them and clears only
   await page.getByRole("switch", { name: "Simulation", exact: true }).check();
   await expect(forecastBalance(page)).toHaveText(/900,00\s*€/);
   await expect(realBalance(page)).toHaveText(/1\s*200,00\s*€/);
-  await navigate(page, "Home");
+  await navigate(page, "Accueil");
   const capacity = page.getByRole("region", {
     name: "Capacité d’épargne",
     exact: true,
@@ -500,7 +500,7 @@ for (const theme of ["light", "dark"]) {
     await login(page, testInfo.project.name, "recovery");
     for (const [name, title] of [
       ["Calendrier", "Calendrier"],
-      ["Home", "Tableau de bord"],
+      ["Accueil", "Tableau de bord"],
       ["Objectifs-Évènements", "Objectifs et événements"],
       ["Liste Opérations", "Opérations"],
       ["Catégories", "Catégories"],
