@@ -227,7 +227,9 @@ test("exposes the checked state of every radio option", async ({ page }) => {
 
   // Formulaire d'opération : type et catégorie (#148).
   await page.getByRole("tab", { name: "Opérations ponctuelles" }).click();
-  await page.getByRole("button", { name: "Ajouter une opération" }).click();
+  await page
+    .getByRole("button", { name: "Ajouter une opération", exact: true })
+    .click();
   await expect(page.getByRole("radio", { name: "Dépense" })).toBeChecked();
   await page.getByRole("radio", { name: "Entrée" }).click();
   await expect(page.getByRole("radio", { name: "Entrée" })).toBeChecked();

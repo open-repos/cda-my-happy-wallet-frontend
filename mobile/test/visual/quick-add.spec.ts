@@ -44,7 +44,12 @@ test("quick add keeps the selected day, income direction and failed draft withou
     await new Promise((resolve) => setTimeout(resolve, 100));
     return route.fulfill({ status: 422, json: { message: "Invalid" } });
   });
-  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Enregistrer", exact: true })
+    .evaluate((element) => {
+      (element as HTMLElement).click();
+      (element as HTMLElement).click();
+    });
   await expect(
     page.getByText(/L’ajout n’a pas pu être enregistré/),
   ).toBeVisible();
@@ -117,4 +122,48 @@ test("floating creation is limited to phone width and exposes four clear choices
   ).toBeVisible();
   await page.getByRole("button", { name: "Annuler", exact: true }).click();
   await expect(fab).toBeFocused();
+});
+
+test("quick addition refreshes the visible dashboard summary without replaying the write", async ({
+  page,
+}) => {
+  test.skip(
+    (page.viewportSize()?.width ?? 0) >= 768,
+    "Global floating creation is limited to phone width",
+  );
+  let reads = 0,
+    writes = 0;
+  await page.route(
+    /\/v1\/budget-periods\/[^/]+\/summary(?:\?.*)?$/,
+    (route) => {
+      reads++;
+      return route.fallback();
+    },
+  );
+  await signIn(page);
+  await expect.poll(() => reads).toBeGreaterThan(0);
+  const before = reads;
+  const fab = page.getByRole("button", {
+    name: "Ajouter une opération ou un événement",
+  });
+  await fab.click();
+  await page.getByRole("button", { name: /^Dépense Opération réelle/ }).click();
+  await page
+    .getByLabel("Titre", { exact: true })
+    .fill("Courses supplémentaires");
+  await page.getByLabel("Montant en euros", { exact: true }).fill("10");
+  await page.getByRole("radio", { name: "Alimentation", exact: true }).click();
+  await page.route("**/v1/operations", (route) => {
+    if (route.request().method() !== "POST") return route.fallback();
+    writes++;
+    const body = route.request().postDataJSON();
+    return route.fulfill({
+      status: 201,
+      json: { data: { id: 99, ...body, type: body.kind } },
+    });
+  });
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await expect.poll(() => reads).toBeGreaterThan(before);
+  await expect(fab).toBeFocused();
+  expect(writes).toBe(1);
 });

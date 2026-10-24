@@ -96,7 +96,7 @@ export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
   const open = useCallback(
     (date?: string, trigger?: View | null) => {
       if (busy.current) return;
-      source.current = trigger ?? fab.current;
+      source.current = trigger ?? null;
       setError(null);
       setSuccess(null);
       setPanel({
@@ -118,6 +118,7 @@ export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
     });
   const close = () => {
     if (busy.current) return;
+    Keyboard.dismiss();
     setPanel(null);
     setError(null);
     restore();
@@ -156,6 +157,7 @@ export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
     );
     busy.current = false;
     if (ok) {
+      Keyboard.dismiss();
       setPanel(null);
       setSuccess(
         kind === "potential"
@@ -186,14 +188,17 @@ export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
             </Pressable>
           </View>
         ) : null}
-        {width < 768 && !keyboard && !panel ? (
+        {width < 768 && !keyboard ? (
           <Pressable
             ref={fab}
             accessibilityLabel="Ajouter une opération ou un événement"
             accessibilityRole="button"
             disabled={saving}
             onPress={() => open()}
-            style={[styles.fab, { bottom: 80 + insets.bottom }]}
+            style={[
+              styles.fab,
+              { bottom: 80 + insets.bottom, display: panel ? "none" : "flex" },
+            ]}
           >
             <Ionicons color={colors.actionPrimaryText} name="add" size={28} />
           </Pressable>
@@ -205,6 +210,7 @@ export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
             Boolean(operationPanel && categoryStatus !== "success")
           }
           onRequestClose={close}
+          onDismiss={restore}
         >
           <SafeAreaProvider>
             <SafeAreaView style={styles.root}>

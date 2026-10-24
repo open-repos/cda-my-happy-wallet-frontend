@@ -9,7 +9,10 @@ import { NativeChart } from "./NativeChart";
 import { categoryColor, expensesOption, goalsOption } from "./chartOptions";
 import { SectionState, sectionLoading, sectionView } from "./sectionState";
 
+import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
+
 function useSection<T>(load: () => Promise<T>) {
+  const { revision } = useSimulation();
   const [state, setState] = useState<SectionState<T>>({ status: "loading" });
   const latest = useRef(0);
   const retry = useCallback(async () => {
@@ -30,7 +33,7 @@ function useSection<T>(load: () => Promise<T>) {
       return () => {
         latest.current++;
       };
-    }, [retry]),
+    }, [retry, revision]),
   );
   return { ...state, retry };
 }

@@ -7,10 +7,13 @@ import {
 } from "@/src/features/budget/domain/budgetSummary";
 import { BudgetSummaryGateway } from "@/src/features/budget/infrastructure/HttpBudgetSummaryGateway";
 
+import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
+
 type LoadStatus = "loading" | "success" | "error";
 
 /** Synthèse du mois courant, rechargée à chaque retour sur l'écran. */
 export const useBudgetSummary = (gateway: BudgetSummaryGateway) => {
+  const { revision } = useSimulation();
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [summary, setSummary] = useState<BudgetSummary | null>(null);
 
@@ -40,7 +43,7 @@ export const useBudgetSummary = (gateway: BudgetSummaryGateway) => {
       return () => {
         isActive = false;
       };
-    }, [gateway]),
+    }, [gateway, revision]),
   );
 
   return { retry: load, status, summary };

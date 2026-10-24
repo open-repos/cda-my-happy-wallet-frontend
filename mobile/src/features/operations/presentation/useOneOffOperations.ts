@@ -100,7 +100,7 @@ export const useOneOffOperations = (gateway: OneOffOperationsGateway) => {
         } catch {
           if (active)
             setMessage(
-              "L’ajout est enregistré, mais la liste n’a pas pu être actualisée. Revenez sur cet écran pour relire les opérations.",
+              "Les opérations n’ont pas pu être actualisées. Revenez sur cet écran pour les relire.",
             );
         }
       })();
