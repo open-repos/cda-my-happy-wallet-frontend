@@ -2,19 +2,26 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import service from "../services/operationsFixesService";
 import { useSimulation } from "../components/Simulation/SimulationContext";
 
-export const useFixedCharges = () => {
+const useFixedCollection = (type) => {
+  const income = type === "income";
+  const noun = income ? "Entrée" : "Charge";
   const { invalidate } = useSimulation();
   const [state, setState] = useState({ status: "loading", data: [] });
   const [message, setMessage] = useState({ text: "", error: false });
+  const [categoryError, setCategoryError] = useState("");
   const [busy, setBusy] = useState(false);
   const writing = useRef(false);
   const latest = useRef(0);
   const mounted = useRef(true);
   const reload = useCallback(async () => {
     const request = ++latest.current;
-    setState({ status: "loading", data: [] });
+    setState((current) => ({ ...current, status: "loading" }));
     try {
-      const response = await service.getAllCharges();
+      const response = await (income
+        ? service.getAllRevenus()
+        : service.getAllCharges());
+      if (!Array.isArray(response.data?.data))
+        throw new Error("Invalid collection");
       if (mounted.current && latest.current === request)
         setState({ status: "success", data: response.data.data });
       return true;
@@ -23,7 +30,7 @@ export const useFixedCharges = () => {
         setState({ status: "error", data: [] });
       return false;
     }
-  }, []);
+  }, [income]);
   useEffect(() => {
     mounted.current = true;
     reload();
@@ -36,7 +43,13 @@ export const useFixedCharges = () => {
     if (writing.current) return false;
     writing.current = true;
     setBusy(true);
-    setMessage({ text: "Enregistrement de la charge…", error: false });
+    setCategoryError("");
+    setMessage({
+      text: income
+        ? "Enregistrement de l’entrée…"
+        : "Enregistrement de la charge…",
+      error: false,
+    });
     try {
       await action();
       // Les synthèses, prévisions et capacités d'épargne se rechargent côté
@@ -51,10 +64,19 @@ export const useFixedCharges = () => {
           error: !loaded,
         });
       return true;
-    } catch {
+    } catch (error) {
+      if (
+        mounted.current &&
+        error?.response?.data?.error?.details?.code === "INVALID_FIXED_CATEGORY"
+      )
+        setCategoryError(
+          "Cette catégorie n’est plus disponible pour cet élément. Choisissez-en une autre."
+        );
       if (mounted.current)
         setMessage({
-          text: "La charge n’a pas pu être enregistrée. Vérifiez votre connexion et vos valeurs, puis réessayez.",
+          text: income
+            ? "L’entrée n’a pas pu être enregistrée. Vérifiez votre connexion et vos valeurs, puis réessayez."
+            : "La charge n’a pas pu être enregistrée. Vérifiez votre connexion et vos valeurs, puis réessayez.",
           error: true,
         });
       return false;
@@ -67,19 +89,31 @@ export const useFixedCharges = () => {
     ...state,
     message,
     busy,
+    categoryError,
+    clearCategoryError: () => setCategoryError(""),
     reload,
     save: (charge, body) =>
       mutate(
         () =>
           charge
-            ? service.putCharge(charge.idOperationFixe, body)
+            ? income
+              ? service.putRevenu(charge.idOperationFixe, body)
+              : service.putCharge(charge.idOperationFixe, body)
+            : income
+            ? service.postRevenus(body)
             : service.postCharges(body),
-        charge ? "Charge modifiée." : "Charge ajoutée."
+        `${noun} ${charge ? "modifiée" : "ajoutée"}.`
       ),
     remove: (charge) =>
       mutate(
-        () => service.deleteCharge(charge.idOperationFixe),
-        "Charge supprimée."
+        () =>
+          income
+            ? service.deleteRevenu(charge.idOperationFixe)
+            : service.deleteCharge(charge.idOperationFixe),
+        `${noun} supprimée.`
       ),
   };
 };
+
+export const useFixedCharges = () => useFixedCollection("charge");
+export const useFixedIncomes = () => useFixedCollection("income");

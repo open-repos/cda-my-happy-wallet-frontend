@@ -60,4 +60,36 @@ describe("contrat charges fixes", () => {
       { withCredentials: true }
     );
   });
+  it("lit toutes les pages des entrées et utilise leurs routes PUT/DELETE existantes", async () => {
+    apiPrivate.get
+      .mockResolvedValueOnce({
+        data: {
+          data: [{ idOperationFixe: 1 }],
+          meta: { hasNext: true, nextCursor: "incomes==" },
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          data: [{ idOperationFixe: 2 }],
+          meta: { hasNext: false, nextCursor: null },
+        },
+      });
+    expect((await service.getAllRevenus()).data.data).toHaveLength(2);
+    expect(apiPrivate.get).toHaveBeenLastCalledWith(
+      "/operations-fixes/revenus",
+      { withCredentials: true, params: { limit: 100, cursor: "incomes==" } }
+    );
+    const body = { titre: "Salaire", montant: 2000, devise: "EUR" };
+    await service.putRevenu(7, body);
+    await service.deleteRevenu(7);
+    expect(apiPrivate.put).toHaveBeenCalledWith(
+      "/operations-fixes/revenus/7",
+      body,
+      { withCredentials: true }
+    );
+    expect(apiPrivate.delete).toHaveBeenCalledWith(
+      "/operations-fixes/revenus/7",
+      { withCredentials: true }
+    );
+  });
 });
