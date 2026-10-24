@@ -15,6 +15,8 @@ import { primitives, semantic, themes } from "@/src/design/tokens";
 import { SimulationProvider } from "@/src/features/simulation/presentation/SimulationContext";
 import { TAB_LABEL_TEXT_PROPS } from "@/src/navigation/tabLabel";
 
+import { QuickAddProvider } from "@/src/features/quick-add/presentation/QuickAddProvider";
+
 const colors = themes.light.color;
 const desktopNavigationBreakpoint = 1024;
 // Seuil tablette de React Navigation. La position des libellés est fixée :
@@ -77,41 +79,43 @@ export default function AppLayout() {
   // Simulation partagée par les onglets, perdue en quittant la zone (#240).
   return (
     <SimulationProvider>
-      <Tabs
-        backBehavior="history"
-        screenOptions={{
-          headerShown: false,
-          tabBarActiveTintColor: colors.navigationActive,
-          tabBarInactiveTintColor: colors.navigationText,
-          tabBarHideOnKeyboard: true,
-          tabBarItemStyle: usesDesktopNavigation
-            ? styles.desktopTabItem
-            : styles.tabItem,
-          tabBarLabelPosition:
-            usesDesktopNavigation || labelBelowIcon
-              ? "below-icon"
-              : "beside-icon",
-          tabBarLabelStyle: styles.tabLabel,
-          tabBarPosition: usesDesktopNavigation ? "left" : "bottom",
-          tabBarShowLabel: !usesDesktopNavigation,
-          tabBarStyle: usesDesktopNavigation
-            ? styles.desktopTabBar
-            : styles.tabBar,
-          tabBarVariant: usesDesktopNavigation ? "material" : "uikit",
-        }}
-      >
-        {APP_DESTINATIONS.map((destination) => (
-          <Tabs.Screen
-            key={destination.route}
-            name={destination.route}
-            options={createTabOptions(destination, labelBelowIcon)}
-          />
-        ))}
-        <Tabs.Screen name="fixed-budget" options={{ href: null }} />
-        <Tabs.Screen name="categories" options={{ href: null }} />
-        <Tabs.Screen name="upcoming-months" options={{ href: null }} />
-        <Tabs.Screen name="analyses" options={{ href: null }} />
-      </Tabs>
+      <QuickAddProvider>
+        <Tabs
+          backBehavior="history"
+          screenOptions={{
+            headerShown: false,
+            tabBarActiveTintColor: colors.navigationActive,
+            tabBarInactiveTintColor: colors.navigationText,
+            tabBarHideOnKeyboard: true,
+            tabBarItemStyle: usesDesktopNavigation
+              ? styles.desktopTabItem
+              : styles.tabItem,
+            tabBarLabelPosition:
+              usesDesktopNavigation || labelBelowIcon
+                ? "below-icon"
+                : "beside-icon",
+            tabBarLabelStyle: styles.tabLabel,
+            tabBarPosition: usesDesktopNavigation ? "left" : "bottom",
+            tabBarShowLabel: !usesDesktopNavigation,
+            tabBarStyle: usesDesktopNavigation
+              ? styles.desktopTabBar
+              : styles.tabBar,
+            tabBarVariant: usesDesktopNavigation ? "material" : "uikit",
+          }}
+        >
+          {APP_DESTINATIONS.map((destination) => (
+            <Tabs.Screen
+              key={destination.route}
+              name={destination.route}
+              options={createTabOptions(destination, labelBelowIcon)}
+            />
+          ))}
+          <Tabs.Screen name="fixed-budget" options={{ href: null }} />
+          <Tabs.Screen name="categories" options={{ href: null }} />
+          <Tabs.Screen name="upcoming-months" options={{ href: null }} />
+          <Tabs.Screen name="analyses" options={{ href: null }} />
+        </Tabs>
+      </QuickAddProvider>
     </SimulationProvider>
   );
 }
