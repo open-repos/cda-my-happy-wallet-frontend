@@ -2,6 +2,9 @@
   width: 100%;
   min-width: 0;
 }
+.quick-add-root .protected-layout {
+  display: flow-root;
+}
 .quick-add-fab {
   display: none;
 }

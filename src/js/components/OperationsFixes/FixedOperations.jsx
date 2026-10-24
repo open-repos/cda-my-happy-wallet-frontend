@@ -55,6 +55,14 @@ export const FixedOperations = () => {
   const announceCharges = useAnnouncesLoading(charges.status, "fixed-charges");
   const announceIncomes = useAnnouncesLoading(incomes.status, "fixed-incomes");
   const busy = charges.busy || incomes.busy;
+  useEffect(
+    () => () => {
+      simulation.setActiveForm((current) =>
+        current === "fixed" ? null : current
+      );
+    },
+    [simulation.setActiveForm]
+  );
   useEffect(() => {
     if (editor || deleting) simulation.setActiveForm("fixed");
     else if (simulation.activeForm === "fixed") simulation.setActiveForm(null);

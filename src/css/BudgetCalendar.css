@@ -437,6 +437,7 @@
 }
 
 .budget-calendar__quick-add {
+  margin-bottom: 1rem;
   display: flex;
   justify-content: flex-end;
   width: 100%;

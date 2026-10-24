@@ -16,6 +16,14 @@ function ListeOperations() {
   const state = useOneOffOperations();
   const quickAdd = useQuickAdd(),
     simulation = useSimulation();
+  useEffect(
+    () => () => {
+      simulation.setActiveForm((current) =>
+        current === "operations" ? null : current
+      );
+    },
+    [simulation.setActiveForm]
+  );
   const [deleting, setDeleting] = useState(null);
   const returnId = useRef(null),
     keepRef = useRef(null),

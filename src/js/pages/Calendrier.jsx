@@ -265,21 +265,6 @@ function Calendrier() {
           Prochains mois
         </Link>
       </header>
-      <div className="budget-calendar__quick-add">
-        <button
-          type="button"
-          className="monthly-event-button"
-          onClick={(event) =>
-            openCreation(quickAdd.available ? "menu" : "expense", event)
-          }
-          disabled={isSaving}
-        >
-          {selectedDate
-            ? `Ajouter le ${longDate(selectedDate)}`
-            : "Ajouter au calendrier"}
-        </button>
-      </div>
-
       <LiveMessage
         message={budget.message.text}
         isError={budget.message.tone === "error"}
@@ -319,6 +304,20 @@ function Calendrier() {
           className="monthly-calendar"
           aria-labelledby="calendar-month-title"
         >
+          <div className="budget-calendar__quick-add">
+            <button
+              type="button"
+              className="monthly-event-button"
+              onClick={(event) =>
+                openCreation(quickAdd.available ? "menu" : "expense", event)
+              }
+              disabled={isSaving}
+            >
+              {selectedDate
+                ? `Ajouter le ${longDate(selectedDate)}`
+                : "Ajouter au calendrier"}
+            </button>
+          </div>
           <CalendarModeToggle mode={mode} onChange={setMode} />
           <div className="monthly-calendar__weekdays" aria-hidden="true">
             {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((day) => (
