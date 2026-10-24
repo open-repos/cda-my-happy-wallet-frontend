@@ -28,7 +28,7 @@ services:
   api:
     build:
       # Consume an immutable backend revision; never edit or seed another clone.
-      context: https://github.com/open-repos/cda-my-happy-wallet-backend.git#bf4bff79b09c41ada4a71ab09d3684dea266ce01
+      context: https://github.com/open-repos/cda-my-happy-wallet-backend.git#7be1f6af69aa614509e312f2cadb8dc5aff21e5c
     environment:
       NODE_ENV: test
       MHW_E2E: "1"

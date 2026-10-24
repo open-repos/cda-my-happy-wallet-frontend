@@ -182,3 +182,9 @@ full-stack vérifie les catégories d'une charge et d'une entrée contre MySQL
 jetable, puis leur relecture. Il nécessite Docker/MySQL/Redis et ne doit jamais
 être utilisé sur une autre base. Les deux PR applicatives restent soumises à
 revue propriétaire ; aucune migration de production ni déploiement automatique.
+
+La page conserve explicitement l’import historique de `FormControl.css` : cette
+feuille fournit encore des styles globaux aux autres pages. La suppression des
+anciens composants fixes ne doit pas changer leurs contrôles ou espacements.
+La nouvelle vue conserve ses sélecteurs locaux ; les références visuelles des
+autres pages restent inchangées.
