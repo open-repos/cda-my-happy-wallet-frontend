@@ -57,6 +57,23 @@
   margin: 0;
   flex: 1 1 18rem;
 }
+.compact-money-list__tools .fixed-operations__sort {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 0.75rem;
+}
+.compact-money-list__tools .fixed-operations__sort label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+  color: var(--ds-color-text-secondary);
+}
+.compact-money-list__tools .fixed-operations__sort select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
 .compact-money-list__scope {
   font-size: 0.75rem;
   color: var(--ds-color-text-muted);

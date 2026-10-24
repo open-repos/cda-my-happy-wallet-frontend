@@ -162,10 +162,14 @@ describe("ListeOperations", () => {
     render(<ListeOperations />, { wrapper: MemoryRouter });
     fireEvent.click(screen.getByRole("button", { name: "Modifier Courses" }));
     expect(
-      screen.getByRole("heading", { name: "Modifier l’opération" })
+      screen.getByRole("textbox", { name: "Titre" }).closest("tr")
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Modifier l’opération" })
+    ).not.toBeInTheDocument();
     expect(screen.getByLabelText("Titre")).toHaveValue("Courses");
-    fireEvent.click(screen.getByRole("button", { name: "Supprimer" }));
+    fireEvent.click(screen.getByRole("button", { name: "Annuler" }));
+    fireEvent.click(screen.getByRole("button", { name: "Supprimer Courses" }));
     fireEvent.click(screen.getByRole("button", { name: "Oui, supprimer" }));
     expect(actions.deleteOperation).toHaveBeenCalledWith(7);
   });

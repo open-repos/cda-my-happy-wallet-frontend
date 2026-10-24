@@ -37,7 +37,8 @@ distinguent opération réelle (point plein), événement prévu (cercle pointil
 et événement en retard (pictogramme `!`), avec une légende et un libellé
 accessible complet par jour. Un clic filtre la liste sur le jour; un second
 clic ou `Tout le mois` retire le filtre. `Ajouter une opération` préremplit la
-date sélectionnée. La conversion préremplit titre, montant et date; une
+date sélectionnée. Le bouton « Ajouter le… » près de la grille et le bouton
+flottant sur téléphone partagent ce parcours (voir [listes compactes](web-compact-operations.md)). La conversion préremplit titre, montant et date; une
 occurrence d'un mois passé propose la date du jour, car le backend refuse une
 réalisation rétroactive (`PERIOD_CLOSED`). Chaque ligne d'opération donne son
 titre, puis sa catégorie avec son icône ou sa pastille (#131), affichée dès que

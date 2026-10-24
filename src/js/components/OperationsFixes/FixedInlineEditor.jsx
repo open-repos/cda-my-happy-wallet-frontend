@@ -75,7 +75,14 @@ export const FixedInlineEditor = ({
     };
     return (
       <div className="fixed-inline__field">
-        <label htmlFor={id} className={compact ? undefined : "sr-only"}>
+        <label
+          htmlFor={id}
+          className={
+            compact || (ledger && name === "pourcentagePersonnel")
+              ? undefined
+              : "sr-only"
+          }
+        >
           {label}
         </label>
         {name === "devise" || name === "periodicite" ? (
