@@ -78,6 +78,7 @@ test("persists operation CRUD and recalculates the calendar budget", async ({
   await page
     .getByRole("button", { name: "Ajouter une opération", exact: true })
     .click();
+  await page.getByRole("button", { name: /^Dépense Opération réelle/ }).click();
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(
     page.getByText("Le titre doit contenir entre 2 et 50 caractères.")
@@ -112,9 +113,8 @@ test("persists operation CRUD and recalculates the calendar budget", async ({
   await expect(realBalance(page)).toHaveText(/1\s*150,00\s*€/);
   await navigate(page, "Liste Opérations");
   await page
-    .getByRole("button", { name: "Modifier Courses E2E", exact: true })
+    .getByRole("button", { name: "Supprimer Courses E2E", exact: true })
     .click();
-  await page.getByRole("button", { name: "Supprimer", exact: true }).click();
   const deleted = apiResponse(page, `/v1/operations/${operationId}`, "DELETE");
   await page
     .getByRole("button", { name: "Oui, supprimer", exact: true })
@@ -525,6 +525,10 @@ for (const theme of ["light", "dark"]) {
     await expect(add).toBeEnabled();
     await add.focus();
     await expect(add).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(
+      page.getByRole("button", { name: /^Dépense Opération réelle/ })
+    ).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(page.getByLabel(/^Titre/)).toBeFocused();
     await page.keyboard.press("Escape");

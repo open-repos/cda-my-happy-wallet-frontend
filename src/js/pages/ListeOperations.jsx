@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import { useQuickAdd } from "../components/QuickAdd/QuickAddContext";
+import { useSimulation } from "../components/Simulation/SimulationContext";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { LiveMessage } from "../components/LiveMessage";
 import { useAnnouncesLoading } from "../hooks/useAnnouncesLoading";
@@ -12,20 +14,53 @@ function ListeOperations() {
   const [editedOperation, setEditedOperation] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const state = useOneOffOperations();
+  const quickAdd = useQuickAdd(),
+    simulation = useSimulation();
+  useEffect(
+    () => () => {
+      simulation.setActiveForm((current) =>
+        current === "operations" ? null : current
+      );
+    },
+    [simulation.setActiveForm]
+  );
+  const [deleting, setDeleting] = useState(null);
+  const returnId = useRef(null),
+    keepRef = useRef(null),
+    addRef = useRef(null);
+  const restore = () =>
+    requestAnimationFrame(() =>
+      (document.getElementById(returnId.current) ?? addRef.current)?.focus()
+    );
+  useEffect(() => {
+    if (deleting) keepRef.current?.focus();
+  }, [deleting]);
+  useEffect(() => {
+    if (editedOperation || deleting || isFormOpen)
+      simulation.setActiveForm("operations");
+    else if (simulation.activeForm === "operations")
+      simulation.setActiveForm(null);
+  }, [editedOperation, deleting, isFormOpen]);
   // Liste générale sans filtre ; une mutation ou la pagination garde la clé.
   const announcesLoading = useAnnouncesLoading(state.status, "operations");
-  const openCreate = () => {
+  const openCreate = (event) => {
+    if (quickAdd.available) {
+      quickAdd.open("menu", null, event?.currentTarget);
+      return;
+    }
     setEditedOperation(null);
     setIsFormOpen(true);
   };
   const openEdit = (operation) => {
+    returnId.current = `one-off-edit-${operation.id}`;
     setEditedOperation(operation);
-    setIsFormOpen(true);
+    setIsFormOpen(false);
   };
   const closeForm = () => {
     if (state.mutationStatus !== "loading") {
       setIsFormOpen(false);
       setEditedOperation(null);
+      restore();
     }
   };
   const save = async (operation) => {
@@ -35,8 +70,11 @@ function ListeOperations() {
     if (succeeded) closeForm();
   };
   const remove = async () => {
-    if (editedOperation && (await state.deleteOperation(editedOperation.id)))
-      closeForm();
+    if (deleting && (await state.deleteOperation(deleting.id))) {
+      setDeleting(null);
+      simulation.setActiveForm(null);
+      restore();
+    }
   };
 
   return (
@@ -54,6 +92,7 @@ function ListeOperations() {
           </p>
         </div>
         <button
+          ref={addRef}
           type="button"
           className="one-off-button"
           onClick={openCreate}
@@ -125,6 +164,17 @@ function ListeOperations() {
             operations={state.operations}
             categories={state.categories}
             onEdit={openEdit}
+            editingId={editedOperation?.id}
+            onCancel={closeForm}
+            onSave={save}
+            busy={state.mutationStatus === "loading" || Boolean(deleting)}
+            mutationError={
+              state.mutationStatus === "error" ? state.message : ""
+            }
+            onDelete={(operation) => {
+              returnId.current = `one-off-edit-${operation.id}`;
+              setDeleting(operation);
+            }}
           />
           {state.meta?.hasNext && (
             <button
@@ -148,6 +198,41 @@ function ListeOperations() {
             </button>
           )}
         </section>
+      )}
+      {state.refreshError && state.status === "success" && (
+        <button
+          type="button"
+          className="one-off-button one-off-button--secondary"
+          onClick={state.retry}
+        >
+          Réessayer l’actualisation
+        </button>
+      )}
+      {deleting && (
+        <fieldset
+          className="one-off-delete-confirmation"
+          disabled={state.mutationStatus === "loading"}
+        >
+          <legend>Supprimer « {deleting.title} » ?</legend>
+          <button
+            ref={keepRef}
+            type="button"
+            className="one-off-button one-off-button--secondary"
+            onClick={() => {
+              setDeleting(null);
+              restore();
+            }}
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            className="one-off-button one-off-button--danger"
+            onClick={remove}
+          >
+            Oui, supprimer
+          </button>
+        </fieldset>
       )}
       {isFormOpen && (
         <OneOffOperationForm
