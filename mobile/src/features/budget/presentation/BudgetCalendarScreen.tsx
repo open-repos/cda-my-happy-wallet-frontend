@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -46,6 +46,8 @@ import { OperationCard } from "@/src/features/operations/presentation/OperationC
 import { SimulationPanel } from "@/src/features/simulation/presentation/SimulationPanel";
 import { SimulationReadout } from "@/src/features/simulation/presentation/SimulationReadout";
 
+import { useQuickAdd } from "@/src/features/quick-add/presentation/QuickAddProvider";
+
 const colors = themes.light.color;
 
 /** Calendrier budgétaire du mois : grille, modes, détail du jour, opérations. */
@@ -64,10 +66,21 @@ export const BudgetCalendarScreen = () => {
     () => new HttpOccurrencesGateway(httpClient),
     [httpClient],
   );
+  const quickAdd = useQuickAdd();
+  const { setCalendarDate } = quickAdd;
+  const addButton = useRef<View>(null);
   const today = currentParisDate();
   const [month, setMonth] = useState(currentParisMonth());
   const [mode, setMode] = useState<CalendarMode>("markers");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const creationDate =
+    selectedDate ?? (today.startsWith(month) ? today : `${month}-01`);
+  useFocusEffect(
+    useCallback(() => {
+      setCalendarDate(creationDate);
+      return () => setCalendarDate(null);
+    }, [creationDate, setCalendarDate]),
+  );
   const [realizing, setRealizing] = useState<PendingOccurrence | null>(null);
   const [realizeError, setRealizeError] = useState<string | null>(null);
   const state = useBudgetCalendar(
@@ -182,6 +195,23 @@ export const BudgetCalendarScreen = () => {
             />
           </Pressable>
         </View>
+
+        <Pressable
+          accessibilityRole="button"
+          ref={addButton}
+          accessibilityLabel={`Ajouter le ${longDate(creationDate)}`}
+          onPress={() => quickAdd.open(creationDate, addButton.current)}
+          style={styles.upcomingLink}
+        >
+          <Ionicons
+            color={colors.actionSecondaryText}
+            name="add-circle-outline"
+            size={24}
+          />
+          <Text
+            style={styles.upcomingLabel}
+          >{`Ajouter le ${longDate(creationDate)}`}</Text>
+        </Pressable>
 
         <View
           accessibilityLabel="Contenu des jours"
