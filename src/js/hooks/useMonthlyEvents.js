@@ -1,3 +1,4 @@
+import { isAcknowledgedWrite } from "../utils/acknowledgedWrite";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { monthlyEventsService } from "../services/monthlyEventsService";
 import { useSimulation } from "../components/Simulation/SimulationContext";
@@ -57,7 +58,11 @@ export const useMonthlyEvents = (month) => {
     setMutationStatus("loading");
     setMessage("");
     try {
-      await action();
+      try {
+        await action();
+      } catch (error) {
+        if (!isAcknowledgedWrite(error)) throw error;
+      }
       const reloaded = await load();
       setMutationStatus("success");
       setMessage(

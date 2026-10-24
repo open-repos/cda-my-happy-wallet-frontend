@@ -1,0 +1,348 @@
+.compact-money-list {
+  container: compactledger / inline-size;
+  font-size: 1rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.compact-money-list__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+.compact-money-list__filters button {
+  min-height: 44px;
+  border: 1px solid transparent;
+  border-radius: var(--ds-radius-control);
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  background: transparent;
+  color: var(--ds-color-text-secondary);
+}
+.compact-money-list__filters button[aria-pressed="true"] {
+  background: var(--ds-color-action-primary-background);
+  color: var(--ds-color-action-primary-text);
+}
+.compact-money-list__tools {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.compact-money-list__tools > label {
+  display: flex;
+  flex: 1 1 14rem;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+  color: var(--ds-color-text-secondary);
+  font-size: 0.875rem;
+}
+.compact-money-list__tools input {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 0.625rem;
+  border: 1px solid var(--ds-color-field-border);
+  border-radius: var(--ds-radius-control);
+  color: var(--ds-color-field-text);
+  background: var(--ds-color-field-background);
+  font: inherit;
+  font-size: 1rem;
+}
+.compact-money-list__tools .fixed-operations__sort {
+  margin: 0;
+  flex: 1 1 18rem;
+}
+.compact-money-list__scope {
+  font-size: 0.75rem;
+  color: var(--ds-color-text-muted);
+  margin: 0.5rem 0 0.875rem;
+}
+.compact-money-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  background: var(--ds-color-background-surface);
+  font-size: 0.875rem;
+}
+.compact-money-table :is(th, td) {
+  padding: 0.375rem 0.5rem;
+  border-bottom: 1px solid var(--ds-color-border-subtle);
+  text-align: left;
+  vertical-align: middle;
+  min-width: 0;
+}
+.compact-money-table thead th {
+  padding-block: 0.875rem;
+  color: var(--ds-color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.compact-money-table thead th:nth-child(1) {
+  width: 12%;
+}
+.compact-money-table thead th:nth-child(2) {
+  width: 25%;
+}
+.compact-money-table thead th:nth-child(3) {
+  width: 20%;
+}
+.compact-money-table thead th:nth-child(4) {
+  width: 9%;
+}
+.compact-money-table thead th:nth-child(5) {
+  width: 21%;
+  text-align: right;
+}
+.compact-money-table thead th:nth-child(6) {
+  width: 104px;
+}
+.compact-money-table__row {
+  height: 60px;
+}
+.compact-money-table__date,
+.compact-money-table__kind {
+  color: var(--ds-color-text-muted);
+  font-size: 0.75rem;
+}
+.compact-money-table__title > button {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ds-color-text-primary);
+  text-align: left;
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.compact-money-table__mobile-icon {
+  display: none;
+}
+.compact-money-table__category .category-label {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 0.75rem;
+}
+.compact-money-table__category :is(.category-icon, .category-swatch) {
+  flex-shrink: 0;
+}
+.compact-money-table .compact-money-table__amount {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.compact-money-table__amount--income {
+  color: var(--ds-color-data-income);
+}
+.compact-money-table__amount--expense {
+  color: var(--ds-color-data-expense);
+}
+.compact-money-table__amount small {
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+.compact-money-table__actions > div {
+  display: flex;
+  width: 88px;
+  gap: 0;
+  flex-wrap: nowrap;
+}
+.compact-money-table__actions button,
+.compact-money-table__actions .one-off-button {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ds-color-text-secondary);
+}
+.compact-money-table__actions button svg {
+  width: 1rem;
+  height: 1rem;
+}
+.compact-money-table__actions button:hover {
+  background: var(--ds-color-background-canvas);
+}
+@media (hover: hover) and (min-width: 64rem) {
+  .compact-money-table__row:not(:hover):not(:focus-within)
+    .compact-money-table__actions
+    > div {
+    opacity: 0;
+  }
+}
+.compact-money-table__details td {
+  padding: 1rem;
+  background: var(--ds-color-background-canvas);
+  overflow-wrap: anywhere;
+}
+.compact-money-table__details dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.375rem 0.75rem;
+  margin-top: 0.75rem;
+}
+.compact-money-table__details dd {
+  margin: 0;
+}
+.compact-money-table__editor {
+  background: var(--ds-color-background-canvas);
+}
+.compact-money-table__editor :is(input, select) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 0.5rem;
+  border: 1px solid var(--ds-color-field-border);
+  border-radius: var(--ds-radius-control);
+  color: var(--ds-color-field-text);
+  background: var(--ds-color-field-background);
+  font: inherit;
+}
+.compact-money-table__editor label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  color: var(--ds-color-text-secondary);
+  font-size: 0.75rem;
+}
+.compact-inline-error {
+  color: var(--ds-color-status-error-text);
+  display: block;
+  white-space: normal;
+  font-size: 0.75rem;
+  margin-top: 0.375rem;
+}
+.compact-money-table__editor [aria-invalid="true"] {
+  border-color: var(--ds-color-status-error-text);
+}
+.compact-inline-controls,
+.compact-money-table__editor .fixed-inline__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.compact-inline-controls .one-off-button,
+.compact-money-table__editor .fixed-inline__controls button {
+  font-size: 0.75rem;
+  padding: 0.5rem;
+  min-height: 44px;
+}
+@media (max-width: 63.999rem) {
+  .compact-money-table,
+  .compact-money-table tbody {
+    display: block;
+  }
+  .compact-money-table thead,
+  .compact-money-table__row
+    > :is(
+      .compact-money-table__date,
+      .compact-money-table__category,
+      .compact-money-table__kind
+    ) {
+    display: none;
+  }
+  .compact-money-table__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content 88px;
+    align-items: center;
+    gap: 0.25rem;
+    height: auto;
+    min-height: 58px;
+    border-bottom: 1px solid var(--ds-color-border-subtle);
+    padding: 0.375rem;
+  }
+  .compact-money-table .compact-money-table__row > :is(td, th) {
+    border: 0;
+    padding: 0;
+  }
+  .compact-money-table__row .compact-money-table__title {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+  .compact-money-table__mobile-icon {
+    display: flex;
+    flex: 0 0 1rem;
+  }
+  .compact-money-table__mobile-icon > :is(svg, span) {
+    width: 1rem;
+    height: 1rem;
+  }
+  .compact-money-table .compact-money-table__amount {
+    font-size: 0.75rem;
+  }
+  .compact-money-table__amount small {
+    display: none;
+  }
+  .compact-money-table__row .compact-money-table__actions > div {
+    opacity: 1;
+  }
+  .compact-money-table__details,
+  .compact-money-table__details td {
+    display: block;
+    width: 100%;
+  }
+  .compact-money-table__details dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .compact-money-table__editor,
+  .compact-money-table__editor > :is(th, td) {
+    display: block;
+    width: 100%;
+  }
+  .compact-money-table__editor {
+    padding: 0.75rem;
+  }
+  .compact-money-table__editor > :is(th, td) {
+    border: 0;
+    padding: 0.375rem 0;
+  }
+  .compact-money-table__editor :is(input, select) {
+    font-size: 1rem;
+  }
+  .compact-inline-controls,
+  .compact-money-table__editor .fixed-inline__controls {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .compact-money-table__editor .fixed-inline__field .sr-only {
+    position: static;
+    width: auto;
+    height: auto;
+    clip: auto;
+    overflow: visible;
+    white-space: normal;
+  }
+}
+@container compactledger (max-width:12em) {
+  .compact-money-table__row {
+    grid-template-columns: minmax(0, 1fr) 88px;
+  }
+  .compact-money-table__row .compact-money-table__title {
+    grid-column: 1/-1;
+  }
+  .compact-money-table__title > button {
+    white-space: normal;
+    overflow: visible;
+  }
+  .compact-money-table .compact-money-table__row .compact-money-table__amount {
+    text-align: left;
+  }
+}

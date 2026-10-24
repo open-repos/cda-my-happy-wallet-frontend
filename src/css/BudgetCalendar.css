@@ -435,3 +435,14 @@
     flex: 1;
   }
 }
+
+.budget-calendar__quick-add {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+@media (max-width: 47.999rem) {
+  .budget-calendar__quick-add .monthly-event-button {
+    width: 100%;
+  }
+}

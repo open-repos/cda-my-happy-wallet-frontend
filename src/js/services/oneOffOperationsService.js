@@ -1,3 +1,4 @@
+import { parseAcknowledgedWrite } from "../utils/acknowledgedWrite";
 import { apiPrivate } from "../../utils/axiosHelper";
 
 export const OPERATIONS_PAGE_LIMIT = 20;
@@ -144,14 +145,14 @@ export const oneOffOperationsService = {
     const response = await apiPrivate.post("/operations", operation, {
       withCredentials: true,
     });
-    return parseOperation(response.data?.data);
+    return parseAcknowledgedWrite(parseOperation, response.data?.data);
   },
 
   async updateOperation(id, operation) {
     const response = await apiPrivate.put(`/operations/${id}`, operation, {
       withCredentials: true,
     });
-    return parseOperation(response.data?.data);
+    return parseAcknowledgedWrite(parseOperation, response.data?.data);
   },
 
   async deleteOperation(id) {

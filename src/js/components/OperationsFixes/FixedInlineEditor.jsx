@@ -23,6 +23,7 @@ import { LiveMessage } from "../LiveMessage";
 export const FixedInlineEditor = ({
   row,
   compact,
+  ledger = false,
   busy,
   draft,
   onDraftChange,
@@ -217,6 +218,30 @@ export const FixedInlineEditor = ({
       {income ? "Entrée" : "Charge"}
     </span>
   );
+  if (ledger)
+    return (
+      <tr
+        className="fixed-inline compact-money-table__editor"
+        onKeyDown={keyboard}
+      >
+        <td>
+          {period}
+          {!income && <div className="fixed-inline__field">{share}</div>}
+        </td>
+        <th scope="row">{title}</th>
+        <td>{categoryField}</td>
+        <td>{badge}</td>
+        <td>
+          {total}
+          {currency}
+          <div className="fixed-operations__monthly">
+            {monthly}
+            <span>Aperçu personnel / mois</span>
+          </div>
+        </td>
+        <td>{controls}</td>
+      </tr>
+    );
   if (compact)
     return (
       <div className="fixed-inline" onKeyDown={keyboard}>
