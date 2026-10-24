@@ -137,6 +137,7 @@ export const OperationsScreen = () => {
             <Pressable
               accessibilityRole="button"
               disabled={state.categories.length === 0}
+              accessibilityLabel="Ajouter une opération"
               onPress={openCreate}
               style={({ pressed }) => [
                 styles.addButton,

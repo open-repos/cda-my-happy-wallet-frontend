@@ -33,6 +33,8 @@ interface MonthlyEventFormModalProps {
   /** Échec d'enregistrement ou de suppression, affiché dans la fenêtre. */
   errorMessage: string | null;
   event: MonthlyEvent | null;
+  initialDate?: string;
+  initialRecurrence?: EventDraft["recurrence"];
   /** Élément potentiel de la Simulation (#241) : titres et début borné. */
   potential?: { minStartDate: string } | null;
   isSaving: boolean;
@@ -61,6 +63,8 @@ const createDraft = (event: MonthlyEvent | null): EventDraft => ({
 export const MonthlyEventFormModal = ({
   errorMessage,
   event,
+  initialDate,
+  initialRecurrence,
   potential = null,
   isSaving,
   visible,
@@ -68,7 +72,15 @@ export const MonthlyEventFormModal = ({
   onDelete,
   onSave,
 }: MonthlyEventFormModalProps) => {
-  const [draft, setDraft] = useState(() => createDraft(event));
+  const [draft, setDraft] = useState(() => ({
+    ...createDraft(event),
+    ...(event == null
+      ? {
+          startDate: initialDate ?? formatCalendarDate(new Date()),
+          recurrence: initialRecurrence ?? "MENSUELLE",
+        }
+      : {}),
+  }));
   const [errors, setErrors] = useState<EventDraftErrors>({});
   // Confirmation dans le formulaire : `Alert.alert` est sans effet sur le Web.
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
