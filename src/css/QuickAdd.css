@@ -102,6 +102,9 @@
   outline: 2px solid var(--ds-color-focus-ring);
   outline-offset: 2px;
 }
+.quick-add-fab:focus-visible {
+  outline-color: var(--ds-color-focus-ring-on-shell);
+}
 @media (max-width: 47.999rem) {
   .quick-add-root .protected-layout__content {
     padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
