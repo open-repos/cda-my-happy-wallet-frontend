@@ -71,10 +71,7 @@ for (const width of [390, 1440]) {
       page.getByRole("heading", { name: "Modifier un élément fixe" })
     ).toHaveCount(0);
     if (width === 1440) await expect(page.getByRole("table")).toBeVisible();
-    else
-      await expect(
-        page.getByRole("article", { name: "Salaire" })
-      ).toBeVisible();
+    else await expect(page.getByRole("row", { name: /Salaire/ })).toBeVisible();
     await page.getByLabel("Montant total par échéance").fill("240");
     await expect(page.getByLabel("Aperçu mensuel personnel")).toContainText(
       "10,00"

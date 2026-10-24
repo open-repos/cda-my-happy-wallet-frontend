@@ -1098,13 +1098,13 @@ test("keeps the operation actions and local icons at their design sizes", async 
   });
   const editButton = page.getByRole("button", { name: "Modifier Courses" });
   const addIcon = addButton.locator("img");
-  const editIcon = editButton.locator("img");
+  const editIcon = editButton.locator("svg");
 
   await expect(addButton).toHaveCSS("min-height", "48px");
   await expect(editButton).toHaveCSS("width", "44px");
   await expect(editButton).toHaveCSS("height", "44px");
   await expect(addIcon).toHaveCSS("width", "16px");
   await expect(addIcon).toHaveCSS("height", "16px");
-  await expect(editIcon).toHaveCSS("width", "20px");
-  await expect(editIcon).toHaveCSS("height", "20px");
+  await expect(editIcon).toHaveCSS("width", "16px");
+  await expect(editIcon).toHaveCSS("height", "16px");
 });

@@ -255,7 +255,8 @@ describe("annonces des listes Web, vrais hooks #221", () => {
     await act(async () => {
       pending = operationState.createOperation(operation);
     });
-    expect(operationState.status).toBe("loading");
+    expect(operationState.status).toBe("success");
+    expect(operationState.mutationStatus).toBe("loading");
     expect(operations.listOperations).toHaveBeenCalledTimes(2);
     expect(loadingTexts(texts)).toEqual([]);
     await act(async () => {

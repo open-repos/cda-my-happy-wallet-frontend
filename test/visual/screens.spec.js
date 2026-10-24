@@ -167,7 +167,7 @@ for (const theme of ["light", "dark"]) {
         ).toBeVisible();
       if (definition.name === "operations") {
         const ratio = await page
-          .locator(".one-off-table tbody th")
+          .locator(".compact-money-table tbody th")
           .first()
           .evaluate((cell) => {
             const rgb = (value) =>
@@ -187,14 +187,14 @@ for (const theme of ["light", "dark"]) {
                 );
             const [high, low] = [
               light(getComputedStyle(cell).color),
-              light(getComputedStyle(cell.closest("tbody")).backgroundColor),
+              light(getComputedStyle(cell.closest("table")).backgroundColor),
             ].sort((a, b) => b - a);
             return (high + 0.05) / (low + 0.05);
           });
         expect(ratio).toBeGreaterThanOrEqual(4.5);
-        if (page.viewportSize().width >= 768) {
+        if (page.viewportSize().width >= 1024) {
           const alignment = await page
-            .locator(".one-off-table")
+            .locator(".compact-money-table")
             .evaluate((table) => {
               const headers = [...table.querySelectorAll("thead th")];
               const cells = [...table.querySelector("tbody tr").children];

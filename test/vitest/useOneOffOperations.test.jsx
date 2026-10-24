@@ -207,7 +207,8 @@ describe("useOneOffOperations", () => {
     await act(async () =>
       expect(await result.current.createOperation(operation)).toBe(true)
     );
-    expect(result.current.status).toBe("error");
+    expect(result.current.status).toBe("success");
+    expect(result.current.refreshError).toBe(true);
     expect(result.current.mutationStatus).toBe("success");
     expect(result.current.message).toBe(
       "La modification est enregistrée, mais la liste n’a pas pu être actualisée."

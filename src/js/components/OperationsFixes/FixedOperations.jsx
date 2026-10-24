@@ -1,3 +1,5 @@
+import { CompactMoneyList } from "../CompactOperations/CompactMoneyList";
+import { useSimulation } from "../Simulation/SimulationContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPen, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useCategories } from "../../hooks/useCategories";
@@ -22,39 +24,6 @@ import { FixedIncomeForm } from "./FixedIncomeForm";
 import "../../../css/FixedCharges.css";
 import "../../../css/FixedOperations.css";
 
-const useCompactFixedLayout = () => {
-  const [compact, setCompact] = useState(
-    () => window.matchMedia?.("(max-width: 1023px)").matches ?? false
-  );
-  useEffect(() => {
-    const query = window.matchMedia?.("(max-width: 1023px)");
-    if (!query) return;
-    const change = () => {
-      const fontSize =
-        parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-      setCompact(
-        query.matches ||
-          (document.documentElement.clientWidth > 0 &&
-            document.documentElement.clientWidth / fontSize < 64)
-      );
-    };
-    change();
-    query.addEventListener("change", change);
-    const observer =
-      typeof MutationObserver === "undefined"
-        ? null
-        : new MutationObserver(change);
-    observer?.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["style", "class"],
-    });
-    return () => {
-      query.removeEventListener("change", change);
-      observer?.disconnect();
-    };
-  }, []);
-  return compact;
-};
 const money = (value, currency) =>
   value == null || !/^\d+(?:\.\d+)?$/.test(String(value))
     ? "Indisponible"
@@ -67,7 +36,7 @@ const share = (row) =>
 export const FixedOperations = () => {
   const charges = useFixedCharges();
   const incomes = useFixedIncomes();
-  const compact = useCompactFixedLayout();
+  const simulation = useSimulation();
   const categories = useCategories();
   const [sort, setSort] = useState({
     field: "montantMensuelPersonnel",
@@ -86,6 +55,10 @@ export const FixedOperations = () => {
   const announceCharges = useAnnouncesLoading(charges.status, "fixed-charges");
   const announceIncomes = useAnnouncesLoading(incomes.status, "fixed-incomes");
   const busy = charges.busy || incomes.busy;
+  useEffect(() => {
+    if (editor || deleting) simulation.setActiveForm("fixed");
+    else if (simulation.activeForm === "fixed") simulation.setActiveForm(null);
+  }, [editor, deleting]);
   const collection = (kind) => (kind === "income" ? incomes : charges);
   const ready = charges.status === "success" && incomes.status === "success";
   const rows = sortFixedOperations(
@@ -155,11 +128,12 @@ export const FixedOperations = () => {
       </button>
     </div>
   );
-  const inlineEditor = (row, compact) => (
+  const inlineEditor = (row) => (
     <FixedInlineEditor
       key={row.key}
       row={row}
-      compact={compact}
+      compact={false}
+      ledger
       busy={busy}
       categories={categories}
       categoryError={collection(row.kind).categoryError}
@@ -171,13 +145,6 @@ export const FixedOperations = () => {
       onSave={(body) => collection(row.kind).save(row, body)}
       onClose={() => setEditor(null)}
     />
-  );
-  const badge = (row) => (
-    <span
-      className={`fixed-operations__badge fixed-operations__badge--${row.kind}`}
-    >
-      {fixedKindLabel(row.kind)}
-    </span>
   );
   const details = (row) => (
     <dl>
@@ -238,10 +205,7 @@ export const FixedOperations = () => {
           editor && !editor.row ? " fixed-operations__work--editing" : ""
         }`}
       >
-        <div
-          className="fixed-operations__overview"
-          hidden={compact && Boolean(editor) && !editor.row}
-        >
+        <div className="fixed-operations__overview" hidden={false}>
           <FixedBudgetSummary overview />
           <div className="fixed-operations__heading">
             <h2>Votre liste</h2>
@@ -284,183 +248,76 @@ export const FixedOperations = () => {
               )}
             </div>
           ))}
-          <div className="fixed-operations__sort">
-            <div className="fixed-operations__sort-field">
-              <label htmlFor="fixed-sort-field">Trier par</label>
-              <select
-                id="fixed-sort-field"
-                disabled={Boolean(editor?.row)}
-                value={sort.field}
-                onChange={(event) =>
-                  changeSort(event.target.value, sort.direction)
-                }
-              >
-                {FIXED_SORT_FIELDS.map((field) => (
-                  <option key={field.value} value={field.value}>
-                    {field.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="fixed-operations__sort-field">
-              <label htmlFor="fixed-sort-order">Ordre du tri</label>
-              <select
-                id="fixed-sort-order"
-                disabled={Boolean(editor?.row)}
-                value={sort.direction}
-                onChange={(event) => changeSort(sort.field, event.target.value)}
-              >
-                <option value="desc">Décroissant</option>
-                <option value="asc">Croissant</option>
-              </select>
-            </div>
-          </div>
           {ready && !rows.length && (
             <p>
               Aucune charge ni entrée fixe enregistrée. Ajoutez votre premier
               élément.
             </p>
           )}
-          {rows.length > 0 &&
-            (compact || (editor && !editor.row) ? (
-              <div className="fixed-operations__cards">
-                {rows.map((row) => (
-                  <article key={row.key} aria-label={row.titre}>
-                    {editor?.row?.key === row.key ? (
-                      inlineEditor(row, true)
-                    ) : (
-                      <>
-                        <details>
-                          <summary>
-                            <div className="fixed-operations__card-top">
-                              <div>
-                                {badge(row)} <strong>{row.titre}</strong>
-                              </div>
-                              <div className="fixed-operations__monthly">
-                                {money(row.montantMensuelPersonnel, row.devise)}
-                                <span>pour moi / mois</span>
-                              </div>
-                            </div>
-                            <p>
-                              {money(row.montant, row.devise)} ·{" "}
-                              {
-                                fixedPeriodLabel(row.periodicite).split(
-                                  " — "
-                                )[0]
-                              }
-                              {row.kind === "charge"
-                                ? ` · Ma part : ${share(row)}`
-                                : ""}
-                            </p>
-                            <p>
-                              <CategoryLabel category={fixedCategory(row)} />
-                            </p>
-                            <span className="fixed-operations__detail-label">
-                              Détail et actions
-                            </span>
-                          </summary>
-                          {details(row)}
-                        </details>
-                        {actions(row)}
-                      </>
-                    )}
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <table
-                className="fixed-operations__table fixed-operations__table--categories"
-                aria-label="Charges et entrées fixes"
-              >
-                <thead>
-                  <tr>
-                    {[
-                      ["titre", "Nom"],
-                      ["category", "Catégorie"],
-                      ["montant", "Total / échéance"],
-                      ["devise", "Devise"],
-                      ["periodicite", "Périodicité"],
-                      ["pourcentagePersonnel", "Ma part (%)"],
-                      ["montantPersonnel", "Personnel / échéance"],
-                      ["montantMensuelPersonnel", "Personnel / mois"],
-                    ].map(([field, label]) => (
-                      <th
-                        key={field}
-                        scope="col"
-                        aria-sort={
-                          sort.field === field
-                            ? sort.direction === "asc"
-                              ? "ascending"
-                              : "descending"
-                            : undefined
-                        }
-                      >
-                        <button
-                          type="button"
-                          aria-label={`Trier par ${label}`}
-                          disabled={Boolean(editor?.row)}
-                          onClick={() =>
-                            changeSort(
-                              field,
-                              sort.field === field && sort.direction === "asc"
-                                ? "desc"
-                                : "asc"
-                            )
-                          }
-                        >
-                          {label}{" "}
-                          <span aria-hidden="true">
-                            {sort.field === field
-                              ? sort.direction === "asc"
-                                ? "↑"
-                                : "↓"
-                              : "↕"}
-                          </span>
-                        </button>
-                      </th>
-                    ))}
-                    <th scope="col">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) =>
-                    editor?.row?.key === row.key ? (
-                      <React.Fragment key={row.key}>
-                        {inlineEditor(row, false)}
-                      </React.Fragment>
-                    ) : (
-                      <tr key={row.key}>
-                        <th scope="row">
-                          {row.titre} {badge(row)}
-                          <details>
-                            <summary>Détail</summary>
-                            {details(row)}
-                          </details>
-                        </th>
-                        <td>
-                          <CategoryLabel category={fixedCategory(row)} />
-                        </td>
-                        <td>{money(row.montant, row.devise)}</td>
-                        <td>{row.devise}</td>
-                        <td>
-                          {fixedPeriodLabel(row.periodicite).split(" — ")[0]}
-                        </td>
-                        <td>{share(row)}</td>
-                        <td>
-                          {row.kind === "income"
-                            ? "Sans objet"
-                            : money(row.montantPersonnel, row.devise)}
-                        </td>
-                        <td className="fixed-operations__monthly">
-                          {money(row.montantMensuelPersonnel, row.devise)}
-                        </td>
-                        <td>{actions(row)}</td>
-                      </tr>
-                    )
-                  )}
-                </tbody>
-              </table>
-            ))}
+          {rows.length > 0 && (
+            <CompactMoneyList
+              fixed
+              label="Charges et entrées fixes"
+              rows={rows.map((row) => ({
+                id: row.key,
+                title: row.titre,
+                date: fixedPeriodLabel(row.periodicite).split(" — ")[0],
+                kind: row.kind === "income" ? "income" : "expense",
+                amount: money(row.montantMensuelPersonnel, row.devise),
+                category: fixedCategory(row),
+                raw: row,
+              }))}
+              sort={{
+                field: {
+                  titre: "title",
+                  periodicite: "date",
+                  category: "category",
+                  kind: "kind",
+                  montantMensuelPersonnel: "amount",
+                }[sort.field],
+                direction: sort.direction,
+              }}
+              editingId={editor?.row?.key}
+              renderEditor={({ raw }) => inlineEditor(raw)}
+              renderActions={({ raw }) => actions(raw)}
+              renderDetails={({ raw }) => details(raw)}
+              sortControls={
+                <div className="fixed-operations__sort">
+                  <div className="fixed-operations__sort-field">
+                    <label htmlFor="fixed-sort-field">Trier par</label>
+                    <select
+                      id="fixed-sort-field"
+                      disabled={Boolean(editor?.row)}
+                      value={sort.field}
+                      onChange={(event) =>
+                        changeSort(event.target.value, sort.direction)
+                      }
+                    >
+                      {FIXED_SORT_FIELDS.map((field) => (
+                        <option key={field.value} value={field.value}>
+                          {field.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="fixed-operations__sort-field">
+                    <label htmlFor="fixed-sort-order">Ordre du tri</label>
+                    <select
+                      id="fixed-sort-order"
+                      disabled={Boolean(editor?.row)}
+                      value={sort.direction}
+                      onChange={(event) =>
+                        changeSort(sort.field, event.target.value)
+                      }
+                    >
+                      <option value="desc">Décroissant</option>
+                      <option value="asc">Croissant</option>
+                    </select>
+                  </div>
+                </div>
+              }
+            />
+          )}
           <p className="fixed-operations__help">
             Les charges fixes sont réparties chaque mois selon votre part
             personnelle. Ne saisissez pas aussi la même dépense dans les
