@@ -95,10 +95,7 @@ enfants reste suivie dans le parent #237.
 
 La page « Charges et entrées fixes » réunit les deux collections existantes.
 Le tableau au-dessus de 1 023 pixels et les lignes compactes sur petit écran
-partagent le même ordre. Sur téléphone, ouvrir une ligne donne tous ses détails,
-puis Modifier/Supprimer. Sur ordinateur, les actions sont directement proposées
-et le détail des montants peut être déplié dans la première colonne. Le
-formulaire s'affiche à côté sur grand écran, avec une liste compacte pour garder des lignes lisibles, et remplace la liste sur petit écran.
+partagent le même ordre. Les icônes Modifier/Supprimer restent visibles sous chaque carte sur téléphone, sans ouvrir les détails. Sur ordinateur, elles apparaissent au survol de la ligne ou au focus clavier, dans un emplacement réservé. L’édition transforme les valeurs dans les mêmes colonnes ou la même carte ; Enregistrer/Annuler sont intégrés sur place. Le type reste verrouillé, les résultats sont des aperçus calculés en lecture seule et la position reste stable pendant la saisie. Le formulaire latéral sur ordinateur et la vue dédiée sur téléphone sont réservés à l’ajout.
 
 Le sélecteur « Trier par » couvre nom, type, total par échéance, devise,
 périodicité, pourcentage personnel, part par échéance et montant mensuel.

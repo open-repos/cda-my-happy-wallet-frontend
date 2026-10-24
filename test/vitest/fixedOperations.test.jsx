@@ -103,6 +103,33 @@ afterEach(() => {
 });
 
 describe("vue commune du budget fixe #265", () => {
+  it("édite dans les colonnes existantes sans déplacer la ligne, et annule sans écrire", async () => {
+    show();
+    const edit = await screen.findByRole("button", {
+      name: "Modifier Assurance",
+    });
+    const table = screen.getByRole("table");
+    const originalRow = edit.closest("tr");
+    const index = rows().indexOf(originalRow);
+    fireEvent.click(edit);
+    const title = within(table).getByLabelText("Titre de la charge");
+    expect(title.closest("tr")).toBe(rows()[index]);
+    expect(
+      screen.queryByRole("heading", { name: "Modifier un élément fixe" })
+    ).not.toBeInTheDocument();
+    fill("Montant total par échéance", "240");
+    expect(service.putCharge).not.toHaveBeenCalled();
+    expect(
+      within(title.closest("tr")).getByLabelText("Aperçu mensuel personnel")
+    ).toHaveTextContent(/10,00/);
+    fireEvent.click(screen.getByRole("button", { name: "Annuler" }));
+    expect(service.putCharge).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: "Modifier Assurance" })
+    ).toHaveFocus();
+    expect(rows()[index]).toHaveTextContent(/5,01/);
+  });
+
   it("affiche le détail mobile, permet de trier les champs et revient à la ligne après Échap", async () => {
     window.matchMedia.mockReturnValue({
       matches: true,
@@ -120,7 +147,8 @@ describe("vue commune du budget fixe #265", () => {
       within(row).getByRole("button", { name: "Modifier Assurance" })
     );
     expect(screen.getByLabelText("Titre de la charge")).toHaveFocus();
-    expect(screen.queryByRole("article")).not.toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "Assurance" })).toBe(row);
+    expect(within(row).getByLabelText("Titre de la charge")).toHaveFocus();
     fireEvent.keyDown(screen.getByLabelText("Titre de la charge"), {
       key: "Escape",
     });
@@ -329,7 +357,8 @@ describe("vue commune du budget fixe #265", () => {
     fireEvent.click(
       await screen.findByRole("button", { name: "Modifier Salaire" })
     );
-    expect(screen.getByRole("radio", { name: "Charge" })).toBeDisabled();
+    expect(screen.queryByRole("radio")).not.toBeInTheDocument();
+    expect(screen.getByRole("table")).toBeVisible();
     expect(screen.queryByLabelText("Périodicité")).not.toBeInTheDocument();
     fill("Montant reçu par mois", "2100");
     fireEvent.click(

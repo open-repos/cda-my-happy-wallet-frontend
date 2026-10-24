@@ -580,9 +580,7 @@ test("persists periodic shared fixed charges and refreshes server budgets withou
   await page
     .getByRole("button", { name: "Modifier Entrée mensuelle E2E" })
     .click();
-  await expect(
-    page.getByRole("radio", { name: "Charge", exact: true })
-  ).toBeDisabled();
+  await expect(page.getByRole("radio")).toHaveCount(0);
   await page.getByLabel("Montant reçu par mois").fill("250");
   const incomeUpdated = apiResponse(
     page,

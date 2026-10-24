@@ -1,3 +1,8 @@
+import {
+  incomeInitialValues,
+  validateIncome,
+  incomeBody,
+} from "../../utils/fixedIncome";
 import React, { useRef, useState } from "react";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import { LiveMessage } from "../LiveMessage";
@@ -11,12 +16,7 @@ export const FixedIncomeForm = ({
   onClose,
 }) => {
   const [values, setValues] = useState(
-    () =>
-      draft ?? {
-        titre: income?.titre ?? "",
-        montant: String(income?.montant ?? ""),
-        devise: income?.devise ?? "EUR",
-      }
+    () => draft ?? incomeInitialValues(income)
   );
   const [errors, setErrors] = useState({});
   const [attempt, setAttempt] = useState(0);
@@ -31,33 +31,14 @@ export const FixedIncomeForm = ({
   };
   const submit = async (event) => {
     event.preventDefault();
-    const next = {};
-    const amountText = values.montant.trim();
-    const amount = Number(amountText.replace(",", "."));
-    if (values.titre.trim().length < 2 || values.titre.trim().length > 50)
-      next.titre = "Saisissez un titre de 2 à 50 caractères.";
-    if (
-      !/^\d+(?:[.,]\d+)?$/.test(amountText) ||
-      !Number.isFinite(amount) ||
-      amount < 1
-    )
-      next.montant = "Saisissez un montant reçu supérieur ou égal à 1.";
-    if (!["EUR", "USD"].includes(values.devise))
-      next.devise = "Choisissez une devise.";
+    const next = validateIncome(values);
     setErrors(next);
     setAttempt((count) => count + 1);
     if (Object.keys(next).length) {
       formRef.current.elements.namedItem(Object.keys(next)[0])?.focus();
       return;
     }
-    if (
-      await onSave({
-        titre: values.titre.trim(),
-        montant: amount,
-        devise: values.devise,
-      })
-    )
-      onClose();
+    if (await onSave(incomeBody(values))) onClose();
   };
   return (
     <section

@@ -198,9 +198,9 @@ for (const width of [320, 390, 768, 1440])
       await page
         .getByRole("button", { name: "Modifier Pension exemple" })
         .click();
-      await expect(
-        page.getByRole("radio", { name: "Charge", exact: true })
-      ).toBeDisabled();
+      await expect(page.getByRole("radio")).toHaveCount(0);
+      await expect(page.getByLabel("Titre de l’entrée")).toBeFocused();
+      await assertFits(page);
       await page.getByLabel("Montant reçu par mois").fill("300");
       await page.getByRole("button", { name: "Enregistrer l’entrée" }).click();
       await expect(fixedOperationItem(page, "Pension exemple")).toContainText(

@@ -14,7 +14,7 @@ const useFixedCollection = (type) => {
   const mounted = useRef(true);
   const reload = useCallback(async () => {
     const request = ++latest.current;
-    setState({ status: "loading", data: [] });
+    setState((current) => ({ ...current, status: "loading" }));
     try {
       const response = await (income
         ? service.getAllRevenus()

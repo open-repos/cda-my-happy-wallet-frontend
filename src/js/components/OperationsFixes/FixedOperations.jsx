@@ -1,3 +1,6 @@
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPen, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { FixedInlineEditor } from "./FixedInlineEditor";
 import React, { useEffect, useRef, useState } from "react";
 import { useFixedCharges, useFixedIncomes } from "../../hooks/useFixedCharges";
 import { useAnnouncesLoading } from "../../hooks/useAnnouncesLoading";
@@ -23,10 +26,29 @@ const useCompactFixedLayout = () => {
   useEffect(() => {
     const query = window.matchMedia?.("(max-width: 1023px)");
     if (!query) return;
-    const change = () => setCompact(query.matches);
+    const change = () => {
+      const fontSize =
+        parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      setCompact(
+        query.matches ||
+          (document.documentElement.clientWidth > 0 &&
+            document.documentElement.clientWidth / fontSize < 64)
+      );
+    };
     change();
     query.addEventListener("change", change);
-    return () => query.removeEventListener("change", change);
+    const observer =
+      typeof MutationObserver === "undefined"
+        ? null
+        : new MutationObserver(change);
+    observer?.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["style", "class"],
+    });
+    return () => {
+      query.removeEventListener("change", change);
+      observer?.disconnect();
+    };
   }, []);
   return compact;
 };
@@ -104,17 +126,17 @@ export const FixedOperations = () => {
     <div className="fixed-operations__row-actions">
       <button
         type="button"
-        className="one-off-button one-off-button--secondary"
+        className="one-off-button one-off-button--secondary fixed-operations__icon-action"
         disabled={busy || Boolean(editor) || Boolean(deleting)}
         aria-label={`Modifier ${row.titre}`}
         id={`fixed-edit-${row.kind}-${row.idOperationFixe}`}
         onClick={(event) => openEditor(event, row)}
       >
-        Modifier
+        <FontAwesomeIcon icon={faPen} aria-hidden="true" />
       </button>
       <button
         type="button"
-        className="one-off-button one-off-button--secondary"
+        className="one-off-button one-off-button--secondary fixed-operations__icon-action"
         disabled={busy || Boolean(editor) || Boolean(deleting)}
         aria-label={`Supprimer ${row.titre}`}
         id={`fixed-delete-${row.kind}-${row.idOperationFixe}`}
@@ -125,9 +147,23 @@ export const FixedOperations = () => {
           setDeleting(row);
         }}
       >
-        Supprimer
+        <FontAwesomeIcon icon={faTrash} aria-hidden="true" />
       </button>
     </div>
+  );
+  const inlineEditor = (row, compact) => (
+    <FixedInlineEditor
+      key={row.key}
+      row={row}
+      compact={compact}
+      busy={busy}
+      draft={drafts.inline}
+      onDraftChange={(draft) =>
+        setDrafts((current) => ({ ...current, inline: draft }))
+      }
+      onSave={(body) => collection(row.kind).save(row, body)}
+      onClose={() => setEditor(null)}
+    />
   );
   const badge = (row) => (
     <span
@@ -188,12 +224,12 @@ export const FixedOperations = () => {
       <LiveMessage visible={false} message={sortMessage} />
       <div
         className={`fixed-operations__work${
-          editor ? " fixed-operations__work--editing" : ""
+          editor && !editor.row ? " fixed-operations__work--editing" : ""
         }`}
       >
         <div
           className="fixed-operations__overview"
-          hidden={compact && Boolean(editor)}
+          hidden={compact && Boolean(editor) && !editor.row}
         >
           <FixedBudgetSummary overview />
           <div className="fixed-operations__heading">
@@ -242,6 +278,7 @@ export const FixedOperations = () => {
               <label htmlFor="fixed-sort-field">Trier par</label>
               <select
                 id="fixed-sort-field"
+                disabled={Boolean(editor?.row)}
                 value={sort.field}
                 onChange={(event) =>
                   changeSort(event.target.value, sort.direction)
@@ -258,6 +295,7 @@ export const FixedOperations = () => {
               <label htmlFor="fixed-sort-order">Ordre du tri</label>
               <select
                 id="fixed-sort-order"
+                disabled={Boolean(editor?.row)}
                 value={sort.direction}
                 onChange={(event) => changeSort(sort.field, event.target.value)}
               >
@@ -273,35 +311,45 @@ export const FixedOperations = () => {
             </p>
           )}
           {rows.length > 0 &&
-            (compact || editor ? (
+            (compact || (editor && !editor.row) ? (
               <div className="fixed-operations__cards">
                 {rows.map((row) => (
                   <article key={row.key} aria-label={row.titre}>
-                    <details>
-                      <summary>
-                        <div className="fixed-operations__card-top">
-                          <div>
-                            {badge(row)} <strong>{row.titre}</strong>
-                          </div>
-                          <div className="fixed-operations__monthly">
-                            {money(row.montantMensuelPersonnel, row.devise)}
-                            <span>pour moi / mois</span>
-                          </div>
-                        </div>
-                        <p>
-                          {money(row.montant, row.devise)} ·{" "}
-                          {fixedPeriodLabel(row.periodicite).split(" — ")[0]}
-                          {row.kind === "charge"
-                            ? ` · Ma part : ${share(row)}`
-                            : ""}
-                        </p>
-                        <span className="fixed-operations__detail-label">
-                          Détail et actions
-                        </span>
-                      </summary>
-                      {details(row)}
-                      {actions(row)}
-                    </details>
+                    {editor?.row?.key === row.key ? (
+                      inlineEditor(row, true)
+                    ) : (
+                      <>
+                        <details>
+                          <summary>
+                            <div className="fixed-operations__card-top">
+                              <div>
+                                {badge(row)} <strong>{row.titre}</strong>
+                              </div>
+                              <div className="fixed-operations__monthly">
+                                {money(row.montantMensuelPersonnel, row.devise)}
+                                <span>pour moi / mois</span>
+                              </div>
+                            </div>
+                            <p>
+                              {money(row.montant, row.devise)} ·{" "}
+                              {
+                                fixedPeriodLabel(row.periodicite).split(
+                                  " — "
+                                )[0]
+                              }
+                              {row.kind === "charge"
+                                ? ` · Ma part : ${share(row)}`
+                                : ""}
+                            </p>
+                            <span className="fixed-operations__detail-label">
+                              Détail et actions
+                            </span>
+                          </summary>
+                          {details(row)}
+                        </details>
+                        {actions(row)}
+                      </>
+                    )}
                   </article>
                 ))}
               </div>
@@ -314,10 +362,11 @@ export const FixedOperations = () => {
                   <tr>
                     {[
                       ["titre", "Nom"],
-                      ["kind", "Type"],
                       ["montant", "Total / échéance"],
+                      ["devise", "Devise"],
                       ["periodicite", "Périodicité"],
                       ["pourcentagePersonnel", "Ma part (%)"],
+                      ["montantPersonnel", "Personnel / échéance"],
                       ["montantMensuelPersonnel", "Personnel / mois"],
                     ].map(([field, label]) => (
                       <th
@@ -334,6 +383,7 @@ export const FixedOperations = () => {
                         <button
                           type="button"
                           aria-label={`Trier par ${label}`}
+                          disabled={Boolean(editor?.row)}
                           onClick={() =>
                             changeSort(
                               field,
@@ -358,27 +408,38 @@ export const FixedOperations = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((row) => (
-                    <tr key={row.key}>
-                      <th scope="row">
-                        {row.titre}
-                        <details>
-                          <summary>Détail</summary>
-                          {details(row)}
-                        </details>
-                      </th>
-                      <td>{badge(row)}</td>
-                      <td>{money(row.montant, row.devise)}</td>
-                      <td>
-                        {fixedPeriodLabel(row.periodicite).split(" — ")[0]}
-                      </td>
-                      <td>{share(row)}</td>
-                      <td className="fixed-operations__monthly">
-                        {money(row.montantMensuelPersonnel, row.devise)}
-                      </td>
-                      <td>{actions(row)}</td>
-                    </tr>
-                  ))}
+                  {rows.map((row) =>
+                    editor?.row?.key === row.key ? (
+                      <React.Fragment key={row.key}>
+                        {inlineEditor(row, false)}
+                      </React.Fragment>
+                    ) : (
+                      <tr key={row.key}>
+                        <th scope="row">
+                          {row.titre} {badge(row)}
+                          <details>
+                            <summary>Détail</summary>
+                            {details(row)}
+                          </details>
+                        </th>
+                        <td>{money(row.montant, row.devise)}</td>
+                        <td>{row.devise}</td>
+                        <td>
+                          {fixedPeriodLabel(row.periodicite).split(" — ")[0]}
+                        </td>
+                        <td>{share(row)}</td>
+                        <td>
+                          {row.kind === "income"
+                            ? "Sans objet"
+                            : money(row.montantPersonnel, row.devise)}
+                        </td>
+                        <td className="fixed-operations__monthly">
+                          {money(row.montantMensuelPersonnel, row.devise)}
+                        </td>
+                        <td>{actions(row)}</td>
+                      </tr>
+                    )
+                  )}
                 </tbody>
               </table>
             ))}
@@ -389,7 +450,7 @@ export const FixedOperations = () => {
             événement ni réserve n’est créé automatiquement.
           </p>
         </div>
-        {editor && (
+        {editor && !editor.row && (
           <section
             className="fixed-operations__editor"
             aria-labelledby="fixed-editor-title"
