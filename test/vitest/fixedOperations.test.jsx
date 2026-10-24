@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import OperationsFixes from "../../src/js/pages/OperationsFixes";
 import reducer from "../../src/js/slices/operationsFixes/operationsFixesSlice";
 import { SimulationProvider } from "../../src/js/components/Simulation/SimulationContext";
+import { categoryService } from "../../src/js/services/categoryService";
 import service from "../../src/js/services/operationsFixesService";
 import { budgetService } from "../../src/js/services/budgetService";
 
@@ -28,6 +29,9 @@ vi.mock("../../src/js/services/operationsFixesService", () => ({
     putRevenu: vi.fn(),
     deleteRevenu: vi.fn(),
   },
+}));
+vi.mock("../../src/js/services/categoryService", () => ({
+  categoryService: { listAll: vi.fn() },
 }));
 vi.mock("../../src/js/services/budgetService", () => ({
   budgetService: { getSummary: vi.fn() },
@@ -66,6 +70,23 @@ const rows = () =>
     .getAllByRole("row")
     .slice(1);
 beforeEach(() => {
+  categoryService.listAll.mockResolvedValue([
+    {
+      id: 10,
+      name: "Assurances",
+      icon: "solid:shield-halved",
+      color: null,
+      fixedKind: "CHARGE",
+    },
+    {
+      id: 11,
+      name: "Salaires",
+      icon: "solid:money-bill-wave",
+      color: null,
+      fixedKind: "REVENU",
+    },
+    { id: 12, name: "Personnel", icon: null, color: null },
+  ]);
   charges = [annual];
   incomes = [salary];
   window.matchMedia = vi.fn(() => ({
@@ -103,6 +124,132 @@ afterEach(() => {
 });
 
 describe("vue commune du budget fixe #265", () => {
+  it("catégorise une nouvelle entrée sans transmettre les champs de charge", async () => {
+    show();
+    await screen.findByRole("button", { name: "Modifier Salaire" });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Ajouter", exact: true })
+    );
+    fireEvent.click(screen.getByRole("radio", { name: "Entrée", exact: true }));
+    fill("Titre de l’entrée", "Salaire complémentaire");
+    fill("Montant reçu par mois", "100");
+    const select = screen.getByRole("combobox", {
+      name: "Catégorie",
+      exact: true,
+    });
+    await waitFor(() => expect(select).toBeEnabled());
+    fireEvent.change(select, { target: { value: "11" } });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Enregistrer l’entrée" })
+    );
+    await waitFor(() =>
+      expect(service.postRevenus).toHaveBeenCalledWith({
+        titre: "Salaire complémentaire",
+        montant: 100,
+        devise: "EUR",
+        categoryId: 11,
+      })
+    );
+  });
+  it("garde le brouillon et signale un refus de catégorie près du sélecteur", async () => {
+    service.putCharge.mockRejectedValue({
+      response: {
+        data: { error: { details: { code: "INVALID_FIXED_CATEGORY" } } },
+      },
+    });
+    show();
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Modifier Assurance" })
+    );
+    const select = screen.getByRole("combobox", {
+      name: "Catégorie",
+      exact: true,
+    });
+    await waitFor(() => expect(select).toBeEnabled());
+    fireEvent.change(select, { target: { value: "10" } });
+    fill("Montant total par échéance", "240");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Enregistrer la charge" })
+    );
+    await waitFor(() => expect(select).toHaveAttribute("aria-invalid", "true"));
+    expect(screen.getByLabelText("Montant total par échéance")).toHaveValue(
+      "240"
+    );
+    fireEvent.change(select, { target: { value: "" } });
+    expect(select).toHaveAttribute("aria-invalid", "false");
+  });
+
+  it("sélectionne une catégorie compatible dans la ligne et la retire explicitement", async () => {
+    charges = [
+      {
+        ...annual,
+        categoryId: 10,
+        category: {
+          id: 10,
+          name: "Assurances",
+          icon: "solid:shield-halved",
+          color: null,
+          fixedKind: "CHARGE",
+        },
+      },
+    ];
+    service.putCharge.mockResolvedValue({ data: { success: true } });
+    show();
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Modifier Assurance" })
+    );
+    const select = screen.getByRole("combobox", { name: "Catégorie" });
+    await waitFor(() => expect(select).toBeEnabled());
+    expect(select).toHaveValue("10");
+    expect(
+      within(select).queryByRole("option", { name: "Salaires" })
+    ).not.toBeInTheDocument();
+    expect(
+      within(select).getByRole("option", { name: "Personnel" })
+    ).toBeInTheDocument();
+    fireEvent.change(select, { target: { value: "" } });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Enregistrer la charge" })
+    );
+    await waitFor(() =>
+      expect(service.putCharge).toHaveBeenCalledWith(
+        7,
+        expect.objectContaining({ categoryId: null })
+      )
+    );
+  });
+  it("conserve le lien et les valeurs si la lecture des catégories échoue", async () => {
+    categoryService.listAll.mockRejectedValue(new Error("offline"));
+    charges = [
+      {
+        ...annual,
+        categoryId: 10,
+        category: { id: 10, name: "Assurances", icon: null, color: null },
+      },
+    ];
+    service.putCharge.mockResolvedValue({ data: { success: true } });
+    show();
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Modifier Assurance" })
+    );
+    expect(
+      await screen.findByRole("button", { name: "Réessayer les catégories" })
+    ).toBeVisible();
+    expect(screen.getByRole("combobox", { name: "Catégorie" })).toHaveValue(
+      "10"
+    );
+    fill("Montant total par échéance", "240");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Enregistrer la charge" })
+    );
+    await waitFor(() =>
+      expect(service.putCharge).toHaveBeenCalledWith(
+        7,
+        expect.objectContaining({ categoryId: 10, montant: 240 })
+      )
+    );
+  });
+
   it("édite dans les colonnes existantes sans déplacer la ligne, et annule sans écrire", async () => {
     show();
     const edit = await screen.findByRole("button", {
@@ -307,7 +454,7 @@ describe("vue commune du budget fixe #265", () => {
         .getAllByRole("columnheader")
         .filter((h) => h.hasAttribute("aria-sort"))
     ).toHaveLength(1);
-    expect(screen.getByLabelText("Trier par").options).toHaveLength(8);
+    expect(screen.getByLabelText("Trier par").options).toHaveLength(9);
     expect(
       await screen.findByLabelText("Entrées fixes mensuelles")
     ).toHaveTextContent(/2\s*100,00/);
@@ -346,6 +493,7 @@ describe("vue commune du budget fixe #265", () => {
         titre: "Pension",
         montant: 250.5,
         devise: "EUR",
+        categoryId: null,
       })
     );
     await waitFor(() => expect(rows()).toHaveLength(3));
@@ -369,6 +517,7 @@ describe("vue commune du budget fixe #265", () => {
         titre: "Salaire",
         montant: 2100,
         devise: "EUR",
+        categoryId: null,
       })
     );
     fireEvent.click(

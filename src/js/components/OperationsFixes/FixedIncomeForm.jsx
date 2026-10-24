@@ -1,3 +1,8 @@
+import { FixedCategorySelect } from "./FixedCategorySelect";
+import {
+  fixedCategoryBody,
+  validateFixedCategory,
+} from "../../utils/fixedCategories";
 import {
   incomeInitialValues,
   validateIncome,
@@ -14,9 +19,15 @@ export const FixedIncomeForm = ({
   onDraftChange,
   onSave,
   onClose,
+  categories,
+  categoryError,
 }) => {
   const [values, setValues] = useState(
-    () => draft ?? incomeInitialValues(income)
+    () =>
+      draft ?? {
+        ...incomeInitialValues(income),
+        ...(categories ? { categoryId: String(income?.categoryId ?? "") } : {}),
+      }
   );
   const [errors, setErrors] = useState({});
   const [attempt, setAttempt] = useState(0);
@@ -32,13 +43,16 @@ export const FixedIncomeForm = ({
   const submit = async (event) => {
     event.preventDefault();
     const next = validateIncome(values);
+    const categoryFailure = validateFixedCategory(values, categories, "income");
+    if (categoryFailure) next.categoryId = categoryFailure;
     setErrors(next);
     setAttempt((count) => count + 1);
     if (Object.keys(next).length) {
       formRef.current.elements.namedItem(Object.keys(next)[0])?.focus();
       return;
     }
-    if (await onSave(incomeBody(values))) onClose();
+    if (await onSave({ ...incomeBody(values), ...fixedCategoryBody(values) }))
+      onClose();
   };
   return (
     <section
@@ -98,6 +112,18 @@ export const FixedIncomeForm = ({
               )}
             </div>
           ))}
+          {categories && (
+            <FixedCategorySelect
+              id="income-category"
+              kind="income"
+              value={values.categoryId ?? ""}
+              onChange={change}
+              source={categories}
+              currentCategory={income?.category}
+              busy={busy}
+              error={errors.categoryId || categoryError}
+            />
+          )}
           <div className="fixed-charge-field">
             <label htmlFor="income-devise">Devise de l’entrée</label>
             <select

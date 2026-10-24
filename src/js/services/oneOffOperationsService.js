@@ -57,6 +57,8 @@ export const parseCategory = (category) => {
     category.name.length < 2 ||
     category.name.length > 50 ||
     (category?.color !== null && !/^#[0-9A-F]{6}$/i.test(category?.color)) ||
+    (category.fixedKind != null &&
+      !["CHARGE", "REVENU"].includes(category.fixedKind)) ||
     // `icon` (#84) : absent d'une API plus ancienne, sinon `style:nom`.
     (category.icon != null &&
       !/^(solid|regular):[a-z0-9-]+$/.test(category.icon))
@@ -68,6 +70,7 @@ export const parseCategory = (category) => {
     name: category.name,
     color: category.color,
     icon: category.icon ?? null,
+    ...(category.fixedKind == null ? {} : { fixedKind: category.fixedKind }),
   };
 };
 

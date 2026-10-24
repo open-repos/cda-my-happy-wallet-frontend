@@ -82,6 +82,30 @@ describe("tri de tous les champs du budget fixe", () => {
     if (field === "pourcentagePersonnel")
       expect(reverse.at(-1).titre).toBe("Salaire");
   });
+  it("trie les catégories par nom dans les deux sens, avec les valeurs inconnues à la fin", () => {
+    const items = [
+      {
+        key: "charge:1",
+        titre: "A",
+        categoryId: 10,
+        category: { name: "Logement" },
+      },
+      {
+        key: "income:2",
+        titre: "B",
+        categoryId: 11,
+        category: { name: "Aides et allocations" },
+      },
+      { key: "charge:3", titre: "C", categoryId: 999 },
+      { key: "charge:4", titre: "D", categoryId: null },
+    ];
+    expect(
+      sortFixedOperations(items, "category", "asc").map((r) => r.titre)
+    ).toEqual(["B", "A", "D", "C"]);
+    expect(
+      sortFixedOperations(items, "category", "desc").map((r) => r.titre)
+    ).toEqual(["D", "A", "B", "C"]);
+  });
   it("garde les inconnues à la fin dans les deux sens et ne recalcule pas les montants absents", () => {
     const unknown = fixedOperationRows(
       [
@@ -118,6 +142,6 @@ describe("tri de tous les champs du budget fixe", () => {
     ];
     expect(sortFixedOperations(close, "montant", "asc")[0].titre).toBe("B");
     expect(close[0].titre).toBe("A");
-    expect(FIXED_SORT_FIELDS).toHaveLength(8);
+    expect(FIXED_SORT_FIELDS).toHaveLength(9);
   });
 });

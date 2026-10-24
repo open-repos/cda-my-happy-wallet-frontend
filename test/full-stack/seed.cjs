@@ -70,6 +70,20 @@ async function seed() {
           create: { userId: user.id, name: "Courant", color: "#275DAD" },
           update: {},
         });
+        const templates = await prisma.operationCategoryTemplate.findMany({
+          where: { active: true },
+        });
+        await prisma.operationCategory.createMany({
+          data: templates.map((template) => ({
+            userId: user.id,
+            name: template.name,
+            color: template.color,
+            icon: template.icon,
+            fixedKind: template.fixedKind,
+            templateId: template.id,
+          })),
+          skipDuplicates: true,
+        });
         for (const [typeOperation, titre, montant] of [
           ["REVENU", "E2E revenu fixe", "2000.00"],
           ["CHARGE", "E2E charge fixe", "800.00"],

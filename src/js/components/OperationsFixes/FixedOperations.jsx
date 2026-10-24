@@ -1,5 +1,8 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPen, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { useCategories } from "../../hooks/useCategories";
+import { CategoryLabel } from "../Categories/CategoryLabel";
+import { fixedCategory } from "../../utils/fixedCategories";
 import { FixedInlineEditor } from "./FixedInlineEditor";
 import React, { useEffect, useRef, useState } from "react";
 import { useFixedCharges, useFixedIncomes } from "../../hooks/useFixedCharges";
@@ -65,6 +68,7 @@ export const FixedOperations = () => {
   const charges = useFixedCharges();
   const incomes = useFixedIncomes();
   const compact = useCompactFixedLayout();
+  const categories = useCategories();
   const [sort, setSort] = useState({
     field: "montantMensuelPersonnel",
     direction: "desc",
@@ -157,10 +161,13 @@ export const FixedOperations = () => {
       row={row}
       compact={compact}
       busy={busy}
+      categories={categories}
+      categoryError={collection(row.kind).categoryError}
       draft={drafts.inline}
-      onDraftChange={(draft) =>
-        setDrafts((current) => ({ ...current, inline: draft }))
-      }
+      onDraftChange={(draft) => {
+        collection(row.kind).clearCategoryError();
+        setDrafts((current) => ({ ...current, inline: draft }));
+      }}
       onSave={(body) => collection(row.kind).save(row, body)}
       onClose={() => setEditor(null)}
     />
@@ -174,6 +181,10 @@ export const FixedOperations = () => {
   );
   const details = (row) => (
     <dl>
+      <dt>Catégorie</dt>
+      <dd>
+        <CategoryLabel category={fixedCategory(row)} />
+      </dd>
       <dt>Type</dt>
       <dd>{fixedKindLabel(row.kind)}</dd>
       <dt>Total par échéance</dt>
@@ -341,6 +352,9 @@ export const FixedOperations = () => {
                                 ? ` · Ma part : ${share(row)}`
                                 : ""}
                             </p>
+                            <p>
+                              <CategoryLabel category={fixedCategory(row)} />
+                            </p>
                             <span className="fixed-operations__detail-label">
                               Détail et actions
                             </span>
@@ -355,13 +369,14 @@ export const FixedOperations = () => {
               </div>
             ) : (
               <table
-                className="fixed-operations__table"
+                className="fixed-operations__table fixed-operations__table--categories"
                 aria-label="Charges et entrées fixes"
               >
                 <thead>
                   <tr>
                     {[
                       ["titre", "Nom"],
+                      ["category", "Catégorie"],
                       ["montant", "Total / échéance"],
                       ["devise", "Devise"],
                       ["periodicite", "Périodicité"],
@@ -422,6 +437,9 @@ export const FixedOperations = () => {
                             {details(row)}
                           </details>
                         </th>
+                        <td>
+                          <CategoryLabel category={fixedCategory(row)} />
+                        </td>
                         <td>{money(row.montant, row.devise)}</td>
                         <td>{row.devise}</td>
                         <td>
@@ -489,10 +507,13 @@ export const FixedOperations = () => {
               <FixedChargeForm
                 key={`charge:${editor.row?.idOperationFixe ?? "new"}`}
                 charge={editor.row}
+                categories={categories}
+                categoryError={charges.categoryError}
                 draft={drafts.charge}
-                onDraftChange={(draft) =>
-                  setDrafts((current) => ({ ...current, charge: draft }))
-                }
+                onDraftChange={(draft) => {
+                  charges.clearCategoryError();
+                  setDrafts((current) => ({ ...current, charge: draft }));
+                }}
                 busy={busy}
                 onClose={() => setEditor(null)}
                 onSave={(body) => charges.save(editor.row, body)}
@@ -501,10 +522,13 @@ export const FixedOperations = () => {
               <FixedIncomeForm
                 key={`income:${editor.row?.idOperationFixe ?? "new"}`}
                 income={editor.row}
+                categories={categories}
+                categoryError={incomes.categoryError}
                 draft={drafts.income}
-                onDraftChange={(draft) =>
-                  setDrafts((current) => ({ ...current, income: draft }))
-                }
+                onDraftChange={(draft) => {
+                  incomes.clearCategoryError();
+                  setDrafts((current) => ({ ...current, income: draft }));
+                }}
                 busy={busy}
                 onClose={() => setEditor(null)}
                 onSave={(body) => incomes.save(editor.row, body)}

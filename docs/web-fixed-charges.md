@@ -143,3 +143,42 @@ Pas de nouvelle dépendance, migration, configuration ni cache de données.
 Les composants historiques restent disponibles pour compatibilité ; la page
 principale consomme la nouvelle vue commune. Le retour
 arrière consiste à révoquer la PR Web, sans modifier les données ou le backend.
+
+## Catégories des charges et entrées fixes — #266
+
+Une catégorie principale facultative peut être sélectionnée à l'ajout ou dans
+l'édition inline. Son nom et son icône sont visibles dans la colonne Catégorie
+et dans les cartes mobiles. « Non catégorisé » utilise l'icône étiquette ; les
+anciennes opérations ne sont pas classées automatiquement. Le tri par catégorie
+est disponible dans les deux sens, y compris sur téléphone, avec les valeurs
+indisponibles à la fin. Le total, la périodicité et la participation restent
+indépendants de la catégorie.
+
+Le catalogue existant de la page Catégories est réutilisé, avec ses icônes Free
+et les catégories personnelles. Les catégories spécialisées `fixedKind=CHARGE`
+ne sont proposées que pour une charge ; `REVENU` pour une entrée ; l'absence de
+restriction (`null` ou champ absent) permet les deux. Le menu natif affiche les
+noms ; l'icône sélectionnée est visible à côté. Le panneau de saisie conserve
+son brouillon lors d'un changement Charge/Entrée. Aucune catégorie n'est créée
+par le navigateur au chargement de la page.
+
+`categoryId` est envoyé comme entier ou `null` pour retirer l'affectation.
+L'absence de champ reste supportée pour les formulaires historiques. Les GET
+et créations consomment aussi l'objet `category` (`id`, `name`, `color`, `icon`,
+`fixedKind`) du backend #127. Une lecture de catalogue en échec conserve
+l'affectation et les autres valeurs ; Réessayer recharge uniquement les
+catégories. Un refus serveur `INVALID_FIXED_CATEGORY` est associé au sélecteur,
+sans perdre la saisie. Un nom/couleur/icône personnalisés existants restent
+inchangés par la migration ; les 20 nouveaux défauts sont ajoutés sans doublon
+aux comptes existants et copiés à l'inscription des nouveaux comptes.
+
+Dépendances de livraison : PR #267 et contrat/migration backend #127. Le Web
+doit être livré après ce backend. Le scénario Compose est épinglé sur le commit
+backend qui fournit ce contrat ; sa disponibilité distante nécessite la
+publication de la branche backend avant le lancement CI. Les tests de
+`fixedCategories.spec.js` vérifient les vraies icônes, la sélection compatible,
+la sauvegarde et le retrait à 320/390/1440 px, avec API simulée. Le parcours
+full-stack vérifie les catégories d'une charge et d'une entrée contre MySQL
+jetable, puis leur relecture. Il nécessite Docker/MySQL/Redis et ne doit jamais
+être utilisé sur une autre base. Les deux PR applicatives restent soumises à
+revue propriétaire ; aucune migration de production ni déploiement automatique.
