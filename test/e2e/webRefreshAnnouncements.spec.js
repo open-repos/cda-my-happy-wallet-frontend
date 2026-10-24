@@ -110,6 +110,9 @@ for (const width of [390, 768, 1440]) {
       if (kind === "categories")
         await page.getByLabel("Nom", { exact: true }).fill("Loisirs");
       else {
+        await page
+          .getByRole("button", { name: /^Dépense Opération réelle/ })
+          .click();
         await page.getByLabel(/^Titre/).fill("Courses E2E");
         await page.getByLabel(/^Montant/).fill("20.00");
         await page.getByLabel(/^Date/).fill("2026-10-18");
@@ -122,16 +125,13 @@ for (const width of [390, 768, 1440]) {
         .getByRole("button", { name: "Enregistrer", exact: true })
         .click();
       await expect.poll(() => reads).toBeGreaterThan(before);
-      if (kind === "operations")
-        await expect(page.locator('h2[aria-hidden="true"]')).toHaveText(
-          loading
-        );
+      if (kind === "operations") await expect(loadedItem).toBeVisible();
       await noLoading(page, loading);
       held.resolve();
       await expect(
         page.getByRole("status").filter({
           hasText:
-            kind === "categories" ? "Catégorie ajoutée." : "Opération ajoutée.",
+            kind === "categories" ? "Catégorie ajoutée." : "Ajout enregistré.",
         })
       ).toHaveCount(1);
     });

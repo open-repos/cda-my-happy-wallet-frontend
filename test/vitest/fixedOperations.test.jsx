@@ -284,18 +284,28 @@ describe("vue commune du budget fixe #265", () => {
       removeEventListener: vi.fn(),
     });
     show();
-    const row = await screen.findByRole("article", { name: "Assurance" });
-    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    const name = await screen.findByRole("button", {
+      name: "Assurance",
+      exact: true,
+    });
+    const row = name.closest("tr");
+    expect(
+      screen.getByRole("table", { name: "Charges et entrées fixes" })
+    ).toBeInTheDocument();
     fill("Trier par", "pourcentagePersonnel");
     fill("Ordre du tri", "asc");
-    expect(screen.getAllByRole("article")[0]).toBe(row);
-    fireEvent.click(within(row).getByText("Détail et actions"));
+    expect(rows()[0]).toBe(row);
+    fireEvent.click(
+      within(row).getByRole("button", { name: "Assurance", exact: true })
+    );
     fireEvent.click(
       within(row).getByRole("button", { name: "Modifier Assurance" })
     );
     expect(screen.getByLabelText("Titre de la charge")).toHaveFocus();
-    expect(screen.getByRole("article", { name: "Assurance" })).toBe(row);
-    expect(within(row).getByLabelText("Titre de la charge")).toHaveFocus();
+    expect(
+      screen.getByLabelText("Titre de la charge").closest("tr")
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Titre de la charge")).toHaveFocus();
     fireEvent.keyDown(screen.getByLabelText("Titre de la charge"), {
       key: "Escape",
     });
@@ -444,11 +454,11 @@ describe("vue commune du budget fixe #265", () => {
     fill("Trier par", "montant");
     fill("Ordre du tri", "asc");
     expect(rows()[0]).toHaveTextContent("Assurance");
-    fireEvent.click(screen.getByRole("button", { name: /Trier par Nom/ }));
-    expect(screen.getByRole("columnheader", { name: /Nom/ })).toHaveAttribute(
-      "aria-sort",
-      "ascending"
-    );
+    fill("Trier par", "titre");
+    fill("Ordre du tri", "asc");
+    expect(
+      screen.getByRole("columnheader", { name: /Libellé/ })
+    ).toHaveAttribute("aria-sort", "ascending");
     expect(
       screen
         .getAllByRole("columnheader")

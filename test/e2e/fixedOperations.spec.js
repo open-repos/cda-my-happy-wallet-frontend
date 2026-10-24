@@ -126,28 +126,17 @@ for (const width of [320, 390, 768, 1440])
       await expect(fixedOperationItem(page, charges[0].titre)).toContainText(
         /5,01/
       );
-      if (width < 1024) {
-        await expect(
-          page.getByRole("table", { name: "Charges et entrées fixes" })
-        ).toHaveCount(0);
-        await expect(page.getByRole("article")).toHaveCount(2);
-      } else
-        await expect(
-          page.getByRole("table", { name: "Charges et entrées fixes" })
-        ).toBeVisible();
+      await expect(
+        page.getByRole("table", { name: "Charges et entrées fixes" })
+      ).toBeVisible();
+      await expect(page.locator(".compact-money-table__row")).toHaveCount(2);
       await page
         .getByLabel("Trier par", { exact: true })
         .selectOption("pourcentagePersonnel");
       await page.getByLabel("Ordre du tri").selectOption("asc");
-      if (width < 1024)
-        await expect(page.getByRole("article").first()).toHaveAttribute(
-          "aria-label",
-          charges[0].titre
-        );
-      else
-        await expect(
-          page.getByRole("table").getByRole("row").nth(1)
-        ).toContainText(charges[0].titre);
+      await expect(
+        page.locator(".compact-money-table__row").first()
+      ).toContainText(charges[0].titre);
       await assertFits(page);
       if (theme === "light" && [390, 1440].includes(width))
         await page.screenshot({

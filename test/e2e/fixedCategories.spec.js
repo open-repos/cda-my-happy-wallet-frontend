@@ -79,9 +79,15 @@ for (const width of [320, 390, 1440]) {
       }
     );
     await page.goto("/home/operations-fixes");
+    if (width < 1024)
+      await page
+        .getByRole("button", { name: charge.titre, exact: true })
+        .click();
     const item = () =>
       width < 1024
-        ? page.getByRole("article", { name: charge.titre })
+        ? page
+            .locator(".compact-money-table__details")
+            .filter({ hasText: charge.titre })
         : page.getByRole("row").filter({
             has: page.getByRole("button", {
               name: "Modifier Assurance habitation",

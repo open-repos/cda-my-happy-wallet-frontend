@@ -67,6 +67,7 @@ export const MonthlyEventForm = ({
   const [errors, setErrors] = useState({});
   const [confirmDelete, setConfirmDelete] = useState(false);
   const titleRef = useRef(null);
+  const saving = useRef(false);
   useFormFocus(titleRef);
   useEffect(() => {
     const close = (keyboardEvent) =>
@@ -90,6 +91,7 @@ export const MonthlyEventForm = ({
   };
   const submit = async (submitEvent) => {
     submitEvent.preventDefault();
+    if (saving.current || isSaving) return;
     const nextErrors = validate(values);
     if (minStartDate && values.startDate && values.startDate < minStartDate)
       nextErrors.startDate =
@@ -101,18 +103,23 @@ export const MonthlyEventForm = ({
         ?.focus();
       return;
     }
-    await onSave({
-      title: values.title.trim(),
-      amount: values.amount,
-      currency: values.currency,
-      kind: values.kind,
-      startDate: values.startDate,
-      recurrence: values.recurrence,
-      endDate:
-        isRepeatingEvent(values.recurrence) && values.endDate
-          ? values.endDate
-          : null,
-    });
+    saving.current = true;
+    try {
+      await onSave({
+        title: values.title.trim(),
+        amount: values.amount,
+        currency: values.currency,
+        kind: values.kind,
+        startDate: values.startDate,
+        recurrence: values.recurrence,
+        endDate:
+          isRepeatingEvent(values.recurrence) && values.endDate
+            ? values.endDate
+            : null,
+      });
+    } finally {
+      saving.current = false;
+    }
   };
   const field = (name) => ({
     "aria-invalid": Boolean(errors[name]),

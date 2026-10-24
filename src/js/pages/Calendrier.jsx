@@ -1,3 +1,4 @@
+import { useQuickAdd } from "../components/QuickAdd/QuickAddContext";
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { formatEventAmount } from "../components/MonthlyEvents/MonthlyEventList";
@@ -119,6 +120,7 @@ const cellLabel = (
 
 function Calendrier() {
   const simulation = useSimulation();
+  const quickAdd = useQuickAdd();
   const today = parisToday();
   const [month, setMonth] = useState(today.slice(0, 7));
   const [selectedDate, setSelectedDate] = useState(null);
@@ -198,6 +200,25 @@ function Calendrier() {
   const closeForm = () => setForm(null);
   const defaultOperationDate =
     selectedDate ?? (month === today.slice(0, 7) ? today : `${month}-01`);
+  useEffect(() => {
+    if (quickAdd.available) quickAdd.setCalendarDate(defaultOperationDate);
+    return () => {
+      if (quickAdd.available) quickAdd.setCalendarDate(null);
+    };
+  }, [defaultOperationDate, quickAdd.setCalendarDate]);
+  const openCreation = (kind, event) => {
+    if (quickAdd.available)
+      quickAdd.open(kind, defaultOperationDate, event?.currentTarget);
+    else
+      setForm({
+        type:
+          kind === "event"
+            ? "create-event"
+            : kind === "potential"
+            ? "create-potential"
+            : "create",
+      });
+  };
 
   return (
     <main className="calendrier-container monthly-events-page budget-calendar">
@@ -244,7 +265,6 @@ function Calendrier() {
           Prochains mois
         </Link>
       </header>
-
       <LiveMessage
         message={budget.message.text}
         isError={budget.message.tone === "error"}
@@ -284,6 +304,20 @@ function Calendrier() {
           className="monthly-calendar"
           aria-labelledby="calendar-month-title"
         >
+          <div className="budget-calendar__quick-add">
+            <button
+              type="button"
+              className="monthly-event-button"
+              onClick={(event) =>
+                openCreation(quickAdd.available ? "menu" : "expense", event)
+              }
+              disabled={isSaving}
+            >
+              {selectedDate
+                ? `Ajouter le ${longDate(selectedDate)}`
+                : "Ajouter au calendrier"}
+            </button>
+          </div>
           <CalendarModeToggle mode={mode} onChange={setMode} />
           <div className="monthly-calendar__weekdays" aria-hidden="true">
             {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((day) => (
@@ -497,9 +531,9 @@ function Calendrier() {
           </h2>
           <div className="budget-operations__actions">
             <PlanningActions
-              onOperation={() => setForm({ type: "create" })}
-              onEvent={() => setForm({ type: "create-event" })}
-              onPotential={() => setForm({ type: "create-potential" })}
+              onOperation={(event) => openCreation("expense", event)}
+              onEvent={(event) => openCreation("event", event)}
+              onPotential={(event) => openCreation("potential", event)}
               disabled={isSaving}
               eventDisabled={isSaving || !eventsLoaded}
             />

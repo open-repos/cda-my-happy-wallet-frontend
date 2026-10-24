@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
+import { FeedbackBanner } from "@/src/design/FeedbackState";
 import { primitives, semantic, themes } from "@/src/design/tokens";
 import {
   OneOffOperation,
@@ -27,6 +28,9 @@ import { OperationDatePicker } from "@/src/features/operations/presentation/Oper
 
 interface OperationFormModalProps {
   categories: OperationCategory[];
+  initialDate?: string;
+  initialKind?: OperationDraft["kind"];
+  errorMessage?: string | null;
   isSaving: boolean;
   operation: OneOffOperation | null;
   visible: boolean;
@@ -48,6 +52,9 @@ const createDraft = (operation: OneOffOperation | null): OperationDraft => ({
 
 export const OperationFormModal = ({
   categories,
+  initialDate,
+  initialKind = "DEPENSE",
+  errorMessage = null,
   isSaving,
   operation,
   visible,
@@ -55,7 +62,15 @@ export const OperationFormModal = ({
   onDelete,
   onSave,
 }: OperationFormModalProps) => {
-  const [draft, setDraft] = useState(() => createDraft(operation));
+  const [draft, setDraft] = useState(() => ({
+    ...createDraft(operation),
+    ...(operation == null
+      ? {
+          operationDate: initialDate ?? formatCalendarDate(new Date()),
+          kind: initialKind,
+        }
+      : {}),
+  }));
   const [errors, setErrors] = useState<OperationDraftErrors>({});
   const categoryIds = useMemo(
     () => new Set(categories.map(({ id }) => id)),
@@ -104,6 +119,9 @@ export const OperationFormModal = ({
                 </Pressable>
               </View>
 
+              {errorMessage ? (
+                <FeedbackBanner kind="error">{errorMessage}</FeedbackBanner>
+              ) : null}
               <Text style={styles.label}>Titre</Text>
               <TextInput
                 accessibilityLabel="Titre"

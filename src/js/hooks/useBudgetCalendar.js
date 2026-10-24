@@ -1,3 +1,4 @@
+import { isAcknowledgedWrite } from "../utils/acknowledgedWrite";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { budgetErrorCode, budgetService } from "../services/budgetService";
 import { oneOffOperationsService } from "../services/oneOffOperationsService";
@@ -134,7 +135,11 @@ export const useBudgetCalendar = (month, selectedDate) => {
     setMutationStatus("loading");
     setMessage({ tone: "info", text: "" });
     try {
-      await action();
+      try {
+        await action();
+      } catch (error) {
+        if (!isAcknowledgedWrite(error)) throw error;
+      }
       // Une écriture dans un mois passé recalcule les reports : tout recharger.
       const [monthLoaded, operationsLoaded] = await Promise.all([
         loadMonth(),

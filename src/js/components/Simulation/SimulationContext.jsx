@@ -1,3 +1,4 @@
+import { isAcknowledgedWrite } from "../../utils/acknowledgedWrite";
 import React, {
   createContext,
   useCallback,
@@ -65,7 +66,11 @@ export const SimulationProvider = ({ children }) => {
       setMutationStatus("loading");
       setMessage("");
       try {
-        await action();
+        try {
+          await action();
+        } catch (error) {
+          if (!isAcknowledgedWrite(error)) throw error;
+        }
         if (mounted.current) {
           invalidate();
           setMutationStatus("success");

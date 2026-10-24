@@ -10,6 +10,8 @@ import {
   AnalyticsRequestError,
 } from "@/src/features/analytics/infrastructure/HttpAnalyticsGateway";
 
+import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
+
 type AnalyticsStatus = "loading" | "invalid" | "error" | "empty" | "success";
 
 interface AnalyticsResult {
@@ -28,6 +30,7 @@ export const useAnalytics = (
   query: AnalyticsQuery,
   problem: string | null,
 ) => {
+  const { revision } = useSimulation();
   const [reload, setReload] = useState(0);
   const [result, setResult] = useState<AnalyticsResult | null>(null);
   const queryKey = JSON.stringify(query);
@@ -61,7 +64,7 @@ export const useAnalytics = (
     return () => {
       isActive = false;
     };
-  }, [gateway, key, problem, queryKey]);
+  }, [gateway, key, problem, queryKey, revision]);
 
   const current = result?.key === key ? result : null;
   const status: AnalyticsStatus =
