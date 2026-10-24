@@ -44,3 +44,10 @@ Recette restant propre aux appareils : development build iOS/Android, toucher,
 clavier virtuel, zones sûres et orientation, VoiceOver/TalkBack, grandes polices
 et focus après fermeture d’une Modal. L’export Web ne vaut pas recette native.
 La coordination avec #161/PR #203 préserve les attributs d’état du calendrier.
+
+Six références ont été revues à partir des captures CI du commit 2dc5b47 :
+calendrier téléphone/tablette/ordinateur, accueil et opérations téléphone,
+et carte d’objectif téléphone sur laquelle le bouton flottant est visible.
+Les autres références et les seuils de comparaison restent inchangés.
+La synthèse d’accueil, ses graphiques et les analyses écoutent l’invalidation
+partagée ; la relecture conserve l’affichage et ne rejoue aucune écriture.

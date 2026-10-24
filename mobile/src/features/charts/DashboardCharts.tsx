@@ -1,5 +1,4 @@
-import { useFocusEffect } from "expo-router";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { FeedbackState } from "@/src/design/FeedbackState";
 import { primitives, semantic, themes } from "@/src/design/tokens";
@@ -9,10 +8,9 @@ import { NativeChart } from "./NativeChart";
 import { categoryColor, expensesOption, goalsOption } from "./chartOptions";
 import { SectionState, sectionLoading, sectionView } from "./sectionState";
 
-import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
+import { useQuietRefresh } from "@/src/features/simulation/presentation/useQuietRefresh";
 
 function useSection<T>(load: () => Promise<T>) {
-  const { revision } = useSimulation();
   const [state, setState] = useState<SectionState<T>>({ status: "loading" });
   const latest = useRef(0);
   const retry = useCallback(async () => {
@@ -27,14 +25,22 @@ function useSection<T>(load: () => Promise<T>) {
         setState((current) => ({ ...current, status: "error" }));
     }
   }, [load]);
-  useFocusEffect(
-    useCallback(() => {
-      void retry();
-      return () => {
-        latest.current++;
-      };
-    }, [retry, revision]),
-  );
+  const refresh = useCallback(() => {
+    const request = ++latest.current;
+    void load()
+      .then((data) => {
+        if (request === latest.current) setState({ status: "success", data });
+      })
+      .catch(() => {
+        if (request === latest.current)
+          setState((current) => ({ ...current, status: "error" }));
+      });
+    return () => {
+      latest.current++;
+    };
+  }, [load]);
+  useEffect(refresh, [refresh]);
+  useQuietRefresh(refresh);
   return { ...state, retry };
 }
 export const DashboardCharts = ({ gateway }: { gateway: ChartGateway }) => {
