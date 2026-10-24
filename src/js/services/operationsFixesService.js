@@ -2,18 +2,20 @@ import { apiPrivate } from "../../utils/axiosHelper";
 
 class OperationsFixesService {
   async getAllRevenus() {
-    return await apiPrivate.get("/operations-fixes/revenus", {
-      withCredentials: true,
-    });
+    return this.getCollection("revenus");
   }
 
   async getAllCharges() {
+    return this.getCollection("charges");
+  }
+
+  async getCollection(type) {
     const rows = [];
     const cursors = new Set();
     let cursor = null;
     let response;
     do {
-      response = await apiPrivate.get("/operations-fixes/charges", {
+      response = await apiPrivate.get(`/operations-fixes/${type}`, {
         withCredentials: true,
         params: { limit: 100, ...(cursor ? { cursor } : {}) },
       });
@@ -44,6 +46,18 @@ class OperationsFixesService {
 
   async deleteCharge(id) {
     return await apiPrivate.delete(`/operations-fixes/charges/${id}`, {
+      withCredentials: true,
+    });
+  }
+
+  async putRevenu(id, data) {
+    return apiPrivate.put(`/operations-fixes/revenus/${id}`, data, {
+      withCredentials: true,
+    });
+  }
+
+  async deleteRevenu(id) {
+    return apiPrivate.delete(`/operations-fixes/revenus/${id}`, {
       withCredentials: true,
     });
   }

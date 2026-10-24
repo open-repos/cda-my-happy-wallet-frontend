@@ -1,8 +1,8 @@
 # Charges fixes Web et PWA
 
 La page `/home/operations-fixes` permet de créer, modifier et supprimer une
-charge fixe en conservant son montant total par échéance. Les revenus fixes
-conservent leur formulaire et leur fonctionnement mensuel.
+charge fixe en conservant son montant total par échéance. La vue commune permet
+aussi de créer, modifier et supprimer les entrées fixes, qui restent mensuelles.
 
 ## Saisie et lecture
 
@@ -90,3 +90,62 @@ compatible après leur activation.
 Ces scénarios ne constituent pas une validation d'un déploiement de production
 ni une recette VoiceOver sur iPhone. L'intégration/staging après fusion des deux
 enfants reste suivie dans le parent #237.
+
+## Vue commune charges et entrées — #265
+
+La page « Charges et entrées fixes » réunit les deux collections existantes.
+Le tableau au-dessus de 1 023 pixels et les lignes compactes sur petit écran
+partagent le même ordre. Les icônes Modifier/Supprimer restent visibles sous chaque carte sur téléphone, sans ouvrir les détails. Sur ordinateur, elles apparaissent au survol de la ligne ou au focus clavier, dans un emplacement réservé. L’édition transforme les valeurs dans les mêmes colonnes ou la même carte ; Enregistrer/Annuler sont intégrés sur place. Le type reste verrouillé, les résultats sont des aperçus calculés en lecture seule et la position reste stable pendant la saisie. Le formulaire latéral sur ordinateur et la vue dédiée sur téléphone sont réservés à l’ajout.
+
+Le sélecteur « Trier par » couvre nom, type, total par échéance, devise,
+périodicité, pourcentage personnel, part par échéance et montant mensuel.
+Chaque champ a les deux sens de tri ; les en-têtes visibles sont aussi des
+boutons. Les valeurs inconnues restent après les valeurs connues, les durées
+sont classées en mois et les égalités départagées par nom puis clé type/id.
+Le tri décimal ne calcule ni mensualisation ni conversion entre devises.
+
+Les trois indicateurs Entrées/Mes charges/Solde fixe utilisent exclusivement
+`fixedIncome`, `fixedExpense` et `base` de la synthèse serveur du mois courant.
+La devise EUR ou USD est sélectionnée explicitement, sans changer la liste ni
+convertir les montants. Le solde fixe précède opérations, événements et reports ;
+le reste à vivre complet reste disponible dans « Voir le reste à vivre du mois ».
+Une panne n'est jamais présentée comme zéro. Une liste partielle est annoncée
+comme telle et le total d'éléments n'est affiché que lorsque les deux lectures
+ont abouti. Les synthèses serveur restent indépendantes de ces listes.
+
+« Ajouter » ouvre le choix Charge/Entrée. Changer de type conserve un brouillon
+par type en mémoire, sans sauvegarde automatique ni stockage persistant.
+L'édition verrouille le type. Les charges conservent leur formulaire, aperçu,
+validation et arrondi existants ; les entrées sont mensuelles, sans pourcentage
+ni périodicité envoyés au serveur. Le revenu reçu doit rester supérieur ou égal
+à 1, conformément au contrat historique.
+
+Les routes revenus existantes de la version backend v1.4.0 sont utilisées :
+GET/POST `/v1/operations-fixes/revenus`, PUT/DELETE
+`/v1/operations-fixes/revenus/:id`. Le GET charge désormais toutes les pages
+par curseur, comme les charges. Les PUT/DELETE n'ont pas de `data` obligatoire :
+la collection est relue après écriture, puis les synthèses sont invalidées.
+Une écriture réussie suivie d'une panne de relecture ne peut pas être rejouée
+par Réessayer. Les contrats ont été vérifiés en lecture seule dans
+`src/routes/operationsFixes.ts` et `src/utils/validators/operationFixe.validator.ts`
+du backend v1.4.0 ; aucun changement backend n'est nécessaire.
+
+Vérifications : `fixedOperations.test.jsx` (brouillons, erreurs, focus, devises,
+création/édition/suppression), `fixedOperationsSort.test.js` (huit tris,
+précision et inconnues), `fixedChargesService.test.js` (pagination revenus),
+`test/e2e/fixedOperations.spec.js` (320/390/768/1440 px, deux thèmes, texte
+à 200 % dont la taille rendue est mesurée) et les parcours charges existants.
+Le parcours full-stack des charges vérifie aussi le CRUD des entrées avec le
+vrai backend et la mise à jour des soldes. Ces tests ne remplacent pas la
+recette VoiceOver/PWA physique suivie dans #54.
+
+Pas de nouvelle dépendance, migration, configuration ni cache de données.
+Les composants historiques restent disponibles pour compatibilité ; la page
+principale consomme la nouvelle vue commune. Le retour
+arrière consiste à révoquer la PR Web, sans modifier les données ou le backend.
+
+La page conserve explicitement l’import historique de `FormControl.css` : cette
+feuille fournit encore des styles globaux aux autres pages. La suppression des
+anciens composants fixes ne doit pas changer leurs contrôles ou espacements.
+La nouvelle vue conserve ses sélecteurs locaux ; les références visuelles des
+autres pages restent inchangées.

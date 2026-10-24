@@ -10,8 +10,17 @@ import { formatMoney } from "../BudgetCalendar/budgetFormat";
 import { LiveMessage } from "../LiveMessage";
 import { useFormFocus } from "../../hooks/useFormFocus";
 
-export const FixedChargeForm = ({ charge, busy, onSave, onClose }) => {
-  const [values, setValues] = useState(() => chargeInitialValues(charge));
+export const FixedChargeForm = ({
+  charge,
+  busy,
+  onSave,
+  onClose,
+  draft,
+  onDraftChange,
+}) => {
+  const [values, setValues] = useState(
+    () => draft ?? chargeInitialValues(charge)
+  );
   const [errors, setErrors] = useState({});
   const [attempt, setAttempt] = useState(0);
   const titleRef = useRef(null);
@@ -20,7 +29,9 @@ export const FixedChargeForm = ({ charge, busy, onSave, onClose }) => {
   const preview = chargePreview(values);
   const change = (event) => {
     const { name, value } = event.target;
-    setValues((current) => ({ ...current, [name]: value }));
+    const next = { ...values, [name]: value };
+    setValues(next);
+    onDraftChange?.(next);
     setErrors((current) => {
       const next = { ...current };
       delete next[name];
@@ -83,8 +94,8 @@ export const FixedChargeForm = ({ charge, busy, onSave, onClose }) => {
           {field("montant", "Montant total par échéance", {
             inputMode: "decimal",
           })}
-          <label htmlFor="charge-devise">
-            Devise de la charge
+          <div className="fixed-charge-field">
+            <label htmlFor="charge-devise">Devise de la charge</label>
             <select
               id="charge-devise"
               name="devise"
@@ -94,9 +105,9 @@ export const FixedChargeForm = ({ charge, busy, onSave, onClose }) => {
               <option value="EUR">EUR</option>
               <option value="USD">USD</option>
             </select>
-          </label>
-          <label htmlFor="charge-periodicite">
-            Périodicité
+          </div>
+          <div className="fixed-charge-field">
+            <label htmlFor="charge-periodicite">Périodicité</label>
             <select
               id="charge-periodicite"
               name="periodicite"
@@ -109,7 +120,7 @@ export const FixedChargeForm = ({ charge, busy, onSave, onClose }) => {
                 </option>
               ))}
             </select>
-          </label>
+          </div>
           <fieldset>
             <legend>Répartition de la charge</legend>
             {field("pourcentagePersonnel", "Ma part de la charge (%)", {
