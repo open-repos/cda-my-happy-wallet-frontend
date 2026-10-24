@@ -7,6 +7,20 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-24
+
+### Added
+
+- Added personal category selection, icons and sorting to fixed expenses and income, preserving assignments and drafts when category loading or saving fails (#266).
+
+### Changed
+
+- Unified fixed expenses and income in a sortable responsive overview with shared entry, editing and deletion controls, preserved drafts and server budget summaries (#265).
+
+### Fixed
+
+- Preserved the existing shared form stylesheet when replacing the fixed-operation components, preventing unrelated pages from changing their controls and table spacing (#265).
+
 ## [1.4.0] - 2026-10-23
 
 ### Changed
@@ -154,7 +168,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Replaced dynamic SSH host discovery with a pre-verified `known_hosts` file.
 - Isolated SSH credentials from validation and build jobs.
 
-[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.4.0...develop
+[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.5.0...develop
+[1.5.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.4.0...v1.5.0
 [1.4.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.3.0...v1.4.0
 [1.3.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.2.0...v1.3.0
 [1.2.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.1.1...v1.2.0
