@@ -143,3 +143,9 @@ Pas de nouvelle dépendance, migration, configuration ni cache de données.
 Les composants historiques restent disponibles pour compatibilité ; la page
 principale consomme la nouvelle vue commune. Le retour
 arrière consiste à révoquer la PR Web, sans modifier les données ou le backend.
+
+La page conserve explicitement l’import historique de `FormControl.css` : cette
+feuille fournit encore des styles globaux aux autres pages. La suppression des
+anciens composants fixes ne doit pas changer leurs contrôles ou espacements.
+La nouvelle vue conserve ses sélecteurs locaux ; les références visuelles des
+autres pages restent inchangées.
