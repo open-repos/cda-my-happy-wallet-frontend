@@ -1095,6 +1095,7 @@ test("keeps the operation actions and local icons at their design sizes", async 
 
   const addButton = page.getByRole("button", {
     name: "Ajouter une opération",
+    exact: true,
   });
   const editButton = page.getByRole("button", { name: "Modifier Courses" });
   const addIcon = addButton.locator("img");

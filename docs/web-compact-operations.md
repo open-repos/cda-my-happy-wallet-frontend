@@ -81,3 +81,19 @@ Ne jamais rejouer le POST/PUT pour réparer une lecture.
   horizontal et lisibilité devise. Safari/WebKit n’est pas couvert par Chromium.
 - Les captures de référence ne doivent être remplacées qu’après revue des écarts
   attendus de la nouvelle liste et du bouton flottant.
+
+### Revue des références de cette refonte
+
+36 captures issues du job CI Web visual regression du commit 563ea6b ont été
+revues : opérations dans les trois tailles/deux thèmes, calendriers et Simulation
+dans les trois tailles/deux thèmes, et vues authentifiées téléphone avec le
+bouton flottant et sa marge de fin. Les références connexion/inscription et les
+vues non concernées sur tablette/ordinateur sont conservées. Aucun seuil de
+différence, contrôle de contraste ou contrôle de débordement n’a été assoupli.
+Les sélecteurs de tableau et le seuil de disposition (1024 px) suivent la
+nouvelle liste ; les assertions d’alignement restent actives sur ordinateur.
+
+WebKit a été téléchargé mais ne démarre pas faute de bibliothèques système
+(GTK/GStreamer notamment). La recette Safari sur iPhone reste à effectuer.
+La pile d’intégration réelle MySQL/Redis n’est pas disponible sans Docker dans
+cet environnement ; les parcours locaux utilisent des contrats synthétiques.
