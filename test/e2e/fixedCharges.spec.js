@@ -1,4 +1,8 @@
 import { expect, test } from "@playwright/test";
+import {
+  fixedOperationItem,
+  openFixedActions,
+} from "./fixedOperationsActions.mjs";
 import { prepareProtectedPage } from "../visual/fixtures.mjs";
 for (const viewport of [
   { width: 390, height: 844 },
@@ -44,11 +48,13 @@ for (const viewport of [
       }
     );
     await page.goto("/home/operations-fixes");
-    await page.getByRole("button", { name: "Ajouter une charge" }).click();
+    await page.getByRole("button", { name: "Ajouter", exact: true }).click();
     await expect(page.getByLabel("Titre de la charge")).toBeFocused();
     await page.getByLabel("Titre de la charge").fill("Abonnement annuel");
     await page.getByLabel("Montant total par échéance").fill("120");
-    await page.getByLabel("Périodicité").selectOption("ANNUELLE");
+    await page
+      .getByRole("combobox", { name: "Périodicité", exact: true })
+      .selectOption("ANNUELLE");
     await page.getByLabel("Ma part de la charge (%)").fill("50");
     await expect(
       page.getByRole("region", { name: "Aperçu de la charge" })
@@ -59,14 +65,17 @@ for (const viewport of [
       )
     ).toBe(false);
     await page.getByRole("button", { name: "Enregistrer la charge" }).click();
-    await expect(
-      page.getByRole("article", { name: "Abonnement annuel" })
-    ).toContainText(/5,00/);
+    await expect(fixedOperationItem(page, "Abonnement annuel")).toContainText(
+      /5,00/
+    );
     await page.reload();
+    await openFixedActions(page, "Abonnement annuel");
     await page
       .getByRole("button", { name: "Modifier Abonnement annuel" })
       .click();
-    await expect(page.getByLabel("Périodicité")).toHaveValue("ANNUELLE");
+    await expect(
+      page.getByRole("combobox", { name: "Périodicité", exact: true })
+    ).toHaveValue("ANNUELLE");
     await expect(page.getByLabel("Ma part de la charge (%)")).toHaveValue("50");
     await page.getByLabel("Ma part de la charge (%)").fill("101");
     await page.getByRole("button", { name: "Enregistrer la charge" }).click();
@@ -77,16 +86,15 @@ for (const viewport of [
     );
     await page.keyboard.press("Escape");
     await expect(
-      page.getByRole("button", { name: "Ajouter une charge" })
+      page.getByRole("button", { name: "Modifier Abonnement annuel" })
     ).toBeFocused();
+    await openFixedActions(page, "Abonnement annuel");
     await page
       .getByRole("button", { name: "Supprimer Abonnement annuel" })
       .click();
     await page
       .getByRole("button", { name: "Confirmer la suppression" })
       .click();
-    await expect(
-      page.getByText("Aucune charge fixe enregistrée.")
-    ).toBeVisible();
+    await expect(fixedOperationItem(page, "Abonnement annuel")).toHaveCount(0);
   });
 }

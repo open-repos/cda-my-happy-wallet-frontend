@@ -1,3 +1,7 @@
+import {
+  fixedOperationItem,
+  openFixedActions,
+} from "../../e2e/fixedOperationsActions.mjs";
 import { expect, test } from "@playwright/test";
 
 const today = () =>
@@ -551,16 +555,63 @@ test("persists periodic shared fixed charges and refreshes server budgets withou
       unexpectedWrites.push(request.method());
   });
   await page.goto("/home/operations-fixes");
+  await page
+    .getByText("Voir le reste à vivre du mois", { exact: true })
+    .click();
   const budget = page.getByRole("region", {
     name: "Reste à vivre du mois en euros",
   });
   await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*200,00/);
-  await page.getByRole("button", { name: "Ajouter une charge" }).click();
+  await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+  await page.getByRole("radio", { name: "Entrée", exact: true }).check();
+  await page.getByLabel("Titre de l’entrée").fill("Entrée mensuelle E2E");
+  await page.getByLabel("Montant reçu par mois").fill("200");
+  const incomeCreated = apiResponse(
+    page,
+    "/v1/operations-fixes/revenus",
+    "POST"
+  );
+  await page.getByRole("button", { name: "Enregistrer l’entrée" }).click();
+  const incomeResponse = await incomeCreated;
+  expect(incomeResponse.status()).toBe(201);
+  const income = (await incomeResponse.json()).data;
+  await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*400,00/);
+  await openFixedActions(page, "Entrée mensuelle E2E");
+  await page
+    .getByRole("button", { name: "Modifier Entrée mensuelle E2E" })
+    .click();
+  await expect(
+    page.getByRole("radio", { name: "Charge", exact: true })
+  ).toBeDisabled();
+  await page.getByLabel("Montant reçu par mois").fill("250");
+  const incomeUpdated = apiResponse(
+    page,
+    `/v1/operations-fixes/revenus/${income.idOperationFixe}`,
+    "PUT"
+  );
+  await page.getByRole("button", { name: "Enregistrer l’entrée" }).click();
+  expect((await incomeUpdated).ok()).toBe(true);
+  await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*450,00/);
+  await openFixedActions(page, "Entrée mensuelle E2E");
+  await page
+    .getByRole("button", { name: "Supprimer Entrée mensuelle E2E" })
+    .click();
+  const incomeDeleted = apiResponse(
+    page,
+    `/v1/operations-fixes/revenus/${income.idOperationFixe}`,
+    "DELETE"
+  );
+  await page.getByRole("button", { name: "Confirmer la suppression" }).click();
+  expect((await incomeDeleted).ok()).toBe(true);
+  await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*200,00/);
+  await page.getByRole("button", { name: "Ajouter", exact: true }).click();
   await page
     .getByLabel("Titre de la charge")
     .fill("Abonnement annuel partagé E2E");
   await page.getByLabel("Montant total par échéance").fill("120");
-  await page.getByLabel("Périodicité").selectOption("ANNUELLE");
+  await page
+    .getByRole("combobox", { name: "Périodicité", exact: true })
+    .selectOption("ANNUELLE");
   await page.getByLabel("Ma part de la charge (%)").fill("50");
   await expect(
     page.getByRole("region", { name: "Aperçu de la charge" })
@@ -579,9 +630,15 @@ test("persists periodic shared fixed charges and refreshes server budgets withou
   await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*195,00/);
   await page.reload();
   await page
+    .getByText("Voir le reste à vivre du mois", { exact: true })
+    .click();
+  await openFixedActions(page, "Abonnement annuel partagé E2E");
+  await page
     .getByRole("button", { name: "Modifier Abonnement annuel partagé E2E" })
     .click();
-  await expect(page.getByLabel("Périodicité")).toHaveValue("ANNUELLE");
+  await expect(
+    page.getByRole("combobox", { name: "Périodicité", exact: true })
+  ).toHaveValue("ANNUELLE");
   await expect(page.getByLabel("Ma part de la charge (%)")).toHaveValue("50");
   await page.getByRole("button", { name: "Annuler", exact: true }).click();
   await page.getByRole("link", { name: /Revenir à la page d'accueil/ }).click();
@@ -597,6 +654,10 @@ test("persists periodic shared fixed charges and refreshes server budgets withou
   await expect(forecast.getByRole("row").nth(1)).toContainText(/1\s*195,00/);
   await page.goto("/home/operations-fixes");
   await page
+    .getByText("Voir le reste à vivre du mois", { exact: true })
+    .click();
+  await openFixedActions(page, "Abonnement annuel partagé E2E");
+  await page
     .getByRole("button", { name: "Modifier Abonnement annuel partagé E2E" })
     .click();
   await page.getByLabel("Ma part de la charge (%)").fill("40");
@@ -609,9 +670,13 @@ test("persists periodic shared fixed charges and refreshes server budgets withou
   expect((await updated).ok()).toBe(true);
   await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*196,00/);
   await page.reload();
+  await page
+    .getByText("Voir le reste à vivre du mois", { exact: true })
+    .click();
   await expect(
-    page.getByRole("article", { name: "Abonnement annuel partagé E2E" })
+    fixedOperationItem(page, "Abonnement annuel partagé E2E")
   ).toContainText(/4,00/);
+  await openFixedActions(page, "Abonnement annuel partagé E2E");
   await page
     .getByRole("button", { name: "Supprimer Abonnement annuel partagé E2E" })
     .click();
@@ -624,8 +689,11 @@ test("persists periodic shared fixed charges and refreshes server budgets withou
   expect((await deleted).ok()).toBe(true);
   await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*200,00/);
   await page.reload();
+  await page
+    .getByText("Voir le reste à vivre du mois", { exact: true })
+    .click();
   await expect(
-    page.getByRole("article", { name: "Abonnement annuel partagé E2E" })
+    fixedOperationItem(page, "Abonnement annuel partagé E2E")
   ).toHaveCount(0);
   expect(unexpectedWrites).toEqual([]);
 });
