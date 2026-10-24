@@ -1,3 +1,8 @@
+import { FixedCategorySelect } from "./FixedCategorySelect";
+import {
+  fixedCategoryBody,
+  validateFixedCategory,
+} from "../../utils/fixedCategories";
 import React, { useRef, useState } from "react";
 import {
   CHARGE_PERIODS,
@@ -23,11 +28,16 @@ export const FixedInlineEditor = ({
   onDraftChange,
   onSave,
   onClose,
+  categories,
+  categoryError,
 }) => {
   const income = row.kind === "income";
   const [values, setValues] = useState(
     () =>
-      draft ?? (income ? incomeInitialValues(row) : chargeInitialValues(row))
+      draft ?? {
+        ...(income ? incomeInitialValues(row) : chargeInitialValues(row)),
+        ...(categories ? { categoryId: String(row.categoryId ?? "") } : {}),
+      }
   );
   const [errors, setErrors] = useState({});
   const titleRef = useRef(null);
@@ -100,6 +110,8 @@ export const FixedInlineEditor = ({
     event.preventDefault();
     if (saving.current || busy) return;
     const next = income ? validateIncome(values) : validateCharge(values);
+    const categoryFailure = validateFixedCategory(values, categories, row.kind);
+    if (categoryFailure) next.categoryId = categoryFailure;
     setErrors(next);
     if (Object.keys(next).length) {
       document.getElementById(`${formId}-${Object.keys(next)[0]}`)?.focus();
@@ -107,7 +119,12 @@ export const FixedInlineEditor = ({
     }
     saving.current = true;
     try {
-      if (await onSave(income ? incomeBody(values) : chargeBody(values)))
+      if (
+        await onSave({
+          ...(income ? incomeBody(values) : chargeBody(values)),
+          ...fixedCategoryBody(values),
+        })
+      )
         onClose();
     } finally {
       saving.current = false;
@@ -158,6 +175,20 @@ export const FixedInlineEditor = ({
       </button>
     </form>
   );
+  const categoryField = categories ? (
+    <FixedCategorySelect
+      id={`${formId}-categoryId`}
+      form={formId}
+      kind={row.kind}
+      value={values.categoryId ?? ""}
+      onChange={change}
+      source={categories}
+      currentCategory={row.category}
+      busy={busy}
+      compact={compact}
+      error={errors.categoryId || categoryError}
+    />
+  ) : null;
   const title = field(
     "titre",
     income ? "Titre de l’entrée" : "Titre de la charge"
@@ -199,6 +230,7 @@ export const FixedInlineEditor = ({
             <span>Aperçu / mois</span>
           </div>
         </div>
+        {categoryField}
         <div className="fixed-inline__fields">
           {total}
           {currency}
@@ -224,6 +256,7 @@ export const FixedInlineEditor = ({
           {title}
           {badge}
         </th>
+        {categories && <td>{categoryField}</td>}
         <td>{total}</td>
         <td>{currency}</td>
         <td>{period}</td>
@@ -240,7 +273,7 @@ export const FixedInlineEditor = ({
         </td>
       </tr>
       <tr className="fixed-inline fixed-inline__footer" onKeyDown={keyboard}>
-        <td colSpan={8}>{controls}</td>
+        <td colSpan={categories ? 9 : 8}>{controls}</td>
       </tr>
     </>
   );

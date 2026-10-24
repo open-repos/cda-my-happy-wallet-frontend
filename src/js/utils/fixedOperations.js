@@ -3,6 +3,7 @@ import { CHARGE_PERIODS, chargeDisplay } from "./fixedCharges";
 export const FIXED_SORT_FIELDS = [
   { value: "titre", label: "Nom" },
   { value: "kind", label: "Type" },
+  { value: "category", label: "Catégorie" },
   { value: "montant", label: "Total / échéance" },
   { value: "devise", label: "Devise" },
   { value: "periodicite", label: "Périodicité" },
@@ -57,6 +58,8 @@ export const sortFixedOperations = (rows, field, direction) => {
       : field === "periodicite"
       ? CHARGE_PERIODS.find(({ value }) => value === row.periodicite)?.months ??
         null
+      : field === "category"
+      ? row.category?.name ?? (row.categoryId == null ? "Non catégorisé" : null)
       : row[field];
   return [...rows].sort((a, b) => {
     const left = numeric ? decimalParts(value(a)) : value(a);

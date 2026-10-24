@@ -8,6 +8,7 @@ const useFixedCollection = (type) => {
   const { invalidate } = useSimulation();
   const [state, setState] = useState({ status: "loading", data: [] });
   const [message, setMessage] = useState({ text: "", error: false });
+  const [categoryError, setCategoryError] = useState("");
   const [busy, setBusy] = useState(false);
   const writing = useRef(false);
   const latest = useRef(0);
@@ -42,6 +43,7 @@ const useFixedCollection = (type) => {
     if (writing.current) return false;
     writing.current = true;
     setBusy(true);
+    setCategoryError("");
     setMessage({
       text: income
         ? "Enregistrement de l’entrée…"
@@ -62,7 +64,14 @@ const useFixedCollection = (type) => {
           error: !loaded,
         });
       return true;
-    } catch {
+    } catch (error) {
+      if (
+        mounted.current &&
+        error?.response?.data?.error?.details?.code === "INVALID_FIXED_CATEGORY"
+      )
+        setCategoryError(
+          "Cette catégorie n’est plus disponible pour cet élément. Choisissez-en une autre."
+        );
       if (mounted.current)
         setMessage({
           text: income
@@ -80,6 +89,8 @@ const useFixedCollection = (type) => {
     ...state,
     message,
     busy,
+    categoryError,
+    clearCategoryError: () => setCategoryError(""),
     reload,
     save: (charge, body) =>
       mutate(

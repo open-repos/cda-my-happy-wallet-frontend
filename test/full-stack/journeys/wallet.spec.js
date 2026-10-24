@@ -566,6 +566,9 @@ test("persists periodic shared fixed charges and refreshes server budgets withou
   await page.getByRole("radio", { name: "Entrée", exact: true }).check();
   await page.getByLabel("Titre de l’entrée").fill("Entrée mensuelle E2E");
   await page.getByLabel("Montant reçu par mois").fill("200");
+  await page
+    .getByRole("combobox", { name: "Catégorie", exact: true })
+    .selectOption({ label: "Salaires" });
   const incomeCreated = apiResponse(
     page,
     "/v1/operations-fixes/revenus",
@@ -575,6 +578,12 @@ test("persists periodic shared fixed charges and refreshes server budgets withou
   const incomeResponse = await incomeCreated;
   expect(incomeResponse.status()).toBe(201);
   const income = (await incomeResponse.json()).data;
+  expect(income.category).toMatchObject({
+    name: "Salaires",
+    icon: "solid:money-bill-wave",
+    fixedKind: "REVENU",
+  });
+  expect(income.categoryId).toBe(income.category.id);
   await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*400,00/);
   await openFixedActions(page, "Entrée mensuelle E2E");
   await page
@@ -611,6 +620,9 @@ test("persists periodic shared fixed charges and refreshes server budgets withou
     .getByRole("combobox", { name: "Périodicité", exact: true })
     .selectOption("ANNUELLE");
   await page.getByLabel("Ma part de la charge (%)").fill("50");
+  await page
+    .getByRole("combobox", { name: "Catégorie", exact: true })
+    .selectOption({ label: "Assurances" });
   await expect(
     page.getByRole("region", { name: "Aperçu de la charge" })
   ).toContainText(/5,00/);
@@ -625,6 +637,12 @@ test("persists periodic shared fixed charges and refreshes server budgets withou
     montantMensuelPersonnel: "5.00",
   });
   expect(Number(charge.montant)).toBe(120);
+  expect(charge.category).toMatchObject({
+    name: "Assurances",
+    icon: "solid:shield-halved",
+    fixedKind: "CHARGE",
+  });
+  expect(charge.categoryId).toBe(charge.category.id);
   await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*195,00/);
   await page.reload();
   await page
@@ -638,6 +656,9 @@ test("persists periodic shared fixed charges and refreshes server budgets withou
     page.getByRole("combobox", { name: "Périodicité", exact: true })
   ).toHaveValue("ANNUELLE");
   await expect(page.getByLabel("Ma part de la charge (%)")).toHaveValue("50");
+  await expect(
+    page.getByRole("combobox", { name: "Catégorie", exact: true })
+  ).toHaveValue(String(charge.categoryId));
   await page.getByRole("button", { name: "Annuler", exact: true }).click();
   await page.getByRole("link", { name: /Revenir à la page d'accueil/ }).click();
   await expect(page.locator(".home-budget__amount")).toHaveText(/1\s*195,00/);

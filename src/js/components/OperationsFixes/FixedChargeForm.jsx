@@ -1,3 +1,8 @@
+import { FixedCategorySelect } from "./FixedCategorySelect";
+import {
+  fixedCategoryBody,
+  validateFixedCategory,
+} from "../../utils/fixedCategories";
 import React, { useRef, useState } from "react";
 import {
   CHARGE_PERIODS,
@@ -15,11 +20,17 @@ export const FixedChargeForm = ({
   busy,
   onSave,
   onClose,
+  categories,
+  categoryError,
   draft,
   onDraftChange,
 }) => {
   const [values, setValues] = useState(
-    () => draft ?? chargeInitialValues(charge)
+    () =>
+      draft ?? {
+        ...chargeInitialValues(charge),
+        ...(categories ? { categoryId: String(charge?.categoryId ?? "") } : {}),
+      }
   );
   const [errors, setErrors] = useState({});
   const [attempt, setAttempt] = useState(0);
@@ -57,13 +68,16 @@ export const FixedChargeForm = ({
   const submit = async (event) => {
     event.preventDefault();
     const next = validateCharge(values);
+    const categoryFailure = validateFixedCategory(values, categories, "charge");
+    if (categoryFailure) next.categoryId = categoryFailure;
     setErrors(next);
     setAttempt((count) => count + 1);
     if (Object.keys(next).length) {
       formRef.current?.elements.namedItem(Object.keys(next)[0])?.focus();
       return;
     }
-    if (await onSave(chargeBody(values))) onClose();
+    if (await onSave({ ...chargeBody(values), ...fixedCategoryBody(values) }))
+      onClose();
   };
   return (
     <section className="fixed-charge-form" aria-labelledby="charge-form-title">
@@ -91,6 +105,18 @@ export const FixedChargeForm = ({
         <fieldset disabled={busy}>
           <legend className="sr-only">Détails de la charge</legend>
           {field("titre", "Titre de la charge", { maxLength: 50 })}
+          {categories && (
+            <FixedCategorySelect
+              id="charge-category"
+              kind="charge"
+              value={values.categoryId ?? ""}
+              onChange={change}
+              source={categories}
+              currentCategory={charge?.category}
+              busy={busy}
+              error={errors.categoryId || categoryError}
+            />
+          )}
           {field("montant", "Montant total par échéance", {
             inputMode: "decimal",
           })}

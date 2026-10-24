@@ -191,7 +191,12 @@ for (const width of [320, 390, 768, 1440])
       expect(writes[0]).toEqual({
         method: "POST",
         income: true,
-        body: { titre: "Pension exemple", montant: 250.5, devise: "EUR" },
+        body: {
+          titre: "Pension exemple",
+          montant: 250.5,
+          devise: "EUR",
+          categoryId: null,
+        },
       });
       await page.reload();
       await openFixedActions(page, "Pension exemple");
