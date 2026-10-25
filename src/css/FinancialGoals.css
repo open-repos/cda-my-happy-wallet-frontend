@@ -295,6 +295,7 @@
 
 .savings-simulation {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--ds-primitive-space-4);
   min-width: 0;
 }
@@ -398,6 +399,8 @@
   height: 1.25rem;
 }
 .savings-simulation__table {
+  min-width: 0;
+  max-width: 100%;
   width: 100%;
   overflow: auto;
   overscroll-behavior-inline: contain;
@@ -426,4 +429,10 @@
 .savings-simulation__legend span {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+/* Expanded details must not contribute the table's intrinsic width to the grid. */
+.goal-trajectory__details {
+  min-width: 0;
+  max-width: 100%;
 }
