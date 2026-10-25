@@ -1,3 +1,4 @@
+import { SavingsTrajectorySimulation } from "./SavingsTrajectorySimulation";
 import React, { useMemo, useState } from "react";
 import { EChart } from "../charts/EChart";
 import {
@@ -19,7 +20,8 @@ import { goalTrajectoryPoints } from "../../utils/goalTrajectory";
 import { shiftForecastMonth } from "../../utils/budgetForecast";
 
 /** Declared progress and the existing server forecast stay separate. */
-export const FinancialGoalCard = ({ goal, onEdit }) => {
+export const FinancialGoalCard = ({ goal, onEdit, onRefresh }) => {
+  const [comparing, setComparing] = useState(false);
   const tokens = useChartTokens();
   const [horizon, setHorizon] = useState(12);
   const percent = goalPercent(goal);
@@ -119,80 +121,94 @@ export const FinancialGoalCard = ({ goal, onEdit }) => {
           className="goal-trajectory"
           aria-labelledby={`goal-${goal.id}-trajectory-title`}
         >
-          <div className="goal-trajectory__header">
-            <h4 id={`goal-${goal.id}-trajectory-title`}>
-              Trajectoire au rythme prévu
-            </h4>
-            <label htmlFor={`goal-${goal.id}-horizon`}>
-              Horizon
-              <select
-                id={`goal-${goal.id}-horizon`}
-                value={horizon}
-                onChange={(event) => setHorizon(Number(event.target.value))}
-              >
-                <option value={12}>12 mois</option>
-                <option value={24}>24 mois</option>
-              </select>
-            </label>
-          </div>
-          <p className="goal-card__help">
-            Départ déclaré en {monthLabel(goal.forecast.referenceMonth)}.
-            Premier versement projeté le mois suivant. Aucun historique
-            reconstitué.
-          </p>
-          <EChart
-            className="goal-trajectory__chart"
-            option={trajectory}
-            label={`Projection de l’objectif ${goal.title} en ${
-              goal.currency
-            }, au rythme enregistré de ${money(
-              goal.monthlyContribution
-            )} par mois. Les valeurs sont disponibles dans le tableau.`}
-          />
-          <p className="goal-card__help">
-            ● Montant déclaré au départ · ○ Points mensuels projetés, reliés en
-            pointillés · Repères : montant cible et mois souhaité lorsqu’il est
-            dans la période tracée.
-          </p>
-          <p className="goal-trajectory__outcome" aria-live="polite">
-            {beyond
-              ? `Objectif non atteint dans l’horizon affiché de ${horizon} mois.`
-              : !reached && goal.monthlyContribution === "0.00"
-              ? "Aucun versement prévu : aucune progression future n’est représentée."
-              : !reached && !reach
-              ? "Aucune date d’atteinte calculable avec les données actuelles."
-              : null}
-          </p>
-          <p className="goal-card__help">
-            Cette projection suit votre versement enregistré. La synthèse de
-            capacité ci-dessous évalue séparément le budget de tous vos
-            objectifs.
-          </p>
-          <details className="goal-trajectory__details">
-            <summary>Lire les montants projetés</summary>
-            <table>
-              <caption>
-                Épargne déclarée et projection en {goal.currency}
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Mois</th>
-                  <th scope="col">Montant</th>
-                </tr>
-              </thead>
-              <tbody>
-                {points.map((point, index) => (
-                  <tr key={point.month}>
-                    <th scope="row">
-                      {monthLabel(point.month)}
-                      {index === 0 ? " · déclaré" : " · projeté"}
-                    </th>
-                    <td>{money(point.amount)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </details>
+          <button
+            type="button"
+            className="monthly-event-button monthly-event-button--secondary"
+            onClick={() => setComparing((value) => !value)}
+            aria-expanded={comparing}
+          >
+            {comparing ? "Revenir au rythme prévu" : "Simuler avec mon budget"}
+          </button>
+          {comparing ? (
+            <SavingsTrajectorySimulation goal={goal} onRefresh={onRefresh} />
+          ) : (
+            <>
+              <div className="goal-trajectory__header">
+                <h4 id={`goal-${goal.id}-trajectory-title`}>
+                  Trajectoire au rythme prévu
+                </h4>
+                <label htmlFor={`goal-${goal.id}-horizon`}>
+                  Horizon
+                  <select
+                    id={`goal-${goal.id}-horizon`}
+                    value={horizon}
+                    onChange={(event) => setHorizon(Number(event.target.value))}
+                  >
+                    <option value={12}>12 mois</option>
+                    <option value={24}>24 mois</option>
+                  </select>
+                </label>
+              </div>
+              <p className="goal-card__help">
+                Départ déclaré en {monthLabel(goal.forecast.referenceMonth)}.
+                Premier versement projeté le mois suivant. Aucun historique
+                reconstitué.
+              </p>
+              <EChart
+                className="goal-trajectory__chart"
+                option={trajectory}
+                label={`Projection de l’objectif ${goal.title} en ${
+                  goal.currency
+                }, au rythme enregistré de ${money(
+                  goal.monthlyContribution
+                )} par mois. Les valeurs sont disponibles dans le tableau.`}
+              />
+              <p className="goal-card__help">
+                ● Montant déclaré au départ · ○ Points mensuels projetés, reliés
+                en pointillés · Repères : montant cible et mois souhaité
+                lorsqu’il est dans la période tracée.
+              </p>
+              <p className="goal-trajectory__outcome" aria-live="polite">
+                {beyond
+                  ? `Objectif non atteint dans l’horizon affiché de ${horizon} mois.`
+                  : !reached && goal.monthlyContribution === "0.00"
+                  ? "Aucun versement prévu : aucune progression future n’est représentée."
+                  : !reached && !reach
+                  ? "Aucune date d’atteinte calculable avec les données actuelles."
+                  : null}
+              </p>
+              <p className="goal-card__help">
+                Cette projection suit votre versement enregistré. La synthèse de
+                capacité ci-dessous évalue séparément le budget de tous vos
+                objectifs.
+              </p>
+              <details className="goal-trajectory__details">
+                <summary>Lire les montants projetés</summary>
+                <table>
+                  <caption>
+                    Épargne déclarée et projection en {goal.currency}
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Mois</th>
+                      <th scope="col">Montant</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {points.map((point, index) => (
+                      <tr key={point.month}>
+                        <th scope="row">
+                          {monthLabel(point.month)}
+                          {index === 0 ? " · déclaré" : " · projeté"}
+                        </th>
+                        <td>{money(point.amount)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </details>
+            </>
+          )}
         </section>
       </div>
     </article>

@@ -167,6 +167,7 @@ export const FinancialGoalsSection = ({ initialGoalId = null }) => {
             key={selectedGoal.id}
             goal={selectedGoal}
             onEdit={open}
+            onRefresh={state.retry}
           />
         </div>
       )}
