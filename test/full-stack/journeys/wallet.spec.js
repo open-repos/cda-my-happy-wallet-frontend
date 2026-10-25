@@ -86,7 +86,7 @@ test("persists operation CRUD and recalculates the calendar budget", async ({
   await page.getByLabel(/^Titre/).fill("Courses E2E");
   await page.getByLabel(/^Montant/).fill("42.50");
   await page.getByLabel(/^Date/).fill(today());
-  await page.getByLabel(/^Catégorie/).selectOption({ label: "Courant" });
+  await chooseCategory(page, "Courant");
   const created = apiResponse(page, "/v1/operations", "POST");
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   const creation = await created;
@@ -155,7 +155,7 @@ test("converts a planned event into a persisted operation without counting it tw
   await expect(realBalance(page)).toHaveText(/1\s*200,00\s*€/);
   await expect(forecastBalance(page)).toHaveText(/1\s*080,00\s*€/);
   await page.getByRole("button", { name: /^Convertir Assurance E2E/ }).click();
-  await page.getByLabel(/^Catégorie/).selectOption({ label: "Courant" });
+  await chooseCategory(page, "Courant");
   const realized = page.waitForResponse((response) =>
     /\/event-occurrences\/\d+\/\d{4}-\d{2}-\d{2}\/realize$/.test(
       new URL(response.url()).pathname
@@ -570,9 +570,7 @@ test("persists periodic shared fixed charges and refreshes server budgets withou
   await page.getByRole("radio", { name: "Entrée", exact: true }).check();
   await page.getByLabel("Titre de l’entrée").fill("Entrée mensuelle E2E");
   await page.getByLabel("Montant reçu par mois").fill("200");
-  await page
-    .getByRole("combobox", { name: "Catégorie", exact: true })
-    .selectOption({ label: "Salaires" });
+  await chooseCategory(page, "Salaires");
   const incomeCreated = apiResponse(
     page,
     "/v1/operations-fixes/revenus",
@@ -624,9 +622,7 @@ test("persists periodic shared fixed charges and refreshes server budgets withou
     .getByRole("combobox", { name: "Périodicité", exact: true })
     .selectOption("ANNUELLE");
   await page.getByLabel("Ma part de la charge (%)").fill("50");
-  await page
-    .getByRole("combobox", { name: "Catégorie", exact: true })
-    .selectOption({ label: "Assurances" });
+  await chooseCategory(page, "Assurances");
   await expect(
     page.getByRole("region", { name: "Aperçu de la charge" })
   ).toContainText(/5,00/);
@@ -662,6 +658,9 @@ test("persists periodic shared fixed charges and refreshes server budgets withou
   await expect(page.getByLabel("Ma part de la charge (%)")).toHaveValue("50");
   await expect(
     page.getByRole("combobox", { name: "Catégorie", exact: true })
+  ).toContainText("Assurances");
+  await expect(
+    page.locator('input[type="hidden"][name="categoryId"]')
   ).toHaveValue(String(charge.categoryId));
   await page.getByRole("button", { name: "Annuler", exact: true }).click();
   await page.getByRole("link", { name: /Revenir à la page d'accueil/ }).click();
@@ -720,6 +719,11 @@ test("persists periodic shared fixed charges and refreshes server budgets withou
   ).toHaveCount(0);
   expect(unexpectedWrites).toEqual([]);
 });
+
+async function chooseCategory(page, name) {
+  await page.getByRole("combobox", { name: "Catégorie", exact: true }).click();
+  await page.getByRole("option", { name, exact: true }).click();
+}
 
 test("compares server savings trajectories without persisting assumptions", async ({
   page,
