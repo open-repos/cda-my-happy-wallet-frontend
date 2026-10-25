@@ -104,7 +104,7 @@ for (const width of [320, 390, 768, 1440])
       );
       await page.goto("/calendrier");
       const day = page.getByRole("button", {
-        name: /^25 octobre 2026.*122 Opération réelle.*1 Événement prévu.*1 Élément potentiel.*1 Événement en retard/,
+        name: /^25 octobre 2026.*122 opérations réelles.*1 événement prévu.*1 élément potentiel.*1 événement en retard/,
       });
       await expect(day).toBeVisible();
       expect(new Set(pages)).toEqual(new Set([null, "next.operations"]));
@@ -182,7 +182,7 @@ test("future without summary and incomplete read retry", async ({ page }) => {
   fail = false;
   await page.getByRole("button", { name: "Réessayer les éléments" }).click();
   await expect(
-    page.getByRole("button", { name: /^1 novembre 2026.*1 Élément potentiel/ })
+    page.getByRole("button", { name: /^1 novembre 2026.*1 élément potentiel/ })
   ).toBeVisible();
   expect(writes).toBe(0);
 });

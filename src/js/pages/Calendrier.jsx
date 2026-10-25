@@ -19,7 +19,11 @@ import {
   CalendarLegend,
 } from "../components/BudgetCalendar/CalendarMarkers";
 import { CalendarElements } from "../components/BudgetCalendar/CalendarElements";
-import { calendarCounts, CALENDAR_TYPES } from "../utils/calendarContent";
+import {
+  calendarCounts,
+  calendarCountLabel,
+  CALENDAR_TYPES,
+} from "../utils/calendarContent";
 import { useBudgetCalendar } from "../hooks/useBudgetCalendar";
 import { useMonthlyEvents } from "../hooks/useMonthlyEvents";
 import { useSimulation } from "../components/Simulation/SimulationContext";
@@ -347,7 +351,10 @@ function Calendrier() {
                   )}${
                     ready
                       ? CALENDAR_TYPES.filter((t) => counts[t.key] > 0)
-                          .map((t) => `, ${counts[t.key]} ${t.label}`)
+                          .map(
+                            (t) =>
+                              `, ${calendarCountLabel(t.key, counts[t.key])}`
+                          )
                           .join("")
                       : budget.operationsStatus === "error"
                       ? ", contenu indisponible"

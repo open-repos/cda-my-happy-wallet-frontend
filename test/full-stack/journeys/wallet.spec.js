@@ -187,7 +187,7 @@ test("converts a planned event into a persisted operation without counting it tw
     )
   ).toBe(true);
   const realizedDay = page.getByRole("button", {
-    name: new RegExp(`^${Number(today().slice(8))} .*1 Opération réelle`),
+    name: new RegExp(`^${Number(today().slice(8))} .*1 opération réelle`),
   });
   await expect(realizedDay.locator(".budget-marker--real")).toHaveCount(1);
   await expect(realizedDay.locator(".budget-marker--planned")).toHaveCount(0);

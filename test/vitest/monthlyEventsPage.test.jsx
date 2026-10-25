@@ -158,7 +158,7 @@ describe("monthly event pages", () => {
       screen.getByRole("heading", { name: "Calendrier" })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /1 Événement prévu/ })
+      screen.getByRole("button", { name: /1 événement prévu/ })
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Mois suivant" }));
     expect(useMonthlyEvents).toHaveBeenCalled();
