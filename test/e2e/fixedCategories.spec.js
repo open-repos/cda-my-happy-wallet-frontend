@@ -114,7 +114,10 @@ for (const width of [320, 390, 1440]) {
     await expect(
       page.getByRole("listbox").getByRole("option", { name: "Salaires" })
     ).toHaveCount(0);
-    await page.getByRole("option", { name: "Personnel" }).click();
+    await page
+      .getByRole("listbox")
+      .getByRole("option", { name: "Personnel", exact: true })
+      .click();
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth > innerWidth

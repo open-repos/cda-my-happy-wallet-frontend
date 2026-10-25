@@ -658,6 +658,9 @@ test("persists periodic shared fixed charges and refreshes server budgets withou
   await expect(page.getByLabel("Ma part de la charge (%)")).toHaveValue("50");
   await expect(
     page.getByRole("combobox", { name: "Catégorie", exact: true })
+  ).toContainText("Assurances");
+  await expect(
+    page.locator('input[type="hidden"][name="categoryId"]')
   ).toHaveValue(String(charge.categoryId));
   await page.getByRole("button", { name: "Annuler", exact: true }).click();
   await page.getByRole("link", { name: /Revenir à la page d'accueil/ }).click();
@@ -721,3 +724,134 @@ async function chooseCategory(page, name) {
   await page.getByRole("combobox", { name: "Catégorie", exact: true }).click();
   await page.getByRole("option", { name, exact: true }).click();
 }
+
+test("compares server savings trajectories without persisting assumptions", async ({
+  page,
+}, testInfo) => {
+  await login(page, testInfo.project.name, "trajectories");
+  await navigate(page, "Objectifs-Évènements");
+  const section = page.getByRole("region", {
+    name: "Objectifs financiers",
+    exact: true,
+  });
+  const reference = today().slice(0, 7),
+    [year, month] = reference.split("-").map(Number);
+  const desired = new Date(Date.UTC(year, month - 1 + 7, 28))
+    .toISOString()
+    .slice(0, 10);
+  const create = async (title, amount, saved, contribution, first) => {
+    await section
+      .getByRole("button", {
+        name: first ? "C’est parti" : "Ajouter un objectif",
+        exact: true,
+      })
+      .click();
+    const form = page.getByRole("region", {
+      name: "Ajouter un objectif",
+      exact: true,
+    });
+    await form.getByLabel("Titre", { exact: true }).fill(title);
+    await form.getByLabel(/^Montant cible/).fill(amount);
+    await form.getByLabel(/^Déjà épargné/).fill(saved);
+    await form.getByLabel(/^Versement mensuel prévu/).fill(contribution);
+    await form.getByLabel(/^Date souhaitée/).fill(desired);
+    const response = apiResponse(page, "/v1/goals", "POST");
+    await form
+      .getByRole("button", { name: "Enregistrer", exact: true })
+      .click();
+    const created = await response;
+    expect(created.status()).toBe(201);
+    return (await created.json()).data.id;
+  };
+  const goalId = await create(
+    "Voyage familial et découverte des régions alpines",
+    "6000",
+    "1800",
+    "350",
+    true
+  );
+  await create(
+    "Travaux de rénovation et réserve pour les imprévus",
+    "90000",
+    "0",
+    "150",
+    false
+  );
+  await section.getByLabel("Objectif à explorer").selectOption(String(goalId));
+  const card = page.getByRole("article", {
+    name: "Voyage familial et découverte des régions alpines",
+    exact: true,
+  });
+  await card.getByRole("button", { name: "Simuler avec mon budget" }).click();
+  const simulation = page.getByRole("region", {
+    name: "Comparaison des trajectoires d’épargne",
+  });
+  await expect(
+    simulation.getByRole("article", {
+      name: "Estimation raisonnable",
+      exact: true,
+    })
+  ).toBeVisible();
+  const writes = [];
+  page.on("request", (request) => {
+    if (
+      ["POST", "PUT", "PATCH", "DELETE"].includes(request.method()) &&
+      !request.url().endsWith("/savings-capacity/trajectories")
+    )
+      writes.push(request.method() + " " + new URL(request.url()).pathname);
+  });
+  await simulation
+    .getByLabel(/Complément variable restant ce mois-ci/)
+    .fill("100");
+  await simulation.getByLabel(/Complément variable par mois futur/).fill("300");
+  await simulation.getByLabel(/Marge de sécurité mensuelle/).fill("100");
+  const response = apiResponse(
+    page,
+    "/v1/savings-capacity/trajectories",
+    "POST"
+  );
+  await simulation
+    .getByRole("button", { name: "Appliquer les hypothèses" })
+    .click();
+  const projected = await response;
+  expect(projected.status()).toBe(200);
+  const data = (await projected.json()).data;
+  expect(data.projections.reasonable.current.remainingUnderAssumptions).toBe(
+    "500.00"
+  );
+  expect(data.projections.reasonable.months[0].selectedTotalContribution).toBe(
+    "650.00"
+  );
+  expect(
+    data.projections.reasonable.months[0].allocations.find(
+      (item) => item.goalId !== goalId
+    ).reservedContribution
+  ).toBe("150.00");
+  expect(data.projections.planned.points[0].savedAmount).toBe("1800.00");
+  const expected = new Intl.DateTimeFormat("fr-FR", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(
+    new Date(data.projections.reasonable.estimatedReachMonth + "-01T00:00:00Z")
+  );
+  await expect(
+    simulation.getByRole("article", {
+      name: "Estimation raisonnable",
+      exact: true,
+    })
+  ).toContainText(expected);
+  await expect(
+    simulation.getByRole("article", {
+      name: "Estimation raisonnable",
+      exact: true,
+    })
+  ).toContainText(/650,00\s*€/);
+  expect(writes).toEqual([]);
+  await page.reload();
+  await section.getByLabel("Objectif à explorer").selectOption(String(goalId));
+  await expect(
+    card.getByRole("img", { name: /30 % de l’objectif/ })
+  ).toBeVisible();
+  await expect(card).toContainText(/1\s*800,00\s*€/);
+});
