@@ -48,6 +48,7 @@ async function seed() {
         "fixed-charges",
         "events",
         "simulation",
+        "trajectories",
         "recovery",
         "session",
         "privacy-a",

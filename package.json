@@ -1,7 +1,7 @@
 {
   "name": "projet-00-myhappywallet-frontend",
   "private": true,
-  "version": "1.6.0",
+  "version": "1.7.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build && npm run pwa:build",
@@ -13,7 +13,7 @@
     "test:api-response": "node test/apiResponse.test.mjs",
     "test:rav": "node test/resteAVivreCalculator.test.mjs",
     "test:refresh-token": "node test/refreshTokenHandler.test.mjs",
-    "test:release": "node test/release/release.test.cjs",
+    "test:release": "node test/release/release.test.cjs && node --test test/release/syncReleaseDevelop.test.cjs",
     "release:prepare": "node scripts/release.cjs prepare",
     "release:notes": "node scripts/release.cjs notes",
     "test:api-thunk": "node test/apiPayloadCreator.test.mjs",

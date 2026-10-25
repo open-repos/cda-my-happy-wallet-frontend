@@ -33,7 +33,10 @@ Register the matching public key as a writable GitLab deploy key for the
 frontend project. Keep the private key only in GitHub Actions secrets. The
 workflow mirrors the current branch and does not create tags, releases or call a
 deployment endpoint. Tags and releases come from the `publish-release`
-workflow described in `docs/release-process.md`.
+workflow described in `docs/release-process.md`. The post-release `main` to
+`develop` sync PR remains open for a maintainer to approve its workflows, wait
+for every configured quality check to pass, then review and merge it. A
+successful publication does not mean that this sync is complete.
 
 A push to GitLab `main` can start the existing GitLab pipeline, but its
 production deployment job remains manual. Only the project owner starts that

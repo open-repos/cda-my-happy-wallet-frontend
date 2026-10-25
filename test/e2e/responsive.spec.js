@@ -315,7 +315,8 @@ for (const viewport of viewports) {
     const card = page.getByRole("article", { name: "Vélo" });
     await expect(card).toContainText("Sans échéance");
     await expect(card).toContainText("avril 2027");
-    await expect(card.locator("canvas")).toBeVisible();
+    await expect(card.locator(".goal-card__gauge-chart canvas")).toBeVisible();
+    await expect(card.locator(".goal-trajectory__chart canvas")).toBeVisible();
 
     await page.getByRole("button", { name: "Ajouter un objectif" }).click();
     await page.getByLabel("Titre", { exact: true }).fill("Vacances");
