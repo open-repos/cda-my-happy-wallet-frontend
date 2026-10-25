@@ -1,3 +1,4 @@
+import { ActionButton } from "@/src/design/ActionButton";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
@@ -196,22 +197,14 @@ export const BudgetCalendarScreen = () => {
           </Pressable>
         </View>
 
-        <Pressable
+        <ActionButton
+          action="add"
           accessibilityRole="button"
           ref={addButton}
           accessibilityLabel={`Ajouter le ${longDate(creationDate)}`}
           onPress={() => quickAdd.open(creationDate, addButton.current)}
           style={styles.upcomingLink}
-        >
-          <Ionicons
-            color={colors.actionSecondaryText}
-            name="add-circle-outline"
-            size={24}
-          />
-          <Text
-            style={styles.upcomingLabel}
-          >{`Ajouter le ${longDate(creationDate)}`}</Text>
-        </Pressable>
+        ></ActionButton>
 
         <View
           accessibilityLabel="Contenu des jours"

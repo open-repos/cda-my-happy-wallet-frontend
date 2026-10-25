@@ -1,3 +1,5 @@
+import { useConfirmationFocus } from "@/src/design/useConfirmationFocus";
+import { ActionButton } from "@/src/design/ActionButton";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState } from "react";
 import {
@@ -76,6 +78,7 @@ export const FinancialGoalFormModal = ({
   const [errors, setErrors] = useState<GoalDraftErrors>({});
   // Confirmation dans le formulaire : `Alert.alert` est sans effet sur le Web.
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const confirmationFocus = useConfirmationFocus(isConfirmingDelete);
 
   const update = <K extends keyof GoalDraft>(key: K, value: GoalDraft[K]) => {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -197,6 +200,7 @@ export const FinancialGoalFormModal = ({
                   ) : null}
                   <View style={styles.confirmationActions}>
                     <Pressable
+                      ref={confirmationFocus.cancel}
                       accessibilityRole="button"
                       disabled={isSaving}
                       onPress={() => setIsConfirmingDelete(false)}
@@ -204,21 +208,24 @@ export const FinancialGoalFormModal = ({
                     >
                       <Text style={styles.secondaryLabel}>Annuler</Text>
                     </Pressable>
-                    <Pressable
+                    <ActionButton
+                      ref={confirmationFocus.trigger}
+                      action="delete"
+                      label="Oui, supprimer"
                       accessibilityRole="button"
                       disabled={isSaving}
                       onPress={onDelete}
                       style={[styles.button, styles.deleteButton]}
-                    >
-                      <Text style={styles.deleteLabel}>Oui, supprimer</Text>
-                    </Pressable>
+                    ></ActionButton>
                   </View>
                 </View>
               ) : null}
 
               <View style={styles.actions}>
                 {goal != null && !isConfirmingDelete ? (
-                  <Pressable
+                  <ActionButton
+                    action="delete"
+                    label="Supprimer"
                     accessibilityRole="button"
                     disabled={isSaving}
                     onPress={() => setIsConfirmingDelete(true)}
@@ -227,9 +234,7 @@ export const FinancialGoalFormModal = ({
                       styles.deleteButton,
                       styles.pushLeft,
                     ]}
-                  >
-                    <Text style={styles.deleteLabel}>Supprimer</Text>
-                  </Pressable>
+                  ></ActionButton>
                 ) : null}
                 <Pressable
                   accessibilityRole="button"
