@@ -161,10 +161,14 @@ for (const theme of ["light", "dark"]) {
         await expect(page.locator("main canvas").first()).toBeVisible();
         await stableCharts(page);
       }
-      if (definition.name === "events-goals")
+      if (definition.name === "events-goals") {
         await expect(
           page.getByRole("article", { name: "Vélo", exact: true })
         ).toBeVisible();
+        // The taller trajectory can scroll the capacity readiness assertion.
+        // Full-page references must keep the fixed navigation at the page top.
+        await page.evaluate(() => window.scrollTo(0, 0));
+      }
       if (definition.name === "operations") {
         const ratio = await page
           .locator(".compact-money-table tbody th")
