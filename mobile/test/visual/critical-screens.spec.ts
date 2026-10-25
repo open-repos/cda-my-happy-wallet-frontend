@@ -289,7 +289,7 @@ test("captures the budget calendar and its day filter", async ({ page }) => {
 
   // Cibles tactiles d'au moins 44 px, y compris sur un écran de 360 px.
   const dayBox = await page
-    .getByRole("button", { name: /^3 octobre 2026.*1 Opération réelle/ })
+    .getByRole("button", { name: /^3 octobre 2026.*1 opération réelle/ })
     .boundingBox();
   expect(dayBox?.width).toBeGreaterThanOrEqual(44);
   expect(dayBox?.height).toBeGreaterThanOrEqual(44);
@@ -310,7 +310,7 @@ test("captures the budget calendar and its day filter", async ({ page }) => {
   await page.getByRole("radio", { name: "Repères" }).click();
 
   await page
-    .getByRole("button", { name: /^3 octobre 2026.*1 Opération réelle/ })
+    .getByRole("button", { name: /^3 octobre 2026.*1 opération réelle/ })
     .click();
   await expect(page.getByText(/^Éléments du 3 /)).toBeVisible();
   await expect(

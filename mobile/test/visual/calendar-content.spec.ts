@@ -100,7 +100,7 @@ for (const width of [320, 390, 768, 1440])
       await page.getByRole("button", { name: "Se connecter" }).click();
       await page.getByRole("tab", { name: "Calendrier" }).click();
       const day = page.getByRole("button", {
-        name: /^25 octobre 2026.*122 Opération réelle.*1 Événement prévu.*1 Élément potentiel.*1 Événement en retard/,
+        name: /^25 octobre 2026.*122 opérations réelles.*1 événement prévu.*1 élément potentiel.*1 événement en retard/,
       });
       await expect(day).toBeVisible();
       await day.click();

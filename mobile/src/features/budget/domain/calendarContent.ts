@@ -132,3 +132,16 @@ export const calendarCounts = (items: CalendarElement[]) => ({
   potential: items.filter((i) => i.nature === "potential").length,
   overdue: items.filter((i) => i.overdue).length,
 });
+
+export const calendarCountLabel = (
+  type: (typeof CALENDAR_TYPES)[number]["key"],
+  count: number,
+) => {
+  const labels = {
+    real: ["opération réelle", "opérations réelles"],
+    planned: ["événement prévu", "événements prévus"],
+    potential: ["élément potentiel", "éléments potentiels"],
+    overdue: ["événement en retard", "événements en retard"],
+  };
+  return `${count} ${labels[type][count > 1 ? 1 : 0]}`;
+};

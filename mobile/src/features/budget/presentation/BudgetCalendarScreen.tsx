@@ -49,7 +49,11 @@ import { SimulationReadout } from "@/src/features/simulation/presentation/Simula
 import { HttpCalendarContentGateway } from "../infrastructure/HttpCalendarContentGateway";
 import { useCalendarContent } from "./useCalendarContent";
 import { CalendarElements } from "./CalendarElements";
-import { CALENDAR_TYPES, calendarCounts } from "../domain/calendarContent";
+import {
+  CALENDAR_TYPES,
+  calendarCounts,
+  calendarCountLabel,
+} from "../domain/calendarContent";
 import { useQuickAdd } from "@/src/features/quick-add/presentation/QuickAddProvider";
 
 /** Calendrier budgétaire du mois : grille, modes, détail du jour, opérations. */
@@ -323,7 +327,7 @@ export const BudgetCalendarScreen = () => {
                             ? markers
                                 .map(
                                   (type) =>
-                                    ` ${counts[type.key]} ${type.label}.`,
+                                    ` ${calendarCountLabel(type.key, counts[type.key])}.`,
                                 )
                                 .join("")
                             : content.status === "error"
