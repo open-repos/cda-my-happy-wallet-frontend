@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   AccessibilityInfo,
   findNodeHandle,
@@ -19,11 +19,15 @@ export const useConfirmationFocus = (open: boolean) => {
     trigger = useRef<View>(null);
   useEffect(() => {
     if (!open) return;
+    const returnTarget = trigger.current;
     const frame = requestAnimationFrame(() => focus(cancel.current));
     return () => {
       cancelAnimationFrame(frame);
-      requestAnimationFrame(() => focus(trigger.current));
+      requestAnimationFrame(() => focus(returnTarget));
     };
   }, [open]);
-  return { cancel, trigger };
+  const setTrigger = useCallback((node: View | null) => {
+    trigger.current = node;
+  }, []);
+  return { cancel, setTrigger };
 };

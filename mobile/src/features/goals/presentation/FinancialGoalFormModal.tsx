@@ -78,7 +78,8 @@ export const FinancialGoalFormModal = ({
   const [errors, setErrors] = useState<GoalDraftErrors>({});
   // Confirmation dans le formulaire : `Alert.alert` est sans effet sur le Web.
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-  const confirmationFocus = useConfirmationFocus(isConfirmingDelete);
+  const { cancel: confirmationCancelRef, setTrigger: setDeleteTrigger } =
+    useConfirmationFocus(isConfirmingDelete);
 
   const update = <K extends keyof GoalDraft>(key: K, value: GoalDraft[K]) => {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -200,7 +201,7 @@ export const FinancialGoalFormModal = ({
                   ) : null}
                   <View style={styles.confirmationActions}>
                     <Pressable
-                      ref={confirmationFocus.cancel}
+                      ref={confirmationCancelRef}
                       accessibilityRole="button"
                       disabled={isSaving}
                       onPress={() => setIsConfirmingDelete(false)}
@@ -209,7 +210,6 @@ export const FinancialGoalFormModal = ({
                       <Text style={styles.secondaryLabel}>Annuler</Text>
                     </Pressable>
                     <ActionButton
-                      ref={confirmationFocus.trigger}
                       action="delete"
                       label="Oui, supprimer"
                       accessibilityRole="button"
@@ -225,6 +225,7 @@ export const FinancialGoalFormModal = ({
                 {goal != null && !isConfirmingDelete ? (
                   <ActionButton
                     action="delete"
+                    ref={setDeleteTrigger}
                     label="Supprimer"
                     accessibilityRole="button"
                     disabled={isSaving}

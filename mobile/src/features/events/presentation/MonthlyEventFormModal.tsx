@@ -86,7 +86,8 @@ export const MonthlyEventFormModal = ({
   const [errors, setErrors] = useState<EventDraftErrors>({});
   // Confirmation dans le formulaire : `Alert.alert` est sans effet sur le Web.
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-  const confirmationFocus = useConfirmationFocus(isConfirmingDelete);
+  const { cancel: confirmationCancelRef, setTrigger: setDeleteTrigger } =
+    useConfirmationFocus(isConfirmingDelete);
   const repeats = draft.recurrence !== "AUCUNE";
 
   const update = <K extends keyof EventDraft>(key: K, value: EventDraft[K]) => {
@@ -258,7 +259,7 @@ export const MonthlyEventFormModal = ({
                   ) : null}
                   <View style={styles.confirmationActions}>
                     <Pressable
-                      ref={confirmationFocus.cancel}
+                      ref={confirmationCancelRef}
                       accessibilityRole="button"
                       disabled={isSaving}
                       onPress={() => setIsConfirmingDelete(false)}
@@ -267,7 +268,6 @@ export const MonthlyEventFormModal = ({
                       <Text style={styles.secondaryLabel}>Annuler</Text>
                     </Pressable>
                     <ActionButton
-                      ref={confirmationFocus.trigger}
                       action="delete"
                       label="Oui, supprimer"
                       accessibilityRole="button"
@@ -283,6 +283,7 @@ export const MonthlyEventFormModal = ({
                 {event != null && !isConfirmingDelete ? (
                   <ActionButton
                     action="delete"
+                    ref={setDeleteTrigger}
                     label="Supprimer"
                     accessibilityRole="button"
                     disabled={isSaving}

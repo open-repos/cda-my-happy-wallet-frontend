@@ -118,7 +118,8 @@ export const CategoryFormModal = ({
   const [icon, setIcon] = useState<string | null>(category?.icon ?? null);
   const [errors, setErrors] = useState<CategoryDraftErrors>({});
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-  const confirmationFocus = useConfirmationFocus(isConfirmingDelete);
+  const { cancel: confirmationCancelRef, setTrigger: setDeleteTrigger } =
+    useConfirmationFocus(isConfirmingDelete);
 
   const choose = (choice: string) => {
     setColor((current) => ({ ...current, choice }));
@@ -293,7 +294,7 @@ export const CategoryFormModal = ({
                   ) : null}
                   <View style={styles.confirmationActions}>
                     <Pressable
-                      ref={confirmationFocus.cancel}
+                      ref={confirmationCancelRef}
                       accessibilityRole="button"
                       disabled={isSaving}
                       onPress={() => {
@@ -305,7 +306,6 @@ export const CategoryFormModal = ({
                       <Text style={styles.secondaryLabel}>Annuler</Text>
                     </Pressable>
                     <ActionButton
-                      ref={confirmationFocus.trigger}
                       action="delete"
                       label="Oui, supprimer"
                       accessibilityRole="button"
@@ -321,6 +321,7 @@ export const CategoryFormModal = ({
                 {category != null && !isConfirmingDelete ? (
                   <ActionButton
                     action="delete"
+                    ref={setDeleteTrigger}
                     label="Supprimer"
                     accessibilityRole="button"
                     disabled={isSaving}
