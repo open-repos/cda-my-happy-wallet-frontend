@@ -1,11 +1,6 @@
+import { ActionButton } from "@/src/design/ActionButton";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  useColorScheme,
-} from "react-native";
+import { StyleSheet, Text, View, useColorScheme } from "react-native";
 
 import { fontAwesomeIcon } from "@/src/features/categories/domain/categoryIcons";
 import { CategoryMark } from "@/src/features/categories/presentation/CategoryMark";
@@ -53,7 +48,8 @@ export const OperationCard = ({
           <Text style={styles.date}>{formatDate(operation.operationDate)}</Text>
         </View>
         {onEdit ? (
-          <Pressable
+          <ActionButton
+            action="edit"
             accessibilityLabel={`Modifier ${operation.title}`}
             accessibilityRole="button"
             hitSlop={primitives.space["2"]}
@@ -62,13 +58,7 @@ export const OperationCard = ({
               styles.editButton,
               pressed && styles.pressed,
             ]}
-          >
-            <Ionicons
-              color={colors.textSecondary}
-              name="create-outline"
-              size={24}
-            />
-          </Pressable>
+          ></ActionButton>
         ) : null}
       </View>
       <View style={styles.details}>

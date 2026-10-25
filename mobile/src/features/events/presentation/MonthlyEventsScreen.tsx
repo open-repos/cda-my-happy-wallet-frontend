@@ -1,7 +1,7 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { ActionButton } from "@/src/design/ActionButton";
 import { useMemo, useState } from "react";
 import { useLocalSearchParams } from "expo-router";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, StyleSheet, Text, View } from "react-native";
 // Barre d'état Android comme encoche iOS (#147).
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -97,7 +97,9 @@ export const MonthlyEventsScreen = () => {
             <Text accessibilityRole="header" style={styles.sectionTitle}>
               Événements mensuels
             </Text>
-            <Pressable
+            <ActionButton
+              action="add"
+              label="Ajouter un événement"
               accessibilityRole="button"
               disabled={state.mutationStatus === "loading"}
               onPress={openCreate}
@@ -105,14 +107,7 @@ export const MonthlyEventsScreen = () => {
                 styles.addButton,
                 pressed && styles.pressed,
               ]}
-            >
-              <Ionicons
-                color={colors.actionPrimaryText}
-                name="add-circle-outline"
-                size={21}
-              />
-              <Text style={styles.addLabel}>Ajouter un événement</Text>
-            </Pressable>
+            ></ActionButton>
             {/* Formulaire ouvert : le message s'affiche dans sa fenêtre. */}
             {state.message && !isFormOpen ? (
               <FeedbackBanner

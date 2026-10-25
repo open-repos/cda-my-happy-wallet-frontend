@@ -15,7 +15,6 @@ import { HttpOneOffOperationsGateway } from "@/src/features/operations/infrastru
 import { useOneOffOperations } from "@/src/features/operations/presentation/useOneOffOperations";
 import { OperationCard } from "@/src/features/operations/presentation/OperationCard";
 import { OperationFormModal } from "@/src/features/operations/presentation/OperationFormModal";
-import { HttpMonthlyEventsGateway } from "@/src/features/events/infrastructure/HttpMonthlyEventsGateway";
 import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
 import { CalendarElement } from "../domain/calendarContent";
 import { PendingOccurrence } from "../domain/pendingOccurrence";
@@ -36,10 +35,6 @@ export const CalendarElements = ({
   const { httpClient } = useAuth();
   const gateway = useMemo(
     () => new HttpOneOffOperationsGateway(httpClient),
-    [httpClient],
-  );
-  const events = useMemo(
-    () => new HttpMonthlyEventsGateway(httpClient),
     [httpClient],
   );
   const state = useOneOffOperations(gateway),
@@ -117,20 +112,11 @@ export const CalendarElements = ({
               </Pressable>
             </View>
           )}
-          {item.nature === "potential" && item.event && (
-            <Pressable
-              accessibilityRole="button"
-              disabled={busy || simulation.mutationStatus === "loading"}
-              style={styles.button}
-              onPress={() =>
-                void simulation.mutate(
-                  () => events.confirmPotentialEvent(item.event!.id),
-                  "Événement confirmé, toujours prévu.",
-                )
-              }
-            >
-              <Text style={styles.buttonText}>Confirmer {item.title}</Text>
-            </Pressable>
+          {item.nature === "potential" && (
+            <Text style={styles.text}>
+              Modification, confirmation et suppression dans le panneau
+              Simulation.
+            </Text>
           )}
         </View>
       ))}

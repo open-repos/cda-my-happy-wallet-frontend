@@ -1,3 +1,4 @@
+import { ActionButton } from "@/src/design/ActionButton";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -117,21 +118,16 @@ export const CategoriesScreen = () => {
               Nommez et colorez les catégories qui classent vos entrées et vos
               dépenses.
             </Text>
-            <Pressable
+            <ActionButton
+              action="add"
+              label="Ajouter une catégorie"
               accessibilityRole="button"
               onPress={() => open(null)}
               style={({ pressed }) => [
                 styles.addButton,
                 pressed && styles.pressed,
               ]}
-            >
-              <Ionicons
-                color={colors.actionPrimaryText}
-                name="add-circle-outline"
-                size={21}
-              />
-              <Text style={styles.addLabel}>Ajouter une catégorie</Text>
-            </Pressable>
+            ></ActionButton>
             {state.message && !isFormOpen ? (
               <FeedbackBanner
                 kind={state.mutationStatus === "error" ? "error" : "success"}
@@ -166,7 +162,8 @@ export const CategoriesScreen = () => {
                 <Text style={styles.cardHint}>Sans couleur</Text>
               )}
             </View>
-            <Pressable
+            <ActionButton
+              action="edit"
               accessibilityLabel={`Modifier ${item.name}`}
               accessibilityRole="button"
               onPress={() => open(item)}
@@ -174,13 +171,7 @@ export const CategoriesScreen = () => {
                 styles.editButton,
                 pressed && styles.pressed,
               ]}
-            >
-              <Ionicons
-                color={colors.actionSecondaryText}
-                name="create-outline"
-                size={22}
-              />
-            </Pressable>
+            ></ActionButton>
           </View>
         )}
       />

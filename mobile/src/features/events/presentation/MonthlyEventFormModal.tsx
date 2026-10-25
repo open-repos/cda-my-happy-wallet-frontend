@@ -1,3 +1,5 @@
+import { useConfirmationFocus } from "@/src/design/useConfirmationFocus";
+import { ActionButton } from "@/src/design/ActionButton";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState } from "react";
 import {
@@ -84,6 +86,8 @@ export const MonthlyEventFormModal = ({
   const [errors, setErrors] = useState<EventDraftErrors>({});
   // Confirmation dans le formulaire : `Alert.alert` est sans effet sur le Web.
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const { cancel: confirmationCancelRef, setTrigger: setDeleteTrigger } =
+    useConfirmationFocus(isConfirmingDelete);
   const repeats = draft.recurrence !== "AUCUNE";
 
   const update = <K extends keyof EventDraft>(key: K, value: EventDraft[K]) => {
@@ -255,6 +259,7 @@ export const MonthlyEventFormModal = ({
                   ) : null}
                   <View style={styles.confirmationActions}>
                     <Pressable
+                      ref={confirmationCancelRef}
                       accessibilityRole="button"
                       disabled={isSaving}
                       onPress={() => setIsConfirmingDelete(false)}
@@ -262,21 +267,24 @@ export const MonthlyEventFormModal = ({
                     >
                       <Text style={styles.secondaryLabel}>Annuler</Text>
                     </Pressable>
-                    <Pressable
+                    <ActionButton
+                      action="delete"
+                      label="Oui, supprimer"
                       accessibilityRole="button"
                       disabled={isSaving}
                       onPress={onDelete}
                       style={[styles.button, styles.deleteButton]}
-                    >
-                      <Text style={styles.deleteLabel}>Oui, supprimer</Text>
-                    </Pressable>
+                    ></ActionButton>
                   </View>
                 </View>
               ) : null}
 
               <View style={styles.actions}>
                 {event != null && !isConfirmingDelete ? (
-                  <Pressable
+                  <ActionButton
+                    action="delete"
+                    ref={setDeleteTrigger}
+                    label="Supprimer"
                     accessibilityRole="button"
                     disabled={isSaving}
                     onPress={() => setIsConfirmingDelete(true)}
@@ -285,9 +293,7 @@ export const MonthlyEventFormModal = ({
                       styles.deleteButton,
                       styles.pushLeft,
                     ]}
-                  >
-                    <Text style={styles.deleteLabel}>Supprimer</Text>
-                  </Pressable>
+                  ></ActionButton>
                 ) : null}
                 <Pressable
                   accessibilityRole="button"
