@@ -1,3 +1,4 @@
+import { CategorySelect } from "../Categories/CategorySelect";
 import React, { useRef, useState } from "react";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import { validateOperation } from "../../utils/oneOffOperationForm";
@@ -38,13 +39,7 @@ export const OneOffInlineEditor = ({
       <label htmlFor={props.id}>
         {label}
         {name === "categoryId" ? (
-          <select {...props}>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <CategorySelect {...props} categories={categories} />
         ) : name === "kind" ? (
           <select {...props}>
             <option value="DEPENSE">Dépense</option>

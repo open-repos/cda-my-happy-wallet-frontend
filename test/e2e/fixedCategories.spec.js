@@ -109,11 +109,12 @@ for (const width of [320, 390, 1440]) {
       name: "Catégorie",
       exact: true,
     });
-    await expect(selector).toHaveValue("10");
+    await expect(selector).toContainText("Assurances");
+    await selector.click();
     await expect(
-      selector.getByRole("option", { name: "Salaires" })
+      page.getByRole("listbox").getByRole("option", { name: "Salaires" })
     ).toHaveCount(0);
-    await selector.selectOption("12");
+    await page.getByRole("option", { name: "Personnel" }).click();
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth > innerWidth
@@ -131,17 +132,20 @@ for (const width of [320, 390, 1440]) {
     await page
       .getByRole("button", { name: "Modifier Assurance habitation" })
       .click();
-    await selector.selectOption("");
+    await selector.click();
+    await page.getByRole("option", { name: "Non catégorisé" }).click();
     await page.getByRole("button", { name: "Enregistrer la charge" }).click();
     await expect(
       item().locator(".category-label:visible").first()
     ).toContainText("Non catégorisé");
     expect(writes[1].categoryId).toBeNull();
     await page.getByRole("button", { name: "Modifier Salaire" }).click();
-    await expect(selector).toHaveValue("11");
+    await expect(selector).toContainText("Salaires");
+    await selector.click();
     await expect(
-      selector.getByRole("option", { name: "Assurances" })
+      page.getByRole("listbox").getByRole("option", { name: "Assurances" })
     ).toHaveCount(0);
+    await page.keyboard.press("Escape");
     await page.getByRole("button", { name: "Annuler", exact: true }).click();
   });
 }

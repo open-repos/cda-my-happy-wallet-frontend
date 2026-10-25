@@ -1,9 +1,6 @@
 import React from "react";
-import { CategoryMark } from "../Categories/CategoryLabel";
-import {
-  compatibleFixedCategories,
-  fixedCategory,
-} from "../../utils/fixedCategories";
+import { CategorySelect } from "../Categories/CategorySelect";
+import { compatibleFixedCategories } from "../../utils/fixedCategories";
 
 export const FixedCategorySelect = ({
   id,
@@ -21,39 +18,24 @@ export const FixedCategorySelect = ({
   const selected =
     options.find((category) => String(category.id) === String(value)) ??
     currentCategory;
-  const missing =
-    value !== "" &&
-    !options.some((category) => String(category.id) === String(value));
   return (
     <div className="fixed-inline__field fixed-category-select">
       <label htmlFor={id} className={compact ? undefined : "sr-only"}>
         Catégorie
       </label>
-      <div className="fixed-category-select__control">
-        <CategoryMark category={value === "" ? fixedCategory({}) : selected} />
-        <select
-          id={id}
-          name="categoryId"
-          form={form}
-          value={value}
-          onChange={onChange}
-          disabled={busy || source.status !== "success"}
-          aria-invalid={Boolean(error)}
-          aria-describedby={error ? `${id}-error` : undefined}
-        >
-          <option value="">Non catégorisé</option>
-          {missing && (
-            <option value={value}>
-              {selected?.name ?? "Catégorie indisponible"}
-            </option>
-          )}
-          {options.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <CategorySelect
+        id={id}
+        name="categoryId"
+        form={form}
+        value={value}
+        onChange={onChange}
+        categories={options}
+        currentCategory={selected}
+        placeholder="Non catégorisé"
+        disabled={busy || source.status !== "success"}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? `${id}-error` : undefined}
+      />
       {source.status === "loading" && (
         <span className="fixed-category-select__notice">
           Chargement des catégories…
@@ -75,7 +57,7 @@ export const FixedCategorySelect = ({
         </>
       )}
       {error && (
-        <span id={`${id}-error`} className="fixed-inline__error">
+        <span role="alert" id={`${id}-error`} className="fixed-inline__error">
           {error}
         </span>
       )}
