@@ -239,6 +239,15 @@ test("exposes the checked state of every radio option", async ({ page }) => {
   await page.getByRole("radio", { name: "Entrée" }).click();
   await expect(page.getByRole("radio", { name: "Entrée" })).toBeChecked();
   await expect(page.getByRole("radio", { name: "Dépense" })).not.toBeChecked();
+  const transport = page.getByRole("radio", { name: "Transport", exact: true });
+  await expect(transport.getByTestId("category-mark-icon")).toBeVisible();
+  await expect(
+    page
+      .getByRole("radio", { name: "Alimentation", exact: true })
+      .getByTestId("category-mark-fallback"),
+  ).toBeVisible();
+  await transport.click();
+  await expect(transport).toBeChecked();
   await page.getByRole("radio", { name: "Alimentation" }).click();
   await expect(page.getByRole("radio", { name: "Alimentation" })).toBeChecked();
   await page.getByRole("button", { name: "Fermer le formulaire" }).click();

@@ -207,6 +207,20 @@ for (const theme of ["light", "dark"])
         .click();
       await expect(region).toContainText(/500,00\s*€/);
       await expect(region).toContainText(fixtures.goals[1].title);
+      await page.screenshot({
+        path: test.info().outputPath(`expanded-${width}-${theme}.png`),
+        fullPage: true,
+      });
+      // An expanded details/table must scroll inside its own region, not widen the page.
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth)
+      ).toBeLessThanOrEqual(width + 1);
+      const tableScroll = region.getByRole("region", {
+        name: "Tableau des trajectoires, défilement horizontal",
+      });
+      expect((await tableScroll.boundingBox()).width).toBeLessThanOrEqual(
+        width
+      );
       expect(calls.at(-1)).toMatchObject({
         currency: "EUR",
         scenario: "standard",
