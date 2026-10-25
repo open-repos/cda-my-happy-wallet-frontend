@@ -3,7 +3,6 @@ import { OneOffOperationList } from "../OneOffOperations/OneOffOperationList";
 import { PendingOccurrences } from "./PendingOccurrences";
 import { formatMoney, longDate } from "./budgetFormat";
 import { LiveMessage } from "../LiveMessage";
-import { monthlyEventsService } from "../../services/monthlyEventsService";
 import { useSimulation } from "../Simulation/SimulationContext";
 
 /** Reuses the operation inline editor and occurrence commands; owns no persistence. */
@@ -124,19 +123,9 @@ export const CalendarElements = ({ items, budget, disabled, onRealize }) => {
                 )}
               </div>
               {item.nature === "potential" && (
-                <button
-                  type="button"
-                  className="monthly-event-button"
-                  disabled={disabled}
-                  onClick={() =>
-                    simulation.mutate(
-                      () => monthlyEventsService.confirmPotentialEvent(item.id),
-                      "Événement confirmé, toujours prévu."
-                    )
-                  }
-                >
-                  Confirmer {item.title}
-                </button>
+                <a href="#simulation-panel-title">
+                  Gérer {item.title} dans la Simulation
+                </a>
               )}
             </li>
           ))}

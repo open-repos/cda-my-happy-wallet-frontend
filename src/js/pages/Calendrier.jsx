@@ -1,5 +1,5 @@
 import { useQuickAdd } from "../components/QuickAdd/QuickAddContext";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { MonthlyEventForm } from "../components/MonthlyEvents/MonthlyEventForm";
 import { OneOffOperationForm } from "../components/OneOffOperations/OneOffOperationForm";
@@ -122,12 +122,26 @@ function Calendrier() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [mode, setMode] = useState(readMode);
   const [form, setFormValue] = useState(null);
+  const formTrigger = useRef(null),
+    formWasOpen = useRef(false);
   const setForm = (value) => {
+    if (value && !form) formTrigger.current = document.activeElement;
     setFormValue(value);
     simulation.setActiveForm(value ? "calendar" : null);
   };
   const visibleForm =
     !simulation.available || simulation.activeForm === "calendar" ? form : null;
+  useEffect(() => {
+    if (formWasOpen.current && !visibleForm)
+      requestAnimationFrame(() => {
+        (formTrigger.current?.isConnected
+          ? formTrigger.current
+          : document.querySelector('.budget-day[aria-pressed="true"]') ??
+            document.querySelector(".budget-calendar__quick-add button")
+        )?.focus();
+      });
+    formWasOpen.current = Boolean(visibleForm);
+  }, [visibleForm]);
   const budget = useBudgetCalendar(month, selectedDate);
   const events = useMonthlyEvents(month);
   const announcesSummaryLoading = useAnnouncesLoading(

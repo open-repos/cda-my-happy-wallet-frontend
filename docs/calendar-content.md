@@ -40,11 +40,12 @@ Projection pure séparée des services paginés, hooks gardés par leur clé de
 requête et composants de présentation. Marqueurs et légende partagent les mêmes
 formes/libellés ; plusieurs types peuvent apparaître. Les modes de montant
 restent ceux de la synthèse. Aucun total n'est calculé depuis la projection.
-Le détail commun affiche tous les éléments, dans un ordre stable par date,
-nature, titre puis identité. Le filtre des opérations existant démarre sur Tout
+La projection trie par date, nature, titre puis identité ; le détail Web regroupe
+les opérations réelles, les prévus/retards puis les potentiels/décisions. Le filtre des opérations existant démarre sur Tout
 et indique clairement sa portée ; les autres natures restent visibles.
 L'éditeur inline, les formulaires et commandes de conversion existants sont
-réutilisés. Les écritures acquittées restent réussies si une relecture échoue ;
+réutilisés. La gestion des potentiels renvoie au panneau Simulation existant,
+avec sa confirmation nominative, pour ne pas créer une seconde commande concurrente. Les écritures acquittées restent réussies si une relecture échoue ;
 Réessayer ne fait que des GET. L'invalidation conserve le mois et le jour.
 
 ## Preuves et limites
