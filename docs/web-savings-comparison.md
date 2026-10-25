@@ -80,3 +80,12 @@ Web/PWA uniquement ; PR native #288 et ticket de comparaison native #285 sépar�
 L’analyse historique #286 reste une deuxième étape. Cette release ne l’annonce pas.
 Aucune migration ou nouvelle dépendance. Déployer backend 1.6.0 avant ce frontend.
 Retour arrière : revenir au frontend précédent avant de retirer la route backend.
+
+## Revue des références
+
+Les six vues de comparaison et les six vues Objectifs mises à jour ont été
+relues depuis l’artefact du runner canonique 40199410863 (Chromium 149), avec
+contrôle des montants, des dates, des titres longs et des deux thèmes. Seules
+ces douze références sont ajoutées/remplacées. Les seuils et assertions restent
+inchangés. La CI fonctionnelle du même code valide 608 tests et 36 parcours
+full-stack réels, dont trois parcours de simulation sur API/MySQL/Redis.
