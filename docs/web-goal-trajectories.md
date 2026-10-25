@@ -65,7 +65,8 @@ passent avec les données synthétiques ; ils ne remplacent pas une recette sur
 Safari/iPhone réel ou l’intégration API/MySQL/Redis jetables.
 
 Les six références de la page Objectifs changent intentionnellement. Elles
-doivent être relues dans le runner canonique avant remplacement ; aucune
+ont été relues dans l’artefact canonique du run 40195771223, après correction
+du cadrage au début de page. Seules ces six images ont été remplacées ; aucune
 tolérance, seuil de contraste ou assertion de géométrie n’a été assoupli.
 
 Pas de migration, configuration, dépendance ou formule serveur modifiée.
