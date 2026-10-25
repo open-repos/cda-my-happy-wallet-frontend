@@ -1,3 +1,4 @@
+import { ActionButton } from "../Actions/ActionButton";
 import React, { useEffect, useRef, useState } from "react";
 import addIcon from "../../../assets/icons/add.svg";
 import { useAnnouncesLoading } from "../../hooks/useAnnouncesLoading";
@@ -88,14 +89,14 @@ export const FinancialGoalsSection = ({ initialGoalId = null }) => {
           <p>Suivez ce que vous mettez de côté et la date visée.</p>
         </div>
         {state.status === "success" && state.goals.length > 0 && (
-          <button
+          <ActionButton
+            action="add"
             type="button"
             className="monthly-event-button"
             onClick={(event) => open(null, event.currentTarget)}
           >
-            <img src={addIcon} alt="" aria-hidden="true" />
             Ajouter un objectif
-          </button>
+          </ActionButton>
         )}
       </header>
       <LiveMessage

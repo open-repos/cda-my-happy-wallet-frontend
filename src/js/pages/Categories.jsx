@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Actions/ActionButton";
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { LiveMessage } from "../components/LiveMessage";
@@ -77,16 +78,16 @@ function Categories() {
             </Link>
           </p>
         </div>
-        <button
+        <ActionButton
+          action="add"
           ref={addButtonRef}
           type="button"
           className="one-off-button"
           onClick={openCreate}
           disabled={state.status !== "success"}
         >
-          <img src={addIcon} alt="" aria-hidden="true" />
           Ajouter une catégorie
-        </button>
+        </ActionButton>
       </header>
       <LiveMessage
         message={state.message}
@@ -162,14 +163,15 @@ function Categories() {
                     <span className="categories-list__hint">Sans couleur</span>
                   )}
                 </span>
-                <button
+                <ActionButton
+                  action="edit"
                   type="button"
                   className="one-off-button one-off-button--secondary"
                   onClick={(event) => openEdit(category, event)}
                   aria-label={`Modifier ${category.name}`}
                 >
                   Modifier
-                </button>
+                </ActionButton>
               </li>
             ))}
           </ul>

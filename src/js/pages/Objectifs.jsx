@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Actions/ActionButton";
 import React, { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import addIcon from "../../assets/icons/add.svg";
@@ -48,7 +49,8 @@ function Objectifs() {
             Anticipez les entrées et dépenses qui influenceront votre budget.
           </p>
         </div>
-        <button
+        <ActionButton
+          action="add"
           type="button"
           className="monthly-event-button"
           onClick={() => {
@@ -57,9 +59,8 @@ function Objectifs() {
           }}
           disabled={state.status !== "success"}
         >
-          <img src={addIcon} alt="" aria-hidden="true" />
           Ajouter un événement
-        </button>
+        </ActionButton>
       </header>
       <LiveMessage
         message={state.message}
@@ -98,13 +99,14 @@ function Objectifs() {
           <p>
             Ajoutez une dépense ou une entrée future, ponctuelle ou mensuelle.
           </p>
-          <button
+          <ActionButton
+            action="add"
             type="button"
             className="monthly-event-button"
             onClick={() => setFormOpen(true)}
           >
             Ajouter mon premier événement
-          </button>
+          </ActionButton>
         </section>
       )}
       {state.status === "success" && state.events.length > 0 && (

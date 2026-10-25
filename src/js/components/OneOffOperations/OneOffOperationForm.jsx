@@ -1,3 +1,5 @@
+import { DeleteConfirmation } from "../Actions/DeleteConfirmation";
+import { ActionButton } from "../Actions/ActionButton";
 import { validateOperation } from "../../utils/oneOffOperationForm";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import React, { useEffect, useRef, useState } from "react";
@@ -33,6 +35,7 @@ export const OneOffOperationForm = ({
   const [errors, setErrors] = useState({});
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const titleRef = useRef(null);
+  const deleteTrigger = useRef(null);
   const saving = useRef(false);
 
   useFormFocus(titleRef);
@@ -184,29 +187,26 @@ export const OneOffOperationForm = ({
         </fieldset>
         <div className="one-off-form__actions">
           {operation && !isConfirmingDelete && (
-            <button
+            <ActionButton
+              action="delete"
+              ref={deleteTrigger}
               type="button"
               className="one-off-button one-off-button--danger"
               onClick={() => setIsConfirmingDelete(true)}
               disabled={isSaving}
             >
               Supprimer
-            </button>
+            </ActionButton>
           )}
           {operation && isConfirmingDelete && (
-            <div className="one-off-delete-confirmation" role="alert">
-              <span>Supprimer « {operation.title} » ?</span>
-              <button type="button" onClick={onDelete} disabled={isSaving}>
-                Oui, supprimer
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsConfirmingDelete(false)}
-                disabled={isSaving}
-              >
-                Annuler
-              </button>
-            </div>
+            <DeleteConfirmation
+              title={operation.title}
+              busy={isSaving}
+              onConfirm={onDelete}
+              onCancel={() => setIsConfirmingDelete(false)}
+              returnFocusRef={deleteTrigger}
+              className="one-off-delete-confirmation"
+            />
           )}
           <button
             type="button"

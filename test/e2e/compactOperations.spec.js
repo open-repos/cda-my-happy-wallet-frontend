@@ -46,7 +46,7 @@ for (const width of [320, 390, 768, 1440])
       await fits(page);
       if (width === 1440) {
         await page.mouse.move(0, 0);
-        await expect(edit.locator("..")).toHaveCSS("opacity", "0");
+        await expect(edit.locator("..")).toHaveCSS("opacity", "1");
         await edit.focus();
         await expect(edit.locator("..")).toHaveCSS("opacity", "1");
       }
@@ -54,6 +54,18 @@ for (const width of [320, 390, 768, 1440])
         const box = await edit.boundingBox();
         expect(box.width).toBeGreaterThanOrEqual(44);
         expect(box.height).toBeGreaterThanOrEqual(44);
+      }
+      if (width < 768) {
+        const fab = page.locator(".quick-add-fab");
+        await expect(fab).toBeVisible();
+        expect(
+          await fab.evaluate((el) => getComputedStyle(el).boxShadow)
+        ).not.toBe("none");
+        expect(
+          await fab.evaluate((el) =>
+            parseFloat(getComputedStyle(el).borderTopWidth)
+          )
+        ).toBeGreaterThanOrEqual(2);
       }
       await edit.click();
       const title = page.getByLabel("Titre", { exact: true });

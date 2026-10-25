@@ -58,6 +58,12 @@ export const QuickAddProvider = ({ children }) => {
         : fab.current
       )?.focus()
     );
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    // Restore after the child form's cleanup; its focus hook also restores focus.
+    if (wasOpen.current && !panel) restore();
+    wasOpen.current = Boolean(panel);
+  }, [panel]);
   const contextDate =
     location.pathname === "/calendrier" && calendarDate
       ? calendarDate
@@ -77,7 +83,6 @@ export const QuickAddProvider = ({ children }) => {
     if (busy) return;
     setPanel(null);
     simulation.setActiveForm(null);
-    restore();
   };
   const loadCategories = useCallback(async () => {
     setCategoryStatus("loading");
@@ -155,7 +160,6 @@ export const QuickAddProvider = ({ children }) => {
             : "Ajout enregistré.",
         error: false,
       });
-      restore();
     } else
       setFeedback({
         text: "L’ajout n’a pas pu être enregistré. Vérifiez les champs puis réessayez.",

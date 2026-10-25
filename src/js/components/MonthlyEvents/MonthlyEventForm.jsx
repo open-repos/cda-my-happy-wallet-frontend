@@ -1,3 +1,5 @@
+import { DeleteConfirmation } from "../Actions/DeleteConfirmation";
+import { ActionButton } from "../Actions/ActionButton";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -67,6 +69,7 @@ export const MonthlyEventForm = ({
   const [errors, setErrors] = useState({});
   const [confirmDelete, setConfirmDelete] = useState(false);
   const titleRef = useRef(null);
+  const deleteTrigger = useRef(null);
   const saving = useRef(false);
   useFormFocus(titleRef);
   useEffect(() => {
@@ -251,29 +254,26 @@ export const MonthlyEventForm = ({
         </fieldset>
         <div className="monthly-event-form__actions">
           {event && !confirmDelete && (
-            <button
+            <ActionButton
+              action="delete"
+              ref={deleteTrigger}
               type="button"
               className="monthly-event-button monthly-event-button--danger"
               onClick={() => setConfirmDelete(true)}
               disabled={isSaving}
             >
               Supprimer
-            </button>
+            </ActionButton>
           )}
           {event && confirmDelete && (
-            <div className="monthly-event-delete-confirmation" role="alert">
-              <span>Confirmer la suppression ?</span>
-              <button type="button" onClick={onDelete} disabled={isSaving}>
-                Oui, supprimer
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmDelete(false)}
-                disabled={isSaving}
-              >
-                Annuler
-              </button>
-            </div>
+            <DeleteConfirmation
+              title={event.title}
+              busy={isSaving}
+              onConfirm={onDelete}
+              onCancel={() => setConfirmDelete(false)}
+              returnFocusRef={deleteTrigger}
+              className="monthly-event-delete-confirmation"
+            />
           )}
           <button
             type="button"

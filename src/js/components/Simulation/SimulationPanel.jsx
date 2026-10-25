@@ -1,3 +1,4 @@
+import { ActionButton } from "../Actions/ActionButton";
 import React, { useEffect, useRef, useState } from "react";
 import { useSimulation } from "./SimulationContext";
 import { SimulationReadout } from "./SimulationControls";
@@ -182,7 +183,8 @@ export const SimulationPanel = ({ month, disabled = false }) => {
                       >
                         Confirmer
                       </button>
-                      <button
+                      <ActionButton
+                        action="edit"
                         type="button"
                         className="monthly-event-button monthly-event-button--secondary"
                         disabled={busy}
@@ -194,8 +196,9 @@ export const SimulationPanel = ({ month, disabled = false }) => {
                         }}
                       >
                         Modifier
-                      </button>
-                      <button
+                      </ActionButton>
+                      <ActionButton
+                        action="delete"
                         type="button"
                         className="monthly-event-button monthly-event-button--secondary"
                         disabled={busy}
@@ -205,7 +208,7 @@ export const SimulationPanel = ({ month, disabled = false }) => {
                         }
                       >
                         Supprimer
-                      </button>
+                      </ActionButton>
                     </div>
                   </li>
                 ))}

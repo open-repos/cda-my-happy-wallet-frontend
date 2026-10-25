@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Actions/ActionButton";
 import { useQuickAdd } from "../components/QuickAdd/QuickAddContext";
 import { useSimulation } from "../components/Simulation/SimulationContext";
 import React, { useEffect, useRef, useState } from "react";
@@ -91,16 +92,16 @@ function ListeOperations() {
             </Link>
           </p>
         </div>
-        <button
+        <ActionButton
+          action="add"
           ref={addRef}
           type="button"
           className="one-off-button"
           onClick={openCreate}
           disabled={state.status !== "success"}
         >
-          <img src={addIcon} alt="" aria-hidden="true" />
           Ajouter une opération
-        </button>
+        </ActionButton>
       </header>
       <LiveMessage
         message={state.message}
@@ -143,9 +144,14 @@ function ListeOperations() {
             Ajoutez votre première entrée ou dépense pour commencer à suivre
             votre budget.
           </p>
-          <button type="button" className="one-off-button" onClick={openCreate}>
+          <ActionButton
+            action="add"
+            type="button"
+            className="one-off-button"
+            onClick={openCreate}
+          >
             Ajouter ma première opération
-          </button>
+          </ActionButton>
         </section>
       )}
       {state.status === "success" && state.operations.length > 0 && (
@@ -225,13 +231,14 @@ function ListeOperations() {
           >
             Annuler
           </button>
-          <button
+          <ActionButton
+            action="delete"
             type="button"
             className="one-off-button one-off-button--danger"
             onClick={remove}
           >
             Oui, supprimer
-          </button>
+          </ActionButton>
         </fieldset>
       )}
       {isFormOpen && (

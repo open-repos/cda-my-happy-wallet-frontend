@@ -1,3 +1,4 @@
+import { ActionButton } from "../Actions/ActionButton";
 import { CompactMoneyList } from "../CompactOperations/CompactMoneyList";
 import { useSimulation } from "../Simulation/SimulationContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -109,7 +110,8 @@ export const FixedOperations = () => {
   };
   const actions = (row) => (
     <div className="fixed-operations__row-actions">
-      <button
+      <ActionButton
+        action="edit"
         type="button"
         className="one-off-button one-off-button--secondary fixed-operations__icon-action"
         disabled={busy || Boolean(editor) || Boolean(deleting)}
@@ -117,9 +119,10 @@ export const FixedOperations = () => {
         id={`fixed-edit-${row.kind}-${row.idOperationFixe}`}
         onClick={(event) => openEditor(event, row)}
       >
-        <FontAwesomeIcon icon={faPen} aria-hidden="true" />
-      </button>
-      <button
+        Modifier
+      </ActionButton>
+      <ActionButton
+        action="delete"
         type="button"
         className="one-off-button one-off-button--secondary fixed-operations__icon-action"
         disabled={busy || Boolean(editor) || Boolean(deleting)}
@@ -132,8 +135,8 @@ export const FixedOperations = () => {
           setDeleting(row);
         }}
       >
-        <FontAwesomeIcon icon={faTrash} aria-hidden="true" />
-      </button>
+        Supprimer
+      </ActionButton>
     </div>
   );
   const inlineEditor = (row) => (
@@ -183,7 +186,8 @@ export const FixedOperations = () => {
     >
       <div className="fixed-operations__heading">
         <h1>Charges et entrées fixes</h1>
-        <button
+        <ActionButton
+          action="add"
           ref={addRef}
           id="fixed-add"
           type="button"
@@ -197,7 +201,7 @@ export const FixedOperations = () => {
           onClick={(event) => openEditor(event)}
         >
           Ajouter
-        </button>
+        </ActionButton>
       </div>
       <LiveMessage
         message={charges.message.text}

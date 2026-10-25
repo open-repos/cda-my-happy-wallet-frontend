@@ -173,9 +173,9 @@
 }
 .compact-money-table__actions > div {
   display: flex;
-  width: 88px;
-  gap: 0;
-  flex-wrap: nowrap;
+  width: 100%;
+  gap: 0.25rem;
+  flex-wrap: wrap;
 }
 .compact-money-table__actions button,
 .compact-money-table__actions .one-off-button {
@@ -194,13 +194,6 @@
 }
 .compact-money-table__actions button:hover {
   background: var(--ds-color-background-canvas);
-}
-@media (hover: hover) and (min-width: 64rem) {
-  .compact-money-table__row:not(:hover):not(:focus-within)
-    .compact-money-table__actions
-    > div {
-    opacity: 0;
-  }
 }
 .compact-money-table__details td {
   padding: 1rem;
@@ -362,4 +355,10 @@
   .compact-money-table .compact-money-table__row .compact-money-table__amount {
     text-align: left;
   }
+}
+
+.compact-money-table__actions .action-button {
+  flex: 1 1 100%;
+  padding: 0.5rem 0.25rem;
+  width: 100%;
 }
