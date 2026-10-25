@@ -127,3 +127,20 @@ describe("authoritative savings trajectory contract", () => {
     expect(apiPrivate.post).not.toHaveBeenCalled();
   });
 });
+
+it.each(["zero", "reached", "deficit"])(
+  "accepts the real backend %s edge contract",
+  (kind) => {
+    const edge = fixtures.edges[kind];
+    const query = {
+      ...request,
+      currentRemainingVariableExpense: "0.00",
+      futureAdditionalVariableExpense: "0.00",
+      monthlySafetyMargin: "0.00",
+    };
+    expect(
+      parseSavingsTrajectories(edge.data, query, edge.goal).projections
+        .reasonable.reachReason
+    ).toBe(edge.data.projections.reasonable.reachReason);
+  }
+);

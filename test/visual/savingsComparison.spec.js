@@ -116,6 +116,11 @@ for (const theme of ["light", "dark"])
         () => document.documentElement.scrollWidth <= innerWidth + 1
       )
     ).toBe(true);
+    // Retain the full-page candidate for review even when its first reference is absent.
+    await page.screenshot({
+      path: test.info().outputPath(`savings-comparison-${theme}-candidate.png`),
+      fullPage: true,
+    });
     await expect(page).toHaveScreenshot(`savings-comparison-${theme}.png`, {
       fullPage: true,
     });
