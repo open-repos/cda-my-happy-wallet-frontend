@@ -1,14 +1,11 @@
 import { useQuickAdd } from "../components/QuickAdd/QuickAddContext";
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { formatEventAmount } from "../components/MonthlyEvents/MonthlyEventList";
 import { MonthlyEventForm } from "../components/MonthlyEvents/MonthlyEventForm";
 import { OneOffOperationForm } from "../components/OneOffOperations/OneOffOperationForm";
 import { BudgetSummary } from "../components/BudgetCalendar/BudgetSummary";
 import { CalendarModeToggle } from "../components/BudgetCalendar/CalendarModeToggle";
-import { PendingOccurrences } from "../components/BudgetCalendar/PendingOccurrences";
 import { RealizeOccurrenceForm } from "../components/BudgetCalendar/RealizeOccurrenceForm";
-import { CategoryLabel } from "../components/Categories/CategoryLabel";
 import { LiveMessage } from "../components/LiveMessage";
 import { useAnnouncesLoading } from "../hooks/useAnnouncesLoading";
 import {
@@ -17,6 +14,12 @@ import {
   longDate,
   monthLabel,
 } from "../components/BudgetCalendar/budgetFormat";
+import {
+  CalendarMarkers,
+  CalendarLegend,
+} from "../components/BudgetCalendar/CalendarMarkers";
+import { CalendarElements } from "../components/BudgetCalendar/CalendarElements";
+import { calendarCounts, CALENDAR_TYPES } from "../utils/calendarContent";
 import { useBudgetCalendar } from "../hooks/useBudgetCalendar";
 import { useMonthlyEvents } from "../hooks/useMonthlyEvents";
 import { useSimulation } from "../components/Simulation/SimulationContext";
@@ -66,13 +69,6 @@ const readMode = () => {
     return "markers";
   }
 };
-
-const groupByDate = (items, dateOf) =>
-  items.reduce(
-    (map, item) =>
-      map.set(dateOf(item), [...(map.get(dateOf(item)) || []), item]),
-    new Map()
-  );
 
 /** Valeur courte d'une case selon le mode : aucune, dépenses ou prévisionnel. */
 const cellValue = (mode, day) => {
@@ -138,9 +134,9 @@ function Calendrier() {
     budget.summaryStatus,
     month
   );
-  const announcesOperationsLoading = useAnnouncesLoading(
+  const announcesContentLoading = useAnnouncesLoading(
     budget.operationsStatus,
-    `${month}:${selectedDate}`
+    month
   );
   // Garder le déclencheur focalisable pendant les actualisations suivantes.
   const [eventsLoaded, setEventsLoaded] = useState(false);
@@ -160,28 +156,6 @@ function Calendrier() {
   const summaryDays = useMemo(
     () => new Map((budget.summary?.days || []).map((day) => [day.date, day])),
     [budget.summary]
-  );
-  const pendingByDate = useMemo(
-    () => groupByDate(budget.pending, (item) => item.occurrenceDate),
-    [budget.pending]
-  );
-  const visiblePending = budget.pending.filter((item) =>
-    selectedDate
-      ? item.occurrenceDate === selectedDate
-      : item.overdue || item.occurrenceDate.startsWith(month)
-  );
-  const occurrencesByDate = useMemo(
-    () => groupByDate(events.occurrences || [], (item) => item.occurrenceDate),
-    [events.occurrences]
-  );
-  const operationsByDate = useMemo(
-    () =>
-      groupByDate(budget.operations, (operation) => operation.operationDate),
-    [budget.operations]
-  );
-  const categoryById = useMemo(
-    () => new Map(budget.categories.map((category) => [category.id, category])),
-    [budget.categories]
   );
   const currency = budget.summary?.currency || "EUR";
   const isSaving =
@@ -328,22 +302,11 @@ function Calendrier() {
             {days.map((date) => {
               const day = summaryDays.get(date);
               const inMonth = date.startsWith(month);
-              const pendingItems = pendingByDate.get(date) || [];
-              const potentialCount = simulation.enabled
-                ? (occurrencesByDate.get(date) || []).filter(
-                    (item) => item.status === "POTENTIEL"
-                  ).length
-                : 0;
-              const overdueCount = pendingItems.filter(
-                (item) => item.overdue
-              ).length;
-              // Un mois futur n'a pas de synthèse : les occurrences suffisent.
-              const plannedCount = budget.summary
-                ? Math.max(pendingItems.length, day?.plannedCount ?? 0)
-                : (occurrencesByDate.get(date) || []).length;
-              const confirmedCount = Math.max(0, plannedCount - potentialCount);
-              const hasOperation =
-                day && (Number(day.expense) > 0 || Number(day.income) > 0);
+              const contents = budget.content.filter(
+                (item) => item.date === date
+              );
+              const counts = calendarCounts(contents);
+              const ready = budget.operationsStatus === "success";
               const value = inMonth ? cellValue(mode, day) : null;
               const className = [
                 "monthly-calendar__day",
@@ -361,14 +324,21 @@ function Calendrier() {
                   className={className}
                   onClick={() => selectDay(date)}
                   aria-pressed={date === selectedDate}
-                  aria-label={cellLabel(
+                  aria-label={`${cellLabel(
                     date,
                     inMonth ? day : null,
-                    confirmedCount,
-                    overdueCount,
-                    currency,
-                    potentialCount
-                  )}
+                    0,
+                    0,
+                    currency
+                  )}${
+                    ready
+                      ? CALENDAR_TYPES.filter((t) => counts[t.key] > 0)
+                          .map((t) => `, ${counts[t.key]} ${t.label}`)
+                          .join("")
+                      : budget.operationsStatus === "error"
+                      ? ", contenu indisponible"
+                      : ", chargement du contenu"
+                  }`}
                 >
                   <span className="budget-day__number">
                     {Number(date.slice(8, 10))}
@@ -385,60 +355,12 @@ function Calendrier() {
                       {value}
                     </span>
                   )}
-                  <span className="budget-day__markers" aria-hidden="true">
-                    {hasOperation && inMonth && (
-                      <span className="budget-marker budget-marker--real" />
-                    )}
-                    {confirmedCount > 0 && inMonth && (
-                      <span className="budget-marker budget-marker--planned" />
-                    )}
-                    {potentialCount > 0 && inMonth && (
-                      <span className="budget-marker budget-marker--potential" />
-                    )}
-                    {overdueCount > 0 && (
-                      <span className="budget-marker budget-marker--overdue">
-                        !
-                      </span>
-                    )}
-                  </span>
+                  {inMonth && ready && <CalendarMarkers counts={counts} />}
                 </button>
               );
             })}
           </div>
-          <ul className="budget-legend" aria-label="Légende">
-            {simulation.enabled && (
-              <li>
-                <span
-                  className="budget-marker budget-marker--potential"
-                  aria-hidden="true"
-                />
-                Élément potentiel
-              </li>
-            )}
-            <li>
-              <span
-                className="budget-marker budget-marker--real"
-                aria-hidden="true"
-              />
-              Opération réelle
-            </li>
-            <li>
-              <span
-                className="budget-marker budget-marker--planned"
-                aria-hidden="true"
-              />
-              Événement prévu
-            </li>
-            <li>
-              <span
-                className="budget-marker budget-marker--overdue"
-                aria-hidden="true"
-              >
-                !
-              </span>
-              Événement en retard
-            </li>
-          </ul>
+          <CalendarLegend />
         </section>
 
         <section
@@ -447,15 +369,65 @@ function Calendrier() {
         >
           <h2 id="budget-events-title">
             {selectedDate
-              ? `Événements du ${longDate(selectedDate)}`
-              : "Événements à traiter"}
+              ? `Éléments du ${longDate(selectedDate)}`
+              : `Éléments de ${monthLabel(month)}`}
           </h2>
-          <PendingOccurrences
-            occurrences={visiblePending}
+          <PlanningActions
+            onOperation={(event) => openCreation("expense", event)}
+            onEvent={(event) => openCreation("event", event)}
+            onPotential={(event) => openCreation("potential", event)}
             disabled={isSaving}
-            onRealize={(occurrence) => setForm({ type: "realize", occurrence })}
-            onCancel={budget.cancelOccurrence}
+            eventDisabled={isSaving || !eventsLoaded}
           />
+          {selectedDate && (
+            <button
+              type="button"
+              className="budget-link-button"
+              onClick={() => setSelectedDate(null)}
+            >
+              Tout le mois
+            </button>
+          )}
+          <LiveMessage
+            message={
+              announcesContentLoading
+                ? "Chargement des éléments…"
+                : budget.operationsStatus === "error"
+                ? "Les éléments n’ont pas pu être chargés."
+                : ""
+            }
+            isError={budget.operationsStatus === "error"}
+          />
+          {budget.operationsStatus === "error" && (
+            <button
+              type="button"
+              className="monthly-event-button"
+              onClick={budget.retry}
+            >
+              Réessayer les éléments
+            </button>
+          )}
+          {budget.operationsStatus === "success" &&
+            (budget.content.filter((item) =>
+              selectedDate
+                ? item.date === selectedDate
+                : item.date.startsWith(month)
+            ).length === 0 ? (
+              <p>Aucun élément {selectedDate ? "ce jour." : "ce mois."}</p>
+            ) : (
+              <CalendarElements
+                items={budget.content.filter((item) =>
+                  selectedDate
+                    ? item.date === selectedDate
+                    : item.date.startsWith(month)
+                )}
+                budget={budget}
+                disabled={isSaving}
+                onRealize={(occurrence) =>
+                  setForm({ type: "realize", occurrence })
+                }
+              />
+            ))}
         </section>
       </div>
 
@@ -518,110 +490,6 @@ function Calendrier() {
           }}
         />
       )}
-
-      <section
-        className="budget-operations"
-        aria-labelledby="budget-operations-title"
-      >
-        <div className="budget-operations__header">
-          <h2 id="budget-operations-title">
-            {selectedDate
-              ? `Opérations du ${longDate(selectedDate)}`
-              : `Opérations de ${monthLabel(month)}`}
-          </h2>
-          <div className="budget-operations__actions">
-            <PlanningActions
-              onOperation={(event) => openCreation("expense", event)}
-              onEvent={(event) => openCreation("event", event)}
-              onPotential={(event) => openCreation("potential", event)}
-              disabled={isSaving}
-              eventDisabled={isSaving || !eventsLoaded}
-            />
-            {selectedDate && (
-              <button
-                type="button"
-                className="monthly-event-button monthly-event-button--secondary"
-                onClick={() => setSelectedDate(null)}
-              >
-                Tout le mois
-              </button>
-            )}
-          </div>
-        </div>
-        {/* Annonces dans des régions live toujours montées (#164). */}
-        <LiveMessage
-          message={
-            announcesOperationsLoading
-              ? "Chargement des opérations…"
-              : budget.operationsStatus === "error"
-              ? "Les opérations n’ont pas pu être chargées."
-              : ""
-          }
-          isError={budget.operationsStatus === "error"}
-          visible={false}
-        />
-        {budget.operationsStatus === "loading" && (
-          <p>Chargement des opérations…</p>
-        )}
-        {budget.operationsStatus === "error" && (
-          <p>Les opérations n’ont pas pu être chargées.</p>
-        )}
-        {budget.operationsStatus !== "loading" &&
-          budget.operationsStatus !== "error" &&
-          budget.operations.length === 0 && (
-            <p className="budget-help">
-              {selectedDate
-                ? "Aucune opération ce jour."
-                : "Aucune opération enregistrée ce mois-ci."}
-            </p>
-          )}
-        {[...operationsByDate.entries()].map(([date, items]) => (
-          <div key={date} className="budget-operations__group">
-            {!selectedDate && (
-              <h3 className="budget-subtitle">{longDate(date)}</h3>
-            )}
-            <ul className="budget-operation-list">
-              {items.map((operation) => (
-                <li key={operation.id} className="budget-operation">
-                  <span className="budget-operation__label">
-                    <span>{operation.title}</span>
-                    {/* Rien tant que les catégories ne sont pas chargées. */}
-                    {categoryById.has(operation.categoryId) && (
-                      <CategoryLabel
-                        category={categoryById.get(operation.categoryId)}
-                      />
-                    )}
-                  </span>
-                  <span
-                    className={
-                      operation.type === "ENTREE"
-                        ? "budget-amount--positive"
-                        : "budget-amount--negative"
-                    }
-                  >
-                    {formatEventAmount(
-                      operation.type === "ENTREE"
-                        ? operation.amount
-                        : -Number(operation.amount),
-                      operation.currency
-                    )}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-        {budget.operationsMeta?.hasNext && (
-          <button
-            type="button"
-            className="monthly-event-button monthly-event-button--secondary"
-            onClick={budget.loadMoreOperations}
-            disabled={budget.operationsStatus === "paging"}
-          >
-            Afficher plus d’opérations
-          </button>
-        )}
-      </section>
     </main>
   );
 }

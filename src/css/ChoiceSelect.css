@@ -28,7 +28,7 @@
   cursor: not-allowed;
 }
 .choice-select__trigger[aria-invalid="true"] {
-  border-color: var(--ds-color-status-danger-text);
+  border-color: var(--ds-color-status-error-text);
 }
 .choice-select__trigger:focus-visible {
   outline: 2px solid var(--ds-color-focus-ring);

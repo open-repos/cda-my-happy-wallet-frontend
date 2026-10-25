@@ -28,6 +28,14 @@ export const prepareProtectedPage = async (
     await page.addInitScript((user) => {
       window.localStorage.setItem(JSON.stringify("user"), JSON.stringify(user));
     }, storedUser);
+  await page.route(/\/v1\/event-occurrence-resolutions(?:\?.*)?$/, (route) =>
+    route.fulfill({
+      json: {
+        data: [],
+        meta: { limit: 100, hasNext: false, nextCursor: null },
+      },
+    })
+  );
   await page.route("**/v1/operations-fixes/**", (route) =>
     route.fulfill({
       contentType: "application/json",

@@ -164,13 +164,38 @@ test("converts a planned event into a persisted operation without counting it tw
   await page
     .getByRole("button", { name: "Enregistrer l’opération", exact: true })
     .click();
-  expect((await realized).status()).toBe(201);
+  const realizedResponse = await realized;
+  expect(realizedResponse.status()).toBe(201);
+  const converted = (await realizedResponse.json()).data;
+  expect(converted.status).toBe("REALIZED");
   await expect(realBalance(page)).toHaveText(/1\s*080,00\s*€/);
   await expect(forecastBalance(page)).toHaveText(/1\s*080,00\s*€/);
   await expect(
     page.getByRole("button", { name: /^Convertir Assurance E2E/ })
   ).toHaveCount(0);
+  const resolutionsRead = apiResponse(
+    page,
+    "/v1/event-occurrence-resolutions",
+    "GET"
+  );
   await page.reload();
+  const persisted = await resolutionsRead;
+  expect(persisted.status()).toBe(200);
+  expect(
+    (await persisted.json()).data.some(
+      (r) => r.operation?.id === converted.operation.id
+    )
+  ).toBe(true);
+  const realizedDay = page.getByRole("button", {
+    name: new RegExp(`^${Number(today().slice(8))} .*1 Opération réelle`),
+  });
+  await expect(realizedDay.locator(".budget-marker--real")).toHaveCount(1);
+  await expect(realizedDay.locator(".budget-marker--planned")).toHaveCount(0);
+  await realizedDay.click();
+  await expect(
+    page.getByRole("heading", { name: /^Éléments du / })
+  ).toBeVisible();
+  await expect(page.getByRole("row", { name: /Assurance E2E/ })).toHaveCount(1);
   await expect(realBalance(page)).toHaveText(/1\s*080,00\s*€/);
   await expect(
     page.getByRole("button", { name: /^Convertir Assurance E2E/ })

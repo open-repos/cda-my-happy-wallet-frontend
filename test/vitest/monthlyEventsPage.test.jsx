@@ -136,6 +136,15 @@ describe("monthly event pages", () => {
       summary: null,
       summaryStatus: "future",
       pending: [],
+      content: [
+        {
+          key: "occurrence:1",
+          nature: "planned",
+          date: today,
+          title: event.title,
+          occurrence: { ...event, eventId: event.id, occurrenceDate: today },
+        },
+      ],
       categories: [],
       operations: [],
       operationsMeta: null,
@@ -149,7 +158,7 @@ describe("monthly event pages", () => {
       screen.getByRole("heading", { name: "Calendrier" })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /1 événement prévu/ })
+      screen.getByRole("button", { name: /1 Événement prévu/ })
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Mois suivant" }));
     expect(useMonthlyEvents).toHaveBeenCalled();
