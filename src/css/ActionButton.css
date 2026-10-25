@@ -1,4 +1,4 @@
-.action-button.action-button {
+.action-button.action-button.action-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -20,11 +20,11 @@
   white-space: normal;
   text-align: center;
 }
-.action-button.action-button--primary {
+.action-button.action-button.action-button--primary {
   background: var(--ds-color-action-primary-background);
   color: var(--ds-color-action-primary-text);
 }
-.action-button.action-button--secondary {
+.action-button.action-button.action-button--secondary {
   background: var(--ds-color-action-secondary-background);
   color: var(--ds-color-action-secondary-text);
 }
