@@ -135,6 +135,10 @@
   color: var(--ds-color-text-primary);
 }
 
+.goal-explorer__choice {
+  color: var(--ds-color-text-on-shell);
+}
+
 .goal-explorer__choice select,
 .goal-trajectory__header select {
   width: 100%;

@@ -135,6 +135,34 @@ test("changing the selected goal does not write or combine currencies", async ({
   });
   await page.goto("/objectifs-evenements");
   const picker = page.getByLabel("Objectif à explorer");
+  const labelContrast = await picker.locator("..").evaluate((label) => {
+    const rgb = (value) =>
+      value
+        .match(/[\d.]+/g)
+        .slice(0, 3)
+        .map(Number);
+    const light = (value) =>
+      rgb(value)
+        .map((n) => {
+          n /= 255;
+          return n <= 0.04045 ? n / 12.92 : ((n + 0.055) / 1.055) ** 2.4;
+        })
+        .reduce((sum, n, i) => sum + n * [0.2126, 0.7152, 0.0722][i], 0);
+    let background = "rgb(255, 255, 255)";
+    for (let node = label; node; node = node.parentElement) {
+      const color = getComputedStyle(node).backgroundColor;
+      if (color !== "transparent" && !color.endsWith(", 0)")) {
+        background = color;
+        break;
+      }
+    }
+    const values = [
+      light(getComputedStyle(label).color),
+      light(background),
+    ].sort((a, b) => b - a);
+    return (values[0] + 0.05) / (values[1] + 0.05);
+  });
+  expect(labelContrast).toBeGreaterThanOrEqual(4.5);
   await picker.selectOption("2");
   const card = page.getByRole("article", { name: second.title, exact: true });
   await expect(card).toBeVisible();
