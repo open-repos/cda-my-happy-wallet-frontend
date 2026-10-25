@@ -177,8 +177,8 @@
   gap: 0.25rem;
   flex-wrap: wrap;
 }
-.compact-money-table__actions button,
-.compact-money-table__actions .one-off-button {
+.compact-money-table__actions button:not(.action-button),
+.compact-money-table__actions .one-off-button:not(.action-button) {
   flex: 0 0 44px;
   width: 44px;
   height: 44px;
@@ -270,7 +270,7 @@
   }
   .compact-money-table__row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) max-content 88px;
+    grid-template-columns: minmax(0, 1fr) max-content;
     align-items: center;
     gap: 0.25rem;
     height: auto;
@@ -343,7 +343,7 @@
 }
 @container compactledger (max-width:12em) {
   .compact-money-table__row {
-    grid-template-columns: minmax(0, 1fr) 88px;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
   .compact-money-table__row .compact-money-table__title {
     grid-column: 1/-1;
@@ -361,4 +361,14 @@
   flex: 1 1 100%;
   padding: 0.5rem 0.25rem;
   width: 100%;
+}
+
+@container compactledger (max-width: 700px) {
+  .compact-money-table__row .compact-money-table__actions {
+    grid-column: 1 / -1;
+  }
+  .compact-money-table__actions .action-button {
+    flex: 1 1 7em;
+    width: auto;
+  }
 }

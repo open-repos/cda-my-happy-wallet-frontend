@@ -44,6 +44,23 @@ for (const width of [320, 390, 768, 1440])
       });
       await expect(edit).toBeVisible();
       await fits(page);
+      const remove = page.getByRole("button", {
+        name: "Supprimer Courses",
+        exact: true,
+      });
+      const dangerStyle = await remove.evaluate((el) => {
+        const s = getComputedStyle(el);
+        return {
+          border: parseFloat(s.borderTopWidth),
+          color: s.color,
+          bg: s.backgroundColor,
+        };
+      });
+      expect(dangerStyle.border).toBeGreaterThanOrEqual(1);
+      expect(dangerStyle.color).not.toBe(dangerStyle.bg);
+      expect(dangerStyle.color).not.toBe(
+        await edit.evaluate((el) => getComputedStyle(el).color)
+      );
       if (width === 1440) {
         await page.mouse.move(0, 0);
         await expect(edit.locator("..")).toHaveCSS("opacity", "1");

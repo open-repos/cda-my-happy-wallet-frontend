@@ -28,7 +28,7 @@
   background: var(--ds-color-action-secondary-background);
   color: var(--ds-color-action-secondary-text);
 }
-.action-button.action-button--danger {
+.action-button.action-button.action-button--danger {
   background: var(--ds-color-status-error-surface);
   color: var(--ds-color-status-error-text);
   border-color: var(--ds-color-status-error-text);
