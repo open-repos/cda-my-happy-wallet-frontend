@@ -70,7 +70,7 @@ export const ChoiceSelect = ({
       const width = viewport?.width || window.innerWidth;
       const below = top + height - rect.bottom - 8,
         above = rect.top - top - 8;
-      const down = below >= Math.min(240, above);
+      const down = below >= above;
       const maxHeight = Math.max(44, Math.min(320, down ? below : above));
       setPlacement({
         position: "fixed",
@@ -78,10 +78,10 @@ export const ChoiceSelect = ({
           left + 8,
           Math.min(
             rect.left,
-            left + width - Math.min(rect.width, width - 16) - 8
+            left + width - Math.min(Math.max(rect.width, 288), width - 16) - 8
           )
         ),
-        width: Math.min(rect.width, width - 16),
+        width: Math.min(Math.max(rect.width, 288), width - 16),
         maxHeight,
         ...(down
           ? { top: rect.bottom + 4 }
@@ -105,10 +105,15 @@ export const ChoiceSelect = ({
       document.removeEventListener("pointerdown", outside);
     };
   }, [open]);
-  useEffect(() => {
+  useLayoutEffect(() => {
+    // The first open render has no viewport bounds yet. Re-scroll once the
+    // measured width/height are applied, including after a keyboard resize.
     if (open)
-      list.current?.children[active]?.scrollIntoView?.({ block: "nearest" });
-  }, [open, active]);
+      list.current?.children[active]?.scrollIntoView?.({
+        block: "nearest",
+        inline: "nearest",
+      });
+  }, [open, active, placement.maxHeight, placement.width]);
   const keyboard = (e) => {
     if (disabled) return;
     if (e.key === "Escape" && open) {
