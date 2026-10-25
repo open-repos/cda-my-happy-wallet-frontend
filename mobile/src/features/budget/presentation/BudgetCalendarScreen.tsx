@@ -321,7 +321,7 @@ export const BudgetCalendarScreen = () => {
                             ? "Affiche de nouveau tout le mois"
                             : "Affiche les opérations de ce jour"
                         }
-                        accessibilityLabel={`${longDate(cell.date)}.${cellContent.value ? ` ${mode === "expenses" ? "Dépenses" : "Reste prévisionnel"} ${cellContent.value} EUR.` : ""}${
+                        accessibilityLabel={`${cellContent.accessibilityLabel.replace(" Aucune opération.", "").replace(/\s\d+ événements? prévus?\./u, "")}${
                           (cell.isToday ? " Aujourd’hui." : "") +
                           (content.status === "success"
                             ? markers
