@@ -1,3 +1,4 @@
+import { CategorySelect } from "../Categories/CategorySelect";
 import { validateOperation } from "../../utils/oneOffOperationForm";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import React, { useEffect, useRef, useState } from "react";
@@ -141,22 +142,19 @@ export const OneOffOperationForm = ({
         </label>
         <label>
           Catégorie
-          <select
+          <CategorySelect
+            categories={categories}
             name="categoryId"
             value={values.categoryId}
             onChange={update}
+            disabled={isSaving}
             aria-invalid={Boolean(errors.categoryId)}
             aria-describedby={describedBy("categoryId")}
-          >
-            <option value="">Choisir une catégorie</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+          />
           {errors.categoryId && (
-            <span id="categoryId-error">{errors.categoryId}</span>
+            <span role="alert" id="categoryId-error">
+              {errors.categoryId}
+            </span>
           )}
         </label>
         <fieldset>

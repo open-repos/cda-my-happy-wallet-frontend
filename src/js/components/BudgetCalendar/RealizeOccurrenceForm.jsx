@@ -1,3 +1,4 @@
+import { CategorySelect } from "../Categories/CategorySelect";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import React, { useEffect, useRef, useState } from "react";
 import { formatMoney, longDate } from "./budgetFormat";
@@ -106,18 +107,15 @@ export const RealizeOccurrenceForm = ({
         </label>
         <label>
           Catégorie
-          <select {...field("categoryId")}>
-            {categories.length === 0 && (
-              <option value="">Aucune catégorie</option>
-            )}
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+          <CategorySelect
+            {...field("categoryId")}
+            categories={categories}
+            disabled={isSaving}
+          />
           {errors.categoryId && (
-            <span id="realize-categoryId-error">{errors.categoryId}</span>
+            <span role="alert" id="realize-categoryId-error">
+              {errors.categoryId}
+            </span>
           )}
         </label>
         <div className="monthly-event-form__actions">

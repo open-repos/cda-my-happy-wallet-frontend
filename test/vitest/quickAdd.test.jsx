@@ -80,7 +80,9 @@ describe("shared quick add", () => {
     ).toBeChecked();
     fill("Titre", "Remboursement");
     fill(/^Montant/, "32.50");
-    fill("Catégorie", "2");
+    fireEvent.click(screen.getByRole("combobox", { name: "Catégorie" }));
+    fireEvent.keyDown(screen.getByRole("combobox"), { key: "End" });
+    fireEvent.keyDown(screen.getByRole("combobox"), { key: "Enter" });
     const submit = screen.getByRole("button", { name: "Enregistrer" });
     fireEvent.click(submit);
     fireEvent.click(submit);

@@ -1,3 +1,4 @@
+import { CategoryChoices } from "@/src/features/categories/presentation/CategoryChoices";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useMemo, useState } from "react";
 import {
@@ -11,6 +12,7 @@ import {
   Text,
   TextInput,
   View,
+  useColorScheme,
 } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
@@ -44,7 +46,6 @@ interface RealizeOccurrenceModalProps {
   onSave(body: RealizeBody): void;
 }
 
-const colors = themes.light.color;
 const semibold = `${primitives.fontWeight.semibold}` as "600";
 
 /**
@@ -63,6 +64,8 @@ export const RealizeOccurrenceModal = ({
   onRetryCategories,
   onSave,
 }: RealizeOccurrenceModalProps) => {
+  const colors = themes[useColorScheme() === "dark" ? "dark" : "light"].color;
+  const styles = makeStyles(colors);
   const [draft, setDraft] = useState<OperationDraft>(() =>
     occurrence ? realizeDraft(occurrence, today) : emptyDraft(today),
   );
@@ -190,50 +193,13 @@ export const RealizeOccurrenceModal = ({
                   ) : null}
                 </View>
               ) : null}
-              <View
-                style={[
-                  styles.categoryList,
-                  errors.categoryId && styles.invalid,
-                ]}
-              >
-                {categories.map((category) => {
-                  const selected = draft.categoryId === category.id;
-                  return (
-                    <Pressable
-                      key={category.id}
-                      accessibilityRole="radio"
-                      aria-checked={selected}
-                      disabled={busy}
-                      onPress={() => update("categoryId", category.id)}
-                      style={[
-                        styles.category,
-                        selected && styles.categorySelected,
-                      ]}
-                    >
-                      <View
-                        style={[
-                          styles.swatch,
-                          {
-                            backgroundColor:
-                              category.color ?? colors.borderSubtle,
-                          },
-                        ]}
-                      />
-                      <Text style={styles.categoryLabel}>{category.name}</Text>
-                      {selected ? (
-                        <Ionicons
-                          color={colors.statusSuccessText}
-                          name="checkmark-circle"
-                          size={20}
-                        />
-                      ) : null}
-                    </Pressable>
-                  );
-                })}
-              </View>
-              {errors.categoryId ? (
-                <Text style={styles.error}>{errors.categoryId}</Text>
-              ) : null}
+              <CategoryChoices
+                categories={categories}
+                value={draft.categoryId}
+                disabled={busy}
+                error={errors.categoryId}
+                onChange={(value) => update("categoryId", value)}
+              />
 
               {errorMessage ? (
                 <View style={styles.banner}>
@@ -286,121 +252,122 @@ const emptyDraft = (today: string): OperationDraft => ({
   kind: "DEPENSE",
 });
 
-const styles = StyleSheet.create({
-  flex: { backgroundColor: colors.backgroundCanvas, flex: 1 },
-  content: {
-    alignSelf: "center",
-    padding: primitives.space["6"],
-    paddingBottom: primitives.space["16"],
-    width: "100%",
-    maxWidth: primitives.size.contentSm,
-  },
-  header: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  title: {
-    color: colors.textPrimary,
-    flex: 1,
-    fontSize: primitives.fontSize["2xl"],
-    fontWeight: semibold,
-  },
-  caption: {
-    color: colors.textMuted,
-    fontSize: primitives.fontSize.sm,
-    marginTop: primitives.space["2"],
-  },
-  iconButton: {
-    alignItems: "center",
-    height: primitives.size.controlMd,
-    justifyContent: "center",
-    width: primitives.size.controlMd,
-  },
-  label: {
-    color: colors.textPrimary,
-    fontSize: primitives.fontSize.sm,
-    fontWeight: semibold,
-    marginBottom: primitives.space["2"],
-    marginTop: primitives.space["5"],
-  },
-  input: {
-    backgroundColor: colors.fieldBackground,
-    borderColor: colors.fieldBorder,
-    borderRadius: semantic.radius.control,
-    borderWidth: semantic.borderWidth.default,
-    color: colors.fieldText,
-    fontSize: primitives.fontSize.md,
-    minHeight: semantic.size.controlMinHeight,
-    paddingHorizontal: semantic.space.controlInline,
-  },
-  invalid: {
-    borderColor: colors.statusErrorText,
-    borderWidth: semantic.borderWidth.focus,
-  },
-  error: {
-    color: colors.statusErrorText,
-    fontSize: primitives.fontSize.sm,
-    marginTop: primitives.space["1"],
-  },
-  categoryList: {
-    backgroundColor: colors.backgroundSurface,
-    borderColor: colors.borderSubtle,
-    borderRadius: semantic.radius.control,
-    borderWidth: semantic.borderWidth.default,
-    overflow: "hidden",
-  },
-  category: {
-    alignItems: "center",
-    borderBottomColor: colors.borderSubtle,
-    borderBottomWidth: semantic.borderWidth.default,
-    flexDirection: "row",
-    gap: primitives.space["3"],
-    minHeight: semantic.size.controlMinHeight,
-    paddingHorizontal: semantic.space.controlInline,
-  },
-  categorySelected: { backgroundColor: colors.statusSuccessSurface },
-  swatch: {
-    borderRadius: primitives.radius.pill,
-    height: primitives.space["4"],
-    width: primitives.space["4"],
-  },
-  categoryLabel: {
-    color: colors.textPrimary,
-    flex: 1,
-    fontSize: primitives.fontSize.md,
-  },
-  actions: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: primitives.space["2"],
-    justifyContent: "flex-end",
-    marginTop: primitives.space["8"],
-  },
-  button: {
-    alignItems: "center",
-    borderRadius: semantic.radius.control,
-    justifyContent: "center",
-    minHeight: semantic.size.controlMinHeight,
-    paddingHorizontal: semantic.space.controlInline,
-  },
-  primaryButton: { backgroundColor: colors.actionPrimaryBackground },
-  secondaryButton: { backgroundColor: colors.actionSecondaryBackground },
-  primaryLabel: {
-    color: colors.actionPrimaryText,
-    fontSize: primitives.fontSize.md,
-    fontWeight: semibold,
-  },
-  secondaryLabel: {
-    color: colors.actionSecondaryText,
-    fontSize: primitives.fontSize.md,
-    fontWeight: semibold,
-  },
-  banner: { marginTop: primitives.space["6"] },
-  categoryState: {
-    alignItems: "flex-start",
-    gap: primitives.space["2"],
-    marginBottom: primitives.space["2"],
-  },
-  disabled: { opacity: 0.65 },
-});
+const makeStyles = (colors: (typeof themes)["light" | "dark"]["color"]) =>
+  StyleSheet.create({
+    flex: { backgroundColor: colors.backgroundCanvas, flex: 1 },
+    content: {
+      alignSelf: "center",
+      padding: primitives.space["6"],
+      paddingBottom: primitives.space["16"],
+      width: "100%",
+      maxWidth: primitives.size.contentSm,
+    },
+    header: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+    },
+    title: {
+      color: colors.textPrimary,
+      flex: 1,
+      fontSize: primitives.fontSize["2xl"],
+      fontWeight: semibold,
+    },
+    caption: {
+      color: colors.textMuted,
+      fontSize: primitives.fontSize.sm,
+      marginTop: primitives.space["2"],
+    },
+    iconButton: {
+      alignItems: "center",
+      height: primitives.size.controlMd,
+      justifyContent: "center",
+      width: primitives.size.controlMd,
+    },
+    label: {
+      color: colors.textPrimary,
+      fontSize: primitives.fontSize.sm,
+      fontWeight: semibold,
+      marginBottom: primitives.space["2"],
+      marginTop: primitives.space["5"],
+    },
+    input: {
+      backgroundColor: colors.fieldBackground,
+      borderColor: colors.fieldBorder,
+      borderRadius: semantic.radius.control,
+      borderWidth: semantic.borderWidth.default,
+      color: colors.fieldText,
+      fontSize: primitives.fontSize.md,
+      minHeight: semantic.size.controlMinHeight,
+      paddingHorizontal: semantic.space.controlInline,
+    },
+    invalid: {
+      borderColor: colors.statusErrorText,
+      borderWidth: semantic.borderWidth.focus,
+    },
+    error: {
+      color: colors.statusErrorText,
+      fontSize: primitives.fontSize.sm,
+      marginTop: primitives.space["1"],
+    },
+    categoryList: {
+      backgroundColor: colors.backgroundSurface,
+      borderColor: colors.borderSubtle,
+      borderRadius: semantic.radius.control,
+      borderWidth: semantic.borderWidth.default,
+      overflow: "hidden",
+    },
+    category: {
+      alignItems: "center",
+      borderBottomColor: colors.borderSubtle,
+      borderBottomWidth: semantic.borderWidth.default,
+      flexDirection: "row",
+      gap: primitives.space["3"],
+      minHeight: semantic.size.controlMinHeight,
+      paddingHorizontal: semantic.space.controlInline,
+    },
+    categorySelected: { backgroundColor: colors.statusSuccessSurface },
+    swatch: {
+      borderRadius: primitives.radius.pill,
+      height: primitives.space["4"],
+      width: primitives.space["4"],
+    },
+    categoryLabel: {
+      color: colors.textPrimary,
+      flex: 1,
+      fontSize: primitives.fontSize.md,
+    },
+    actions: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: primitives.space["2"],
+      justifyContent: "flex-end",
+      marginTop: primitives.space["8"],
+    },
+    button: {
+      alignItems: "center",
+      borderRadius: semantic.radius.control,
+      justifyContent: "center",
+      minHeight: semantic.size.controlMinHeight,
+      paddingHorizontal: semantic.space.controlInline,
+    },
+    primaryButton: { backgroundColor: colors.actionPrimaryBackground },
+    secondaryButton: { backgroundColor: colors.actionSecondaryBackground },
+    primaryLabel: {
+      color: colors.actionPrimaryText,
+      fontSize: primitives.fontSize.md,
+      fontWeight: semibold,
+    },
+    secondaryLabel: {
+      color: colors.actionSecondaryText,
+      fontSize: primitives.fontSize.md,
+      fontWeight: semibold,
+    },
+    banner: { marginTop: primitives.space["6"] },
+    categoryState: {
+      alignItems: "flex-start",
+      gap: primitives.space["2"],
+      marginBottom: primitives.space["2"],
+    },
+    disabled: { opacity: 0.65 },
+  });

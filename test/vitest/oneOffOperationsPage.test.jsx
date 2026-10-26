@@ -132,9 +132,8 @@ describe("ListeOperations", () => {
     fireEvent.change(screen.getByLabelText(/^Date/), {
       target: { value: "2026-08-18" },
     });
-    fireEvent.change(screen.getByLabelText(/^Catégorie/), {
-      target: { value: "2" },
-    });
+    fireEvent.click(screen.getByRole("combobox", { name: "Catégorie" }));
+    fireEvent.click(screen.getByRole("option", { name: "Alimentation" }));
     fireEvent.click(screen.getByLabelText("Entrée"));
     fireEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
     expect(actions.createOperation).not.toHaveBeenCalled();

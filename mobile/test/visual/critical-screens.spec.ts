@@ -158,6 +158,11 @@ test("manages categories from the operations screen", async ({ page }) => {
 
   await page.getByRole("button", { name: "Modifier Alimentation" }).click();
   await page.getByRole("button", { name: "Supprimer", exact: true }).click();
+  await expect(
+    page
+      .getByRole("alert")
+      .getByRole("button", { name: "Annuler", exact: true }),
+  ).toBeFocused();
   await page.getByRole("button", { name: "Oui, supprimer" }).click();
   await expect(
     page.getByText(/Cette catégorie est utilisée par des opérations/),
@@ -234,6 +239,15 @@ test("exposes the checked state of every radio option", async ({ page }) => {
   await page.getByRole("radio", { name: "Entrée" }).click();
   await expect(page.getByRole("radio", { name: "Entrée" })).toBeChecked();
   await expect(page.getByRole("radio", { name: "Dépense" })).not.toBeChecked();
+  const transport = page.getByRole("radio", { name: "Transport", exact: true });
+  await expect(transport.getByTestId("category-mark-icon")).toBeVisible();
+  await expect(
+    page
+      .getByRole("radio", { name: "Alimentation", exact: true })
+      .getByTestId("category-mark-fallback"),
+  ).toBeVisible();
+  await transport.click();
+  await expect(transport).toBeChecked();
   await page.getByRole("radio", { name: "Alimentation" }).click();
   await expect(page.getByRole("radio", { name: "Alimentation" })).toBeChecked();
   await page.getByRole("button", { name: "Fermer le formulaire" }).click();
@@ -441,6 +455,11 @@ test("manages monthly events from the objectives tab (#225)", async ({
       request.method() === "DELETE" &&
       new URL(request.url()).pathname.endsWith("/events/21"),
   );
+  await expect(
+    page
+      .getByRole("alert")
+      .getByRole("button", { name: "Annuler", exact: true }),
+  ).toBeFocused();
   await page.getByRole("button", { name: "Oui, supprimer" }).click();
   await deleted;
   await expect(page.getByText("Événement supprimé.")).toBeVisible();
@@ -543,6 +562,11 @@ test("manages financial goals from the objectives tab (#226)", async ({
       request.method() === "DELETE" &&
       new URL(request.url()).pathname.endsWith("/goals/1"),
   );
+  await expect(
+    page
+      .getByRole("alert")
+      .getByRole("button", { name: "Annuler", exact: true }),
+  ).toBeFocused();
   await page.getByRole("button", { name: "Oui, supprimer" }).click();
   await deleted;
   await expect(page.getByText("Objectif supprimé.")).toBeVisible();
