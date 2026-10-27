@@ -32,7 +32,7 @@
 }
 .choice-select__trigger:focus-visible {
   outline: 2px solid var(--ds-color-focus-ring);
-  outline-offset: 2px;
+  outline-offset: 0;
 }
 .choice-select__list {
   display: block;

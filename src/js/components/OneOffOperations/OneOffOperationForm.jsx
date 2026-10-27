@@ -1,8 +1,10 @@
+import { FormActions } from "../Actions/FormActions";
+import { DeleteConfirmation } from "../Actions/DeleteConfirmation";
+import { ActionButton } from "../Actions/ActionButton";
 import { CategorySelect } from "../Categories/CategorySelect";
 import { validateOperation } from "../../utils/oneOffOperationForm";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import React, { useEffect, useRef, useState } from "react";
-
 const emptyOperation = {
   title: "",
   amount: "",
@@ -11,7 +13,6 @@ const emptyOperation = {
   operationDate: "",
   categoryId: "",
 };
-
 export const OneOffOperationForm = ({
   categories,
   operation,
@@ -29,13 +30,17 @@ export const OneOffOperationForm = ({
           kind: operation.type,
           categoryId: `${operation.categoryId}`,
         }
-      : { ...emptyOperation, kind: initialKind, operationDate: initialDate }
+      : {
+          ...emptyOperation,
+          kind: initialKind,
+          operationDate: initialDate,
+        }
   );
   const [errors, setErrors] = useState({});
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const titleRef = useRef(null);
+  const deleteTrigger = useRef(null);
   const saving = useRef(false);
-
   useFormFocus(titleRef);
   useEffect(() => {
     const closeOnEscape = (event) => {
@@ -44,13 +49,17 @@ export const OneOffOperationForm = ({
     document.addEventListener("keydown", closeOnEscape);
     return () => document.removeEventListener("keydown", closeOnEscape);
   }, [isSaving, onCancel]);
-
   const update = (event) => {
     const { name, value } = event.target;
-    setValues((current) => ({ ...current, [name]: value }));
-    setErrors((current) => ({ ...current, [name]: undefined }));
+    setValues((current) => ({
+      ...current,
+      [name]: value,
+    }));
+    setErrors((current) => ({
+      ...current,
+      [name]: undefined,
+    }));
   };
-
   const submit = async (event) => {
     event.preventDefault();
     if (saving.current || isSaving) return;
@@ -74,9 +83,7 @@ export const OneOffOperationForm = ({
       saving.current = false;
     }
   };
-
   const describedBy = (field) => (errors[field] ? `${field}-error` : undefined);
-
   return (
     <section
       className="one-off-form-panel"
@@ -180,44 +187,54 @@ export const OneOffOperationForm = ({
             Entrée
           </label>
         </fieldset>
-        <div className="one-off-form__actions">
-          {operation && !isConfirmingDelete && (
-            <button
-              type="button"
-              className="one-off-button one-off-button--danger"
-              onClick={() => setIsConfirmingDelete(true)}
-              disabled={isSaving}
-            >
-              Supprimer
-            </button>
-          )}
-          {operation && isConfirmingDelete && (
-            <div className="one-off-delete-confirmation" role="alert">
-              <span>Supprimer « {operation.title} » ?</span>
-              <button type="button" onClick={onDelete} disabled={isSaving}>
-                Oui, supprimer
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsConfirmingDelete(false)}
-                disabled={isSaving}
-              >
-                Annuler
-              </button>
-            </div>
-          )}
-          <button
+        <FormActions
+          className="one-off-form__actions"
+          destructive={
+            <>
+              {operation && !isConfirmingDelete && (
+                <ActionButton
+                  action="delete"
+                  ref={deleteTrigger}
+                  type="button"
+                  className="one-off-button one-off-button--danger"
+                  onClick={() => setIsConfirmingDelete(true)}
+                  disabled={isSaving}
+                >
+                  Supprimer
+                </ActionButton>
+              )}
+              {operation && isConfirmingDelete && (
+                <DeleteConfirmation
+                  title={operation.title}
+                  busy={isSaving}
+                  onConfirm={onDelete}
+                  onCancel={() => setIsConfirmingDelete(false)}
+                  returnFocusRef={deleteTrigger}
+                  className="one-off-delete-confirmation"
+                />
+              )}
+            </>
+          }
+        >
+          <ActionButton
+            action="cancel"
             type="button"
             className="one-off-button one-off-button--secondary"
             onClick={onCancel}
             disabled={isSaving}
           >
             Annuler
-          </button>
-          <button type="submit" className="one-off-button" disabled={isSaving}>
+          </ActionButton>
+          <ActionButton
+            action="save"
+            type="submit"
+            className="one-off-button"
+            disabled={isSaving}
+            busy={isSaving}
+          >
             {isSaving ? "Enregistrement…" : "Enregistrer"}
-          </button>
-        </div>
+          </ActionButton>
+        </FormActions>
       </form>
     </section>
   );

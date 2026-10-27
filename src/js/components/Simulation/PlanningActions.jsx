@@ -1,3 +1,4 @@
+import { ActionButton } from "../Actions/ActionButton";
 import React, { useEffect, useState } from "react";
 import { useSimulation } from "./SimulationContext";
 import { MonthlyEventForm } from "../MonthlyEvents/MonthlyEventForm";
@@ -6,7 +7,6 @@ import { monthlyEventsService } from "../../services/monthlyEventsService";
 import { oneOffOperationsService } from "../../services/oneOffOperationsService";
 import { forecastToday } from "../../utils/budgetForecast";
 import { LiveMessage } from "../LiveMessage";
-
 export const PlanningActions = ({
   onOperation,
   onEvent,
@@ -15,33 +15,35 @@ export const PlanningActions = ({
   eventDisabled = disabled,
 }) => (
   <div className="planning-actions" role="group" aria-label="Ajouter au budget">
-    <button
+    <ActionButton
+      action="add"
       type="button"
       className="monthly-event-button"
       onClick={onOperation}
       disabled={disabled}
     >
       Ajouter une opération
-    </button>
-    <button
+    </ActionButton>
+    <ActionButton
+      action="add"
       type="button"
       className="monthly-event-button monthly-event-button--secondary"
       onClick={onEvent}
       disabled={eventDisabled}
     >
       Ajouter un événement prévu
-    </button>
-    <button
+    </ActionButton>
+    <ActionButton
+      action="add"
       type="button"
       className="monthly-event-button monthly-event-button--secondary"
       onClick={onPotential}
       disabled={disabled}
     >
       Ajouter un élément potentiel
-    </button>
+    </ActionButton>
   </div>
 );
-
 export const ForecastPlanning = ({ month }) => {
   const state = useSimulation();
   const today = forecastToday();
@@ -143,13 +145,14 @@ export const ForecastPlanning = ({ month }) => {
                   Réessayer les catégories
                 </button>
               )}
-              <button
+              <ActionButton
+                action="cancel"
                 type="button"
                 className="monthly-event-button monthly-event-button--secondary"
                 onClick={close}
               >
                 Annuler l’ajout
-              </button>
+              </ActionButton>
             </>
           )
         ) : (

@@ -129,6 +129,34 @@ for (const width of [320, 390, 768, 1440])
       await expect(
         page.getByText("Déjà converti", { exact: true })
       ).toHaveCount(0);
+      const edit = page.getByRole("button", {
+        name: "Modifier Courses 1",
+        exact: true,
+      });
+      await edit.click();
+      const title = page.getByLabel("Titre", { exact: true });
+      await title.fill("Brouillon du calendrier");
+      await page.getByRole("button", { name: "Annuler", exact: true }).click();
+      await expect(edit).toBeFocused();
+      const remove = page.getByRole("button", {
+        name: "Supprimer Courses 1",
+        exact: true,
+      });
+      await remove.click();
+      const confirmation = page.getByRole("group", {
+        name: "Supprimer « Courses 1 » ?",
+      });
+      await expect(
+        confirmation.getByRole("button", { name: "Annuler", exact: true })
+      ).toBeFocused();
+      await expect(
+        confirmation.getByRole("button", { name: "Oui, supprimer" })
+      ).toHaveAttribute("data-variant", "danger");
+      await confirmation
+        .getByRole("button", { name: "Annuler", exact: true })
+        .click();
+      await expect(remove).toBeFocused();
+      await expect(day).toHaveAttribute("aria-pressed", "true");
       await page.locator("html").evaluate((el) => (el.style.fontSize = "200%"));
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth)

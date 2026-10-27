@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { prepareProtectedPage } from "./fixtures.mjs";
 import { prepareSimulationPage } from "../e2e/simulationFixture.mjs";
+import { prepareFullContentCapture } from "./fullContentCapture.mjs";
 
 const definitions = [
   { name: "login", path: "/login", ready: ".login_form" },
@@ -213,6 +214,7 @@ for (const theme of ["light", "dark"]) {
         }
       }
       await layout(page);
+      await prepareFullContentCapture(page);
       await expect(page).toHaveScreenshot(`${definition.name}-${theme}.png`, {
         fullPage: true,
       });
@@ -266,6 +268,7 @@ for (const theme of ["light", "dark"]) {
             page.getByRole("button", { name: "Réessayer" })
           ).toBeVisible();
         await layout(page);
+        await prepareFullContentCapture(page);
         await expect(page).toHaveScreenshot(
           `operations-${state}-${theme}.png`,
           { fullPage: true }

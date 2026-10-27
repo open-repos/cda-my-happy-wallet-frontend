@@ -1,5 +1,6 @@
+import { ActionButton } from "@/src/design/ActionButton";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { primitives, semantic, themes } from "@/src/design/tokens";
 import {
@@ -47,7 +48,8 @@ export const MonthlyEventCard = ({ event, onEdit }: MonthlyEventCardProps) => {
             {recurrenceLabel(event.recurrence)} · {describePeriod(event)}
           </Text>
         </View>
-        <Pressable
+        <ActionButton
+          action="edit"
           accessibilityLabel={`Modifier ${event.title}`}
           accessibilityRole="button"
           hitSlop={primitives.space["2"]}
@@ -56,13 +58,7 @@ export const MonthlyEventCard = ({ event, onEdit }: MonthlyEventCardProps) => {
             styles.editButton,
             pressed && styles.pressed,
           ]}
-        >
-          <Ionicons
-            color={colors.textSecondary}
-            name="create-outline"
-            size={24}
-          />
-        </Pressable>
+        ></ActionButton>
       </View>
       <View style={styles.footer}>
         <View

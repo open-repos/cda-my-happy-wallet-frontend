@@ -58,3 +58,17 @@ synthèse. Les captures générées utilisent uniquement des données synthétiq
 La CI couvre les références canoniques et les autres parcours du dépôt.
 Chromium local/CI et export Expo Web ne constituent pas une recette Safari,
 iPhone/VoiceOver ou appareil Android/TalkBack ; ces appareils sont indisponibles.
+
+## Intégration après les actions Sauge
+
+La branche est synchronisée avec develop après #305, #315, #317 et le retour
+de release #311. Le calendrier conserve ses marqueurs exhaustifs et son détail
+commun, avec les ajouts datés et la zone du FAB partagés. La confirmation de
+suppression réutilise DeleteConfirmation ; le retour après édition recherche
+le bouton recréé par son identifiant avant de se replier sur le jour sélectionné.
+Le rejeu des effets StrictMode annule la restauration provisoire de focus pour
+laisser Annuler focalisé. Un test unitaire et les huit variantes navigateur
+320/390/768/1440 clair/sombre couvrent cette régression.
+
+Les références du calendrier doivent être relues sur le runner canonique après
+cette intégration ; les seuils visuels et les workflows restent inchangés.

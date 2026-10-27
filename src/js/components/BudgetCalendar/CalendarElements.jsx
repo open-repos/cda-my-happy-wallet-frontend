@@ -1,3 +1,4 @@
+import { DeleteConfirmation } from "../Actions/DeleteConfirmation";
 import React, { useRef, useState } from "react";
 import { OneOffOperationList } from "../OneOffOperations/OneOffOperationList";
 import { PendingOccurrences } from "./PendingOccurrences";
@@ -9,49 +10,37 @@ import { useSimulation } from "../Simulation/SimulationContext";
 export const CalendarElements = ({ items, budget, disabled, onRealize }) => {
   const [editing, setEditing] = useState(null),
     [deleting, setDeleting] = useState(null);
-  const cancel = useRef(null),
-    returnTo = useRef(null);
+  const returnTo = useRef(null);
   const simulation = useSimulation();
   const restore = () =>
     requestAnimationFrame(() =>
       (returnTo.current?.isConnected
         ? returnTo.current
-        : document.querySelector('.budget-day[aria-pressed="true"]') ??
+        : document.getElementById(returnTo.current?.id) ??
+          document.querySelector('.budget-day[aria-pressed="true"]') ??
           document.querySelector(".budget-calendar__quick-add button")
       )?.focus()
     );
-  React.useEffect(() => {
-    if (deleting) cancel.current?.focus();
-  }, [deleting]);
   const real = items.filter((i) => i.operation && i.nature === "real");
   return (
     <>
       {deleting && (
-        <fieldset className="monthly-event-delete-confirmation">
-          <legend>Supprimer « {deleting.title} » ?</legend>
-          <button
-            type="button"
-            ref={cancel}
-            onClick={() => {
+        <DeleteConfirmation
+          className="monthly-event-delete-confirmation"
+          title={deleting.title}
+          busy={disabled}
+          returnFocusRef={returnTo}
+          onCancel={() => {
+            setDeleting(null);
+            restore();
+          }}
+          onConfirm={async () => {
+            if (await budget.deleteOperation(deleting.id)) {
               setDeleting(null);
               restore();
-            }}
-          >
-            Annuler
-          </button>
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={async () => {
-              if (await budget.deleteOperation(deleting.id)) {
-                setDeleting(null);
-                restore();
-              }
-            }}
-          >
-            Oui, supprimer
-          </button>
-        </fieldset>
+            }
+          }}
+        />
       )}
       {real.length > 0 && (
         <>
