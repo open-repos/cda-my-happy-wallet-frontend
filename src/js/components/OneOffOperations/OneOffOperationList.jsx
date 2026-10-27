@@ -1,3 +1,4 @@
+import { ActionButton } from "../Actions/ActionButton";
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPen, faTrash } from "@fortawesome/free-solid-svg-icons";
@@ -43,26 +44,28 @@ export const OneOffOperationList = ({
       )}
       renderActions={({ raw }) => (
         <div>
-          <button
+          <ActionButton
+            action="edit"
             type="button"
             id={`one-off-edit-${raw.id}`}
-            className="one-off-icon-button"
+            className="one-off-button one-off-button--secondary"
             disabled={busy || Boolean(editingId)}
             onClick={(e) => onEdit(raw, e)}
             aria-label={`Modifier ${raw.title}`}
           >
-            <FontAwesomeIcon icon={faPen} aria-hidden="true" />
-          </button>
+            Modifier
+          </ActionButton>
           {onDelete && (
-            <button
+            <ActionButton
+              action="delete"
               type="button"
-              className="one-off-icon-button"
+              className="one-off-button one-off-button--secondary"
               disabled={busy || Boolean(editingId)}
               onClick={(e) => onDelete(raw, e)}
               aria-label={`Supprimer ${raw.title}`}
             >
-              <FontAwesomeIcon icon={faTrash} aria-hidden="true" />
-            </button>
+              Supprimer
+            </ActionButton>
           )}
         </div>
       )}

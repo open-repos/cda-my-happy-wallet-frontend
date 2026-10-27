@@ -1,3 +1,6 @@
+import { FormActions } from "../Actions/FormActions";
+import { DeleteConfirmation } from "../Actions/DeleteConfirmation";
+import { ActionButton } from "../Actions/ActionButton";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import React, { useEffect, useId, useRef, useState } from "react";
 import {
@@ -5,7 +8,6 @@ import {
   isEventRecurrence,
   isRepeatingEvent,
 } from "../../utils/eventRecurrences";
-
 const emptyEvent = {
   title: "",
   amount: "",
@@ -25,7 +27,6 @@ const isDate = (value) => {
     date.getUTCDate() === Number(match[3])
   );
 };
-
 const validate = (event) => {
   const errors = {};
   if (event.title.trim().length < 2 || event.title.trim().length > 50)
@@ -48,7 +49,6 @@ const validate = (event) => {
       "Choisissez une date de fin valide, au plus tôt à la date de début.";
   return errors;
 };
-
 export const MonthlyEventForm = ({
   event,
   initialDate = "",
@@ -61,14 +61,21 @@ export const MonthlyEventForm = ({
 }) => {
   const [values, setValues] = useState(() =>
     event
-      ? { ...event, endDate: event.endDate || "" }
-      : { ...emptyEvent, startDate: initialDate }
+      ? {
+          ...event,
+          endDate: event.endDate || "",
+        }
+      : {
+          ...emptyEvent,
+          startDate: initialDate,
+        }
   );
   const formId = useId();
   const controlId = (name) => `monthly-event-${formId}-${name}`;
   const [errors, setErrors] = useState({});
   const [confirmDelete, setConfirmDelete] = useState(false);
   const titleRef = useRef(null);
+  const deleteTrigger = useRef(null);
   const saving = useRef(false);
   useFormFocus(titleRef);
   useEffect(() => {
@@ -81,13 +88,19 @@ export const MonthlyEventForm = ({
     setValues((current) => ({
       ...current,
       [name]: value,
-      ...(name === "recurrence" && value === "AUCUNE" ? { endDate: "" } : {}),
+      ...(name === "recurrence" && value === "AUCUNE"
+        ? {
+            endDate: "",
+          }
+        : {}),
     }));
     setErrors((current) => ({
       ...current,
       [name]: undefined,
       ...(name === "recurrence" && value === "AUCUNE"
-        ? { endDate: undefined }
+        ? {
+            endDate: undefined,
+          }
         : {}),
     }));
   };
@@ -257,48 +270,54 @@ export const MonthlyEventForm = ({
             Entrée
           </label>
         </fieldset>
-        <div className="monthly-event-form__actions">
-          {event && !confirmDelete && (
-            <button
-              type="button"
-              className="monthly-event-button monthly-event-button--danger"
-              onClick={() => setConfirmDelete(true)}
-              disabled={isSaving}
-            >
-              Supprimer
-            </button>
-          )}
-          {event && confirmDelete && (
-            <div className="monthly-event-delete-confirmation" role="alert">
-              <span>Confirmer la suppression ?</span>
-              <button type="button" onClick={onDelete} disabled={isSaving}>
-                Oui, supprimer
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmDelete(false)}
-                disabled={isSaving}
-              >
-                Annuler
-              </button>
-            </div>
-          )}
-          <button
+        <FormActions
+          className="monthly-event-form__actions"
+          destructive={
+            <>
+              {event && !confirmDelete && (
+                <ActionButton
+                  action="delete"
+                  ref={deleteTrigger}
+                  type="button"
+                  className="monthly-event-button monthly-event-button--danger"
+                  onClick={() => setConfirmDelete(true)}
+                  disabled={isSaving}
+                >
+                  Supprimer
+                </ActionButton>
+              )}
+              {event && confirmDelete && (
+                <DeleteConfirmation
+                  title={event.title}
+                  busy={isSaving}
+                  onConfirm={onDelete}
+                  onCancel={() => setConfirmDelete(false)}
+                  returnFocusRef={deleteTrigger}
+                  className="monthly-event-delete-confirmation"
+                />
+              )}
+            </>
+          }
+        >
+          <ActionButton
+            action="cancel"
             type="button"
             className="monthly-event-button monthly-event-button--secondary"
             onClick={onCancel}
             disabled={isSaving}
           >
             Annuler
-          </button>
-          <button
+          </ActionButton>
+          <ActionButton
+            action="save"
             type="submit"
             className="monthly-event-button"
             disabled={isSaving}
+            busy={isSaving}
           >
             {isSaving ? "Enregistrement…" : "Enregistrer"}
-          </button>
-        </div>
+          </ActionButton>
+        </FormActions>
       </form>
     </section>
   );

@@ -1,3 +1,4 @@
+import { ActionButton } from "../Actions/ActionButton";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import React, { useEffect, useRef, useState } from "react";
 import tokens from "../../../../design-tokens/tokens.json";
@@ -7,26 +8,32 @@ import {
   validateCategory,
 } from "../../utils/categoryForm";
 import { CategoryIconPicker } from "./CategoryIconPicker";
-
 const NO_COLOR = "none";
 const CUSTOM_COLOR = "custom";
 const DEFAULT_CUSTOM_COLOR = tokens.primitive.color.neutral700.toLowerCase();
-
 const initialChoice = (color) => {
-  if (!color) return { choice: NO_COLOR, customColor: DEFAULT_CUSTOM_COLOR };
+  if (!color)
+    return {
+      choice: NO_COLOR,
+      customColor: DEFAULT_CUSTOM_COLOR,
+    };
   const swatch = CATEGORY_PALETTE.find(
     ({ value }) => value.toUpperCase() === color.toUpperCase()
   );
   return swatch
-    ? { choice: swatch.value, customColor: DEFAULT_CUSTOM_COLOR }
-    : { choice: CUSTOM_COLOR, customColor: color.toLowerCase() };
+    ? {
+        choice: swatch.value,
+        customColor: DEFAULT_CUSTOM_COLOR,
+      }
+    : {
+        choice: CUSTOM_COLOR,
+        customColor: color.toLowerCase(),
+      };
 };
-
 const selectedColor = ({ choice, customColor }) => {
   if (choice === NO_COLOR) return null;
   return choice === CUSTOM_COLOR ? customColor : choice;
 };
-
 export const CategoryForm = ({
   category,
   isSaving,
@@ -40,7 +47,6 @@ export const CategoryForm = ({
   const [errors, setErrors] = useState({});
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const nameRef = useRef(null);
-
   useFormFocus(nameRef);
   useEffect(() => {
     const closeOnEscape = (event) => {
@@ -49,7 +55,6 @@ export const CategoryForm = ({
     document.addEventListener("keydown", closeOnEscape);
     return () => document.removeEventListener("keydown", closeOnEscape);
   }, [isSaving, onCancel]);
-
   const submit = async (event) => {
     event.preventDefault();
     // Icône inchangée : non renvoyée, pour qu'une icône retirée depuis de la
@@ -69,14 +74,14 @@ export const CategoryForm = ({
     }
     const result = await onSave(toCategoryPayload(values));
     if (result?.code === "CATEGORY_NAME_CONFLICT") {
-      setErrors({ name: "Une catégorie porte déjà ce nom." });
+      setErrors({
+        name: "Une catégorie porte déjà ce nom.",
+      });
       nameRef.current?.focus();
     }
   };
-
   const describedBy = (field) =>
     errors[field] ? `category-${field}-error` : undefined;
-
   return (
     <section
       className="one-off-form-panel"
@@ -106,7 +111,10 @@ export const CategoryForm = ({
             value={name}
             onChange={(event) => {
               setName(event.target.value);
-              setErrors((current) => ({ ...current, name: undefined }));
+              setErrors((current) => ({
+                ...current,
+                name: undefined,
+              }));
             }}
             maxLength={50}
             autoComplete="off"
@@ -131,7 +139,10 @@ export const CategoryForm = ({
               value={NO_COLOR}
               checked={color.choice === NO_COLOR}
               onChange={() =>
-                setColor((current) => ({ ...current, choice: NO_COLOR }))
+                setColor((current) => ({
+                  ...current,
+                  choice: NO_COLOR,
+                }))
               }
             />
             <span
@@ -148,12 +159,17 @@ export const CategoryForm = ({
                 value={swatch.value}
                 checked={color.choice === swatch.value}
                 onChange={() =>
-                  setColor((current) => ({ ...current, choice: swatch.value }))
+                  setColor((current) => ({
+                    ...current,
+                    choice: swatch.value,
+                  }))
                 }
               />
               <span
                 className="category-swatch"
-                style={{ backgroundColor: swatch.value }}
+                style={{
+                  backgroundColor: swatch.value,
+                }}
                 aria-hidden="true"
               />
               {swatch.label}
@@ -166,12 +182,17 @@ export const CategoryForm = ({
               value={CUSTOM_COLOR}
               checked={color.choice === CUSTOM_COLOR}
               onChange={() =>
-                setColor((current) => ({ ...current, choice: CUSTOM_COLOR }))
+                setColor((current) => ({
+                  ...current,
+                  choice: CUSTOM_COLOR,
+                }))
               }
             />
             <span
               className="category-swatch"
-              style={{ backgroundColor: color.customColor }}
+              style={{
+                backgroundColor: color.customColor,
+              }}
               aria-hidden="true"
             />
             Autre couleur
@@ -205,41 +226,56 @@ export const CategoryForm = ({
         />
         <div className="one-off-form__actions">
           {category && !isConfirmingDelete && (
-            <button
+            <ActionButton
+              action="delete"
               type="button"
               className="one-off-button one-off-button--danger"
               onClick={() => setIsConfirmingDelete(true)}
               disabled={isSaving}
+              variant="danger"
             >
               Supprimer
-            </button>
+            </ActionButton>
           )}
           {category && isConfirmingDelete && (
             <div className="one-off-delete-confirmation" role="alert">
               <span>Supprimer « {category.name} » ?</span>
-              <button type="button" onClick={onDelete} disabled={isSaving}>
+              <ActionButton
+                action="delete"
+                type="button"
+                onClick={onDelete}
+                disabled={isSaving}
+              >
                 Oui, supprimer
-              </button>
-              <button
+              </ActionButton>
+              <ActionButton
+                action="cancel"
                 type="button"
                 onClick={() => setIsConfirmingDelete(false)}
                 disabled={isSaving}
               >
                 Annuler
-              </button>
+              </ActionButton>
             </div>
           )}
-          <button
+          <ActionButton
+            action="cancel"
             type="button"
             className="one-off-button one-off-button--secondary"
             onClick={onCancel}
             disabled={isSaving}
           >
             Annuler
-          </button>
-          <button type="submit" className="one-off-button" disabled={isSaving}>
+          </ActionButton>
+          <ActionButton
+            action="save"
+            type="submit"
+            className="one-off-button"
+            disabled={isSaving}
+            busy={isSaving}
+          >
             {isSaving ? "Enregistrement…" : "Enregistrer"}
-          </button>
+          </ActionButton>
         </div>
       </form>
     </section>

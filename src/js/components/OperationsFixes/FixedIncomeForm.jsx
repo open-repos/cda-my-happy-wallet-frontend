@@ -1,3 +1,4 @@
+import { ActionButton } from "../Actions/ActionButton";
 import { FixedCategorySelect } from "./FixedCategorySelect";
 import {
   fixedCategoryBody,
@@ -11,7 +12,6 @@ import {
 import React, { useRef, useState } from "react";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import { LiveMessage } from "../LiveMessage";
-
 export const FixedIncomeForm = ({
   income,
   busy,
@@ -26,7 +26,11 @@ export const FixedIncomeForm = ({
     () =>
       draft ?? {
         ...incomeInitialValues(income),
-        ...(categories ? { categoryId: String(income?.categoryId ?? "") } : {}),
+        ...(categories
+          ? {
+              categoryId: String(income?.categoryId ?? ""),
+            }
+          : {}),
       }
   );
   const [errors, setErrors] = useState({});
@@ -35,10 +39,16 @@ export const FixedIncomeForm = ({
   const formRef = useRef(null);
   useFormFocus(titleRef);
   const change = ({ target: { name, value } }) => {
-    const next = { ...values, [name]: value };
+    const next = {
+      ...values,
+      [name]: value,
+    };
     setValues(next);
     onDraftChange?.(next);
-    setErrors((current) => ({ ...current, [name]: null }));
+    setErrors((current) => ({
+      ...current,
+      [name]: null,
+    }));
   };
   const submit = async (event) => {
     event.preventDefault();
@@ -51,7 +61,12 @@ export const FixedIncomeForm = ({
       formRef.current.elements.namedItem(Object.keys(next)[0])?.focus();
       return;
     }
-    if (await onSave({ ...incomeBody(values), ...fixedCategoryBody(values) }))
+    if (
+      await onSave({
+        ...incomeBody(values),
+        ...fixedCategoryBody(values),
+      })
+    )
       onClose();
   };
   return (
@@ -145,17 +160,24 @@ export const FixedIncomeForm = ({
           )}
         </fieldset>
         <div className="fixed-charge-actions">
-          <button
+          <ActionButton
+            action="cancel"
             className="one-off-button one-off-button--secondary"
             type="button"
             disabled={busy}
             onClick={onClose}
           >
             Annuler
-          </button>
-          <button className="one-off-button" type="submit" disabled={busy}>
+          </ActionButton>
+          <ActionButton
+            action="save"
+            className="one-off-button"
+            type="submit"
+            disabled={busy}
+            busy={busy}
+          >
             {busy ? "Enregistrement…" : "Enregistrer l’entrée"}
-          </button>
+          </ActionButton>
         </div>
       </form>
     </section>

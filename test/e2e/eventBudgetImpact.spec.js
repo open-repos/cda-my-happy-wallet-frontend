@@ -88,34 +88,27 @@ for (const width of [320, 390, 768, 1440])
       });
     });
 
-test("a quick-add event keeps its own labels while the page form stays mounted", async ({
+test("editing hides the quick-add dock and cancellation restores it", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.clock.setFixedTime(new Date("2026-10-27T10:00:00Z"));
   await prepareSimulationPage(page);
   await page.goto("/objectifs-evenements");
+  const fab = page.getByRole("button", {
+    name: "Ajouter une opération ou un événement",
+  });
+  await expect(fab).toBeVisible();
   await page
     .getByRole("button", { name: "Ajouter un événement", exact: true })
     .click();
-  const backgroundForm = page.locator(".monthly-event-form");
-  await backgroundForm
-    .getByLabel("Titre", { exact: true })
-    .fill("Brouillon conservé");
-  await page
-    .getByRole("button", { name: "Ajouter une opération ou un événement" })
-    .click();
-  await page
-    .getByRole("button", { name: /^Événement à confirmer Simulation/ })
-    .click();
-  const dialog = page.getByRole("dialog", { name: "Création au budget" });
-  await expect(page.locator(".monthly-event-form")).toHaveCount(2);
-  await toggle(dialog);
-  await dialog.getByRole("button", { name: "Annuler", exact: true }).click();
-  await expect(backgroundForm.getByLabel("Titre", { exact: true })).toHaveValue(
+  const form = page.locator(".monthly-event-form");
+  await form.getByLabel("Titre", { exact: true }).fill("Brouillon conservé");
+  await expect(fab).toBeHidden();
+  await toggle(form);
+  await expect(form.getByLabel("Titre", { exact: true })).toHaveValue(
     "Brouillon conservé"
   );
-  await expect(
-    backgroundForm.getByRole("radio", { name: "Dépense", exact: true })
-  ).toBeChecked();
+  await form.getByRole("button", { name: "Annuler", exact: true }).click();
+  await expect(fab).toBeVisible();
 });
