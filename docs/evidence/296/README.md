@@ -22,3 +22,5 @@ s'ouvre. Les cartes et les actions peuvent défiler au-dessus de cette rangée.
 Les contrôles automatisés couvrent aussi 320 et 768 px, les deux thèmes et le
 texte à 200 %. Ces preuves ne remplacent ni les références visuelles du runner
 canonique ni Safari sur appareil réel.
+
+La [revue canonique](canonical-review.md) documente les 58 références PNG mises à jour depuis le runner CI et la préservation du contenu complet.
