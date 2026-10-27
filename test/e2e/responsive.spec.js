@@ -168,6 +168,9 @@ for (const viewport of viewports) {
     page,
   }) => {
     await page.setViewportSize(viewport);
+    // The fixture occurrence on October 20 must still be upcoming here;
+    // overdue classification is exercised separately in calendarContent.spec.js.
+    await page.clock.setFixedTime(new Date("2026-10-18T10:00:00Z"));
     await prepareProtectedPage(page);
     await page.goto("/calendrier");
 
