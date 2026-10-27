@@ -10,8 +10,10 @@ import { useSimulation } from "@/src/features/simulation/presentation/Simulation
 import { useSimulationComparison } from "@/src/features/simulation/presentation/useSimulationComparison";
 
 const useStyles = () => {
-  const colors = themes[useColorScheme() === "dark" ? "dark" : "light"].color;
-  return { colors, styles: useMemo(() => makeStyles(colors), [colors]) };
+  const theme: keyof typeof themes =
+    useColorScheme() === "dark" ? "dark" : "light";
+  const colors = themes[theme].color;
+  return { theme, colors, styles: useMemo(() => makeStyles(colors), [colors]) };
 };
 const semibold = `${primitives.fontWeight.semibold}` as "600";
 
@@ -33,7 +35,7 @@ const EXPLANATION = {
 };
 
 const Comparison = ({ month }: { month: string }) => {
-  const { styles } = useStyles();
+  const { styles, theme } = useStyles();
   const { httpClient } = useAuth();
   const gateway = useMemo(
     () => new HttpBudgetForecastGateway(httpClient),
@@ -48,6 +50,7 @@ const Comparison = ({ month }: { month: string }) => {
       </Text>
       {state.status === "loading" ? (
         <FeedbackState
+          theme={theme}
           description="Calcul de l’écart de simulation…"
           framed={false}
           kind="loading"
@@ -56,6 +59,7 @@ const Comparison = ({ month }: { month: string }) => {
       ) : null}
       {state.status === "error" ? (
         <FeedbackState
+          theme={theme}
           actions={[
             {
               accessibilityLabel: "Réessayer la comparaison",

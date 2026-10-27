@@ -1,4 +1,34 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+const assertTextContrast = async (page: Page, label: string) => {
+  const contrast = await page
+    .getByTestId("calendar-scroll-content")
+    .getByText(label, { exact: true })
+    .filter({ visible: true })
+    .first()
+    .evaluate((el) => {
+      const rgb = (value: string) => value.match(/[\d.]+/g)!.map(Number);
+      const lum = (c: number[]) =>
+        c
+          .slice(0, 3)
+          .map((v) => v / 255)
+          .map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
+          .reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0);
+      let parent: Element | null = el;
+      while (parent) {
+        const bg = rgb(getComputedStyle(parent).backgroundColor);
+        if (bg.length === 3 || bg[3] === 1) {
+          const [high, low] = [
+            lum(rgb(getComputedStyle(el).color)),
+            lum(bg),
+          ].sort((a, b) => b - a);
+          return (high + 0.05) / (low + 0.05);
+        }
+        parent = parent.parentElement;
+      }
+      return 0;
+    });
+  expect(contrast, `${label} contrast`).toBeGreaterThanOrEqual(4.5);
+};
 const date = "2026-10-25";
 const operation = {
   id: 1,
@@ -100,37 +130,7 @@ for (const width of [320, 390, 768, 1440])
       await page.getByRole("button", { name: "Se connecter" }).click();
       await page.getByRole("tab", { name: "Calendrier" }).click();
       for (const label of ["Prochains mois", "Simulation"]) {
-        const contrast = await page
-          .getByText(label, { exact: true })
-          .first()
-          .evaluate((el) => {
-            const rgb = (value: string) => value.match(/[\d.]+/g)!.map(Number);
-            const lum = (c: number[]) =>
-              c
-                .slice(0, 3)
-                .map((v) => v / 255)
-                .map((v) =>
-                  v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4,
-                )
-                .reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0);
-            let parent: Element | null = el;
-            while (parent) {
-              const bg = rgb(getComputedStyle(parent).backgroundColor);
-              if (bg.length === 3 || bg[3] === 1) {
-                const [high, low] = [
-                  lum(rgb(getComputedStyle(el).color)),
-                  lum(bg),
-                ].sort((a, b) => b - a);
-                return (high + 0.05) / (low + 0.05);
-              }
-              parent = parent.parentElement;
-            }
-            return 0;
-          });
-        expect(
-          contrast,
-          `${label} contrast in ${theme}`,
-        ).toBeGreaterThanOrEqual(4.5);
+        await assertTextContrast(page, label);
       }
       if (width < 768) {
         const fab = page.getByRole("button", {
@@ -191,3 +191,36 @@ for (const width of [320, 390, 768, 1440])
         path: test.info().outputPath(`native-calendar-${width}-${theme}.png`),
       });
     });
+
+for (const theme of ["light", "dark"] as const)
+  test(`simulation error stays readable in ${theme}`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: theme });
+    await page.clock.setFixedTime(new Date("2026-10-18T10:00:00Z"));
+    await page.route(/\/v1\/budget-forecast(?:\?.*)?$/, (route) =>
+      route.fulfill({ status: 503, json: { message: "offline" } }),
+    );
+    await page.goto("/sign-in");
+    await page.getByLabel("Email").fill("happy@example.test");
+    await page
+      .getByRole("textbox", { name: "Mot de passe", exact: true })
+      .fill("correct-horse-battery-staple");
+    await page.getByRole("button", { name: "Se connecter" }).click();
+    await page.getByRole("tab", { name: "Calendrier" }).click();
+    const toggle = page
+      .getByTestId("calendar-scroll-content")
+      .getByRole("switch", { name: "Simulation", exact: true })
+      .filter({ visible: true })
+      .last();
+    if (!(await toggle.isChecked())) await toggle.click();
+    await expect(
+      page
+        .getByTestId("calendar-scroll-content")
+        .getByText("Comparaison indisponible", { exact: true })
+        .filter({ visible: true }),
+    ).toBeVisible();
+    await assertTextContrast(page, "Comparaison indisponible");
+    await assertTextContrast(
+      page,
+      "L’écart de simulation n’a pas pu être chargé.",
+    );
+  });

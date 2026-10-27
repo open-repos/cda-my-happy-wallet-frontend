@@ -82,3 +82,10 @@ la zone défilante se termine au-dessus du FAB. Son icône suit aussi le thème.
 
 La [revue canonique](calendar-visual-review.md) documente la référence mobile
 mise à jour, les différences attendues et les limites de recette appareil.
+
+Les états sans cadre de la comparaison Simulation reçoivent explicitement le
+thème de leur surface, y compris après une erreur de lecture. FeedbackState
+accepte ce thème sans changer les consommateurs historiques sur fond clair.
+Deux parcours supplémentaires injectent un HTTP 503 et contrôlent le contraste
+du titre et de la description d’erreur dans les deux thèmes. Les contrôles de
+contraste ciblent les éléments visibles du calendrier, pas les onglets masqués.

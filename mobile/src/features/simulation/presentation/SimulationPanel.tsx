@@ -26,8 +26,10 @@ import { useSimulation } from "@/src/features/simulation/presentation/Simulation
 import { usePotentialEvents } from "@/src/features/simulation/presentation/usePotentialEvents";
 
 const useStyles = () => {
-  const colors = themes[useColorScheme() === "dark" ? "dark" : "light"].color;
-  return { colors, styles: useMemo(() => makeStyles(colors), [colors]) };
+  const theme: keyof typeof themes =
+    useColorScheme() === "dark" ? "dark" : "light";
+  const colors = themes[theme].color;
+  return { theme, colors, styles: useMemo(() => makeStyles(colors), [colors]) };
 };
 const semibold = `${primitives.fontWeight.semibold}` as "600";
 
@@ -169,7 +171,7 @@ const PotentialCard = ({
  * L'interrupteur et la comparaison (#240) restent en haut de l'écran.
  */
 export const SimulationPanel = () => {
-  const { styles } = useStyles();
+  const { styles, theme } = useStyles();
   const simulation = useSimulation();
   const { httpClient } = useAuth();
   const gateway = useMemo(
@@ -254,6 +256,7 @@ export const SimulationPanel = () => {
       {/* Formulaire ouvert : le message s'affiche dans sa fenêtre. */}
       {simulation.message != null && edited == null ? (
         <FeedbackBanner
+          theme={theme}
           kind={simulation.mutationStatus === "error" ? "error" : "success"}
         >
           {simulation.message}
@@ -298,6 +301,7 @@ export const SimulationPanel = () => {
 
       {potentials.status === "loading" ? (
         <FeedbackState
+          theme={theme}
           description="Chargement des éléments potentiels…"
           framed={false}
           kind="loading"
@@ -306,6 +310,7 @@ export const SimulationPanel = () => {
       ) : null}
       {potentials.status === "error" ? (
         <FeedbackState
+          theme={theme}
           actions={[
             {
               accessibilityLabel: "Réessayer les éléments potentiels",
