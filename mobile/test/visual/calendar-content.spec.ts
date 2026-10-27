@@ -132,6 +132,21 @@ for (const width of [320, 390, 768, 1440])
           `${label} contrast in ${theme}`,
         ).toBeGreaterThanOrEqual(4.5);
       }
+      if (width < 768) {
+        const fab = page.getByRole("button", {
+          name: "Ajouter une opération ou un événement",
+          exact: true,
+        });
+        await expect(fab).toBeVisible();
+        const scroll = await page
+          .getByTestId("calendar-scroll-content")
+          .boundingBox();
+        const bounds = await fab.boundingBox();
+        expect(scroll!.y + scroll!.height).toBeLessThanOrEqual(bounds!.y);
+        await expect(
+          page.getByTestId("calendar-quick-add-space"),
+        ).toBeVisible();
+      }
       const day = page.getByRole("button", {
         name: /^25 octobre 2026.*122 opérations réelles.*1 événement prévu.*1 élément potentiel.*1 événement en retard/,
       });

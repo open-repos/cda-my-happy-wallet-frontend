@@ -73,3 +73,9 @@ plutôt que des styles figés en clair ; les modèles et commandes sont conserv�
 Les huit variantes navigateur mesurent aussi le contraste calculé du lien et
 du libellé Simulation (au moins 4,5:1). Les styles Web ne sont pas importés dans
 l’application native : les composants et tokens natifs existants sont réutilisés.
+
+Sur téléphone, le calendrier réserve une rangée de 88 px sous sa zone de
+défilement (FAB 56 px et deux espaces de 16 px), au-dessus des onglets qui
+possèdent déjà la safe area. Le FAB ne recouvre donc plus le détail ; sa
+silhouette et son menu existants restent conservés. Les tests mesurent que
+la zone défilante se termine au-dessus du FAB. Son icône suit aussi le thème.

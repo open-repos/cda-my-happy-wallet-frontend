@@ -10,6 +10,7 @@ import {
   Text,
   View,
   useColorScheme,
+  useWindowDimensions,
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -58,6 +59,7 @@ import { useQuickAdd } from "@/src/features/quick-add/presentation/QuickAddProvi
 
 /** Calendrier budgétaire du mois : grille, modes, détail du jour, opérations. */
 export const BudgetCalendarScreen = () => {
+  const compact = useWindowDimensions().width < 768;
   const colors = themes[useColorScheme() === "dark" ? "dark" : "light"].color;
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
@@ -150,7 +152,10 @@ export const BudgetCalendarScreen = () => {
 
   return (
     <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        testID="calendar-scroll-content"
+        contentContainerStyle={styles.content}
+      >
         <View style={styles.heading}>
           <Text style={styles.eyebrow}>BUDGET</Text>
           <Text accessibilityRole="header" style={styles.title}>
@@ -463,6 +468,9 @@ export const BudgetCalendarScreen = () => {
         )}
         <SimulationPanel />
       </ScrollView>
+      {compact && (
+        <View testID="calendar-quick-add-space" style={styles.quickAddSpace} />
+      )}
       <RealizeOccurrenceModal
         key={
           realizing
@@ -499,6 +507,9 @@ const makeStyles = (
 ) =>
   StyleSheet.create({
     safeArea: { backgroundColor: colors.backgroundCanvas, flex: 1 },
+    // FAB 56 px, plus its 16 px clearance and a 16 px content gap. The tabs
+    // already own the bottom safe area, so it must not be added a second time.
+    quickAddSpace: { height: 88, flexShrink: 0 },
     content: {
       gap: 20,
       paddingBottom: 40,

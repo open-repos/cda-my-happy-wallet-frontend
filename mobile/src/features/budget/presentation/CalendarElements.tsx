@@ -87,14 +87,16 @@ export const CalendarElements = ({
           {item.nature === "planned" && item.occurrence && (
             <View style={styles.actions}>
               <Button
-                label={`Convertir ${item.title} en opération`}
+                label="Convertir en opération"
+                accessibilityLabel={`Convertir ${item.title} en opération`}
                 icon="swap-horizontal-outline"
                 variant="primary"
                 disabled={busy}
                 onPress={() => onRealize(item.occurrence!)}
               />
               <Button
-                label={`Annuler ${item.title}`}
+                label="Annuler"
+                accessibilityLabel={`Annuler ${item.title}`}
                 icon="close-outline"
                 disabled={busy}
                 onPress={() => onCancel(item.occurrence!)}
