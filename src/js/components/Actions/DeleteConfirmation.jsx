@@ -11,11 +11,17 @@ export const DeleteConfirmation = ({
   className = "",
 }) => {
   const id = useId(),
-    keep = useRef(null);
+    keep = useRef(null),
+    restoreFrame = useRef(null);
   useLayoutEffect(() => {
+    // StrictMode replays setup/cleanup: cancel a provisional restoration before
+    // focusing the mounted confirmation, while retaining the real unmount path.
+    cancelAnimationFrame(restoreFrame.current);
     keep.current?.focus();
     return () => {
-      requestAnimationFrame(() => returnFocusRef?.current?.focus());
+      restoreFrame.current = requestAnimationFrame(() =>
+        returnFocusRef?.current?.focus()
+      );
     };
   }, [returnFocusRef]);
   return (

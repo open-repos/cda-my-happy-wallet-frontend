@@ -1,3 +1,7 @@
+import { listCalendarResolutions } from "../../src/js/services/calendarResolutionsService";
+vi.mock("../../src/js/services/calendarResolutionsService", () => ({
+  listCalendarResolutions: vi.fn(),
+}));
 import React from "react";
 import { act, cleanup, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -30,7 +34,7 @@ vi.mock("../../src/js/services/budgetService", async (importOriginal) => ({
 }));
 vi.mock("../../src/js/services/oneOffOperationsService", () => ({
   oneOffOperationsService: {
-    listOperations: vi.fn(),
+    listAllOperations: vi.fn(),
     listAllCategories: vi.fn(),
     createOperation: vi.fn(),
   },
@@ -75,10 +79,8 @@ beforeEach(() => {
   budgetService.getSummary.mockResolvedValue({ days: [], revision: 1 });
   budgetService.listPending.mockResolvedValue([]);
   operations.listAllCategories.mockResolvedValue([]);
-  operations.listOperations.mockResolvedValue({
-    data: [],
-    meta: { hasNext: false },
-  });
+  operations.listAllOperations.mockResolvedValue([]);
+  listCalendarResolutions.mockResolvedValue([]);
 });
 afterEach(cleanup);
 
@@ -101,7 +103,7 @@ describe("loading announcements around a mutation (#171)", () => {
     expect(view.current.message).toBe("Événement ajouté.");
   });
 
-  it("announces the operations of a newly selected day", async () => {
+  it("filters an already complete month without announcing another network load", async () => {
     const renders = [];
     let current;
     const Probe = ({ selectedDate }) => {
@@ -120,21 +122,13 @@ describe("loading announcements around a mutation (#171)", () => {
     );
     await waitFor(() => expect(current.operationsStatus).toBe("success"));
 
-    let resolveDay;
-    operations.listOperations.mockReturnValue(
-      new Promise((resolve) => {
-        resolveDay = resolve;
-      })
-    );
-    const before = renders.length;
+    const calls = operations.listAllOperations.mock.calls.length;
     view.rerender(
       <SimulationProvider>
         <Probe selectedDate="2026-10-12" />
       </SimulationProvider>
     );
-    await waitFor(() => expect(current.operationsStatus).toBe("loading"));
-    expect(renders.slice(before).some(({ announces }) => announces)).toBe(true);
-    await act(async () => resolveDay({ data: [], meta: { hasNext: false } }));
-    await waitFor(() => expect(current.operationsStatus).toBe("success"));
+    expect(current.operationsStatus).toBe("success");
+    expect(operations.listAllOperations).toHaveBeenCalledTimes(calls);
   });
 });

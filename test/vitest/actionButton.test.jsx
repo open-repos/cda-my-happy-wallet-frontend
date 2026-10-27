@@ -1,6 +1,13 @@
-import React, { createRef } from "react";
+import { DeleteConfirmation } from "../../src/js/components/Actions/DeleteConfirmation";
+import React, { createRef, StrictMode } from "react";
 import { afterEach, describe, it, expect, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import { Button } from "../../src/js/components/Actions/Button";
 import { ActionButton } from "../../src/js/components/Actions/ActionButton";
 afterEach(cleanup);
@@ -67,4 +74,32 @@ describe("shared action buttons", () => {
     expect(button.querySelector('[aria-hidden="true"] svg')).not.toBeNull();
     expect(button).toHaveAttribute("data-variant");
   });
+});
+
+it("keeps cancellation focused through StrictMode replay and restores the trigger on close", async () => {
+  const trigger = createRef();
+  const content = (open) => (
+    <StrictMode>
+      {!open && <button ref={trigger}>Supprimer Courses</button>}
+      {open && (
+        <DeleteConfirmation
+          title="Courses"
+          onCancel={vi.fn()}
+          onConfirm={vi.fn()}
+          returnFocusRef={trigger}
+        />
+      )}
+    </StrictMode>
+  );
+  const { rerender } = render(content(false));
+  rerender(content(true));
+  await act(async () => {
+    await new Promise(requestAnimationFrame);
+  });
+  expect(screen.getByRole("button", { name: "Annuler" })).toHaveFocus();
+  rerender(content(false));
+  await act(async () => {
+    await new Promise(requestAnimationFrame);
+  });
+  expect(trigger.current).toHaveFocus();
 });

@@ -1,3 +1,4 @@
+import { calendarContent } from "../../src/js/utils/calendarContent";
 import React from "react";
 import {
   cleanup,
@@ -74,7 +75,6 @@ const summary = (overrides = {}) => ({
   ],
   ...overrides,
 });
-
 const occurrence = {
   eventId: 8,
   occurrenceDate: `${month}-01`,
@@ -93,31 +93,40 @@ const actions = {
   cancelOccurrence: vi.fn().mockResolvedValue(true),
 };
 
-const state = (overrides = {}) => ({
-  summary: summary(),
-  summaryStatus: "success",
-  pending: [occurrence],
-  categories: [
-    { id: 3, name: "Logement", color: "#275DAD", icon: "solid:house" },
-  ],
-  operations: [
-    {
-      id: 1,
-      title: "Courses",
-      amount: "40.00",
-      currency: "EUR",
-      type: "DEPENSE",
-      operationDate: `${month}-02`,
-      categoryId: 3,
-    },
-  ],
-  operationsMeta: { limit: 20, hasNext: false, nextCursor: null },
-  operationsStatus: "success",
-  mutationStatus: "idle",
-  message: { tone: "info", text: "" },
-  ...actions,
-  ...overrides,
-});
+const state = (overrides = {}) => {
+  const result = {
+    summary: summary(),
+    summaryStatus: "success",
+    pending: [occurrence],
+    categories: [
+      { id: 3, name: "Logement", color: "#275DAD", icon: "solid:house" },
+    ],
+    operations: [
+      {
+        id: 1,
+        title: "Courses",
+        amount: "40.00",
+        currency: "EUR",
+        type: "DEPENSE",
+        operationDate: `${month}-02`,
+        categoryId: 3,
+      },
+    ],
+    operationsMeta: { limit: 20, hasNext: false, nextCursor: null },
+    operationsStatus: "success",
+    mutationStatus: "idle",
+    message: { tone: "info", text: "" },
+    ...actions,
+    ...overrides,
+  };
+  result.content = calendarContent({
+    operations: result.operations,
+    occurrences: result.pending.map((o) => ({ ...o, id: o.eventId })),
+    resolutions: [],
+    today: `${month}-28`,
+  });
+  return result;
+};
 
 const text = (element) => element.textContent.replace(/\s/g, " ");
 const render = (ui) => renderComponent(ui, { wrapper: MemoryRouter });
@@ -306,7 +315,7 @@ describe("budget calendar page", () => {
 
   it("labels each operation with its category and icon", async () => {
     render(<Calendrier />);
-    const row = screen.getByText("Courses").closest("li");
+    const row = screen.getByText("Courses").closest("tr");
     expect(within(row).getByText("Logement")).toBeInTheDocument();
     // Icône décorative, dessinée dans la couleur de la catégorie.
     const icon = await waitFor(() => {
@@ -328,7 +337,7 @@ describe("budget calendar page", () => {
     fireEvent.click(screen.getByRole("button", { name: "Mois suivant" }));
     rerender(<Calendrier />);
     await expectAnnouncedIn(captured, "status", "Calcul de votre budget…");
-    await expectAnnouncedIn(captured, "status", "Chargement des opérations…");
+    await expectAnnouncedIn(captured, "status", "Chargement des éléments…");
 
     useBudgetCalendar.mockReturnValue(
       state({ summaryStatus: "error", operationsStatus: "error" })
@@ -342,7 +351,7 @@ describe("budget calendar page", () => {
     await expectAnnouncedIn(
       captured,
       "alert",
-      "Les opérations n’ont pas pu être chargées."
+      "Les éléments n’ont pas pu être chargés."
     );
   });
 
@@ -384,14 +393,14 @@ describe("budget calendar page", () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
     for (const region of screen.getAllByRole("status")) {
       expect(region).not.toHaveTextContent("Calcul de votre budget…");
-      expect(region).not.toHaveTextContent("Chargement des opérations…");
+      expect(region).not.toHaveTextContent("Chargement des éléments…");
     }
   });
 
   it("filters the list by day and returns to the whole month", () => {
     render(<Calendrier />);
     expect(
-      screen.getByRole("heading", { name: /^Opérations de / })
+      screen.getByRole("heading", { name: /^Éléments de / })
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /dépenses 40,00/ }));
     expect(useBudgetCalendar).toHaveBeenLastCalledWith(month, `${month}-02`);
@@ -412,14 +421,19 @@ describe("budget calendar page", () => {
       screen.getByRole("button", { name: "Enregistrer l’opération" })
     );
     await vi.waitFor(() =>
-      expect(actions.realizeOccurrence).toHaveBeenCalledWith(occurrence, {
-        categoryId: 3,
-        title: "Loyer",
-        amount: "287.90",
-        operationDate: `${month}-01`,
-      })
+      expect(actions.realizeOccurrence).toHaveBeenCalledWith(
+        expect.objectContaining(occurrence),
+        {
+          categoryId: 3,
+          title: "Loyer",
+          amount: "287.90",
+          operationDate: `${month}-01`,
+        }
+      )
     );
     fireEvent.click(screen.getByRole("button", { name: /^Annuler Loyer/ }));
-    expect(actions.cancelOccurrence).toHaveBeenCalledWith(occurrence);
+    expect(actions.cancelOccurrence).toHaveBeenCalledWith(
+      expect.objectContaining(occurrence)
+    );
   });
 });

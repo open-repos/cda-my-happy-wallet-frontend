@@ -11,7 +11,11 @@ const isPaginationMeta = (meta) =>
   (typeof meta?.nextCursor === "string" || meta?.nextCursor === null);
 
 const parseCollectionPage = (payload, parseItem) => {
-  if (!Array.isArray(payload?.data) || !isPaginationMeta(payload?.meta)) {
+  if (
+    !Array.isArray(payload?.data) ||
+    !isPaginationMeta(payload?.meta) ||
+    (payload.meta.hasNext && !payload.meta.nextCursor)
+  ) {
     throw new Error("Invalid collection response");
   }
 

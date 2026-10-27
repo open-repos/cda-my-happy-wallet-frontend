@@ -447,3 +447,66 @@
     width: 100%;
   }
 }
+
+/* The common detail contains a compact list: let the grid track shrink with
+   enlarged text instead of using its intrinsic table/button width. */
+.budget-calendar__layout > *,
+.budget-events,
+.budget-occurrence__main,
+.budget-occurrence__actions {
+  min-width: 0;
+  max-width: 100%;
+}
+.budget-events {
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+}
+.budget-events button {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 64rem) {
+  .budget-calendar__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.budget-events .compact-money-list,
+.budget-events .compact-money-table,
+.budget-events .compact-money-table__actions {
+  min-width: 0;
+  max-width: 100%;
+}
+@media (max-width: 30rem) {
+  .budget-events {
+    padding: 0.75rem;
+  }
+  .budget-events .budget-occurrence__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .budget-events .budget-occurrence__actions .monthly-event-button {
+    flex: 0 0 auto;
+  }
+}
+.budget-mode__group {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  flex-wrap: wrap;
+}
+.budget-mode__option {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.budget-occurrence__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--web-action-min-size);
+  color: var(--ds-color-text-secondary);
+}
+.budget-occurrence__link:focus-visible {
+  outline: var(--ds-border-width-focus) solid var(--ds-color-focus-ring);
+  outline-offset: 0;
+}

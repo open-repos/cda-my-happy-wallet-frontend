@@ -136,6 +136,15 @@ describe("monthly event pages", () => {
       summary: null,
       summaryStatus: "future",
       pending: [],
+      content: [
+        {
+          key: "occurrence:1",
+          nature: "planned",
+          date: today,
+          title: event.title,
+          occurrence: { ...event, eventId: event.id, occurrenceDate: today },
+        },
+      ],
       categories: [],
       operations: [],
       operationsMeta: null,
