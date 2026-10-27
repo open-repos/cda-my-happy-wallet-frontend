@@ -79,3 +79,6 @@ défilement (FAB 56 px et deux espaces de 16 px), au-dessus des onglets qui
 possèdent déjà la safe area. Le FAB ne recouvre donc plus le détail ; sa
 silhouette et son menu existants restent conservés. Les tests mesurent que
 la zone défilante se termine au-dessus du FAB. Son icône suit aussi le thème.
+
+La [revue canonique](calendar-visual-review.md) documente la référence mobile
+mise à jour, les différences attendues et les limites de recette appareil.
