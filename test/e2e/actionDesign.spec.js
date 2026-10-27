@@ -1,6 +1,28 @@
 import { expect, test } from "@playwright/test";
 import { prepareSimulationPage } from "./simulationFixture.mjs";
 
+test("the mobile navigation profile stays clickable above the quick-add area", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await prepareSimulationPage(page);
+  await page.goto("/operations");
+  const dock = page.locator(".quick-add-dock");
+  await expect(dock).toBeVisible();
+  await page
+    .getByRole("button", { name: "Ouvrir le menu", exact: true })
+    .click();
+  await expect(dock).toBeHidden();
+  const profile = page.locator(
+    'button[aria-controls="sidebar-profile-details"]'
+  );
+  await profile.click();
+  await expect(profile).toHaveAttribute("aria-expanded", "true");
+  await profile.click();
+  await page.keyboard.press("Escape");
+  await expect(dock).toBeVisible();
+});
+
 // Measure actual text colours against the first opaque rendered ancestor.
 const assertContrast = async (root) => {
   const failures = await root.evaluate((root) => {
