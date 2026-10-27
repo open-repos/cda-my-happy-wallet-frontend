@@ -66,3 +66,10 @@ Les commandes Convertir et Annuler du nouveau détail utilisent Button, avec
 icônes Ionicons, libellés explicites, thèmes et cibles d'au moins 48 px.
 Les scénarios de jour complet contrôlent ces boutons aux quatre largeurs et
 dans les deux thèmes. Les seuils des références visuelles restent inchangés.
+
+Le lien Prochains mois utilise textSecondary sur le fond du calendrier. Le
+panneau et la comparaison Simulation suivent désormais le thème courant,
+plutôt que des styles figés en clair ; les modèles et commandes sont conservés.
+Les huit variantes navigateur mesurent aussi le contraste calculé du lien et
+du libellé Simulation (au moins 4,5:1). Les styles Web ne sont pas importés dans
+l’application native : les composants et tokens natifs existants sont réutilisés.

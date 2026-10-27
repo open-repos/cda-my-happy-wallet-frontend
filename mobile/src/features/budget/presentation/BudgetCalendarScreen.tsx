@@ -165,7 +165,7 @@ export const BudgetCalendarScreen = () => {
             ]}
           >
             <Ionicons
-              color={colors.actionSecondaryText}
+              color={colors.textSecondary}
               name="trending-up-outline"
               size={20}
             />
@@ -517,7 +517,7 @@ const makeStyles = (
       minHeight: semantic.size.controlMinHeight,
     },
     upcomingLabel: {
-      color: colors.actionSecondaryText,
+      color: colors.textSecondary,
       fontSize: 16,
       fontWeight: "600",
       textDecorationLine: "underline",

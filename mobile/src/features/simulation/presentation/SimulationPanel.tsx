@@ -1,5 +1,11 @@
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useColorScheme,
+} from "react-native";
 
 import { FeedbackBanner, FeedbackState } from "@/src/design/FeedbackState";
 import { primitives, semantic, themes } from "@/src/design/tokens";
@@ -19,7 +25,10 @@ import {
 import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
 import { usePotentialEvents } from "@/src/features/simulation/presentation/usePotentialEvents";
 
-const colors = themes.light.color;
+const useStyles = () => {
+  const colors = themes[useColorScheme() === "dark" ? "dark" : "light"].color;
+  return { colors, styles: useMemo(() => makeStyles(colors), [colors]) };
+};
 const semibold = `${primitives.fontWeight.semibold}` as "600";
 
 type PendingAction =
@@ -72,23 +81,28 @@ const Button = ({
   disabled: boolean;
   onPress(): void;
   variant?: "primary" | "secondary" | "danger";
-}) => (
-  <Pressable
-    accessibilityLabel={accessibilityLabel}
-    accessibilityRole="button"
-    accessibilityState={{ disabled }}
-    disabled={disabled}
-    onPress={onPress}
-    style={({ pressed }) => [
-      styles.button,
-      styles[variant],
-      disabled && styles.disabled,
-      pressed && styles.pressed,
-    ]}
-  >
-    <Text style={[styles.buttonLabel, styles[`${variant}Label`]]}>{label}</Text>
-  </Pressable>
-);
+}) => {
+  const { styles } = useStyles();
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.button,
+        styles[variant],
+        disabled && styles.disabled,
+        pressed && styles.pressed,
+      ]}
+    >
+      <Text style={[styles.buttonLabel, styles[`${variant}Label`]]}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+};
 
 const PotentialCard = ({
   event,
@@ -100,48 +114,54 @@ const PotentialCard = ({
   busy: boolean;
   onAction(action: "confirm" | "delete"): void;
   onEdit(): void;
-}) => (
-  <View style={styles.potential}>
-    <View style={styles.potentialHeading}>
-      <Text accessibilityRole="header" style={styles.potentialTitle}>
-        {event.title}
+}) => {
+  const { styles } = useStyles();
+  return (
+    <View style={styles.potential}>
+      <View style={styles.potentialHeading}>
+        <Text accessibilityRole="header" style={styles.potentialTitle}>
+          {event.title}
+        </Text>
+        <Text style={styles.badge}>Potentiel</Text>
+      </View>
+      <Text style={styles.help}>
+        {event.kind === "DEPENSE" ? "Dépense" : "Entrée"} :{" "}
+        {formatMoney(event.amount, event.currency)} ·{" "}
+        {recurrenceLabel(event.recurrence)}
       </Text>
-      <Text style={styles.badge}>Potentiel</Text>
+      <Text style={styles.help}>
+        Date de début : {longDate(event.startDate)}
+      </Text>
+      <Text style={styles.help}>
+        Expiration : à partir du{" "}
+        {longDate(potentialExpiration(event.startDate))}, si non confirmé. Toute
+        série récurrente expire selon son premier mois.
+      </Text>
+      {/* Ni réalisation ni annulation d'occurrence avant confirmation. */}
+      <View style={styles.actions}>
+        <Button
+          accessibilityLabel={`Confirmer ${event.title}`}
+          disabled={busy}
+          label="Confirmer"
+          onPress={() => onAction("confirm")}
+          variant="primary"
+        />
+        <Button
+          accessibilityLabel={`Modifier ${event.title}`}
+          disabled={busy}
+          label="Modifier"
+          onPress={onEdit}
+        />
+        <Button
+          accessibilityLabel={`Supprimer ${event.title}`}
+          disabled={busy}
+          label="Supprimer"
+          onPress={() => onAction("delete")}
+        />
+      </View>
     </View>
-    <Text style={styles.help}>
-      {event.kind === "DEPENSE" ? "Dépense" : "Entrée"} :{" "}
-      {formatMoney(event.amount, event.currency)} ·{" "}
-      {recurrenceLabel(event.recurrence)}
-    </Text>
-    <Text style={styles.help}>Date de début : {longDate(event.startDate)}</Text>
-    <Text style={styles.help}>
-      Expiration : à partir du {longDate(potentialExpiration(event.startDate))},
-      si non confirmé. Toute série récurrente expire selon son premier mois.
-    </Text>
-    {/* Ni réalisation ni annulation d'occurrence avant confirmation. */}
-    <View style={styles.actions}>
-      <Button
-        accessibilityLabel={`Confirmer ${event.title}`}
-        disabled={busy}
-        label="Confirmer"
-        onPress={() => onAction("confirm")}
-        variant="primary"
-      />
-      <Button
-        accessibilityLabel={`Modifier ${event.title}`}
-        disabled={busy}
-        label="Modifier"
-        onPress={onEdit}
-      />
-      <Button
-        accessibilityLabel={`Supprimer ${event.title}`}
-        disabled={busy}
-        label="Supprimer"
-        onPress={() => onAction("delete")}
-      />
-    </View>
-  </View>
-);
+  );
+};
 
 /**
  * Éléments potentiels de la Simulation (#241) et leurs commandes, chacune
@@ -149,6 +169,7 @@ const PotentialCard = ({
  * L'interrupteur et la comparaison (#240) restent en haut de l'écran.
  */
 export const SimulationPanel = () => {
+  const { styles } = useStyles();
   const simulation = useSimulation();
   const { httpClient } = useAuth();
   const gateway = useMemo(
@@ -334,85 +355,88 @@ export const SimulationPanel = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  panel: { gap: primitives.space["3"] },
-  title: {
-    color: colors.textPrimary,
-    fontSize: primitives.fontSize.xl,
-    fontWeight: semibold,
-  },
-  help: {
-    color: colors.textSecondary,
-    fontSize: primitives.fontSize.sm,
-    lineHeight: 20,
-  },
-  actions: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: primitives.space["2"],
-  },
-  button: {
-    alignItems: "center",
-    borderRadius: semantic.radius.control,
-    justifyContent: "center",
-    minHeight: semantic.size.controlMinHeight,
-    paddingHorizontal: semantic.space.controlInline,
-  },
-  primary: { backgroundColor: colors.actionPrimaryBackground },
-  secondary: { backgroundColor: colors.actionSecondaryBackground },
-  danger: { backgroundColor: colors.actionDangerBackground },
-  buttonLabel: { fontSize: primitives.fontSize.md, fontWeight: semibold },
-  primaryLabel: { color: colors.actionPrimaryText },
-  secondaryLabel: { color: colors.actionSecondaryText },
-  dangerLabel: { color: colors.actionDangerText },
-  disabled: { opacity: 0.6 },
-  pressed: { opacity: 0.8 },
-  // Contour pointillé et libellé : un potentiel ne se confond pas avec un
-  // événement prévu, même sans percevoir les couleurs.
-  potential: {
-    backgroundColor: colors.backgroundSurface,
-    borderColor: colors.borderStrong,
-    borderRadius: semantic.radius.card,
-    borderStyle: "dashed",
-    borderWidth: 2,
-    gap: primitives.space["2"],
-    padding: primitives.space["4"],
-  },
-  potentialHeading: {
-    alignItems: "center",
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: primitives.space["2"],
-    justifyContent: "space-between",
-  },
-  potentialTitle: {
-    color: colors.textPrimary,
-    flexShrink: 1,
-    fontSize: primitives.fontSize.md,
-    fontWeight: semibold,
-  },
-  badge: {
-    borderColor: colors.borderStrong,
-    borderRadius: semantic.radius.control,
-    borderStyle: "dashed",
-    borderWidth: semantic.borderWidth.default,
-    color: colors.textPrimary,
-    fontSize: primitives.fontSize.sm,
-    fontWeight: semibold,
-    paddingHorizontal: primitives.space["2"],
-    paddingVertical: primitives.space["1"],
-  },
-  confirmation: {
-    backgroundColor: colors.backgroundSurface,
-    borderColor: colors.borderStrong,
-    borderRadius: semantic.radius.card,
-    borderWidth: semantic.borderWidth.default,
-    gap: primitives.space["3"],
-    padding: primitives.space["4"],
-  },
-  confirmationText: {
-    color: colors.textPrimary,
-    fontSize: primitives.fontSize.md,
-    lineHeight: 22,
-  },
-});
+const makeStyles = (
+  colors: typeof themes.light.color | typeof themes.dark.color,
+) =>
+  StyleSheet.create({
+    panel: { gap: primitives.space["3"] },
+    title: {
+      color: colors.textPrimary,
+      fontSize: primitives.fontSize.xl,
+      fontWeight: semibold,
+    },
+    help: {
+      color: colors.textSecondary,
+      fontSize: primitives.fontSize.sm,
+      lineHeight: 20,
+    },
+    actions: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: primitives.space["2"],
+    },
+    button: {
+      alignItems: "center",
+      borderRadius: semantic.radius.control,
+      justifyContent: "center",
+      minHeight: semantic.size.controlMinHeight,
+      paddingHorizontal: semantic.space.controlInline,
+    },
+    primary: { backgroundColor: colors.actionPrimaryBackground },
+    secondary: { backgroundColor: colors.actionSecondaryBackground },
+    danger: { backgroundColor: colors.actionDangerBackground },
+    buttonLabel: { fontSize: primitives.fontSize.md, fontWeight: semibold },
+    primaryLabel: { color: colors.actionPrimaryText },
+    secondaryLabel: { color: colors.actionSecondaryText },
+    dangerLabel: { color: colors.actionDangerText },
+    disabled: { opacity: 0.6 },
+    pressed: { opacity: 0.8 },
+    // Contour pointillé et libellé : un potentiel ne se confond pas avec un
+    // événement prévu, même sans percevoir les couleurs.
+    potential: {
+      backgroundColor: colors.backgroundSurface,
+      borderColor: colors.borderStrong,
+      borderRadius: semantic.radius.card,
+      borderStyle: "dashed",
+      borderWidth: 2,
+      gap: primitives.space["2"],
+      padding: primitives.space["4"],
+    },
+    potentialHeading: {
+      alignItems: "center",
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: primitives.space["2"],
+      justifyContent: "space-between",
+    },
+    potentialTitle: {
+      color: colors.textPrimary,
+      flexShrink: 1,
+      fontSize: primitives.fontSize.md,
+      fontWeight: semibold,
+    },
+    badge: {
+      borderColor: colors.borderStrong,
+      borderRadius: semantic.radius.control,
+      borderStyle: "dashed",
+      borderWidth: semantic.borderWidth.default,
+      color: colors.textPrimary,
+      fontSize: primitives.fontSize.sm,
+      fontWeight: semibold,
+      paddingHorizontal: primitives.space["2"],
+      paddingVertical: primitives.space["1"],
+    },
+    confirmation: {
+      backgroundColor: colors.backgroundSurface,
+      borderColor: colors.borderStrong,
+      borderRadius: semantic.radius.card,
+      borderWidth: semantic.borderWidth.default,
+      gap: primitives.space["3"],
+      padding: primitives.space["4"],
+    },
+    confirmationText: {
+      color: colors.textPrimary,
+      fontSize: primitives.fontSize.md,
+      lineHeight: 22,
+    },
+  });

@@ -99,6 +99,39 @@ for (const width of [320, 390, 768, 1440])
         .fill("correct-horse-battery-staple");
       await page.getByRole("button", { name: "Se connecter" }).click();
       await page.getByRole("tab", { name: "Calendrier" }).click();
+      for (const label of ["Prochains mois", "Simulation"]) {
+        const contrast = await page
+          .getByText(label, { exact: true })
+          .first()
+          .evaluate((el) => {
+            const rgb = (value: string) => value.match(/[\d.]+/g)!.map(Number);
+            const lum = (c: number[]) =>
+              c
+                .slice(0, 3)
+                .map((v) => v / 255)
+                .map((v) =>
+                  v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4,
+                )
+                .reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0);
+            let parent: Element | null = el;
+            while (parent) {
+              const bg = rgb(getComputedStyle(parent).backgroundColor);
+              if (bg.length === 3 || bg[3] === 1) {
+                const [high, low] = [
+                  lum(rgb(getComputedStyle(el).color)),
+                  lum(bg),
+                ].sort((a, b) => b - a);
+                return (high + 0.05) / (low + 0.05);
+              }
+              parent = parent.parentElement;
+            }
+            return 0;
+          });
+        expect(
+          contrast,
+          `${label} contrast in ${theme}`,
+        ).toBeGreaterThanOrEqual(4.5);
+      }
       const day = page.getByRole("button", {
         name: /^25 octobre 2026.*122 opérations réelles.*1 événement prévu.*1 élément potentiel.*1 événement en retard/,
       });
