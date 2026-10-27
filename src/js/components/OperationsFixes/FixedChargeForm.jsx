@@ -1,3 +1,4 @@
+import { ActionButton } from "../Actions/ActionButton";
 import { FixedCategorySelect } from "./FixedCategorySelect";
 import {
   fixedCategoryBody,
@@ -14,7 +15,6 @@ import {
 import { formatMoney } from "../BudgetCalendar/budgetFormat";
 import { LiveMessage } from "../LiveMessage";
 import { useFormFocus } from "../../hooks/useFormFocus";
-
 export const FixedChargeForm = ({
   charge,
   busy,
@@ -29,7 +29,11 @@ export const FixedChargeForm = ({
     () =>
       draft ?? {
         ...chargeInitialValues(charge),
-        ...(categories ? { categoryId: String(charge?.categoryId ?? "") } : {}),
+        ...(categories
+          ? {
+              categoryId: String(charge?.categoryId ?? ""),
+            }
+          : {}),
       }
   );
   const [errors, setErrors] = useState({});
@@ -40,11 +44,16 @@ export const FixedChargeForm = ({
   const preview = chargePreview(values);
   const change = (event) => {
     const { name, value } = event.target;
-    const next = { ...values, [name]: value };
+    const next = {
+      ...values,
+      [name]: value,
+    };
     setValues(next);
     onDraftChange?.(next);
     setErrors((current) => {
-      const next = { ...current };
+      const next = {
+        ...current,
+      };
       delete next[name];
       return next;
     });
@@ -76,7 +85,12 @@ export const FixedChargeForm = ({
       formRef.current?.elements.namedItem(Object.keys(next)[0])?.focus();
       return;
     }
-    if (await onSave({ ...chargeBody(values), ...fixedCategoryBody(values) }))
+    if (
+      await onSave({
+        ...chargeBody(values),
+        ...fixedCategoryBody(values),
+      })
+    )
       onClose();
   };
   return (
@@ -104,7 +118,9 @@ export const FixedChargeForm = ({
       >
         <fieldset disabled={busy}>
           <legend className="sr-only">Détails de la charge</legend>
-          {field("titre", "Titre de la charge", { maxLength: 50 })}
+          {field("titre", "Titre de la charge", {
+            maxLength: 50,
+          })}
           {categories && (
             <FixedCategorySelect
               id="charge-category"
@@ -198,17 +214,24 @@ export const FixedChargeForm = ({
           </p>
         </section>
         <div className="fixed-charge-actions">
-          <button
+          <ActionButton
+            action="cancel"
             className="one-off-button one-off-button--secondary"
             type="button"
             onClick={onClose}
             disabled={busy}
           >
             Annuler
-          </button>
-          <button className="one-off-button" type="submit" disabled={busy}>
+          </ActionButton>
+          <ActionButton
+            action="save"
+            className="one-off-button"
+            type="submit"
+            disabled={busy}
+            busy={busy}
+          >
             {busy ? "Enregistrement…" : "Enregistrer la charge"}
-          </button>
+          </ActionButton>
         </div>
       </form>
     </section>

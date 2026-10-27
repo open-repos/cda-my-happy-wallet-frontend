@@ -23,6 +23,8 @@ import Analyses from "./pages/Analyses";
 import Categories from "./pages/Categories";
 import CalculRaV from "./components/CalculRaV";
 
+import "../css/ActionForms.css";
+
 function App() {
   return (
     <>

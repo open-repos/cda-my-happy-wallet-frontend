@@ -1,12 +1,6 @@
 import { useMemo, useState } from "react";
-import {
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  useColorScheme,
-} from "react-native";
+import { Alert, StyleSheet, Text, View, useColorScheme } from "react-native";
+import { Button } from "@/src/design/Button";
 import { themes } from "@/src/design/tokens";
 import { FeedbackBanner } from "@/src/design/FeedbackState";
 import { useAuth } from "@/src/features/auth/presentation/AuthProvider";
@@ -92,24 +86,19 @@ export const CalendarElements = ({
           )}
           {item.nature === "planned" && item.occurrence && (
             <View style={styles.actions}>
-              <Pressable
-                accessibilityRole="button"
+              <Button
+                label={`Convertir ${item.title} en opération`}
+                icon="swap-horizontal-outline"
+                variant="primary"
                 disabled={busy}
-                style={styles.button}
                 onPress={() => onRealize(item.occurrence!)}
-              >
-                <Text style={styles.buttonText}>
-                  Convertir {item.title} en opération
-                </Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
+              />
+              <Button
+                label={`Annuler ${item.title}`}
+                icon="close-outline"
                 disabled={busy}
-                style={styles.button}
                 onPress={() => onCancel(item.occurrence!)}
-              >
-                <Text style={styles.buttonText}>Annuler {item.title}</Text>
-              </Pressable>
+              />
             </View>
           )}
           {item.nature === "potential" && (
@@ -171,18 +160,4 @@ const makeStyles = (
     title: { fontSize: 16, fontWeight: "600", color: colors.textPrimary },
     text: { fontSize: 14, color: colors.textPrimary, flexShrink: 1 },
     actions: { gap: 8 },
-    button: {
-      minHeight: 48,
-      justifyContent: "center",
-      padding: 12,
-      borderWidth: 1,
-      borderColor: colors.borderStrong,
-      borderRadius: 8,
-      backgroundColor: colors.actionSecondaryBackground,
-    },
-    buttonText: {
-      color: colors.actionSecondaryText,
-      fontSize: 16,
-      flexShrink: 1,
-    },
   });

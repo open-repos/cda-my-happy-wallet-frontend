@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Actions/ActionButton";
 import { useQuickAdd } from "../components/QuickAdd/QuickAddContext";
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
@@ -26,9 +27,7 @@ import { monthlyEventsService } from "../services/monthlyEventsService";
 import "../../css/MonthlyEvents.css";
 import "../../css/Operations.css";
 import "../../css/BudgetCalendar.css";
-
 const MODE_STORAGE_KEY = "mhw.calendar.mode";
-
 const toMonth = (date) =>
   `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
 const toDate = (date) =>
@@ -42,11 +41,16 @@ const shiftMonth = (month, offset) => {
 const calendarDays = (month) => {
   const first = monthDate(month);
   first.setUTCDate(first.getUTCDate() - ((first.getUTCDay() + 6) % 7));
-  return Array.from({ length: 42 }, (_, index) => {
-    const day = new Date(first);
-    day.setUTCDate(first.getUTCDate() + index);
-    return toDate(day);
-  });
+  return Array.from(
+    {
+      length: 42,
+    },
+    (_, index) => {
+      const day = new Date(first);
+      day.setUTCDate(first.getUTCDate() + index);
+      return toDate(day);
+    }
+  );
 };
 const parisToday = () =>
   new Intl.DateTimeFormat("en-CA", {
@@ -55,7 +59,6 @@ const parisToday = () =>
     month: "2-digit",
     day: "2-digit",
   }).format(new Date());
-
 const readMode = () => {
   try {
     const stored = window.localStorage.getItem(MODE_STORAGE_KEY);
@@ -66,7 +69,6 @@ const readMode = () => {
     return "markers";
   }
 };
-
 const groupByDate = (items, dateOf) =>
   items.reduce(
     (map, item) =>
@@ -84,7 +86,6 @@ const cellValue = (mode, day) => {
     ? null
     : formatCompact(day.forecastRemaining);
 };
-
 const cellLabel = (
   date,
   day,
@@ -117,7 +118,6 @@ const cellLabel = (
     );
   return parts.join(", ");
 };
-
 function Calendrier() {
   const simulation = useSimulation();
   const quickAdd = useQuickAdd();
@@ -148,7 +148,6 @@ function Calendrier() {
     if (events.status === "success") setEventsLoaded(true);
   }, [events.status]);
   const days = useMemo(() => calendarDays(month), [month]);
-
   useEffect(() => {
     try {
       window.localStorage.setItem(MODE_STORAGE_KEY, mode);
@@ -156,7 +155,6 @@ function Calendrier() {
       // La préférence est une commodité locale : son absence est sans effet.
     }
   }, [mode]);
-
   const summaryDays = useMemo(
     () => new Map((budget.summary?.days || []).map((day) => [day.date, day])),
     [budget.summary]
@@ -188,7 +186,6 @@ function Calendrier() {
     budget.mutationStatus === "loading" ||
     events.mutationStatus === "loading" ||
     simulation.mutationStatus === "loading";
-
   const changeMonth = (offset) => {
     setMonth(shiftMonth(month, offset));
     setSelectedDate(null);
@@ -219,7 +216,6 @@ function Calendrier() {
             : "create",
       });
   };
-
   return (
     <main className="calendrier-container monthly-events-page budget-calendar">
       <header className="monthly-events-header budget-calendar__header">
@@ -305,7 +301,8 @@ function Calendrier() {
           aria-labelledby="calendar-month-title"
         >
           <div className="budget-calendar__quick-add">
-            <button
+            <ActionButton
+              action="add"
               type="button"
               className="monthly-event-button"
               onClick={(event) =>
@@ -316,7 +313,7 @@ function Calendrier() {
               {selectedDate
                 ? `Ajouter le ${longDate(selectedDate)}`
                 : "Ajouter au calendrier"}
-            </button>
+            </ActionButton>
           </div>
           <CalendarModeToggle mode={mode} onChange={setMode} />
           <div className="monthly-calendar__weekdays" aria-hidden="true">
@@ -453,7 +450,12 @@ function Calendrier() {
           <PendingOccurrences
             occurrences={visiblePending}
             disabled={isSaving}
-            onRealize={(occurrence) => setForm({ type: "realize", occurrence })}
+            onRealize={(occurrence) =>
+              setForm({
+                type: "realize",
+                occurrence,
+              })
+            }
             onCancel={budget.cancelOccurrence}
           />
         </section>
@@ -625,5 +627,4 @@ function Calendrier() {
     </main>
   );
 }
-
 export default Calendrier;

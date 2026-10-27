@@ -57,3 +57,12 @@ synthèse. Les captures générées utilisent uniquement des données synthétiq
 La CI couvre les références canoniques et les autres parcours du dépôt.
 Chromium local/CI et export Expo Web ne constituent pas une recette Safari,
 iPhone/VoiceOver ou appareil Android/TalkBack ; ces appareils sont indisponibles.
+
+## Intégration avec develop
+
+La branche conserve les actions natives partagées de #304 et les ajouts Web
+fusionnés depuis #305/#315, après la synchronisation de release #311.
+Les commandes Convertir et Annuler du nouveau détail utilisent Button, avec
+icônes Ionicons, libellés explicites, thèmes et cibles d'au moins 48 px.
+Les scénarios de jour complet contrôlent ces boutons aux quatre largeurs et
+dans les deux thèmes. Les seuils des références visuelles restent inchangés.

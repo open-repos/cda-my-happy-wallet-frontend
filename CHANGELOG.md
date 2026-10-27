@@ -7,6 +7,18 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-10-26
+
+### Changed
+
+- Native shared action buttons now distinguish deletion with existing icons and themed danger styling. Floating add buttons gain a contrasting border and platform shadows; existing confirmations preserve cancellation focus (#297).
+
+### Fixed
+
+- Added a shared icon-capable category selector for operation, conversion and fixed-budget forms (#290).
+- Displayed existing personal category icons and fallbacks in shared native form choices with system theme colors (#291).
+- Kept expanded savings tables inside their scroll region instead of widening the page (#301).
+
 ## [1.7.0] - 2026-10-25
 
 ### Added
@@ -188,7 +200,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Replaced dynamic SSH host discovery with a pre-verified `known_hosts` file.
 - Isolated SSH credentials from validation and build jobs.
 
-[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.7.0...develop
+[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.8.0...develop
+[1.8.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.7.0...v1.8.0
 [1.7.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.6.0...v1.7.0
 [1.6.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.5.0...v1.6.0
 [1.5.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.4.0...v1.5.0

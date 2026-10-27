@@ -124,6 +124,15 @@ for (const width of [320, 390, 768, 1440])
           exact: true,
         }),
       ).toBeVisible();
+      for (const name of [
+        "Convertir Facture confirmée en opération",
+        "Annuler Facture confirmée",
+      ]) {
+        const action = page.getByRole("button", { name, exact: true });
+        await expect(action.getByTestId("action-button-icon")).toHaveCount(1);
+        const bounds = await action.boundingBox();
+        expect(bounds?.height).toBeGreaterThanOrEqual(48);
+      }
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth),
       ).toBeLessThanOrEqual(width);

@@ -1,3 +1,4 @@
+import { ActionButton } from "../Actions/ActionButton";
 import React, { useEffect, useRef, useState } from "react";
 import { useFixedCharges } from "../../hooks/useFixedCharges";
 import { CHARGE_PERIODS, chargeDisplay } from "../../utils/fixedCharges";
@@ -5,7 +6,6 @@ import { formatMoney } from "../BudgetCalendar/budgetFormat";
 import { LiveMessage } from "../LiveMessage";
 import { FixedChargeForm } from "./FixedChargeForm";
 import "../../../css/FixedCharges.css";
-
 export const FixedCharges = () => {
   const charges = useFixedCharges();
   const [editing, setEditing] = useState(undefined);
@@ -93,7 +93,8 @@ export const FixedCharges = () => {
                   </dd>
                 </dl>
                 <div className="fixed-charge-actions">
-                  <button
+                  <ActionButton
+                    action="edit"
                     type="button"
                     className="one-off-button one-off-button--secondary"
                     disabled={charges.busy || editing !== undefined}
@@ -104,8 +105,9 @@ export const FixedCharges = () => {
                     aria-label={`Modifier ${charge.titre}`}
                   >
                     Modifier
-                  </button>
-                  <button
+                  </ActionButton>
+                  <ActionButton
+                    action="delete"
                     type="button"
                     className="one-off-button one-off-button--secondary"
                     disabled={charges.busy || editing !== undefined}
@@ -113,7 +115,7 @@ export const FixedCharges = () => {
                     aria-label={`Supprimer ${charge.titre}`}
                   >
                     Supprimer
-                  </button>
+                  </ActionButton>
                 </div>
                 {deleting === charge.idOperationFixe && (
                   <fieldset
@@ -132,7 +134,8 @@ export const FixedCharges = () => {
                     >
                       Conserver la charge
                     </button>
-                    <button
+                    <ActionButton
+                      action="confirm"
                       className="one-off-button one-off-button--danger"
                       type="button"
                       onClick={async () => {
@@ -141,9 +144,10 @@ export const FixedCharges = () => {
                           setDeleting(null);
                         }
                       }}
+                      variant="danger"
                     >
                       Confirmer la suppression
-                    </button>
+                    </ActionButton>
                   </fieldset>
                 )}
               </article>
@@ -151,7 +155,8 @@ export const FixedCharges = () => {
           </div>
         </>
       )}
-      <button
+      <ActionButton
+        action="add"
         ref={addRef}
         className="one-off-button"
         type="button"
@@ -167,7 +172,7 @@ export const FixedCharges = () => {
         }}
       >
         Ajouter une charge
-      </button>
+      </ActionButton>
       {editing !== undefined && (
         <FixedChargeForm
           key={editing?.idOperationFixe ?? "new"}

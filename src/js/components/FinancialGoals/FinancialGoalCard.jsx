@@ -1,3 +1,4 @@
+import { ActionButton } from "../Actions/ActionButton";
 import { SavingsTrajectorySimulation } from "./SavingsTrajectorySimulation";
 import React, { useMemo, useState } from "react";
 import { EChart } from "../charts/EChart";
@@ -108,27 +109,29 @@ export const FinancialGoalCard = ({ goal, onEdit, onRefresh }) => {
             ))}
           </dl>
           <p className="goal-card__forecast">{forecastMessage(goal)}</p>
-          <button
+          <ActionButton
+            action="edit"
             type="button"
             className="monthly-event-button monthly-event-button--secondary"
             onClick={(event) => onEdit(goal, event.currentTarget)}
             aria-label={`Modifier l’objectif ${goal.title}`}
           >
             Modifier
-          </button>
+          </ActionButton>
         </div>
         <section
           className="goal-trajectory"
           aria-labelledby={`goal-${goal.id}-trajectory-title`}
         >
-          <button
+          <ActionButton
+            action="simulate"
             type="button"
             className="monthly-event-button monthly-event-button--secondary"
             onClick={() => setComparing((value) => !value)}
             aria-expanded={comparing}
           >
             {comparing ? "Revenir au rythme prévu" : "Simuler avec mon budget"}
-          </button>
+          </ActionButton>
           {comparing ? (
             <SavingsTrajectorySimulation goal={goal} onRefresh={onRefresh} />
           ) : (

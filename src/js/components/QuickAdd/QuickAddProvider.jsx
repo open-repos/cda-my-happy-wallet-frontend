@@ -1,3 +1,5 @@
+import { useViewportBounds } from "../../hooks/useViewportBounds";
+import { ActionButton } from "../Actions/ActionButton";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -46,11 +48,15 @@ export const QuickAddProvider = ({ children }) => {
     [panel, setPanel] = useState(null),
     [categories, setCategories] = useState([]),
     [categoryStatus, setCategoryStatus] = useState("idle"),
-    [feedback, setFeedback] = useState({ text: "", error: false });
+    [feedback, setFeedback] = useState({
+      text: "",
+      error: false,
+    });
   const returnFocus = useRef(null),
     overlay = useRef(null),
     fab = useRef(null);
   const busy = simulation.mutationStatus === "loading";
+  const viewportStyle = useViewportBounds();
   const restore = () =>
     requestAnimationFrame(() =>
       (returnFocus.current?.isConnected && !returnFocus.current.disabled
@@ -58,6 +64,12 @@ export const QuickAddProvider = ({ children }) => {
         : fab.current
       )?.focus()
     );
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    // Restore after the child form's cleanup; its focus hook also restores focus.
+    if (wasOpen.current && !panel) restore();
+    wasOpen.current = Boolean(panel);
+  }, [panel]);
   const contextDate =
     location.pathname === "/calendrier" && calendarDate
       ? calendarDate
@@ -67,8 +79,14 @@ export const QuickAddProvider = ({ children }) => {
       if (simulation.activeForm && simulation.activeForm !== "quick-add")
         return;
       returnFocus.current = trigger ?? document.activeElement;
-      setFeedback({ text: "", error: false });
-      setPanel({ kind, date: date ?? contextDate });
+      setFeedback({
+        text: "",
+        error: false,
+      });
+      setPanel({
+        kind,
+        date: date ?? contextDate,
+      });
       simulation.setActiveForm("quick-add");
     },
     [contextDate, simulation.activeForm, simulation.setActiveForm]
@@ -77,7 +95,6 @@ export const QuickAddProvider = ({ children }) => {
     if (busy) return;
     setPanel(null);
     simulation.setActiveForm(null);
-    restore();
   };
   const loadCategories = useCallback(async () => {
     setCategoryStatus("loading");
@@ -155,7 +172,6 @@ export const QuickAddProvider = ({ children }) => {
             : "Ajout enregistré.",
         error: false,
       });
-      restore();
     } else
       setFeedback({
         text: "L’ajout n’a pas pu être enregistré. Vérifiez les champs puis réessayez.",
@@ -165,9 +181,13 @@ export const QuickAddProvider = ({ children }) => {
   };
   return (
     <QuickAddContext.Provider
-      value={{ available: true, open, setCalendarDate }}
+      value={{
+        available: true,
+        open,
+        setCalendarDate,
+      }}
     >
-      <div className="quick-add-root">
+      <div className="quick-add-root" style={viewportStyle}>
         {children}
         <div className="quick-add-feedback">
           <LiveMessage
@@ -176,30 +196,48 @@ export const QuickAddProvider = ({ children }) => {
             visible={!panel}
           />
         </div>
-        <button
-          ref={fab}
-          type="button"
-          className="quick-add-fab"
-          aria-label={
-            panel
-              ? "Fermer l’ajout rapide"
-              : "Ajouter une opération ou un événement"
-          }
-          aria-expanded={Boolean(panel)}
-          aria-haspopup="dialog"
-          disabled={
-            busy ||
+        <div
+          className="quick-add-dock"
+          hidden={
+            Boolean(panel && panel.kind !== "menu") ||
             Boolean(
               simulation.activeForm && simulation.activeForm !== "quick-add"
             )
           }
-          hidden={Boolean(panel && panel.kind !== "menu")}
-          onClick={(e) =>
-            panel ? close() : open("menu", null, e.currentTarget)
-          }
         >
-          <FontAwesomeIcon icon={panel ? faTimes : faPlus} aria-hidden="true" />
-        </button>
+          <span className="quick-add-dock__context">
+            {location.pathname === "/calendrier"
+              ? `Calendrier · ${dateLabel(contextDate)}`
+              : "Ajouter au budget"}
+          </span>
+          <button
+            ref={fab}
+            type="button"
+            className="quick-add-fab"
+            aria-label={
+              panel
+                ? "Fermer l’ajout rapide"
+                : "Ajouter une opération ou un événement"
+            }
+            aria-expanded={Boolean(panel)}
+            aria-haspopup="dialog"
+            disabled={
+              busy ||
+              Boolean(
+                simulation.activeForm && simulation.activeForm !== "quick-add"
+              )
+            }
+            hidden={Boolean(panel && panel.kind !== "menu")}
+            onClick={(e) =>
+              panel ? close() : open("menu", null, e.currentTarget)
+            }
+          >
+            <FontAwesomeIcon
+              icon={panel ? faTimes : faPlus}
+              aria-hidden="true"
+            />
+          </button>
+        </div>
         {panel && (
           <div
             ref={overlay}
@@ -232,8 +270,14 @@ export const QuickAddProvider = ({ children }) => {
                         type="button"
                         key={kind}
                         onClick={() => {
-                          setFeedback({ text: "", error: false });
-                          setPanel((p) => ({ ...p, kind }));
+                          setFeedback({
+                            text: "",
+                            error: false,
+                          });
+                          setPanel((p) => ({
+                            ...p,
+                            kind,
+                          }));
                         }}
                       >
                         <FontAwesomeIcon icon={icon} aria-hidden="true" />
@@ -244,13 +288,14 @@ export const QuickAddProvider = ({ children }) => {
                       </button>
                     ))}
                   </div>
-                  <button
+                  <ActionButton
+                    action="cancel"
                     type="button"
                     className="one-off-button one-off-button--secondary"
                     onClick={close}
                   >
                     Annuler
-                  </button>
+                  </ActionButton>
                 </>
               ) : (
                 <>
@@ -297,13 +342,14 @@ export const QuickAddProvider = ({ children }) => {
                             Réessayer les catégories
                           </button>
                         )}
-                        <button
+                        <ActionButton
+                          action="cancel"
                           type="button"
                           className="one-off-button one-off-button--secondary"
                           onClick={close}
                         >
                           Annuler
-                        </button>
+                        </ActionButton>
                       </>
                     )
                   ) : (
