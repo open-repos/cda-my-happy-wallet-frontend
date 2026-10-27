@@ -485,6 +485,9 @@
     flex-direction: column;
     align-items: stretch;
   }
+  .budget-events .budget-occurrence__actions .monthly-event-button {
+    flex: 0 0 auto;
+  }
 }
 .budget-mode__group {
   min-width: 0;

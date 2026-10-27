@@ -129,6 +129,13 @@ for (const width of [320, 390, 768, 1440])
       await expect(
         page.getByText("Déjà converti", { exact: true })
       ).toHaveCount(0);
+      for (const action of await page
+        .locator(".budget-occurrence__actions button")
+        .all()) {
+        const bounds = await action.boundingBox();
+        expect(bounds.height).toBeGreaterThanOrEqual(44);
+        expect(bounds.height).toBeLessThanOrEqual(80);
+      }
       const edit = page.getByRole("button", {
         name: "Modifier Courses 1",
         exact: true,

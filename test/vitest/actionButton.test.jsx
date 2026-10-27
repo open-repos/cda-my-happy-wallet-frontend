@@ -80,7 +80,7 @@ it("keeps cancellation focused through StrictMode replay and restores the trigge
   const trigger = createRef();
   const content = (open) => (
     <StrictMode>
-      <button ref={trigger}>Supprimer Courses</button>
+      {!open && <button ref={trigger}>Supprimer Courses</button>}
       {open && (
         <DeleteConfirmation
           title="Courses"
@@ -91,7 +91,8 @@ it("keeps cancellation focused through StrictMode replay and restores the trigge
       )}
     </StrictMode>
   );
-  const { rerender } = render(content(true));
+  const { rerender } = render(content(false));
+  rerender(content(true));
   await act(async () => {
     await new Promise(requestAnimationFrame);
   });

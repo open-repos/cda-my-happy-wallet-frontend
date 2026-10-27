@@ -19,8 +19,9 @@ export const DeleteConfirmation = ({
     cancelAnimationFrame(restoreFrame.current);
     keep.current?.focus();
     return () => {
-      const trigger = returnFocusRef?.current;
-      restoreFrame.current = requestAnimationFrame(() => trigger?.focus());
+      restoreFrame.current = requestAnimationFrame(() =>
+        returnFocusRef?.current?.focus()
+      );
     };
   }, [returnFocusRef]);
   return (
