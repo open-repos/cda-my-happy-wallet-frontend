@@ -49,9 +49,13 @@ vi.mock("../../src/js/services/oneOffOperationsService", () => ({
     createOperation: vi.fn(),
   },
 }));
-vi.mock("../../src/js/services/budgetForecastService", () => ({
-  budgetForecastService: { forecast: vi.fn() },
-}));
+vi.mock(
+  "../../src/js/services/budgetForecastService",
+  async (importOriginal) => ({
+    ...(await importOriginal()),
+    budgetForecastService: { forecast: vi.fn() },
+  })
+);
 vi.mock("../../src/js/services/budgetService", () => ({
   budgetService: { getSummary: vi.fn() },
 }));

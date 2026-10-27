@@ -57,7 +57,7 @@ for (const width of [390, 1440]) {
     if (width === 1440) {
       const actions = edit.locator("..");
       await page.mouse.move(0, 0);
-      await expect(actions).toHaveCSS("opacity", "0");
+      await expect(actions).toHaveCSS("opacity", "1");
       await edit.focus();
       await expect(actions).toHaveCSS("opacity", "1");
     } else {

@@ -1,3 +1,9 @@
+vi.mock("../../src/js/services/monthlyEventsService", () => ({
+  monthlyEventsService: { listOccurrences: vi.fn(async () => []) },
+}));
+vi.mock("../../src/js/services/calendarResolutionsService", () => ({
+  listCalendarResolutions: vi.fn(async () => []),
+}));
 import React from "react";
 import {
   cleanup,
@@ -41,9 +47,13 @@ vi.mock("../../src/js/services/oneOffOperationsService", () => ({
     listOperations: async () => ({ data: [], meta: { hasNext: false } }),
   },
 }));
-vi.mock("../../src/js/services/budgetForecastService", () => ({
-  budgetForecastService: { forecast: vi.fn() },
-}));
+vi.mock(
+  "../../src/js/services/budgetForecastService",
+  async (importOriginal) => ({
+    ...(await importOriginal()),
+    budgetForecastService: { forecast: vi.fn() },
+  })
+);
 const Probe = () => {
   const home = useHomeBudget("2026-10");
   const calendar = useBudgetCalendar("2026-10", null);

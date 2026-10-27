@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Actions/ActionButton";
 import { useQuickAdd } from "../components/QuickAdd/QuickAddContext";
 import { useSimulation } from "../components/Simulation/SimulationContext";
 import React, { useEffect, useRef, useState } from "react";
@@ -9,7 +10,6 @@ import { OneOffOperationForm } from "../components/OneOffOperations/OneOffOperat
 import { OneOffOperationList } from "../components/OneOffOperations/OneOffOperationList";
 import { useOneOffOperations } from "../hooks/useOneOffOperations";
 import "../../css/Operations.css";
-
 function ListeOperations() {
   const [editedOperation, setEditedOperation] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -76,7 +76,6 @@ function ListeOperations() {
       restore();
     }
   };
-
   return (
     <main className="operations-container">
       <header className="one-off-header">
@@ -91,16 +90,16 @@ function ListeOperations() {
             </Link>
           </p>
         </div>
-        <button
+        <ActionButton
+          action="add"
           ref={addRef}
           type="button"
           className="one-off-button"
           onClick={openCreate}
           disabled={state.status !== "success"}
         >
-          <img src={addIcon} alt="" aria-hidden="true" />
           Ajouter une opération
-        </button>
+        </ActionButton>
       </header>
       <LiveMessage
         message={state.message}
@@ -143,9 +142,14 @@ function ListeOperations() {
             Ajoutez votre première entrée ou dépense pour commencer à suivre
             votre budget.
           </p>
-          <button type="button" className="one-off-button" onClick={openCreate}>
+          <ActionButton
+            action="add"
+            type="button"
+            className="one-off-button"
+            onClick={openCreate}
+          >
             Ajouter ma première opération
-          </button>
+          </ActionButton>
         </section>
       )}
       {state.status === "success" && state.operations.length > 0 && (
@@ -214,7 +218,8 @@ function ListeOperations() {
           disabled={state.mutationStatus === "loading"}
         >
           <legend>Supprimer « {deleting.title} » ?</legend>
-          <button
+          <ActionButton
+            action="cancel"
             ref={keepRef}
             type="button"
             className="one-off-button one-off-button--secondary"
@@ -224,14 +229,15 @@ function ListeOperations() {
             }}
           >
             Annuler
-          </button>
-          <button
+          </ActionButton>
+          <ActionButton
+            action="delete"
             type="button"
             className="one-off-button one-off-button--danger"
             onClick={remove}
           >
             Oui, supprimer
-          </button>
+          </ActionButton>
         </fieldset>
       )}
       {isFormOpen && (
@@ -248,5 +254,4 @@ function ListeOperations() {
     </main>
   );
 }
-
 export default ListeOperations;

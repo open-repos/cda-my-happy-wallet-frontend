@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { prepareProtectedPage } from "./fixtures.mjs";
 import fixtures from "../fixtures/savingsTrajectories.json";
+import { prepareFullContentCapture } from "./fullContentCapture.mjs";
 for (const theme of ["light", "dark"])
   test(`savings comparison (${theme})`, async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-10-25T10:00:00Z"));
@@ -117,6 +118,7 @@ for (const theme of ["light", "dark"])
       )
     ).toBe(true);
     // Retain the full-page candidate for review even when its first reference is absent.
+    await prepareFullContentCapture(page);
     await page.screenshot({
       path: test.info().outputPath(`savings-comparison-${theme}-candidate.png`),
       fullPage: true,

@@ -1,3 +1,6 @@
+vi.mock("../../src/js/services/calendarResolutionsService", () => ({
+  listCalendarResolutions: vi.fn(async () => []),
+}));
 import React from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
@@ -17,7 +20,10 @@ vi.mock("../../src/js/services/budgetForecastService", () => ({
   budgetForecastService: { forecast: vi.fn() },
 }));
 vi.mock("../../src/js/services/monthlyEventsService", () => ({
-  monthlyEventsService: { listPotentialEvents: vi.fn() },
+  monthlyEventsService: {
+    listPotentialEvents: vi.fn(),
+    listOccurrences: vi.fn(async () => []),
+  },
 }));
 vi.mock("../../src/js/services/budgetService", () => ({
   budgetService: { getSummary: vi.fn(), listPending: vi.fn() },
@@ -26,6 +32,7 @@ vi.mock("../../src/js/services/budgetService", () => ({
 vi.mock("../../src/js/services/oneOffOperationsService", () => ({
   oneOffOperationsService: {
     listAllCategories: vi.fn().mockResolvedValue([]),
+    listAllOperations: vi.fn(async () => []),
     listOperations: vi.fn().mockResolvedValue({ data: [], meta: {} }),
   },
 }));

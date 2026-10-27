@@ -7,6 +7,18 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-10-27
+
+### Changed
+
+- Read complete month collections and persisted occurrence links to project calendar markers and common day details without changing financial calculations (#293).
+- Native calendar now reads complete month collections, displays simultaneous type indicators with a shared legend, and opens common day details with linked occurrence decisions and existing operation forms. Potential visibility is independent of financial simulation (#294).
+- Shared sage action buttons, compact forms and a reserved quick-add area clarified actions in both themes without covering financial content (#296).
+
+### Fixed
+
+- Kept event field labels, errors and budget-impact radios local to their form instance (#312).
+
 ## [1.8.0] - 2026-10-26
 
 ### Changed
@@ -200,7 +212,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Replaced dynamic SSH host discovery with a pre-verified `known_hosts` file.
 - Isolated SSH credentials from validation and build jobs.
 
-[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.8.0...develop
+[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.9.0...develop
+[1.9.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.8.0...v1.9.0
 [1.8.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.7.0...v1.8.0
 [1.7.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.6.0...v1.7.0
 [1.6.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.5.0...v1.6.0

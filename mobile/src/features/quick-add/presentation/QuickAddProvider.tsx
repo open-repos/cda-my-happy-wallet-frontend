@@ -207,7 +207,12 @@ export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
               { bottom: 80 + insets.bottom, display: panel ? "none" : "flex" },
             ]}
           >
-            <Ionicons color={colors.actionPrimaryText} name="add" size={28} />
+            <Ionicons
+              testID="quick-add-icon"
+              color={fabColors.actionPrimaryText}
+              name="add"
+              size={28}
+            />
           </Pressable>
         ) : null}
         <Modal
