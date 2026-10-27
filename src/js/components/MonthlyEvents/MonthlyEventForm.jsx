@@ -1,5 +1,5 @@
 import { useFormFocus } from "../../hooks/useFormFocus";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import {
   EVENT_RECURRENCE_OPTIONS,
   isEventRecurrence,
@@ -64,6 +64,8 @@ export const MonthlyEventForm = ({
       ? { ...event, endDate: event.endDate || "" }
       : { ...emptyEvent, startDate: initialDate }
   );
+  const formId = useId();
+  const controlId = (name) => `monthly-event-${formId}-${name}`;
   const [errors, setErrors] = useState({});
   const [confirmDelete, setConfirmDelete] = useState(false);
   const titleRef = useRef(null);
@@ -123,15 +125,15 @@ export const MonthlyEventForm = ({
   };
   const field = (name) => ({
     "aria-invalid": Boolean(errors[name]),
-    "aria-describedby": errors[name] ? `${name}-error` : undefined,
+    "aria-describedby": errors[name] ? controlId(`${name}-error`) : undefined,
   });
   return (
     <section
       className="monthly-event-form-panel"
-      aria-labelledby="monthly-event-form-title"
+      aria-labelledby={controlId("form-title")}
     >
       <div className="monthly-event-form-panel__header">
-        <h2 id="monthly-event-form-title">
+        <h2 id={controlId("form-title")}>
           {formTitle ||
             (event ? "Modifier l’événement" : "Ajouter un événement")}
         </h2>
@@ -146,10 +148,10 @@ export const MonthlyEventForm = ({
         </button>
       </div>
       <form className="monthly-event-form" onSubmit={submit} noValidate>
-        <label htmlFor="monthly-event-title">
+        <label htmlFor={controlId("title")}>
           Titre
           <input
-            id="monthly-event-title"
+            id={controlId("title")}
             ref={titleRef}
             name="title"
             value={values.title}
@@ -157,13 +159,15 @@ export const MonthlyEventForm = ({
             maxLength={50}
             {...field("title")}
           />
-          {errors.title && <span id="title-error">{errors.title}</span>}
+          {errors.title && (
+            <span id={controlId("title-error")}>{errors.title}</span>
+          )}
         </label>
-        <label htmlFor="monthly-event-amount">
+        <label htmlFor={controlId("amount")}>
           Montant
           <span className="monthly-event-form__amount">
             <input
-              id="monthly-event-amount"
+              id={controlId("amount")}
               name="amount"
               inputMode="decimal"
               value={values.amount}
@@ -173,12 +177,14 @@ export const MonthlyEventForm = ({
             />
             <span>EUR</span>
           </span>
-          {errors.amount && <span id="amount-error">{errors.amount}</span>}
+          {errors.amount && (
+            <span id={controlId("amount-error")}>{errors.amount}</span>
+          )}
         </label>
-        <label htmlFor="monthly-event-start-date">
+        <label htmlFor={controlId("start-date")}>
           Date de début
           <input
-            id="monthly-event-start-date"
+            id={controlId("start-date")}
             type="date"
             min={minStartDate}
             name="startDate"
@@ -187,13 +193,13 @@ export const MonthlyEventForm = ({
             {...field("startDate")}
           />
           {errors.startDate && (
-            <span id="startDate-error">{errors.startDate}</span>
+            <span id={controlId("startDate-error")}>{errors.startDate}</span>
           )}
         </label>
-        <label htmlFor="monthly-event-recurrence">
+        <label htmlFor={controlId("recurrence")}>
           Récurrence
           <select
-            id="monthly-event-recurrence"
+            id={controlId("recurrence")}
             name="recurrence"
             value={values.recurrence}
             onChange={update}
@@ -206,14 +212,14 @@ export const MonthlyEventForm = ({
             ))}
           </select>
           {errors.recurrence && (
-            <span id="recurrence-error">{errors.recurrence}</span>
+            <span id={controlId("recurrence-error")}>{errors.recurrence}</span>
           )}
         </label>
         {isRepeatingEvent(values.recurrence) && (
-          <label htmlFor="monthly-event-end-date">
+          <label htmlFor={controlId("end-date")}>
             Date de fin <span>(facultative)</span>
             <input
-              id="monthly-event-end-date"
+              id={controlId("end-date")}
               type="date"
               name="endDate"
               value={values.endDate}
@@ -221,14 +227,16 @@ export const MonthlyEventForm = ({
               onChange={update}
               {...field("endDate")}
             />
-            {errors.endDate && <span id="endDate-error">{errors.endDate}</span>}
+            {errors.endDate && (
+              <span id={controlId("endDate-error")}>{errors.endDate}</span>
+            )}
           </label>
         )}
         <fieldset>
           <legend>Impact sur le budget</legend>
-          <label htmlFor="monthly-event-expense">
+          <label htmlFor={controlId("expense")}>
             <input
-              id="monthly-event-expense"
+              id={controlId("expense")}
               type="radio"
               name="kind"
               value="DEPENSE"
@@ -237,9 +245,9 @@ export const MonthlyEventForm = ({
             />
             Dépense
           </label>
-          <label htmlFor="monthly-event-income">
+          <label htmlFor={controlId("income")}>
             <input
-              id="monthly-event-income"
+              id={controlId("income")}
               type="radio"
               name="kind"
               value="ENTREE"
