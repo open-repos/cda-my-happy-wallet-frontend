@@ -1,0 +1,1243 @@
+<div id="mhw-ux">
+  <div class="mhw-review-tools" aria-label="Aperçu des maquettes">
+    <label
+      >Format
+      <select id="mhw-device">
+        <option value="phone">iPhone</option>
+        <option value="tablet">Tablette</option>
+        <option value="desktop">Desktop</option>
+      </select></label
+    >
+    <label
+      >Apparence
+      <select id="mhw-theme">
+        <option value="light">Clair</option>
+        <option value="dark">Sombre</option>
+      </select></label
+    >
+    <label
+      >Vue
+      <select id="mhw-view">
+        <option value="page">Contenu et FAB</option>
+        <option value="form">Formulaire</option>
+        <option value="keyboard">Formulaire · clavier affiché</option>
+        <option value="states">États des boutons</option>
+      </select></label
+    >
+  </div>
+  <div
+    class="viz-carousel viz-dotted-background"
+    aria-label="Directions MyHappyWallet"
+    data-previous-label="Précédente"
+    data-next-label="Suivante"
+  >
+    <section data-variant="Minimal Sauge" aria-label="Minimal Sauge">
+      <div
+        class="mhw-stage"
+        data-design="sage"
+        data-device="phone"
+        data-theme="light"
+        data-view="page"
+      >
+        <div class="mhw-window">
+          <div class="mhw-status">
+            <span>9:41</span><span>MyHappyWallet</span
+            ><i data-lucide="battery-full" aria-hidden="true"></i>
+          </div>
+          <div class="mhw-shell">
+            <aside class="mhw-sidebar">
+              <strong>MyHappyWallet</strong><span>Accueil</span
+              ><span>Opérations</span
+              ><span class="mhw-active-nav">Objectifs</span
+              ><span>Calendrier</span>
+            </aside>
+            <main class="mhw-main">
+              <header class="mhw-heading">
+                <div>
+                  <span class="mhw-eyebrow">VOS PROJETS</span>
+                  <h2>Objectifs<br />et événements</h2>
+                </div>
+                <button class="mhw-button mhw-primary mhw-add" type="button">
+                  <i data-lucide="plus" aria-hidden="true"></i>Ajouter
+                </button>
+              </header>
+              <div class="mhw-layout">
+                <div class="mhw-page-content">
+                  <article class="mhw-goal">
+                    <div class="mhw-line">
+                      <h3>Mon épargne</h3>
+                      <span class="mhw-tag">En cours</span>
+                    </div>
+                    <div class="mhw-amount">600 <span>/ 2 000 €</span></div>
+                    <div
+                      class="mhw-meter"
+                      role="progressbar"
+                      aria-label="Épargne déclarée"
+                      aria-valuenow="30"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                    >
+                      <span></span>
+                    </div>
+                    <p>30 % constitués · Cible septembre 2027</p>
+                    <div class="mhw-goal-actions">
+                      <button
+                        class="mhw-button mhw-secondary"
+                        type="button"
+                        data-form
+                      >
+                        <i data-lucide="pencil" aria-hidden="true"></i
+                        >Modifier</button
+                      ><button
+                        class="mhw-button mhw-secondary mhw-simulate"
+                        type="button"
+                      >
+                        <i
+                          data-lucide="chart-no-axes-combined"
+                          aria-hidden="true"
+                        ></i
+                        >Simuler avec mon budget
+                      </button>
+                    </div>
+                  </article>
+                  <section class="mhw-events">
+                    <div class="mhw-line">
+                      <h3>À venir</h3>
+                      <span>27 oct.</span>
+                    </div>
+                    <article class="mhw-event">
+                      <div class="mhw-event-icon">
+                        <i data-lucide="calendar-days" aria-hidden="true"></i>
+                      </div>
+                      <div>
+                        <strong>Assurance habitation</strong>
+                        <p>Dépense prévue · aujourd’hui</p>
+                      </div>
+                      <strong class="mhw-money">−20 €</strong>
+                    </article>
+                    <div class="mhw-event-actions">
+                      <button
+                        class="mhw-button mhw-secondary"
+                        type="button"
+                        data-form
+                      >
+                        <i data-lucide="pencil" aria-hidden="true"></i
+                        >Modifier</button
+                      ><button class="mhw-button mhw-primary" type="button">
+                        <i data-lucide="arrow-right-left" aria-hidden="true"></i
+                        >Convertir
+                      </button>
+                    </div>
+                    <article class="mhw-event">
+                      <div class="mhw-event-icon">
+                        <i data-lucide="circle-dashed" aria-hidden="true"></i>
+                      </div>
+                      <div>
+                        <strong>Week-end à la montagne</strong>
+                        <p>À confirmer · 3 novembre</p>
+                      </div>
+                      <strong class="mhw-money">−120 €</strong>
+                    </article>
+                  </section>
+                  <section class="mhw-empty">
+                    <i data-lucide="calendar-plus" aria-hidden="true"></i>
+                    <div>
+                      <strong>Un prochain événement ?</strong>
+                      <p>Anticipez une entrée ou une dépense.</p>
+                    </div>
+                    <button
+                      class="mhw-button mhw-secondary"
+                      type="button"
+                      data-form
+                    >
+                      <i data-lucide="plus" aria-hidden="true"></i>Ajouter
+                    </button>
+                  </section>
+                </div>
+                <section
+                  class="mhw-editor"
+                  aria-label="Modifier l’événement"
+                  hidden
+                >
+                  <header class="mhw-editor-title">
+                    <div>
+                      <span class="mhw-eyebrow">PRÉVISION · 27 OCTOBRE</span>
+                      <h3>Modifier l’événement</h3>
+                    </div>
+                    <button
+                      class="mhw-button mhw-close"
+                      type="button"
+                      data-close
+                      aria-label="Fermer le formulaire"
+                    >
+                      <i data-lucide="x" aria-hidden="true"></i>
+                    </button>
+                  </header>
+                  <form class="mhw-fields">
+                    <label class="mhw-title-field"
+                      >Titre<input
+                        value="Assurance habitation"
+                        aria-label="Titre de l’événement"
+                    /></label>
+                    <label
+                      >Montant (€)<input
+                        value="20,00"
+                        inputmode="decimal"
+                        aria-label="Montant de l’événement"
+                    /></label>
+                    <label
+                      >Date de début<input
+                        value="27/10/2026"
+                        aria-label="Date de début de l’événement"
+                    /></label>
+                    <label class="mhw-recurrence"
+                      >Récurrence<select aria-label="Récurrence de l’événement">
+                        <option>Une seule fois</option>
+                        <option>Chaque mois</option>
+                      </select></label
+                    >
+                    <fieldset class="mhw-impact">
+                      <legend>Impact sur le budget</legend>
+                      <label
+                        ><input
+                          type="radio"
+                          name="sage-impact"
+                          value="expense"
+                          checked
+                        />Dépense</label
+                      ><label
+                        ><input
+                          type="radio"
+                          name="sage-impact"
+                          value="income"
+                        />Entrée</label
+                      >
+                    </fieldset>
+                  </form>
+                  <div class="mhw-save-actions">
+                    <button
+                      class="mhw-button mhw-secondary"
+                      type="button"
+                      data-close
+                    >
+                      <i data-lucide="x" aria-hidden="true"></i>Annuler</button
+                    ><button
+                      class="mhw-button mhw-primary"
+                      type="button"
+                      data-save
+                    >
+                      <i data-lucide="check" aria-hidden="true"></i>Enregistrer
+                    </button>
+                  </div>
+                  <div class="mhw-delete-area">
+                    <button
+                      class="mhw-button mhw-danger"
+                      type="button"
+                      data-delete
+                    >
+                      <i data-lucide="trash-2" aria-hidden="true"></i>Supprimer
+                      l’événement
+                    </button>
+                  </div>
+                  <div class="mhw-confirm" hidden>
+                    <p>Supprimer « Assurance habitation » ?</p>
+                    <div class="mhw-line">
+                      <button
+                        class="mhw-button mhw-secondary"
+                        type="button"
+                        data-keep
+                      >
+                        Annuler</button
+                      ><button
+                        class="mhw-button mhw-danger"
+                        type="button"
+                        data-confirm
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    class="mhw-keyboard"
+                    hidden
+                    aria-label="Clavier iPhone illustré"
+                  >
+                    <div class="mhw-keyboard-top">
+                      <span>assurance</span><span>habitation</span
+                      ><button
+                        type="button"
+                        data-hide-keyboard
+                        aria-label="Masquer le clavier"
+                      >
+                        <i data-lucide="chevron-down" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                    <div class="mhw-keys" aria-hidden="true">
+                      <span>A</span><span>Z</span><span>E</span><span>R</span
+                      ><span>T</span><span>Y</span><span>U</span><span>I</span
+                      ><span>O</span><span>P</span><span>Q</span><span>S</span
+                      ><span>D</span><span>F</span><span>G</span><span>H</span
+                      ><span>J</span><span>K</span><span>L</span><span>M</span>
+                    </div>
+                    <div class="mhw-space" aria-hidden="true">espace</div>
+                    <div class="mhw-home-indicator"></div>
+                  </div>
+                </section>
+              </div>
+              <div class="mhw-state-samples" hidden>
+                <h3>Actions et états</h3>
+                <div class="mhw-sample-buttons">
+                  <button type="button" class="mhw-button mhw-primary">
+                    <i data-lucide="check" aria-hidden="true"></i
+                    >Enregistrer</button
+                  ><button type="button" class="mhw-button mhw-secondary">
+                    <i data-lucide="pencil" aria-hidden="true"></i
+                    >Modifier</button
+                  ><button type="button" class="mhw-button mhw-secondary">
+                    <i data-lucide="x" aria-hidden="true"></i>Annuler</button
+                  ><button type="button" class="mhw-button mhw-danger">
+                    <i data-lucide="trash-2" aria-hidden="true"></i
+                    >Supprimer</button
+                  ><button type="button" class="mhw-button mhw-primary">
+                    <i data-lucide="plus" aria-hidden="true"></i>Ajouter</button
+                  ><button type="button" class="mhw-button mhw-primary">
+                    <i data-lucide="arrow-right-left" aria-hidden="true"></i
+                    >Convertir
+                  </button>
+                </div>
+                <div class="mhw-sample-buttons">
+                  <button
+                    class="mhw-button mhw-primary mhw-sample-hover"
+                    type="button"
+                  >
+                    Survol</button
+                  ><button
+                    class="mhw-button mhw-primary mhw-sample-focus"
+                    type="button"
+                  >
+                    Focus</button
+                  ><button
+                    class="mhw-button mhw-primary mhw-sample-pressed"
+                    type="button"
+                  >
+                    Pressé</button
+                  ><button
+                    class="mhw-button mhw-primary"
+                    disabled
+                    aria-busy="true"
+                    type="button"
+                  >
+                    <i data-lucide="loader-circle" aria-hidden="true"></i
+                    >Enregistrement…</button
+                  ><button
+                    class="mhw-button mhw-primary"
+                    disabled
+                    type="button"
+                  >
+                    Indisponible
+                  </button>
+                </div>
+              </div>
+              <p class="mhw-feedback" role="status" aria-live="polite"></p>
+            </main>
+          </div>
+          <div class="mhw-dock">
+            <span class="mhw-dock-context">Calendrier · 27 octobre</span>
+            <div class="mhw-fab-area">
+              <div class="mhw-fab-menu" hidden>
+                <strong>Ajouter le 27 octobre</strong
+                ><button
+                  class="mhw-button mhw-secondary"
+                  type="button"
+                  data-form
+                >
+                  <i data-lucide="minus" aria-hidden="true"></i>Dépense réelle</button
+                ><button
+                  class="mhw-button mhw-secondary"
+                  type="button"
+                  data-form
+                >
+                  <i data-lucide="plus" aria-hidden="true"></i>Entrée réelle</button
+                ><button
+                  class="mhw-button mhw-secondary"
+                  type="button"
+                  data-form
+                >
+                  <i data-lucide="calendar-days" aria-hidden="true"></i
+                  >Événement prévu</button
+                ><button
+                  class="mhw-button mhw-secondary"
+                  type="button"
+                  data-form
+                >
+                  <i data-lucide="circle-dashed" aria-hidden="true"></i>Élément
+                  potentiel
+                </button>
+              </div>
+              <button
+                class="mhw-fab"
+                type="button"
+                aria-label="Ajouter au 27 octobre"
+                aria-expanded="false"
+              >
+                <i data-lucide="plus" aria-hidden="true"></i
+                ><span>Ajouter</span>
+              </button>
+            </div>
+          </div>
+          <div class="mhw-home-indicator mhw-page-indicator"></div>
+        </div>
+      </div>
+    </section>
+    <section
+      data-variant="Fintech moderne"
+      aria-label="Fintech moderne"
+      hidden
+    ></section>
+    <section
+      data-variant="Ergonomie mobile native"
+      aria-label="Ergonomie mobile native"
+      hidden
+    ></section>
+  </div>
+</div>
+<style>
+  #mhw-ux {
+    font: 14px/1.45 "Open Sans", Arial, sans-serif;
+    color: light-dark(#263321, #ecf1e8);
+    color-scheme: light dark;
+  }
+  #mhw-ux * {
+    box-sizing: border-box;
+  }
+  #mhw-ux .mhw-review-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin: 0 0 18px;
+    padding-right: 90px;
+  }
+  #mhw-ux .mhw-review-tools label {
+    display: grid;
+    gap: 4px;
+  }
+  #mhw-ux .mhw-review-tools select {
+    font: inherit;
+    min-height: 44px;
+    background: light-dark(#fff, #242b20);
+    color: inherit;
+    border: 1px solid light-dark(#6b7863, #99a58f);
+    padding: 6px 10px;
+    border-radius: 8px;
+    max-width: 100%;
+  }
+  #mhw-ux .mhw-stage {
+    --mhw-bg: #f4f9f0;
+    --mhw-surface: #fff;
+    --mhw-soft: #eaf1e4;
+    --mhw-text: #263321;
+    --mhw-muted: #53624d;
+    --mhw-border: #7b8a70;
+    --mhw-primary: #43553a;
+    --mhw-on-primary: #f4f9f0;
+    --mhw-danger: #a51d2b;
+    --mhw-danger-bg: #fff1f2;
+    --mhw-shadow: 0 7px 24px #26332125;
+    --mhw-radius: 12px;
+    --mhw-ring: #42622d;
+    max-width: 390px;
+    margin: 0 auto;
+    min-height: 850px;
+    color: var(--mhw-text);
+    color-scheme: light;
+  }
+  #mhw-ux .mhw-stage[data-theme="dark"] {
+    --mhw-bg: #20271d;
+    --mhw-surface: #303b2a;
+    --mhw-soft: #3e4d35;
+    --mhw-text: #f0f5eb;
+    --mhw-muted: #c4d1bb;
+    --mhw-border: #87977c;
+    --mhw-primary: #bfd9a8;
+    --mhw-on-primary: #202c18;
+    --mhw-danger: #ffb5ba;
+    --mhw-danger-bg: #512c30;
+    --mhw-shadow: 0 7px 24px #0006;
+    --mhw-ring: #e2efce;
+    color-scheme: dark;
+  }
+  #mhw-ux .mhw-stage[data-design="fintech"] {
+    --mhw-radius: 10px;
+    --mhw-primary: #a63c2c;
+    --mhw-on-primary: #fff7f3;
+  }
+  #mhw-ux .mhw-stage[data-design="fintech"][data-theme="dark"] {
+    --mhw-primary: #f2a18c;
+    --mhw-on-primary: #38231d;
+  }
+  #mhw-ux .mhw-stage[data-design="native"] {
+    --mhw-radius: 16px;
+  }
+  #mhw-ux .mhw-stage[data-device="tablet"] {
+    max-width: 834px;
+  }
+  #mhw-ux .mhw-stage[data-device="desktop"] {
+    max-width: 1280px;
+  }
+  #mhw-ux .mhw-window {
+    border: 1px solid var(--mhw-border);
+    border-radius: 24px;
+    overflow: clip;
+    background: var(--mhw-bg);
+    position: relative;
+    box-shadow: var(--mhw-shadow);
+    container-type: inline-size;
+  }
+  #mhw-ux .mhw-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    font-weight: 600;
+    color: var(--mhw-text);
+    border-bottom: 1px solid var(--mhw-border);
+  }
+  #mhw-ux svg,
+  #mhw-ux i[data-lucide] {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    display: inline-block;
+  }
+  #mhw-ux .mhw-shell {
+    display: flex;
+  }
+  #mhw-ux .mhw-sidebar {
+    display: none;
+    padding: 26px 18px;
+    gap: 22px;
+    background: var(--mhw-surface);
+    border-right: 1px solid var(--mhw-border);
+    flex: 0 0 175px;
+  }
+  #mhw-ux .mhw-active-nav {
+    font-weight: 700;
+    color: var(--mhw-primary);
+  }
+  #mhw-ux .mhw-main {
+    min-width: 0;
+    padding: 22px 18px 12px;
+    flex: 1;
+  }
+  #mhw-ux .mhw-heading {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+  }
+  #mhw-ux .mhw-heading h2 {
+    font: 600 25px/1.16 Barlow, Arial, sans-serif;
+    margin: 7px 0 0;
+    letter-spacing: -0.6px;
+  }
+  #mhw-ux .mhw-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--mhw-muted);
+  }
+  #mhw-ux h3 {
+    font: 600 18px/1.3 Barlow, Arial, sans-serif;
+    margin: 0;
+  }
+  #mhw-ux p {
+    margin: 6px 0;
+    color: var(--mhw-muted);
+    font-size: 13px;
+  }
+  #mhw-ux .mhw-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  #mhw-ux .mhw-line > span {
+    color: var(--mhw-muted);
+    font-size: 12px;
+  }
+  #mhw-ux .mhw-tag {
+    background: var(--mhw-soft);
+    padding: 4px 8px;
+    border-radius: 20px;
+  }
+  #mhw-ux .mhw-goal {
+    background: var(--mhw-surface);
+    border: 1px solid var(--mhw-border);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 18px;
+  }
+  #mhw-ux .mhw-amount {
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -1px;
+    margin: 12px 0;
+  }
+  #mhw-ux .mhw-amount span {
+    font-size: 16px;
+    color: var(--mhw-muted);
+    letter-spacing: 0;
+  }
+  #mhw-ux .mhw-meter {
+    height: 8px;
+    border-radius: 8px;
+    background: var(--mhw-soft);
+    margin-bottom: 10px;
+  }
+  #mhw-ux .mhw-meter > span {
+    display: block;
+    width: 30%;
+    height: 100%;
+    background: var(--mhw-primary);
+    border-radius: 8px;
+  }
+  #mhw-ux .mhw-goal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  #mhw-ux .mhw-button {
+    font: 600 13px/1.35 "Open Sans", Arial, sans-serif;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 44px;
+    min-width: 44px;
+    max-width: 100%;
+    padding: 10px 12px;
+    border-radius: var(--mhw-radius);
+    border: 1px solid var(--mhw-border);
+    color: var(--mhw-text);
+    background: var(--mhw-surface);
+    white-space: normal;
+    text-align: center;
+    transition: transform 120ms ease, box-shadow 120ms ease;
+  }
+  #mhw-ux .mhw-primary {
+    background: var(--mhw-primary);
+    color: var(--mhw-on-primary);
+    border-color: var(--mhw-primary);
+  }
+  #mhw-ux .mhw-secondary {
+    background: var(--mhw-surface);
+  }
+  #mhw-ux .mhw-danger {
+    color: var(--mhw-danger);
+    background: var(--mhw-danger-bg);
+    border-color: var(--mhw-danger);
+  }
+  #mhw-ux .mhw-button:hover:not(:disabled),
+  #mhw-ux .mhw-sample-hover {
+    box-shadow: inset 0 0 0 1px currentColor;
+  }
+  #mhw-ux .mhw-button:active:not(:disabled),
+  #mhw-ux .mhw-sample-pressed {
+    transform: translateY(1px);
+    box-shadow: inset 0 2px 4px #0003;
+  }
+  #mhw-ux button:focus-visible,
+  #mhw-ux input:focus-visible,
+  #mhw-ux select:focus-visible,
+  #mhw-ux .mhw-sample-focus {
+    outline: 3px solid var(--mhw-ring);
+    outline-offset: 3px;
+  }
+  #mhw-ux .mhw-button:disabled {
+    opacity: 0.6;
+  }
+  #mhw-ux .mhw-events {
+    padding: 6px 0 0;
+  }
+  #mhw-ux .mhw-event {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--mhw-border);
+  }
+  #mhw-ux .mhw-event > div:nth-child(2) {
+    flex: 1;
+    min-width: 0;
+  }
+  #mhw-ux .mhw-event strong {
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+  #mhw-ux .mhw-event-icon {
+    background: var(--mhw-soft);
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    min-width: 38px;
+    height: 38px;
+  }
+  #mhw-ux .mhw-money {
+    white-space: nowrap;
+  }
+  #mhw-ux .mhw-event-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin: 10px 0;
+  }
+  #mhw-ux .mhw-empty {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0;
+    padding: 14px;
+    background: var(--mhw-soft);
+    border-radius: var(--mhw-radius);
+    flex-wrap: wrap;
+  }
+  #mhw-ux .mhw-empty > div {
+    flex: 1;
+    min-width: 140px;
+  }
+  #mhw-ux .mhw-empty strong {
+    font-size: 13px;
+  }
+  #mhw-ux .mhw-empty > svg {
+    display: none;
+  }
+  #mhw-ux .mhw-dock {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px 8px;
+    gap: 12px;
+    border-top: 1px solid var(--mhw-border);
+    background: var(--mhw-surface);
+    min-height: 88px;
+    position: relative;
+  }
+  #mhw-ux .mhw-dock-context {
+    font-size: 12px;
+    color: var(--mhw-muted);
+  }
+  #mhw-ux .mhw-fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 56px;
+    height: 56px;
+    border: 2px solid var(--mhw-on-primary);
+    outline: 1px solid var(--mhw-primary);
+    background: var(--mhw-primary);
+    color: var(--mhw-on-primary);
+    border-radius: 18px;
+    box-shadow: 0 4px 10px #0004;
+  }
+  #mhw-ux .mhw-fab > span {
+    display: none;
+  }
+  #mhw-ux .mhw-fab > svg {
+    width: 24px;
+    height: 24px;
+  }
+  #mhw-ux .mhw-fab[aria-expanded="true"] > svg {
+    transform: rotate(45deg);
+  }
+  #mhw-ux .mhw-fab-area {
+    position: relative;
+  }
+  #mhw-ux .mhw-fab-menu {
+    position: absolute;
+    bottom: 72px;
+    right: 0;
+    width: min(285px, calc(100cqw - 36px));
+    padding: 14px;
+    background: var(--mhw-surface);
+    border: 1px solid var(--mhw-border);
+    box-shadow: var(--mhw-shadow);
+    border-radius: 16px;
+    z-index: 3;
+  }
+  #mhw-ux .mhw-fab-menu strong {
+    display: block;
+    margin: 0 0 8px;
+  }
+  #mhw-ux .mhw-fab-menu .mhw-button {
+    width: 100%;
+    justify-content: flex-start;
+    margin-top: 5px;
+    border: 0;
+    background: var(--mhw-soft);
+  }
+  #mhw-ux .mhw-home-indicator {
+    width: 100px;
+    height: 4px;
+    background: var(--mhw-text);
+    border-radius: 4px;
+    margin: 10px auto;
+  }
+  #mhw-ux .mhw-editor {
+    background: var(--mhw-surface);
+    border: 1px solid var(--mhw-border);
+    border-radius: 18px;
+    padding: 16px;
+    min-width: 0;
+  }
+  #mhw-ux .mhw-editor-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  #mhw-ux .mhw-editor-title h3 {
+    margin-top: 4px;
+  }
+  #mhw-ux .mhw-close {
+    padding: 8px;
+    border: 0;
+  }
+  #mhw-ux .mhw-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+  }
+  #mhw-ux .mhw-fields > label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--mhw-muted);
+    min-width: 0;
+  }
+  #mhw-ux .mhw-fields :is(input:not([type="radio"]), select) {
+    width: 100%;
+    min-width: 0;
+    font: 400 16px/1.4 "Open Sans", Arial, sans-serif;
+    min-height: 44px;
+    padding: 10px;
+    border: 1px solid var(--mhw-border);
+    border-radius: var(--mhw-radius);
+    background: var(--mhw-surface);
+    color: var(--mhw-text);
+  }
+  #mhw-ux .mhw-title-field,
+  #mhw-ux .mhw-recurrence,
+  #mhw-ux .mhw-impact {
+    grid-column: 1/-1;
+  }
+  #mhw-ux .mhw-impact {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  #mhw-ux .mhw-impact legend {
+    font-size: 12px;
+    color: var(--mhw-muted);
+    margin-bottom: 5px;
+  }
+  #mhw-ux .mhw-impact label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    min-height: 44px;
+    flex: 1;
+    border: 1px solid var(--mhw-border);
+    border-radius: var(--mhw-radius);
+  }
+  #mhw-ux .mhw-impact label:has(:checked) {
+    background: var(--mhw-soft);
+    border-color: var(--mhw-primary);
+  }
+  #mhw-ux .mhw-impact input {
+    accent-color: var(--mhw-primary);
+    width: 18px;
+    height: 18px;
+    margin: 0;
+  }
+  #mhw-ux .mhw-save-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--mhw-border);
+    flex-wrap: wrap;
+  }
+  #mhw-ux .mhw-delete-area {
+    margin-top: 22px;
+    padding-top: 14px;
+    border-top: 1px solid var(--mhw-border);
+  }
+  #mhw-ux .mhw-delete-area .mhw-button {
+    background: var(--mhw-surface);
+    border-color: transparent;
+    font-weight: 500;
+    padding-left: 0;
+  }
+  #mhw-ux .mhw-feedback {
+    min-height: 18px;
+  }
+  #mhw-ux .mhw-keyboard {
+    background: var(--mhw-soft);
+    padding: 8px;
+    margin: 16px -16px -16px;
+    border-radius: 0 0 16px 16px;
+  }
+  #mhw-ux .mhw-keyboard-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 8px;
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+  #mhw-ux .mhw-keyboard-top button {
+    border: 0;
+    background: var(--mhw-surface);
+    color: var(--mhw-text);
+    border-radius: 8px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  #mhw-ux .mhw-keys {
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: 4px;
+  }
+  #mhw-ux .mhw-keys span {
+    background: var(--mhw-surface);
+    text-align: center;
+    border-radius: 5px;
+    padding: 12px 0;
+    font-size: 13px;
+    box-shadow: 0 1px 1px #0003;
+  }
+  #mhw-ux .mhw-space {
+    text-align: center;
+    border-radius: 5px;
+    background: var(--mhw-surface);
+    width: 60%;
+    padding: 10px;
+    margin: 8px auto;
+    font-size: 13px;
+  }
+  #mhw-ux [hidden] {
+    display: none !important;
+  }
+  #mhw-ux .mhw-stage[data-view="form"] .mhw-page-content,
+  #mhw-ux .mhw-stage[data-view="keyboard"] .mhw-page-content {
+    display: none;
+  }
+  #mhw-ux .mhw-stage[data-view="form"] .mhw-dock,
+  #mhw-ux .mhw-stage[data-view="keyboard"] .mhw-dock,
+  #mhw-ux .mhw-stage[data-view="states"] .mhw-dock {
+    display: none;
+  }
+  #mhw-ux .mhw-stage[data-view="states"] .mhw-layout {
+    display: none;
+  }
+  #mhw-ux .mhw-sample-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 22px;
+  }
+  #mhw-ux .mhw-stage[data-design="fintech"] .mhw-status {
+    background: var(--mhw-text);
+    color: var(--mhw-surface);
+  }
+  #mhw-ux .mhw-stage[data-design="fintech"] .mhw-goal {
+    border: 0;
+    box-shadow: var(--mhw-shadow);
+  }
+  #mhw-ux .mhw-stage[data-design="fintech"] .mhw-goal-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+    margin-top: 12px;
+  }
+  #mhw-ux .mhw-stage[data-design="fintech"] .mhw-event {
+    padding-block: 12px;
+    background: var(--mhw-surface);
+    padding-inline: 12px;
+    border-radius: 10px;
+    border: 0;
+  }
+  #mhw-ux .mhw-stage[data-design="fintech"] .mhw-events > .mhw-line {
+    margin-bottom: 10px;
+  }
+  #mhw-ux .mhw-stage[data-design="fintech"] .mhw-event-actions {
+    justify-content: stretch;
+    margin: 8px 0 16px;
+  }
+  #mhw-ux .mhw-stage[data-design="fintech"] .mhw-event-actions .mhw-button {
+    flex: 1;
+  }
+  #mhw-ux .mhw-stage[data-design="fintech"] .mhw-fab {
+    border-radius: 50%;
+    box-shadow: 0 6px 16px #0005;
+  }
+  #mhw-ux .mhw-stage[data-design="fintech"] .mhw-save-actions {
+    background: var(--mhw-soft);
+    padding: 12px;
+    margin-inline: -16px;
+  }
+  #mhw-ux .mhw-stage[data-design="native"] .mhw-goal {
+    border: 0;
+    border-radius: 20px;
+  }
+  #mhw-ux .mhw-stage[data-design="native"] .mhw-events {
+    background: var(--mhw-surface);
+    padding: 16px;
+    border-radius: 20px;
+  }
+  #mhw-ux .mhw-stage[data-design="native"] .mhw-event-actions {
+    justify-content: stretch;
+  }
+  #mhw-ux .mhw-stage[data-design="native"] .mhw-event-actions .mhw-button {
+    flex: 1;
+  }
+  #mhw-ux .mhw-stage[data-design="native"] .mhw-editor {
+    border: 0;
+    border-radius: 22px;
+    padding-top: 22px;
+  }
+  #mhw-ux .mhw-stage[data-design="native"] .mhw-fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  #mhw-ux .mhw-stage[data-design="native"] .mhw-fields > label {
+    display: grid;
+    grid-template-columns: 100px minmax(0, 1fr);
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--mhw-border);
+    grid-column: 1/-1;
+    color: var(--mhw-text);
+  }
+  #mhw-ux
+    .mhw-stage[data-design="native"]
+    .mhw-fields
+    :is(input:not([type="radio"]), select) {
+    border: 0;
+    background: var(--mhw-soft);
+  }
+  #mhw-ux .mhw-stage[data-design="native"] .mhw-impact {
+    padding-top: 16px;
+  }
+  #mhw-ux .mhw-stage[data-design="native"] .mhw-save-actions .mhw-primary {
+    flex: 1;
+  }
+  #mhw-ux .mhw-stage[data-design="native"] .mhw-fab {
+    width: auto;
+    border-radius: 28px;
+    padding: 0 18px;
+  }
+  #mhw-ux .mhw-stage[data-design="native"] .mhw-fab > span {
+    display: inline;
+    font: 600 14px Arial, sans-serif;
+  }
+  @container (min-width:650px) {
+    #mhw-ux .mhw-main {
+      padding: 28px;
+    }
+    #mhw-ux .mhw-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 22px;
+    }
+    #mhw-ux .mhw-page-content {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 22px;
+    }
+    #mhw-ux .mhw-empty {
+      grid-column: 1/-1;
+    }
+    #mhw-ux .mhw-editor {
+      max-width: 560px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    #mhw-ux .mhw-stage[data-design="fintech"] .mhw-editor {
+      margin: 0 0 0 auto;
+    }
+    #mhw-ux .mhw-stage[data-design="native"] .mhw-editor {
+      max-width: 640px;
+    }
+    #mhw-ux .mhw-page-indicator {
+      display: none;
+    }
+  }
+  @container (min-width:950px) {
+    #mhw-ux .mhw-sidebar {
+      display: flex;
+      flex-direction: column;
+    }
+    #mhw-ux .mhw-stage[data-design="fintech"][data-view="form"] .mhw-layout,
+    #mhw-ux
+      .mhw-stage[data-design="fintech"][data-view="keyboard"]
+      .mhw-layout {
+      grid-template-columns: minmax(0, 1fr) minmax(350px, 1fr);
+    }
+    #mhw-ux
+      .mhw-stage[data-design="fintech"][data-view="form"]
+      .mhw-page-content,
+    #mhw-ux
+      .mhw-stage[data-design="fintech"][data-view="keyboard"]
+      .mhw-page-content {
+      display: block;
+    }
+    #mhw-ux .mhw-stage[data-design="native"] .mhw-dock {
+      justify-content: flex-end;
+    }
+  }
+  @media (max-width: 400px) {
+    #mhw-ux .mhw-review-tools {
+      padding-right: 0;
+      gap: 8px;
+    }
+    #mhw-ux .mhw-heading {
+      flex-wrap: wrap;
+    }
+    #mhw-ux .mhw-main {
+      padding-inline: 12px;
+    }
+    #mhw-ux .mhw-editor {
+      padding: 12px;
+    }
+    #mhw-ux .mhw-fields {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    #mhw-ux .mhw-keyboard {
+      margin-inline: -12px;
+      margin-bottom: -12px;
+    }
+    #mhw-ux .mhw-stage[data-design="native"] .mhw-fields > label {
+      grid-template-columns: 80px minmax(0, 1fr);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #mhw-ux * {
+      transition: none !important;
+    }
+  }
+</style>
+<script>
+  (() => {
+    const root = document.getElementById("mhw-ux");
+    const variants = root.querySelectorAll("[data-variant]");
+    const source = variants[0].querySelector(".mhw-stage");
+    ["fintech", "native"].forEach((design, index) => {
+      const stage = source.cloneNode(true);
+      stage.dataset.design = design;
+      stage
+        .querySelectorAll("input[type=radio]")
+        .forEach((r) => (r.name = design + "-impact"));
+      variants[index + 1].append(stage);
+    });
+    const stages = [...root.querySelectorAll(".mhw-stage")];
+    function view(stage, value) {
+      stage.dataset.view = value;
+      stage.querySelector(".mhw-editor").hidden = ![
+        "form",
+        "keyboard",
+      ].includes(value);
+      stage.querySelector(".mhw-keyboard").hidden = value !== "keyboard";
+      stage.querySelector(".mhw-state-samples").hidden = value !== "states";
+      stage.querySelector(".mhw-fab-menu").hidden = true;
+      stage.querySelector(".mhw-fab").setAttribute("aria-expanded", "false");
+      stage
+        .querySelector(".mhw-fab")
+        .setAttribute("aria-label", "Ajouter au 27 octobre");
+      stage.querySelector(".mhw-confirm").hidden = true;
+    }
+    root
+      .querySelector("#mhw-device")
+      .addEventListener("change", (e) =>
+        stages.forEach((s) => (s.dataset.device = e.target.value))
+      );
+    root
+      .querySelector("#mhw-theme")
+      .addEventListener("change", (e) =>
+        stages.forEach((s) => (s.dataset.theme = e.target.value))
+      );
+    root
+      .querySelector("#mhw-view")
+      .addEventListener("change", (e) =>
+        stages.forEach((s) => view(s, e.target.value))
+      );
+    stages.forEach((stage) => {
+      const fab = stage.querySelector(".mhw-fab"),
+        menu = stage.querySelector(".mhw-fab-menu");
+      fab.addEventListener("click", () => {
+        menu.hidden = !menu.hidden;
+        fab.setAttribute("aria-expanded", String(!menu.hidden));
+        fab.setAttribute(
+          "aria-label",
+          menu.hidden ? "Ajouter au 27 octobre" : "Fermer l’ajout rapide"
+        );
+        if (!menu.hidden) menu.querySelector("button").focus();
+      });
+      stage.querySelectorAll("[data-form],.mhw-add").forEach((b) =>
+        b.addEventListener("click", () => {
+          view(stage, "form");
+          stage.querySelector(".mhw-fields input").focus();
+        })
+      );
+      stage.querySelectorAll("[data-close]").forEach((b) =>
+        b.addEventListener("click", () => {
+          view(stage, "page");
+          fab.focus();
+        })
+      );
+      stage
+        .querySelector("[data-hide-keyboard]")
+        .addEventListener("click", () => view(stage, "form"));
+      stage.querySelector("[data-save]").addEventListener("click", () => {
+        view(stage, "page");
+        stage.querySelector(".mhw-feedback").textContent =
+          "Aperçu : événement enregistré.";
+        fab.focus();
+      });
+      stage.querySelector("[data-delete]").addEventListener("click", () => {
+        stage.querySelector(".mhw-confirm").hidden = false;
+        stage.querySelector("[data-keep]").focus();
+      });
+      stage.querySelector("[data-keep]").addEventListener("click", () => {
+        stage.querySelector(".mhw-confirm").hidden = true;
+        stage.querySelector("[data-delete]").focus();
+      });
+      stage.querySelector("[data-confirm]").addEventListener("click", () => {
+        view(stage, "page");
+        stage.querySelector(".mhw-feedback").textContent =
+          "Aperçu : suppression confirmée.";
+      });
+      stage.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          view(stage, "page");
+          fab.focus();
+        }
+      });
+      stage
+        .querySelector("form")
+        .addEventListener("submit", (e) => e.preventDefault());
+    });
+    if (globalThis.lucide)
+      globalThis.lucide.createIcons({ attrs: { width: 18, height: 18 } });
+  })();
+</script>
