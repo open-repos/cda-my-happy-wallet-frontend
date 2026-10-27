@@ -129,6 +129,34 @@ for (const width of [320, 390, 768, 1440])
       await expect(
         page.getByText("Déjà converti", { exact: true })
       ).toHaveCount(0);
+      const potentialLink = page.getByRole("link", {
+        name: "Gérer Projet potentiel dans la Simulation",
+      });
+      const contrast = await potentialLink.evaluate((el) => {
+        const rgb = (value) => value.match(/[\d.]+/g).map(Number);
+        const lum = (c) =>
+          c
+            .slice(0, 3)
+            .map((v) => v / 255)
+            .map((v) =>
+              v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4
+            )
+            .reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0);
+        let parent = el;
+        while (parent) {
+          const bg = rgb(getComputedStyle(parent).backgroundColor);
+          if (bg.length === 3 || bg[3] === 1) {
+            const [high, low] = [
+              lum(rgb(getComputedStyle(el).color)),
+              lum(bg),
+            ].sort((a, b) => b - a);
+            return (high + 0.05) / (low + 0.05);
+          }
+          parent = parent.parentElement;
+        }
+        return 0;
+      });
+      expect(contrast).toBeGreaterThanOrEqual(4.5);
       for (const action of await page
         .locator(".budget-occurrence__actions button")
         .all()) {

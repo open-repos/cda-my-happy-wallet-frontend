@@ -112,7 +112,10 @@ export const CalendarElements = ({ items, budget, disabled, onRealize }) => {
                 )}
               </div>
               {item.nature === "potential" && (
-                <a href="#simulation-panel-title">
+                <a
+                  className="budget-occurrence__link"
+                  href="#simulation-panel-title"
+                >
                   Gérer {item.title} dans la Simulation
                 </a>
               )}

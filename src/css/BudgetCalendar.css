@@ -499,3 +499,14 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+.budget-occurrence__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--web-action-min-size);
+  color: var(--ds-color-text-secondary);
+}
+.budget-occurrence__link:focus-visible {
+  outline: var(--ds-border-width-focus) solid var(--ds-color-focus-ring);
+  outline-offset: 0;
+}
