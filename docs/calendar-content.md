@@ -70,5 +70,6 @@ Le rejeu des effets StrictMode annule la restauration provisoire de focus pour
 laisser Annuler focalisé. Un test unitaire et les huit variantes navigateur
 320/390/768/1440 clair/sombre couvrent cette régression.
 
-Les références du calendrier doivent être relues sur le runner canonique après
-cette intégration ; les seuils visuels et les workflows restent inchangés.
+Les douze références du calendrier ont été comparées et relues sur le runner
+canonique : voir [les preuves et empreintes](evidence/293/README.md). Les seuils
+visuels et les workflows restent inchangés.

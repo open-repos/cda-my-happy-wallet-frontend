@@ -1,5 +1,7 @@
 import { ActionButton } from "../Actions/ActionButton";
 import React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
 import { formatMoney, longDate } from "./budgetFormat";
 const OccurrenceItem = ({ occurrence, disabled, onRealize, onCancel }) => (
   <li
@@ -11,7 +13,7 @@ const OccurrenceItem = ({ occurrence, disabled, onRealize, onCancel }) => (
       <span className="budget-occurrence__date">
         {occurrence.overdue && (
           <span className="budget-occurrence__warning" aria-hidden="true">
-            ⚠
+            <FontAwesomeIcon icon={faExclamationTriangle} />
           </span>
         )}
         {longDate(occurrence.occurrenceDate)}
