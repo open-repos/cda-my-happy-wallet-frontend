@@ -1,3 +1,4 @@
+import { ActionButton } from "../Actions/ActionButton";
 import React, { useMemo, useState } from "react";
 import { useSavingsTrajectory } from "../../hooks/useSavingsTrajectory";
 import { LiveMessage } from "../LiveMessage";
@@ -8,7 +9,6 @@ import {
   savingsComparisonOption,
 } from "../charts/savingsComparisonOptions";
 import { formatMoney, monthLabel } from "../BudgetCalendar/budgetFormat";
-
 const ZERO = {
   currentRemainingVariableExpense: "0.00",
   futureAdditionalVariableExpense: "0.00",
@@ -103,7 +103,10 @@ export const SavingsTrajectorySimulation = ({ goal, onRefresh }) => {
               value={draft[key]}
               aria-describedby={`saving-${goal.id}-${key}-help`}
               onChange={(event) =>
-                setDraft({ ...draft, [key]: event.target.value })
+                setDraft({
+                  ...draft,
+                  [key]: event.target.value,
+                })
               }
             />
             <span
@@ -126,10 +129,15 @@ export const SavingsTrajectorySimulation = ({ goal, onRefresh }) => {
           </select>
         </label>
         <div className="savings-simulation__actions">
-          <button type="submit" className="monthly-event-button">
+          <ActionButton
+            action="apply"
+            type="submit"
+            className="monthly-event-button"
+          >
             Appliquer les hypothèses
-          </button>
-          <button
+          </ActionButton>
+          <ActionButton
+            action="reset"
             type="button"
             className="monthly-event-button monthly-event-button--secondary"
             onClick={() => {
@@ -139,7 +147,7 @@ export const SavingsTrajectorySimulation = ({ goal, onRefresh }) => {
             }}
           >
             Réinitialiser les hypothèses
-          </button>
+          </ActionButton>
         </div>
       </form>
       <p role="status">

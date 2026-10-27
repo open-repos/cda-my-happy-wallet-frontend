@@ -10,7 +10,6 @@ import { OneOffOperationForm } from "../components/OneOffOperations/OneOffOperat
 import { OneOffOperationList } from "../components/OneOffOperations/OneOffOperationList";
 import { useOneOffOperations } from "../hooks/useOneOffOperations";
 import "../../css/Operations.css";
-
 function ListeOperations() {
   const [editedOperation, setEditedOperation] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -77,7 +76,6 @@ function ListeOperations() {
       restore();
     }
   };
-
   return (
     <main className="operations-container">
       <header className="one-off-header">
@@ -220,7 +218,8 @@ function ListeOperations() {
           disabled={state.mutationStatus === "loading"}
         >
           <legend>Supprimer « {deleting.title} » ?</legend>
-          <button
+          <ActionButton
+            action="cancel"
             ref={keepRef}
             type="button"
             className="one-off-button one-off-button--secondary"
@@ -230,7 +229,7 @@ function ListeOperations() {
             }}
           >
             Annuler
-          </button>
+          </ActionButton>
           <ActionButton
             action="delete"
             type="button"
@@ -255,5 +254,4 @@ function ListeOperations() {
     </main>
   );
 }
-
 export default ListeOperations;

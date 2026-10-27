@@ -1,3 +1,4 @@
+import { ActionButton } from "@/src/design/ActionButton";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -84,7 +85,7 @@ export const FixedBudgetScreen = () => {
   const confirmDelete = () => {
     if (editedOperation == null) return;
     Alert.alert(
-      "Supprimer cet élément ?",
+      `Supprimer « ${editedOperation.title} » ?`,
       `${editedOperation.title} sera retiré de votre budget fixe.`,
       [
         { text: "Annuler", style: "cancel" },
@@ -173,7 +174,9 @@ export const FixedBudgetScreen = () => {
               vivre.
             </Text>
             <View style={styles.createActions}>
-              <Pressable
+              <ActionButton
+                action="add"
+                label="Ajouter un revenu"
                 accessibilityRole="button"
                 onPress={() => openCreate("REVENU")}
                 style={({ pressed }) => [
@@ -181,15 +184,10 @@ export const FixedBudgetScreen = () => {
                   styles.incomeButton,
                   pressed && styles.pressed,
                 ]}
-              >
-                <Ionicons
-                  color={colors.statusSuccessText}
-                  name="add-circle-outline"
-                  size={20}
-                />
-                <Text style={styles.incomeButtonLabel}>Ajouter un revenu</Text>
-              </Pressable>
-              <Pressable
+              ></ActionButton>
+              <ActionButton
+                action="add"
+                label="Ajouter une charge"
                 accessibilityRole="button"
                 onPress={() => openCreate("CHARGE")}
                 style={({ pressed }) => [
@@ -197,16 +195,7 @@ export const FixedBudgetScreen = () => {
                   styles.expenseButton,
                   pressed && styles.pressed,
                 ]}
-              >
-                <Ionicons
-                  color={colors.actionDangerText}
-                  name="add-circle-outline"
-                  size={20}
-                />
-                <Text style={styles.expenseButtonLabel}>
-                  Ajouter une charge
-                </Text>
-              </Pressable>
+              ></ActionButton>
             </View>
             {state.message != null ? (
               <FeedbackBanner

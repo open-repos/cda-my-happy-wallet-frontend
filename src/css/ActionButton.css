@@ -1,34 +1,50 @@
-.action-button.action-button.action-button {
+/* Web action roles reuse the shared contract and adapt automatically to the theme. */
+:root {
+  --web-action-primary-background: var(--ds-color-text-secondary);
+  --web-action-primary-text: var(--ds-color-text-inverse);
+  --web-action-secondary-background: var(--ds-color-background-surface);
+  --web-action-secondary-text: var(--ds-color-text-primary);
+  --web-action-border: var(--ds-color-text-secondary);
+  --web-action-radius: var(--ds-primitive-radius-md);
+  --web-action-min-size: 44px;
+  --web-quick-add-size: 56px;
+  --web-quick-add-space: var(--ds-primitive-space-3);
+}
+
+.action-button[data-variant] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  min-height: 44px;
-  min-width: 44px;
+  gap: var(--ds-primitive-space-2);
+  min-height: var(--web-action-min-size);
+  min-width: var(--web-action-min-size);
   max-width: 100%;
   height: auto;
   width: auto;
   box-sizing: border-box;
-  padding: 0.6rem 0.8rem;
-  border: 1px solid var(--ds-color-border-strong);
-  border-radius: var(--ds-radius-control);
+  padding: var(--ds-primitive-space-2) var(--ds-primitive-space-3);
+  border: var(--ds-border-width-default) solid var(--web-action-border);
+  border-radius: var(--web-action-radius);
   font: inherit;
-  font-weight: 600;
-  line-height: 1.35;
+  font-weight: var(--ds-typography-action-weight);
+  line-height: var(--ds-primitive-line-height-heading);
   text-decoration: none;
   cursor: pointer;
   white-space: normal;
   text-align: center;
+  transition: box-shadow var(--ds-motion-duration-fast)
+      var(--ds-motion-easing-standard),
+    transform var(--ds-motion-duration-fast) var(--ds-motion-easing-standard);
 }
-.action-button.action-button.action-button--primary {
-  background: var(--ds-color-action-primary-background);
-  color: var(--ds-color-action-primary-text);
+.action-button[data-variant="primary"] {
+  background: var(--web-action-primary-background);
+  color: var(--web-action-primary-text);
 }
-.action-button.action-button.action-button--secondary {
-  background: var(--ds-color-action-secondary-background);
-  color: var(--ds-color-action-secondary-text);
+.action-button[data-variant="secondary"] {
+  background: var(--web-action-secondary-background);
+  color: var(--web-action-secondary-text);
 }
-.action-button.action-button.action-button--danger {
+.action-button[data-variant="danger"] {
   background: var(--ds-color-status-error-surface);
   color: var(--ds-color-status-error-text);
   border-color: var(--ds-color-status-error-text);
@@ -47,15 +63,35 @@
 .action-button__label {
   min-width: 0;
   overflow-wrap: anywhere;
+  color: inherit;
 }
-.action-button.action-button:focus-visible {
-  outline: 2px solid var(--ds-color-focus-ring);
-  outline-offset: 3px;
+.action-button[data-variant]:focus-visible {
+  outline: var(--ds-border-width-focus) solid var(--ds-color-focus-ring);
+  outline-offset: 0;
 }
-.action-button.action-button:hover:not(:disabled) {
+.action-button[data-variant]:hover:not(:disabled) {
   box-shadow: inset 0 0 0 1px currentColor;
 }
-.action-button.action-button:disabled {
-  opacity: 0.6;
+.action-button[data-variant]:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.action-button[data-variant]:disabled {
+  background: var(--ds-color-action-disabled-background);
+  color: var(--ds-color-action-disabled-text);
+  border-color: var(--ds-color-action-disabled-text);
   cursor: not-allowed;
+}
+.monthly-events-header .action-button[data-variant="primary"],
+.one-off-header .action-button[data-variant="primary"] {
+  border-color: var(--ds-color-text-on-shell);
+  min-height: var(--ds-size-control-min-height);
+}
+.monthly-events-header .action-button:focus-visible,
+.one-off-header .action-button:focus-visible {
+  outline-color: var(--ds-color-focus-ring-on-shell);
+}
+@media (prefers-reduced-motion: reduce) {
+  .action-button[data-variant] {
+    transition: none;
+  }
 }

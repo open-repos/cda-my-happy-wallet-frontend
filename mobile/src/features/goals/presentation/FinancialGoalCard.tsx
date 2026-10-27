@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ActionButton } from "@/src/design/ActionButton";
+import { StyleSheet, Text, View } from "react-native";
 
 import { primitives, semantic, themes } from "@/src/design/tokens";
 import {
@@ -74,14 +75,14 @@ export const FinancialGoalCard = ({ goal, onEdit }: FinancialGoalCardProps) => {
         ))}
       </View>
       <Text style={styles.forecast}>{forecastMessage(goal)}</Text>
-      <Pressable
+      <ActionButton
+        action="edit"
+        label="Modifier"
         accessibilityLabel={`Modifier l’objectif ${goal.title}`}
         accessibilityRole="button"
         onPress={() => onEdit(goal)}
         style={({ pressed }) => [styles.editButton, pressed && styles.pressed]}
-      >
-        <Text style={styles.editLabel}>Modifier</Text>
-      </Pressable>
+      ></ActionButton>
     </View>
   );
 };

@@ -1,3 +1,4 @@
+import { ActionButton } from "../Actions/ActionButton";
 import { CategorySelect } from "../Categories/CategorySelect";
 import React, { useRef, useState } from "react";
 import { useFormFocus } from "../../hooks/useFormFocus";
@@ -21,8 +22,14 @@ export const OneOffInlineEditor = ({
   useFormFocus(titleRef);
   const formId = `one-off-inline-${operation.id}`;
   const change = ({ target: { name, value } }) => {
-    setValues((v) => ({ ...v, [name]: value }));
-    setErrors((v) => ({ ...v, [name]: null }));
+    setValues((v) => ({
+      ...v,
+      [name]: value,
+    }));
+    setErrors((v) => ({
+      ...v,
+      [name]: null,
+    }));
   };
   const field = (name, label, type = "text") => {
     const props = {
@@ -115,17 +122,24 @@ export const OneOffInlineEditor = ({
               {mutationError}
             </span>
           )}
-          <button type="submit" className="one-off-button" disabled={busy}>
+          <ActionButton
+            action="save"
+            type="submit"
+            className="one-off-button"
+            disabled={busy}
+            busy={busy}
+          >
             {busy ? "Enregistrement…" : "Enregistrer"}
-          </button>
-          <button
+          </ActionButton>
+          <ActionButton
+            action="cancel"
             type="button"
             className="one-off-button one-off-button--secondary"
             disabled={busy}
             onClick={onCancel}
           >
             Annuler
-          </button>
+          </ActionButton>
         </form>
       </td>
     </tr>

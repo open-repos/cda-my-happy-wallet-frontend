@@ -24,7 +24,6 @@ import { FixedChargeForm } from "./FixedChargeForm";
 import { FixedIncomeForm } from "./FixedIncomeForm";
 import "../../../css/FixedCharges.css";
 import "../../../css/FixedOperations.css";
-
 const money = (value, currency) =>
   value == null || !/^\d+(?:\.\d+)?$/.test(String(value))
     ? "Indisponible"
@@ -33,7 +32,6 @@ const share = (row) =>
   row.pourcentagePersonnel == null
     ? "Sans objet"
     : `${String(row.pourcentagePersonnel).replace(".", ",")} %`;
-
 export const FixedOperations = () => {
   const charges = useFixedCharges();
   const incomes = useFixedIncomes();
@@ -92,7 +90,10 @@ export const FixedOperations = () => {
     hadAction.current = Boolean(editor || deleting);
   }, [editor, deleting, charges.status, incomes.status]);
   const changeSort = (field, direction) => {
-    setSort({ field, direction });
+    setSort({
+      field,
+      direction,
+    });
     setSortMessage(
       `Liste triée par ${
         FIXED_SORT_FIELDS.find((item) => item.value === field).label
@@ -106,7 +107,10 @@ export const FixedOperations = () => {
       row?.kind ?? (charges.status === "success" ? "charge" : "income");
     actionKind.current = kind;
     setDrafts({});
-    setEditor({ kind, row });
+    setEditor({
+      kind,
+      row,
+    });
   };
   const actions = (row) => (
     <div className="fixed-operations__row-actions">
@@ -151,7 +155,10 @@ export const FixedOperations = () => {
       draft={drafts.inline}
       onDraftChange={(draft) => {
         collection(row.kind).clearCategoryError();
-        setDrafts((current) => ({ ...current, inline: draft }));
+        setDrafts((current) => ({
+          ...current,
+          inline: draft,
+        }));
       }}
       onSave={(body) => collection(row.kind).save(row, body)}
       onClose={() => setEditor(null)}
@@ -365,7 +372,10 @@ export const FixedOperations = () => {
                     disabled={collection(kind).status !== "success"}
                     onChange={() => {
                       actionKind.current = kind;
-                      setEditor({ ...editor, kind });
+                      setEditor({
+                        ...editor,
+                        kind,
+                      });
                     }}
                   />
                   {label}
@@ -381,7 +391,10 @@ export const FixedOperations = () => {
                 draft={drafts.charge}
                 onDraftChange={(draft) => {
                   charges.clearCategoryError();
-                  setDrafts((current) => ({ ...current, charge: draft }));
+                  setDrafts((current) => ({
+                    ...current,
+                    charge: draft,
+                  }));
                 }}
                 busy={busy}
                 onClose={() => setEditor(null)}
@@ -396,7 +409,10 @@ export const FixedOperations = () => {
                 draft={drafts.income}
                 onDraftChange={(draft) => {
                   incomes.clearCategoryError();
-                  setDrafts((current) => ({ ...current, income: draft }));
+                  setDrafts((current) => ({
+                    ...current,
+                    income: draft,
+                  }));
                 }}
                 busy={busy}
                 onClose={() => setEditor(null)}
@@ -421,16 +437,18 @@ export const FixedOperations = () => {
           >
             Conserver cet élément
           </button>
-          <button
+          <ActionButton
+            action="confirm"
             type="button"
             className="one-off-button one-off-button--danger"
             onClick={async () => {
               if (await collection(deleting.kind).remove(deleting))
                 setDeleting(null);
             }}
+            variant="danger"
           >
             Confirmer la suppression
-          </button>
+          </ActionButton>
         </fieldset>
       )}
     </section>

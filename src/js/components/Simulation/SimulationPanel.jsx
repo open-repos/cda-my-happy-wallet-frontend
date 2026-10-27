@@ -11,7 +11,6 @@ import { LiveMessage } from "../LiveMessage";
 import { formatMoney, longDate } from "../BudgetCalendar/budgetFormat";
 import { potentialExpiration } from "../../utils/budgetSimulation";
 import { forecastToday } from "../../utils/budgetForecast";
-
 const Confirmation = ({ title, label, disabled, onConfirm, onCancel }) => {
   const cancel = useRef(null);
   useFormFocus(cancel);
@@ -32,7 +31,8 @@ const Confirmation = ({ title, label, disabled, onConfirm, onCancel }) => {
       aria-label={title}
     >
       <p>{title}</p>
-      <button
+      <ActionButton
+        action="cancel"
         type="button"
         ref={cancel}
         className="monthly-event-button monthly-event-button--secondary"
@@ -41,7 +41,7 @@ const Confirmation = ({ title, label, disabled, onConfirm, onCancel }) => {
         aria-label="Annuler la confirmation"
       >
         Annuler
-      </button>
+      </ActionButton>
       <button
         type="button"
         className="monthly-event-button"
@@ -53,7 +53,6 @@ const Confirmation = ({ title, label, disabled, onConfirm, onCancel }) => {
     </section>
   );
 };
-
 export const SimulationPanel = ({ month, disabled = false }) => {
   const state = useSimulation();
   const potentials = usePotentialEvents();
@@ -70,7 +69,10 @@ export const SimulationPanel = ({ month, disabled = false }) => {
     trigger.focus();
     setEdited(null);
     state.setActiveForm("simulation-confirmation");
-    setPending({ action, event });
+    setPending({
+      action,
+      event,
+    });
   };
   const confirm = async () => {
     const { action, event } = pending;
@@ -168,7 +170,8 @@ export const SimulationPanel = ({ month, disabled = false }) => {
                       mois.
                     </p>
                     <div className="planning-actions">
-                      <button
+                      <ActionButton
+                        action="confirm"
                         type="button"
                         className="monthly-event-button"
                         disabled={busy}
@@ -182,7 +185,7 @@ export const SimulationPanel = ({ month, disabled = false }) => {
                         }
                       >
                         Confirmer
-                      </button>
+                      </ActionButton>
                       <ActionButton
                         action="edit"
                         type="button"

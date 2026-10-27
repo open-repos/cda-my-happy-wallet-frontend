@@ -1087,7 +1087,7 @@ test("loads the next operation page without duplicating rows", async ({
   ).toHaveCount(0);
 });
 
-test("keeps the operation actions and local icons at their design sizes", async ({
+test("keeps labeled operation actions touch accessible and local icons at their design sizes", async ({
   page,
 }) => {
   await page.setViewportSize(viewports[2]);
@@ -1099,12 +1099,14 @@ test("keeps the operation actions and local icons at their design sizes", async 
     exact: true,
   });
   const editButton = page.getByRole("button", { name: "Modifier Courses" });
-  const addIcon = addButton.locator("img");
+  const addIcon = addButton.locator("svg");
   const editIcon = editButton.locator("svg");
 
   await expect(addButton).toHaveCSS("min-height", "48px");
-  await expect(editButton).toHaveCSS("width", "44px");
-  await expect(editButton).toHaveCSS("height", "44px");
+  await expect(editButton).toHaveText("Modifier");
+  const editBounds = await editButton.boundingBox();
+  expect(editBounds.width).toBeGreaterThanOrEqual(44);
+  expect(editBounds.height).toBeGreaterThanOrEqual(44);
   await expect(addIcon).toHaveCSS("width", "16px");
   await expect(addIcon).toHaveCSS("height", "16px");
   await expect(editIcon).toHaveCSS("width", "16px");

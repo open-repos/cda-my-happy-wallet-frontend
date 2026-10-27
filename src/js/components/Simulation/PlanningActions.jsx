@@ -7,7 +7,6 @@ import { monthlyEventsService } from "../../services/monthlyEventsService";
 import { oneOffOperationsService } from "../../services/oneOffOperationsService";
 import { forecastToday } from "../../utils/budgetForecast";
 import { LiveMessage } from "../LiveMessage";
-
 export const PlanningActions = ({
   onOperation,
   onEvent,
@@ -45,7 +44,6 @@ export const PlanningActions = ({
     </ActionButton>
   </div>
 );
-
 export const ForecastPlanning = ({ month }) => {
   const state = useSimulation();
   const today = forecastToday();
@@ -147,13 +145,14 @@ export const ForecastPlanning = ({ month }) => {
                   Réessayer les catégories
                 </button>
               )}
-              <button
+              <ActionButton
+                action="cancel"
                 type="button"
                 className="monthly-event-button monthly-event-button--secondary"
                 onClick={close}
               >
                 Annuler l’ajout
-              </button>
+              </ActionButton>
             </>
           )
         ) : (

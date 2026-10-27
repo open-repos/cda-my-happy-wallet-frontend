@@ -21,6 +21,7 @@ import {
   Text,
   useWindowDimensions,
   View,
+  useColorScheme,
 } from "react-native";
 import {
   SafeAreaProvider,
@@ -75,6 +76,8 @@ const choices = [
 const colors = themes.light.color;
 
 export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
+  const fabColors =
+    themes[useColorScheme() === "dark" ? "dark" : "light"].color;
   const { httpClient } = useAuth();
   const simulation = useSimulation();
   const { width } = useWindowDimensions();
@@ -197,6 +200,10 @@ export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
             onPress={() => open()}
             style={[
               styles.fab,
+              {
+                backgroundColor: fabColors.actionPrimaryBackground,
+                borderColor: fabColors.actionPrimaryText,
+              },
               { bottom: 80 + insets.bottom, display: panel ? "none" : "flex" },
             ]}
           >
@@ -324,7 +331,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.actionPrimaryBackground,
-    elevation: 6,
+    elevation: 10,
+    borderWidth: 2,
+    borderColor: colors.actionPrimaryText,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
   },
   menu: {
     padding: primitives.space["4"],

@@ -21,6 +21,7 @@ export const Button = forwardRef(function Button(
       type={type}
       disabled={disabled || busy}
       aria-busy={busy || undefined}
+      data-variant={variant}
       className={`action-button action-button--${variant} ${className}`.trim()}
     >
       {icon && (

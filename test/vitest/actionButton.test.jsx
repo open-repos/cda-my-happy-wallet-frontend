@@ -49,4 +49,22 @@ describe("shared action buttons", () => {
     rerender(<Button type="submit">Enregistrer</Button>);
     expect(screen.getByRole("button")).toHaveAttribute("type", "submit");
   });
+
+  it.each([
+    "add",
+    "edit",
+    "delete",
+    "save",
+    "cancel",
+    "convert",
+    "simulate",
+    "apply",
+    "reset",
+  ])("renders the %s action with a label and a decorative icon", (action) => {
+    render(<ActionButton action={action} />);
+    const button = screen.getByRole("button");
+    expect(button).toHaveAccessibleName();
+    expect(button.querySelector('[aria-hidden="true"] svg')).not.toBeNull();
+    expect(button).toHaveAttribute("data-variant");
+  });
 });

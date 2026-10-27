@@ -6,7 +6,6 @@ import { formatMoney } from "../BudgetCalendar/budgetFormat";
 import { LiveMessage } from "../LiveMessage";
 import { FixedChargeForm } from "./FixedChargeForm";
 import "../../../css/FixedCharges.css";
-
 export const FixedCharges = () => {
   const charges = useFixedCharges();
   const [editing, setEditing] = useState(undefined);
@@ -135,7 +134,8 @@ export const FixedCharges = () => {
                     >
                       Conserver la charge
                     </button>
-                    <button
+                    <ActionButton
+                      action="confirm"
                       className="one-off-button one-off-button--danger"
                       type="button"
                       onClick={async () => {
@@ -144,9 +144,10 @@ export const FixedCharges = () => {
                           setDeleting(null);
                         }
                       }}
+                      variant="danger"
                     >
                       Confirmer la suppression
-                    </button>
+                    </ActionButton>
                   </fieldset>
                 )}
               </article>

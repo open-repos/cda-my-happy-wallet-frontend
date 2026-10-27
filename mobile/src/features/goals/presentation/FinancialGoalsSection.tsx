@@ -1,6 +1,6 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { ActionButton } from "@/src/design/ActionButton";
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { FeedbackBanner, FeedbackState } from "@/src/design/FeedbackState";
 import { primitives, semantic, themes } from "@/src/design/tokens";
@@ -93,19 +93,14 @@ export const FinancialGoalsSection = ({
         Suivez ce que vous mettez de côté et la date visée.
       </Text>
       {canAdd ? (
-        <Pressable
+        <ActionButton
+          action="add"
+          label="Ajouter un objectif"
           accessibilityRole="button"
           disabled={state.mutationStatus === "loading"}
           onPress={() => open(null)}
           style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}
-        >
-          <Ionicons
-            color={colors.actionPrimaryText}
-            name="add-circle-outline"
-            size={21}
-          />
-          <Text style={styles.addLabel}>Ajouter un objectif</Text>
-        </Pressable>
+        ></ActionButton>
       ) : null}
       {/* Formulaire ouvert : le message s'affiche dans sa fenêtre. */}
       {state.message && !isFormVisible ? (

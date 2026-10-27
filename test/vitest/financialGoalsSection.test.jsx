@@ -289,7 +289,9 @@ describe("FinancialGoalsSection", () => {
       screen.getByRole("group", { name: "Supprimer « Vélo » ?" })
     ).toBeVisible();
     expect(
-      screen.getAllByRole("button", { name: "Annuler", exact: true })[0]
+      screen
+        .getByRole("group", { name: "Supprimer « Vélo » ?" })
+        .querySelector("button")
     ).toHaveFocus();
     fireEvent.click(screen.getByRole("button", { name: "Oui, supprimer" }));
     await waitFor(() => expect(current.deleteGoal).toHaveBeenCalledWith(3));

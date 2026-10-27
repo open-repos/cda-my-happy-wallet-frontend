@@ -123,14 +123,15 @@ export const FinancialGoalCard = ({ goal, onEdit, onRefresh }) => {
           className="goal-trajectory"
           aria-labelledby={`goal-${goal.id}-trajectory-title`}
         >
-          <button
+          <ActionButton
+            action="simulate"
             type="button"
             className="monthly-event-button monthly-event-button--secondary"
             onClick={() => setComparing((value) => !value)}
             aria-expanded={comparing}
           >
             {comparing ? "Revenir au rythme prévu" : "Simuler avec mon budget"}
-          </button>
+          </ActionButton>
           {comparing ? (
             <SavingsTrajectorySimulation goal={goal} onRefresh={onRefresh} />
           ) : (
