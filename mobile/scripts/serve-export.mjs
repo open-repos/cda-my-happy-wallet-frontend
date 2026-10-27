@@ -255,6 +255,40 @@ const testApiResponse = (pathname, searchParams) => {
       },
     };
   }
+  if (pathname.endsWith("/event-occurrence-resolutions"))
+    return { data: [], meta: noNextPage };
+  if (pathname.endsWith("/event-occurrences")) {
+    const month = searchParams.get("month") ?? "2026-10";
+    return {
+      data: [
+        {
+          id: 9,
+          title: "Loyer",
+          amount: "300.00",
+          currency: "EUR",
+          kind: "DEPENSE",
+          status: "CONFIRME",
+          startDate: `${month}-05`,
+          occurrenceDate: `${month}-05`,
+          recurrence: "MENSUELLE",
+          endDate: null,
+        },
+        {
+          id: 10,
+          title: "Assurance",
+          amount: "45.00",
+          currency: "EUR",
+          kind: "DEPENSE",
+          status: "CONFIRME",
+          startDate: `${month}-20`,
+          occurrenceDate: `${month}-20`,
+          recurrence: "MENSUELLE",
+          endDate: null,
+        },
+      ],
+      meta: noNextPage,
+    };
+  }
   if (pathname.endsWith("/event-occurrences/pending")) {
     const month = (searchParams.get("through") ?? "2026-10-31").slice(0, 7);
     return {
