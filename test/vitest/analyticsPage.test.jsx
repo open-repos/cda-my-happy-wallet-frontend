@@ -19,6 +19,10 @@ import Analyses from "../../src/js/pages/Analyses";
 import { useAnalytics } from "../../src/js/hooks/useAnalytics";
 
 vi.mock("../../src/js/hooks/useAnalytics", () => ({ useAnalytics: vi.fn() }));
+// Les cartes d'enveloppes et leurs annonces sont vérifiées séparément.
+vi.mock("../../src/js/components/Envelopes/EnvelopeSection", () => ({
+  EnvelopeSection: () => null,
+}));
 // Les rangs de palette ont leur propre test (#172).
 vi.mock("../../src/js/hooks/useCategoryRanks", () => ({
   useCategoryRanks: vi.fn(() => ({ ranks: null, settled: true })),

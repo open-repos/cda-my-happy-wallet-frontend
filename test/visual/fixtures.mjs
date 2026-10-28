@@ -1,5 +1,6 @@
 import { forecastFixture } from "./forecastFixture.mjs";
 import { savingsCapacityFixture } from "./savingsCapacityFixture.mjs";
+import { envelopeIntegration, envelopeMeta } from "../fixtures/envelopes.mjs";
 
 // Synthetic, read-only browser fixtures shared by responsive and visual tests.
 const storedUser = {
@@ -28,6 +29,40 @@ export const prepareProtectedPage = async (
     await page.addInitScript((user) => {
       window.localStorage.setItem(JSON.stringify("user"), JSON.stringify(user));
     }, storedUser);
+  // Existing journeys use ordinary fixed charges: no implicit envelope/link.
+  await page.route(
+    /\/v1\/(envelope-overview|envelope-analytics)(?:\?.*)?$/,
+    (route) =>
+      route.fulfill({
+        json: { data: [], meta: envelopeMeta, historyPolicy: "OBSERVED_ONLY" },
+      })
+  );
+  await page.route(
+    /\/v1\/reconciliation\/months\/[^/]+\/occurrences(?:\?.*)?$/,
+    (route) =>
+      route.fulfill({
+        json: {
+          data: [],
+          meta: { ...envelopeMeta, limit: 100 },
+          integration: envelopeIntegration,
+        },
+      })
+  );
+  await page.route(/\/v1\/operations\/\d+\/reconciliation$/, (route) =>
+    route.fulfill({
+      json: {
+        data: {
+          operationId: Number(
+            new URL(route.request().url()).pathname.match(
+              /operations\/(\d+)/
+            )[1]
+          ),
+          occurrenceId: null,
+        },
+        integration: envelopeIntegration,
+      },
+    })
+  );
   await page.route(/\/v1\/event-occurrence-resolutions(?:\?.*)?$/, (route) =>
     route.fulfill({
       json: {

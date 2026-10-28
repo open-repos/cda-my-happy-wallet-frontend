@@ -27,6 +27,7 @@ import {
   toSearchParams,
 } from "../utils/analyticsExplorer";
 import "../../css/Analyses.css";
+import { EnvelopeSection } from "../components/Envelopes/EnvelopeSection";
 
 const LOADING = "Chargement du graphique…";
 const EMPTY = "Aucune opération sur cette période.";
@@ -148,6 +149,7 @@ const Analyses = () => {
           type), 30 ans, et 500 points au plus.
         </p>
       </header>
+      <EnvelopeSection analysis />
 
       <form
         className="analytics__controls"

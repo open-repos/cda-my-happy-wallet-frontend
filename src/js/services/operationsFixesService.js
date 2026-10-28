@@ -1,6 +1,33 @@
 import { apiPrivate } from "../../utils/axiosHelper";
 
 class OperationsFixesService {
+  async getMonthDefinitions(month) {
+    const rows = [],
+      seen = new Set();
+    let cursor = null;
+    do {
+      const response = await apiPrivate.get(
+        `/operations-fixes/months/${month}`,
+        {
+          withCredentials: true,
+          params: { limit: 100, ...(cursor ? { cursor } : {}) },
+        }
+      );
+      const { data, meta } = response.data ?? {};
+      if (
+        !Array.isArray(data) ||
+        typeof meta?.hasNext !== "boolean" ||
+        (meta.hasNext && !meta.nextCursor)
+      )
+        throw new Error("Invalid fixed month response");
+      rows.push(...data);
+      cursor = meta.hasNext ? meta.nextCursor : null;
+      if (cursor && seen.has(cursor))
+        throw new Error("Repeated fixed month cursor");
+      if (cursor) seen.add(cursor);
+    } while (cursor);
+    return rows;
+  }
   async getAllRevenus() {
     return this.getCollection("revenus");
   }

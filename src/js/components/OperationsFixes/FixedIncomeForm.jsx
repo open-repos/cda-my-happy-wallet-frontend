@@ -1,5 +1,6 @@
 import { ActionButton } from "../Actions/ActionButton";
 import { FixedCategorySelect } from "./FixedCategorySelect";
+import { FixedEnvelopeFields } from "./FixedEnvelopeFields";
 import {
   fixedCategoryBody,
   validateFixedCategory,
@@ -158,6 +159,14 @@ export const FixedIncomeForm = ({
           {errors.devise && (
             <span id="income-devise-error">{errors.devise}</span>
           )}
+          <FixedEnvelopeFields
+            values={values}
+            onChange={change}
+            income
+            editing={Boolean(income)}
+            disabled={busy}
+            error={errors.effectiveMonth}
+          />
         </fieldset>
         <div className="fixed-charge-actions">
           <ActionButton

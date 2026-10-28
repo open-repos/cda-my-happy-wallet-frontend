@@ -11,6 +11,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import Analyses from "../../src/js/pages/Analyses";
 import { useAnalytics } from "../../src/js/hooks/useAnalytics";
 import { categoryService } from "../../src/js/services/categoryService";
+vi.mock("../../src/js/components/Envelopes/EnvelopeSection", () => ({
+  EnvelopeSection: () => null,
+}));
 
 vi.mock("../../src/js/hooks/useAnalytics", () => ({ useAnalytics: vi.fn() }));
 vi.mock("../../src/js/services/categoryService", () => ({
