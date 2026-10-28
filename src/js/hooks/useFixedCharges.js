@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import service from "../services/operationsFixesService";
 import { useSimulation } from "../components/Simulation/SimulationContext";
+import { envelopeErrorMessage } from "../services/envelopesService";
 
 const useFixedCollection = (type) => {
   const income = type === "income";
@@ -74,9 +75,12 @@ const useFixedCollection = (type) => {
         );
       if (mounted.current)
         setMessage({
-          text: income
-            ? "L’entrée n’a pas pu être enregistrée. Vérifiez votre connexion et vos valeurs, puis réessayez."
-            : "La charge n’a pas pu être enregistrée. Vérifiez votre connexion et vos valeurs, puis réessayez.",
+          text: envelopeErrorMessage(
+            error,
+            income
+              ? "L’entrée n’a pas pu être enregistrée. Vérifiez votre connexion et vos valeurs, puis réessayez."
+              : "La charge n’a pas pu être enregistrée. Vérifiez votre connexion et vos valeurs, puis réessayez."
+          ),
           error: true,
         });
       return false;
@@ -102,7 +106,9 @@ const useFixedCollection = (type) => {
             : income
             ? service.postRevenus(body)
             : service.postCharges(body),
-        `${noun} ${charge ? "modifiée" : "ajoutée"}.`
+        body.effectiveMonth
+          ? `${noun} : modification enregistrée à partir de ${body.effectiveMonth}.`
+          : `${noun} ${charge ? "modifiée" : "ajoutée"}.`
       ),
     remove: (charge) =>
       mutate(

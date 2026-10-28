@@ -75,7 +75,7 @@ export const QuickAddProvider = ({ children }) => {
       ? calendarDate
       : forecastToday();
   const open = useCallback(
-    (kind = "menu", date = null, trigger = null) => {
+    (kind = "menu", date = null, trigger = null, defaults = {}) => {
       if (simulation.activeForm && simulation.activeForm !== "quick-add")
         return;
       returnFocus.current = trigger ?? document.activeElement;
@@ -86,6 +86,7 @@ export const QuickAddProvider = ({ children }) => {
       setPanel({
         kind,
         date: date ?? contextDate,
+        defaults,
       });
       simulation.setActiveForm("quick-add");
     },
@@ -174,7 +175,7 @@ export const QuickAddProvider = ({ children }) => {
       });
     } else
       setFeedback({
-        text: "L’ajout n’a pas pu être enregistré. Vérifiez les champs puis réessayez.",
+        text: "",
         error: true,
       });
     return ok;
@@ -318,6 +319,9 @@ export const QuickAddProvider = ({ children }) => {
                           panel.kind === "income" ? "ENTREE" : "DEPENSE"
                         }
                         initialDate={panel.date}
+                        initialCurrency={panel.defaults?.currency ?? "EUR"}
+                        initialCategoryId={panel.defaults?.categoryId ?? ""}
+                        suggestedEnvelopeId={panel.defaults?.envelopeId ?? null}
                         categories={categories}
                         isSaving={busy}
                         onCancel={close}

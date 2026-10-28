@@ -4,6 +4,8 @@ import { ActionButton } from "../Actions/ActionButton";
 import { CategorySelect } from "../Categories/CategorySelect";
 import { validateOperation } from "../../utils/oneOffOperationForm";
 import { useFormFocus } from "../../hooks/useFormFocus";
+import { useEnvelopeAssignment } from "../../hooks/useEnvelopeAssignment";
+import { EnvelopeAssignment } from "../Envelopes/EnvelopeAssignment";
 import React, { useEffect, useRef, useState } from "react";
 const emptyOperation = {
   title: "",
@@ -18,6 +20,9 @@ export const OneOffOperationForm = ({
   operation,
   initialDate = "",
   initialKind = "DEPENSE",
+  initialCurrency = "EUR",
+  initialCategoryId = "",
+  suggestedEnvelopeId = null,
   isSaving,
   onCancel,
   onDelete,
@@ -34,6 +39,8 @@ export const OneOffOperationForm = ({
           ...emptyOperation,
           kind: initialKind,
           operationDate: initialDate,
+          currency: initialCurrency,
+          categoryId: String(initialCategoryId),
         }
   );
   const [errors, setErrors] = useState({});
@@ -41,6 +48,11 @@ export const OneOffOperationForm = ({
   const titleRef = useRef(null);
   const deleteTrigger = useRef(null);
   const saving = useRef(false);
+  const assignment = useEnvelopeAssignment(
+    operation,
+    values,
+    suggestedEnvelopeId
+  );
   useFormFocus(titleRef);
   useEffect(() => {
     const closeOnEscape = (event) => {
@@ -67,6 +79,9 @@ export const OneOffOperationForm = ({
       values,
       new Set(categories.map(({ id }) => id))
     );
+    const reconciliationError = assignment.problem();
+    if (reconciliationError)
+      validationErrors.reconciliation = reconciliationError;
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
     saving.current = true;
@@ -74,10 +89,11 @@ export const OneOffOperationForm = ({
       await onSave({
         title: values.title.trim(),
         amount: values.amount,
-        currency: "EUR",
+        currency: values.currency,
         kind: values.kind,
         operationDate: values.operationDate,
         categoryId: Number(values.categoryId),
+        ...assignment.body(),
       });
     } finally {
       saving.current = false;
@@ -129,9 +145,21 @@ export const OneOffOperationForm = ({
               aria-invalid={Boolean(errors.amount)}
               aria-describedby={describedBy("amount")}
             />
-            <span aria-hidden="true">EUR</span>
+            <span aria-hidden="true">{values.currency}</span>
           </span>
           {errors.amount && <span id="amount-error">{errors.amount}</span>}
+        </label>
+        <label>
+          Devise
+          <select
+            name="currency"
+            value={values.currency}
+            onChange={update}
+            disabled={isSaving}
+          >
+            <option>EUR</option>
+            <option>USD</option>
+          </select>
         </label>
         <label>
           Date
@@ -187,23 +215,30 @@ export const OneOffOperationForm = ({
             Entrée
           </label>
         </fieldset>
+        <EnvelopeAssignment
+          assignment={assignment}
+          busy={isSaving}
+          error={errors.reconciliation}
+        />
         <FormActions
           className="one-off-form__actions"
           destructive={
             <>
-              {operation && !isConfirmingDelete && (
+              {operation && onDelete && !isConfirmingDelete && (
                 <ActionButton
                   action="delete"
                   ref={deleteTrigger}
                   type="button"
                   className="one-off-button one-off-button--danger"
                   onClick={() => setIsConfirmingDelete(true)}
-                  disabled={isSaving}
+                  disabled={
+                    isSaving || Boolean(assignment.link.occurrence?.closed)
+                  }
                 >
                   Supprimer
                 </ActionButton>
               )}
-              {operation && isConfirmingDelete && (
+              {operation && onDelete && isConfirmingDelete && (
                 <DeleteConfirmation
                   title={operation.title}
                   busy={isSaving}
@@ -229,7 +264,7 @@ export const OneOffOperationForm = ({
             action="save"
             type="submit"
             className="one-off-button"
-            disabled={isSaving}
+            disabled={isSaving || Boolean(assignment.link.occurrence?.closed)}
             busy={isSaving}
           >
             {isSaving ? "Enregistrement…" : "Enregistrer"}

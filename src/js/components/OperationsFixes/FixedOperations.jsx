@@ -22,6 +22,8 @@ import { LiveMessage } from "../LiveMessage";
 import { FixedBudgetSummary } from "./FixedBudgetSummary";
 import { FixedChargeForm } from "./FixedChargeForm";
 import { FixedIncomeForm } from "./FixedIncomeForm";
+import { FixedMonthPreview } from "./FixedMonthPreview";
+import "../../../css/Envelopes.css";
 import "../../../css/FixedCharges.css";
 import "../../../css/FixedOperations.css";
 const money = (value, currency) =>
@@ -172,6 +174,16 @@ export const FixedOperations = () => {
       </dd>
       <dt>Type</dt>
       <dd>{fixedKindLabel(row.kind)}</dd>
+      {row.kind !== "income" && (
+        <>
+          <dt>Enveloppe budgétaire mensuelle</dt>
+          <dd>
+            {row.isBudgetEnvelope
+              ? "Oui — rattachement des dépenses disponible"
+              : "Non"}
+          </dd>
+        </>
+      )}
       <dt>Total par échéance</dt>
       <dd>{money(row.montant, row.devise)}</dd>
       <dt>Devise</dt>
@@ -339,10 +351,13 @@ export const FixedOperations = () => {
           )}
           <p className="fixed-operations__help">
             Les charges fixes sont réparties chaque mois selon votre part
-            personnelle. Ne saisissez pas aussi la même dépense dans les
-            événements ou les opérations : elle serait comptée deux fois. Aucun
-            événement ni réserve n’est créé automatiquement.
+            personnelle. Pour une charge mensuelle marquée comme enveloppe,
+            saisissez vos dépenses réelles en les rattachant à cette enveloppe :
+            le rapprochement évite leur double comptabilisation. Les charges
+            ordinaires et les entrées restent exclues du rapprochement ; évitez
+            de les dupliquer dans les opérations.
           </p>
+          <FixedMonthPreview />
         </div>
         {editor && !editor.row && (
           <section

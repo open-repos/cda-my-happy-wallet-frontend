@@ -24,5 +24,7 @@ export const validateOperation = (operation, categoryIds) => {
     errors.operationDate = "Choisissez une date valide.";
   if (!categoryIds.has(Number(operation.categoryId)))
     errors.categoryId = "Choisissez une catégorie.";
+  if (!["EUR", "USD"].includes(operation.currency))
+    errors.currency = "Choisissez une devise.";
   return errors;
 };

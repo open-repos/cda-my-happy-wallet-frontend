@@ -1,5 +1,6 @@
 import { ActionButton } from "../Actions/ActionButton";
 import { FixedCategorySelect } from "./FixedCategorySelect";
+import { FixedEnvelopeFields } from "./FixedEnvelopeFields";
 import {
   fixedCategoryBody,
   validateFixedCategory,
@@ -59,10 +60,13 @@ export const FixedInlineEditor = ({
     : chargePreview(values);
   const amount = (field) =>
     preview ? formatMoney(preview[field], values.devise) : "Indisponible";
-  const change = ({ target: { name, value } }) => {
+  const change = ({ target: { name, value, type, checked } }) => {
     const next = {
       ...values,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
+      ...(name === "periodicite" && value !== "MENSUELLE"
+        ? { isBudgetEnvelope: false }
+        : {}),
     };
     setValues(next);
     onDraftChange(next);
@@ -164,6 +168,15 @@ export const FixedInlineEditor = ({
       onSubmit={submit}
       className="fixed-inline__controls"
     >
+      <FixedEnvelopeFields
+        values={values}
+        onChange={change}
+        income={income}
+        editing
+        disabled={busy}
+        form={formId}
+        error={errors.isBudgetEnvelope || errors.effectiveMonth}
+      />
       <LiveMessage
         isError
         message={

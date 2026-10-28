@@ -8,7 +8,7 @@ import "../../../css/BudgetCalendar.css";
 import "../../../css/HomeBudget.css";
 
 /** Accueil : reste à vivre du mois courant, dépenses et objectifs. */
-const CaseShowRaV = () => {
+const CaseShowRaV = ({ children }) => {
   const [period, setPeriod] = useState("mois");
   const { summary, expenses, goals } = useHomeBudget();
 
@@ -17,6 +17,7 @@ const CaseShowRaV = () => {
       <PeriodToggle period={period} onChange={setPeriod} />
       <img className="home-budget__illustration" src={Wallet} alt="" />
       <RemainingToLive section={summary} period={period} />
+      {children}
       <div className="home-budget__cards">
         <ExpensesByCategoryCard section={expenses} currency={HOME_CURRENCY} />
         <GoalsCard section={goals} currency={HOME_CURRENCY} />

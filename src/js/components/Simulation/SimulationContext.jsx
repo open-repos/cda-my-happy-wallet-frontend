@@ -1,4 +1,5 @@
 import { isAcknowledgedWrite } from "../../utils/acknowledgedWrite";
+import { envelopeErrorMessage } from "../../services/envelopesService";
 import React, {
   createContext,
   useCallback,
@@ -81,7 +82,7 @@ export const SimulationProvider = ({ children }) => {
         if (mounted.current) {
           setMutationStatus("error");
           const code = error?.response?.data?.error?.details?.code;
-          setMessage(errors[code] || failure);
+          setMessage(errors[code] || envelopeErrorMessage(error, failure));
         }
         return false;
       } finally {

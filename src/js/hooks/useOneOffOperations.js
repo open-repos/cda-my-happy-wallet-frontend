@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { oneOffOperationsService as service } from "../services/oneOffOperationsService";
 import { useSimulation } from "../components/Simulation/SimulationContext";
 import { isAcknowledgedWrite } from "../utils/acknowledgedWrite";
+import { envelopeErrorMessage } from "../services/envelopesService";
 const genericError =
   "Impossible de charger vos opérations. Vérifiez votre connexion puis réessayez.";
 const merge = (current, incoming) => {
@@ -127,10 +128,15 @@ export const useOneOffOperations = () => {
         );
       }
       return true;
-    } catch {
+    } catch (error) {
       if (mounted.current) {
         setMutationStatus("error");
-        setMessage("L’opération n’a pas pu être enregistrée. Réessayez.");
+        setMessage(
+          envelopeErrorMessage(
+            error,
+            "L’opération n’a pas pu être enregistrée. Réessayez."
+          )
+        );
       }
       return false;
     } finally {

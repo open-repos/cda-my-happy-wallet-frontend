@@ -1,3 +1,4 @@
+import { envelopeMonth, validEffectiveMonth } from "./envelopes";
 export const CHARGE_PERIODS = [
   { value: "MENSUELLE", label: "Mensuelle — tous les mois", months: 1 },
   {
@@ -43,6 +44,11 @@ export const validateCharge = (values) => {
     errors.periodicite = "Choisissez une périodicité.";
   if (!["EUR", "USD"].includes(values.devise))
     errors.devise = "Choisissez une devise.";
+  if (values.isBudgetEnvelope && values.periodicite !== "MENSUELLE")
+    errors.isBudgetEnvelope = "Une enveloppe doit être mensuelle.";
+  if (!validEffectiveMonth(values.effectiveMonth))
+    errors.effectiveMonth =
+      "Choisissez le mois courant ou un mois futur (24 mois maximum).";
   return errors;
 };
 const decimal = (cents) =>
@@ -75,6 +81,8 @@ export const chargeInitialValues = (charge) => ({
   devise: charge?.devise ?? "EUR",
   periodicite: charge?.periodicite ?? "MENSUELLE",
   pourcentagePersonnel: String(charge?.pourcentagePersonnel ?? 100),
+  isBudgetEnvelope: charge?.isBudgetEnvelope ?? false,
+  effectiveMonth: charge ? envelopeMonth() : "",
 });
 export const chargeBody = (values) => ({
   titre: values.titre.trim(),
@@ -82,6 +90,10 @@ export const chargeBody = (values) => ({
   devise: values.devise,
   periodicite: values.periodicite,
   pourcentagePersonnel: hundredths(values.pourcentagePersonnel) / 100,
+  ...(values.isBudgetEnvelope === undefined
+    ? {}
+    : { isBudgetEnvelope: Boolean(values.isBudgetEnvelope) }),
+  ...(values.effectiveMonth ? { effectiveMonth: values.effectiveMonth } : {}),
 });
 // Les montants reçus restent autoritaires ; calcul de secours seulement pour
 // les anciennes lignes sans les nouveaux champs (mensuelles à 100 %).
