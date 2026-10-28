@@ -5,6 +5,7 @@ import { faPen, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { CompactMoneyList } from "../CompactOperations/CompactMoneyList";
 import { OneOffInlineEditor } from "./OneOffInlineEditor";
 import { formatMoney } from "../BudgetCalendar/budgetFormat";
+import { OperationEnvelopeLink } from "../Envelopes/OperationEnvelopeLink";
 export const OneOffOperationList = ({
   categories,
   operations,
@@ -70,16 +71,19 @@ export const OneOffOperationList = ({
         </div>
       )}
       renderDetails={({ raw, category }) => (
-        <dl>
-          <dt>Date</dt>
-          <dd>{raw.operationDate.split("-").reverse().join("/")}</dd>
-          <dt>Catégorie</dt>
-          <dd>{category?.name ?? "Catégorie indisponible"}</dd>
-          <dt>Type</dt>
-          <dd>{raw.type === "ENTREE" ? "Entrée" : "Dépense"}</dd>
-          <dt>Montant</dt>
-          <dd>{formatMoney(raw.amount, raw.currency)}</dd>
-        </dl>
+        <>
+          <OperationEnvelopeLink operation={raw} />
+          <dl>
+            <dt>Date</dt>
+            <dd>{raw.operationDate.split("-").reverse().join("/")}</dd>
+            <dt>Catégorie</dt>
+            <dd>{category?.name ?? "Catégorie indisponible"}</dd>
+            <dt>Type</dt>
+            <dd>{raw.type === "ENTREE" ? "Entrée" : "Dépense"}</dd>
+            <dt>Montant</dt>
+            <dd>{formatMoney(raw.amount, raw.currency)}</dd>
+          </dl>
+        </>
       )}
     />
   );

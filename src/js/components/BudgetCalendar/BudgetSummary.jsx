@@ -18,6 +18,17 @@ export const toneOf = (amount) =>
 /** Décomposition explicite : report du mois précédent + résultat du mois. */
 export const RealBreakdown = ({ summary }) => (
   <dl className="budget-breakdown">
+    {summary.reconciliationAdjustment !== undefined &&
+      Number(summary.reconciliationAdjustment) !== 0 && (
+        <div className="budget-breakdown__row">
+          <dt>Rapprochement des enveloppes inclus dans le résultat</dt>
+          <dd>
+            {formatMoney(summary.reconciliationAdjustment, summary.currency, {
+              signed: true,
+            })}
+          </dd>
+        </div>
+      )}
     {summary.carryFromMonth && (
       <div className="budget-breakdown__row budget-breakdown__row--carry">
         <dt>Report {ofMonth(summary.carryFromMonth)}</dt>
@@ -48,7 +59,8 @@ export const CarryHelp = ({ summary }) =>
             summary.carryFromMonth
           )} est ajouté à ce mois.`}{" "}
       Le résultat du mois correspond à vos revenus et charges fixes, plus vos
-      entrées, moins vos dépenses.
+      entrées, moins vos dépenses, avec le rapprochement des enveloppes
+      lorsqu’il est disponible.
     </p>
   ) : null;
 

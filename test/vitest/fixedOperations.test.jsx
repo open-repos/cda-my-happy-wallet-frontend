@@ -1,4 +1,5 @@
 import React from "react";
+import { envelopeMonth } from "../../src/js/utils/envelopes";
 import {
   cleanup,
   fireEvent,
@@ -533,6 +534,7 @@ describe("vue commune du budget fixe #265", () => {
         montant: 2100,
         devise: "EUR",
         categoryId: null,
+        effectiveMonth: envelopeMonth(),
       })
     );
     fireEvent.click(

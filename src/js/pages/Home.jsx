@@ -6,6 +6,7 @@ import CaseShowRaV from "../components/HomeComponents/CaseShowRaV";
 import { useOperationsFixes } from "../hooks/useOperationsFixes";
 import { SavingsCapacitySection } from "../components/FinancialGoals/SavingsCapacitySection";
 import { SimulationControls } from "../components/Simulation/SimulationControls";
+import { EnvelopeSection } from "../components/Envelopes/EnvelopeSection";
 import "../../css/BudgetForecast.css";
 function Home() {
   // let navigate = useNavigate();
@@ -17,7 +18,16 @@ function Home() {
   return (
     <main>
       <SimulationControls />
-      {isEmptyOpFixe ? <CaseOpFixeEmpty /> : <CaseShowRaV />}
+      {isEmptyOpFixe ? (
+        <>
+          <CaseOpFixeEmpty />
+          <EnvelopeSection />
+        </>
+      ) : (
+        <CaseShowRaV>
+          <EnvelopeSection />
+        </CaseShowRaV>
+      )}
       <SavingsCapacitySection />
       <Link className="home-forecast-link" to="/prochains-mois">
         Voir les prochains mois

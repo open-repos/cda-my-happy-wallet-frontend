@@ -94,7 +94,9 @@ export const parseBudgetSummary = (summary) => {
     !isOptionalAmount(summary?.realDailyAllowance) ||
     !isCount(summary?.unresolvedEvents) ||
     !Array.isArray(summary?.days) ||
-    summary.days.length > 31
+    summary.days.length > 31 ||
+    (summary.reconciliationAdjustment !== undefined &&
+      !isAmount(summary.reconciliationAdjustment))
   ) {
     invalid("budget summary");
   }
@@ -114,6 +116,9 @@ export const parseBudgetSummary = (summary) => {
     actualExpense: summary.actualExpense,
     monthResult: summary.monthResult,
     realRemaining: summary.realRemaining,
+    ...(summary.reconciliationAdjustment === undefined
+      ? {}
+      : { reconciliationAdjustment: summary.reconciliationAdjustment }),
     remainingDays: summary.remainingDays,
     realDailyAllowance: summary.realDailyAllowance,
     unresolvedEvents: summary.unresolvedEvents,

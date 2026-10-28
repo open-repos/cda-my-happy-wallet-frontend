@@ -1,5 +1,6 @@
 import { ActionButton } from "../Actions/ActionButton";
 import { FixedCategorySelect } from "./FixedCategorySelect";
+import { FixedEnvelopeFields } from "./FixedEnvelopeFields";
 import {
   fixedCategoryBody,
   validateFixedCategory,
@@ -43,10 +44,13 @@ export const FixedChargeForm = ({
   useFormFocus(titleRef);
   const preview = chargePreview(values);
   const change = (event) => {
-    const { name, value } = event.target;
+    const { name, value, type, checked } = event.target;
     const next = {
       ...values,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
+      ...(name === "periodicite" && value !== "MENSUELLE"
+        ? { isBudgetEnvelope: false }
+        : {}),
     };
     setValues(next);
     onDraftChange?.(next);
@@ -173,6 +177,13 @@ export const FixedChargeForm = ({
               pouvez choisir un autre pourcentage, y compris 0 %.
             </p>
           </fieldset>
+          <FixedEnvelopeFields
+            values={values}
+            onChange={change}
+            editing={Boolean(charge)}
+            disabled={busy}
+            error={errors.isBudgetEnvelope || errors.effectiveMonth}
+          />
         </fieldset>
         <section
           aria-label="Aperçu de la charge"

@@ -33,6 +33,13 @@ import {
   shiftForecastMonth,
 } from "../../src/js/utils/budgetForecast";
 import { captureLiveRegions, expectAnnouncedIn } from "./liveRegions";
+vi.mock("../../src/js/services/envelopesService", async (original) => ({
+  ...(await original()),
+  envelopesService: {
+    allOccurrences: async () => [],
+    link: async (operationId) => ({ operationId, occurrenceId: null }),
+  },
+}));
 
 // Services simulés seulement : pages, hooks de données, régions live et
 // SimulationProvider sont réels. Les deux spies observent les commandes des
