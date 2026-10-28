@@ -396,8 +396,7 @@ export const EnvelopeSection = ({ analysis = false }) => {
       <p className="envelope-help">
         Pendant le mois, le budget reste réservé jusqu’à son montant prévu. À la
         clôture, le réalisé rattaché le remplace. Sans dépense rattachée, le
-        prévu reste réservé. Le solde mensuel du backend intègre ce
-        rapprochement.
+        prévu reste réservé. Le solde mensuel intègre ce rapprochement.
       </p>
     </section>
   );

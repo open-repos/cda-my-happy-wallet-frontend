@@ -59,8 +59,10 @@ export const CarryHelp = ({ summary }) =>
             summary.carryFromMonth
           )} est ajouté à ce mois.`}{" "}
       Le résultat du mois correspond à vos revenus et charges fixes, plus vos
-      entrées, moins vos dépenses, avec le rapprochement des enveloppes
-      lorsqu’il est disponible.
+      entrées, moins vos dépenses.
+      {summary.reconciliationAdjustment !== undefined &&
+        Number(summary.reconciliationAdjustment) !== 0 &&
+        " Le rapprochement des enveloppes est déjà inclus dans ce résultat."}
     </p>
   ) : null;
 
