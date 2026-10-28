@@ -1,7 +1,7 @@
 {
   "name": "projet-00-myhappywallet-frontend",
   "private": true,
-  "version": "1.9.0",
+  "version": "1.10.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build && npm run pwa:build",
