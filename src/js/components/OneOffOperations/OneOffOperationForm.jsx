@@ -1,3 +1,4 @@
+import { FormHeader } from "../Forms/FormHeader";
 import { FormActions } from "../Actions/FormActions";
 import { DeleteConfirmation } from "../Actions/DeleteConfirmation";
 import { ActionButton } from "../Actions/ActionButton";
@@ -105,20 +106,9 @@ export const OneOffOperationForm = ({
       className="one-off-form-panel"
       aria-labelledby="operation-form-title"
     >
-      <div className="one-off-form-panel__header">
-        <h2 id="operation-form-title">
-          {operation ? "Modifier l’opération" : "Ajouter une opération"}
-        </h2>
-        <button
-          type="button"
-          className="one-off-icon-button"
-          onClick={onCancel}
-          disabled={isSaving}
-          aria-label="Fermer le formulaire"
-        >
-          ×
-        </button>
-      </div>
+      <FormHeader id="operation-form-title" busy={isSaving} onClose={onCancel}>
+        {operation ? "Modifier l’opération" : "Ajouter une opération"}
+      </FormHeader>
       <form className="one-off-form" onSubmit={submit} noValidate>
         <label>
           Titre

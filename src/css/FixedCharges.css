@@ -12,6 +12,7 @@
   flex: 1 1 30rem;
 }
 .fixed-charges p,
+.fixed-charge-form p,
 .fixed-budget-summary p {
   margin-block: var(--ds-primitive-space-3);
 }
@@ -61,7 +62,8 @@
 .fixed-charge-form [id$="-error"] {
   color: var(--ds-color-status-error-text);
 }
-.fixed-charges dl {
+.fixed-charges dl,
+.fixed-charge-preview dl {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--ds-primitive-space-2);
@@ -98,4 +100,9 @@
   .fixed-charge-actions > button {
     width: 100%;
   }
+}
+
+.fixed-charge-form h3 {
+  color: var(--ds-color-text-primary);
+  font-size: 1.125rem;
 }

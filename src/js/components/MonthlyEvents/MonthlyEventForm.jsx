@@ -1,3 +1,4 @@
+import { FormHeader } from "../Forms/FormHeader";
 import { FormActions } from "../Actions/FormActions";
 import { DeleteConfirmation } from "../Actions/DeleteConfirmation";
 import { ActionButton } from "../Actions/ActionButton";
@@ -145,21 +146,15 @@ export const MonthlyEventForm = ({
       className="monthly-event-form-panel"
       aria-labelledby={controlId("form-title")}
     >
-      <div className="monthly-event-form-panel__header">
-        <h2 id={controlId("form-title")}>
-          {formTitle ||
-            (event ? "Modifier l’événement" : "Ajouter un événement")}
-        </h2>
-        <button
-          type="button"
-          className="monthly-event-icon-button"
-          onClick={onCancel}
-          disabled={isSaving}
-          aria-label="Fermer le formulaire"
-        >
-          ×
-        </button>
-      </div>
+      <FormHeader
+        id={controlId("form-title")}
+        busy={isSaving}
+        onClose={onCancel}
+        className="monthly-event-form-panel__header"
+        closeClassName="monthly-event-icon-button"
+      >
+        {formTitle || (event ? "Modifier l’événement" : "Ajouter un événement")}
+      </FormHeader>
       <form className="monthly-event-form" onSubmit={submit} noValidate>
         <label htmlFor={controlId("title")}>
           Titre

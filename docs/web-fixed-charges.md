@@ -95,7 +95,7 @@ enfants reste suivie dans le parent #237.
 
 La page « Charges et entrées fixes » réunit les deux collections existantes.
 Le tableau au-dessus de 1 023 pixels et les lignes compactes sur petit écran
-partagent le même ordre. Les icônes Modifier/Supprimer restent visibles sous chaque carte sur téléphone, sans ouvrir les détails. Sur ordinateur, elles apparaissent au survol de la ligne ou au focus clavier, dans un emplacement réservé. L’édition transforme les valeurs dans les mêmes colonnes ou la même carte ; Enregistrer/Annuler sont intégrés sur place. Le type reste verrouillé, les résultats sont des aperçus calculés en lecture seule et la position reste stable pendant la saisie. Le formulaire latéral sur ordinateur et la vue dédiée sur téléphone sont réservés à l’ajout.
+partagent le même ordre. Les icônes Modifier/Supprimer restent visibles sous chaque carte sur téléphone, sans ouvrir les détails. Sur ordinateur, elles apparaissent au survol de la ligne ou au focus clavier, dans un emplacement réservé. L’édition transforme les valeurs dans les mêmes colonnes ou la même carte ; Enregistrer/Annuler sont intégrés sur place. Le type reste verrouillé, les résultats sont des aperçus calculés en lecture seule et la position reste stable pendant la saisie. L’ajout utilise la popup `FormDialog`, partagée avec les opérations et événements, sur ordinateur comme sur téléphone.
 
 Le sélecteur « Trier par » couvre nom, type, total par échéance, devise,
 périodicité, pourcentage personnel, part par échéance et montant mensuel.
@@ -188,3 +188,43 @@ feuille fournit encore des styles globaux aux autres pages. La suppression des
 anciens composants fixes ne doit pas changer leurs contrôles ou espacements.
 La nouvelle vue conserve ses sélecteurs locaux ; les références visuelles des
 autres pages restent inchangées.
+
+## Popup commune et clavier mobile
+
+L’ajout conserve `FixedChargeForm` et `FixedIncomeForm`, leurs validations,
+aperçus et brouillons par type. `FormDialog` fournit le même conteneur que
+l’ajout rapide d’opérations et d’événements : surface, fond, focus contenu,
+Échap, fermeture désactivée pendant l’écriture et défilement interne.
+`FormActions` et les règles `ActionForms.css` sont également partagés.
+L’édition des éléments existants reste inline.
+
+La popup est portée dans `document.body`, hors du conteneur mobile défilant.
+Elle suit la hauteur et le décalage du viewport visuel ; après focus ou
+redimensionnement, seul son contenu défile pour révéler le champ actif.
+Le focus initial ne fait pas défiler le document. Le changement Charge/Entrée
+ne restaure pas le focus derrière la popup. Le dock est masqué pendant la saisie.
+Le fond est inerte jusqu’à la fermeture, puis le focus revient au déclencheur
+ou à l’action de récupération si une relecture échoue. Les messages d’écriture
+sont visibles dans la popup pour permettre une reprise après erreur.
+
+Les règles communes bornent les contrôles à leur colonne en `border-box`.
+Les dates et mois utilisent `appearance: none` pour éviter la largeur native
+intrinsèque de Safari ; le sélecteur de date natif et la saisie restent disponibles.
+Les champs des opérations, événements et éléments fixes partagent ces règles.
+Les sélecteurs autorisent le retour à la ligne pour empêcher une valeur longue
+de déborder sur WebKit avec le texte agrandi.
+
+`formDialogs.spec.js` vérifie les largeurs 320/390/768/1440 px, la date à 200 %,
+le viewport réduit/décalé, la visibilité des champs, les brouillons, la reprise
+après erreur et la fermeture/réouverture. Le clavier est simulé via les événements
+de `VisualViewport` : une recette Safari et PWA sur iPhone physique reste
+nécessaire, dans le suivi #54.
+
+Validation locale du correctif : 663 tests Vitest et 45 parcours Chromium
+(formulaires partagés, design des actions, opérations compactes, charges,
+entrées, catégories et édition inline), plus format, lint, suites Node,
+type-check et build. Les 8 nouveaux parcours passent aussi sous WebKit Linux. Le champ actif est
+repositionné même quand WebKit répète les mêmes coordonnées après changement
+de taille du texte. Cette vérification ne simule pas le clavier natif iOS.
+Les quatre largeurs et les thèmes clair/sombre sont couverts par les parcours existants ; le nouveau test mesure aussi la largeur
+du contenu de la popup, sans se limiter à celle du document.

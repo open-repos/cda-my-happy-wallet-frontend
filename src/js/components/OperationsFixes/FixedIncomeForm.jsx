@@ -1,3 +1,4 @@
+import { FormActions } from "../Actions/FormActions";
 import { ActionButton } from "../Actions/ActionButton";
 import { FixedCategorySelect } from "./FixedCategorySelect";
 import { FixedEnvelopeFields } from "./FixedEnvelopeFields";
@@ -168,7 +169,7 @@ export const FixedIncomeForm = ({
             error={errors.effectiveMonth}
           />
         </fieldset>
-        <div className="fixed-charge-actions">
+        <FormActions className="fixed-charge-actions">
           <ActionButton
             action="cancel"
             className="one-off-button one-off-button--secondary"
@@ -187,7 +188,7 @@ export const FixedIncomeForm = ({
           >
             {busy ? "Enregistrement…" : "Enregistrer l’entrée"}
           </ActionButton>
-        </div>
+        </FormActions>
       </form>
     </section>
   );
