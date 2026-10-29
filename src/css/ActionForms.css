@@ -1,4 +1,4 @@
-/* Shared event, operation and goal forms: compact controls, explicit theme roles. */
+/* Shared event, operation, fixed budget and goal forms: compact controls, explicit theme roles. */
 :is(.monthly-event-form-panel, .one-off-form-panel) {
   max-width: 52rem;
   color: var(--ds-color-text-primary);
@@ -10,15 +10,17 @@
   font-size: var(--ds-primitive-font-size-lg);
   line-height: var(--ds-primitive-line-height-heading);
 }
-:is(.monthly-event-form, .one-off-form) {
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form) {
   gap: var(--ds-primitive-space-3);
 }
-:is(.monthly-event-form, .one-off-form) :is(label, legend) {
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form)
+  :is(label, legend) {
   color: var(--ds-color-text-secondary);
   font-weight: var(--ds-primitive-font-weight-semibold);
 }
-:is(.monthly-event-form, .one-off-form) input:not([type="radio"]),
-:is(.monthly-event-form, .one-off-form) select {
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form)
+  input:not([type="radio"]):not([type="checkbox"]),
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form) select {
   min-height: var(--web-action-min-size);
   font-size: max(1rem, var(--ds-primitive-font-size-md));
   padding: var(--ds-primitive-space-2) var(--ds-primitive-space-3);
@@ -27,12 +29,13 @@
   background: var(--ds-color-field-background);
   border-color: var(--web-action-border);
 }
-:is(.monthly-event-form, .one-off-form)
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form)
   input[type="date"]::-webkit-date-and-time-value {
   min-width: 0;
   text-align: start;
 }
-:is(.monthly-event-form, .one-off-form) input[type="radio"] {
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form)
+  input[type="radio"] {
   appearance: auto;
   flex: 0 0 1.25rem;
   width: 1.25rem;
@@ -68,7 +71,8 @@
 :is(.monthly-event-form, .one-off-form) fieldset label:has(input:checked) {
   background: var(--ds-color-background-canvas);
 }
-:is(.monthly-event-form, .one-off-form) :is(input, select):focus-visible {
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form)
+  :is(input, select):focus-visible {
   outline: var(--ds-border-width-focus) solid var(--ds-color-focus-ring);
   outline-offset: 0;
 }
@@ -121,4 +125,42 @@
   .budget-occurrence__actions .action-button {
     flex: 1 1 10em;
   }
+}
+
+/* Native date/month controls must use the same border box as other fields.
+   Safari's native appearance can otherwise grow past a narrow grid column. */
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form),
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form)
+  :is(label, fieldset, .fixed-charge-field) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form)
+  :is(input:not([type="radio"]):not([type="checkbox"]), select) {
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form) select {
+  /* WebKit otherwise propagates a long selected label beyond its border box. */
+  white-space: normal;
+}
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form)
+  :is(input[type="date"], input[type="month"]) {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  text-align: start;
+}
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form)
+  input::-webkit-datetime-edit {
+  min-inline-size: 0;
+  padding: 0;
+}
+.fixed-charge-form form > fieldset,
+.fixed-charge-form form > fieldset > fieldset {
+  display: block;
+  padding: 0;
+  border: 0;
 }

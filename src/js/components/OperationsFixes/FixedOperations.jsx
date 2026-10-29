@@ -1,3 +1,5 @@
+import { FormHeader } from "../Forms/FormHeader";
+import { FormDialog } from "../Forms/FormDialog";
 import { ActionButton } from "../Actions/ActionButton";
 import { CompactMoneyList } from "../CompactOperations/CompactMoneyList";
 import { useSimulation } from "../Simulation/SimulationContext";
@@ -231,11 +233,7 @@ export const FixedOperations = () => {
         isError={incomes.message.error}
       />
       <LiveMessage visible={false} message={sortMessage} />
-      <div
-        className={`fixed-operations__work${
-          editor && !editor.row ? " fixed-operations__work--editing" : ""
-        }`}
-      >
+      <div className="fixed-operations__work">
         <div className="fixed-operations__overview" hidden={false}>
           <FixedBudgetSummary overview />
           <div className="fixed-operations__heading">
@@ -360,15 +358,22 @@ export const FixedOperations = () => {
           <FixedMonthPreview />
         </div>
         {editor && !editor.row && (
-          <section
-            className="fixed-operations__editor"
-            aria-labelledby="fixed-editor-title"
+          <FormDialog
+            labelledBy="fixed-editor-title"
+            busy={busy}
+            onClose={() => setEditor(null)}
           >
-            <h2 id="fixed-editor-title">
-              {editor.row
-                ? "Modifier un élément fixe"
-                : "Ajouter un élément fixe"}
-            </h2>
+            <FormHeader
+              id="fixed-editor-title"
+              busy={busy}
+              onClose={() => setEditor(null)}
+            >
+              Ajouter un élément fixe
+            </FormHeader>
+            <LiveMessage
+              message={collection(editor.kind).message.text}
+              isError={collection(editor.kind).message.error}
+            />
             <fieldset
               className="fixed-operations__kind"
               disabled={busy || Boolean(editor.row)}
@@ -434,7 +439,7 @@ export const FixedOperations = () => {
                 onSave={(body) => incomes.save(editor.row, body)}
               />
             )}
-          </section>
+          </FormDialog>
         )}
       </div>
       {deleting && (

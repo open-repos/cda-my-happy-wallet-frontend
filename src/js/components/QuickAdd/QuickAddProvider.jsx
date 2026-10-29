@@ -1,3 +1,4 @@
+import { FormDialog } from "../Forms/FormDialog";
 import { useViewportBounds } from "../../hooks/useViewportBounds";
 import { ActionButton } from "../Actions/ActionButton";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -53,7 +54,6 @@ export const QuickAddProvider = ({ children }) => {
       error: false,
     });
   const returnFocus = useRef(null),
-    overlay = useRef(null),
     fab = useRef(null);
   const busy = simulation.mutationStatus === "loading";
   const viewportStyle = useViewportBounds();
@@ -114,40 +114,6 @@ export const QuickAddProvider = ({ children }) => {
     setCalendarDate(null);
     if (simulation.activeForm === "quick-add") simulation.setActiveForm(null);
   }, [location.pathname]);
-  useEffect(() => {
-    if (!panel) return;
-    const focusables = () => [
-      ...(overlay.current?.querySelectorAll(
-        "button:not([disabled]):not([tabindex='-1']),input:not([disabled]),select:not([disabled]),a[href]"
-      ) ?? []),
-    ];
-    if (
-      panel.kind === "menu" ||
-      (["expense", "income"].includes(panel.kind) &&
-        categoryStatus !== "success")
-    )
-      focusables()[0]?.focus();
-    const keydown = (e) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        if (!busy) close();
-      }
-      if (e.key === "Tab") {
-        const els = focusables(),
-          first = els[0],
-          last = els[els.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last?.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first?.focus();
-        }
-      }
-    };
-    document.addEventListener("keydown", keydown);
-    return () => document.removeEventListener("keydown", keydown);
-  }, [panel?.kind, busy, categoryStatus]);
   const save = async (body) => {
     const kind = panel.kind;
     const ok = await simulation.mutate(
@@ -240,152 +206,143 @@ export const QuickAddProvider = ({ children }) => {
           </button>
         </div>
         {panel && (
-          <div
-            ref={overlay}
-            role="dialog"
-            aria-modal="true"
-            aria-label={
+          <FormDialog
+            inertBackground={panel.kind !== "menu"}
+            busy={busy}
+            onClose={close}
+            label={
               panel.kind === "menu" ? "Ajouter au budget" : "Création au budget"
             }
             className={`quick-add-overlay quick-add-overlay--${
               panel.kind === "menu" ? "menu" : "form"
             }`}
+            surfaceClassName="quick-add-surface"
           >
-            <button
-              type="button"
-              tabIndex={-1}
-              className="quick-add-backdrop"
-              aria-label="Fermer l’ajout"
-              disabled={busy}
-              onClick={close}
-            />
-            <div className="quick-add-surface">
-              <p className="quick-add-context">
-                Ajouter · {dateLabel(panel.date)}
-              </p>
-              {panel.kind === "menu" ? (
-                <>
-                  <div className="quick-add-choices">
-                    {choices.map(([kind, title, help, icon]) => (
-                      <button
-                        type="button"
-                        key={kind}
-                        onClick={() => {
-                          setFeedback({
-                            text: "",
-                            error: false,
-                          });
-                          setPanel((p) => ({
-                            ...p,
-                            kind,
-                          }));
-                        }}
-                      >
-                        <FontAwesomeIcon icon={icon} aria-hidden="true" />
-                        <span>
-                          <strong>{title}</strong>
-                          <small>{help}</small>
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                  <ActionButton
-                    action="cancel"
-                    type="button"
-                    className="one-off-button one-off-button--secondary"
-                    onClick={close}
-                  >
-                    Annuler
-                  </ActionButton>
-                </>
-              ) : (
-                <>
-                  <LiveMessage
-                    message={
-                      feedback.text ||
-                      (simulation.mutationStatus === "error"
-                        ? simulation.message
-                        : "")
-                    }
-                    isError={
-                      feedback.error || simulation.mutationStatus === "error"
-                    }
-                  />
-                  {["expense", "income"].includes(panel.kind) ? (
-                    categoryStatus === "success" ? (
-                      <OneOffOperationForm
-                        key={`${panel.kind}:${panel.date}`}
-                        initialKind={
-                          panel.kind === "income" ? "ENTREE" : "DEPENSE"
-                        }
-                        initialDate={panel.date}
-                        initialCurrency={panel.defaults?.currency ?? "EUR"}
-                        initialCategoryId={panel.defaults?.categoryId ?? ""}
-                        suggestedEnvelopeId={panel.defaults?.envelopeId ?? null}
-                        categories={categories}
-                        isSaving={busy}
-                        onCancel={close}
-                        onSave={save}
-                      />
-                    ) : (
-                      <>
-                        <LiveMessage
-                          message={
-                            categoryStatus === "error"
-                              ? "Les catégories n’ont pas pu être chargées."
-                              : "Chargement des catégories…"
-                          }
-                          isError={categoryStatus === "error"}
-                        />
-                        {categoryStatus === "error" && (
-                          <button
-                            type="button"
-                            className="one-off-button"
-                            onClick={loadCategories}
-                          >
-                            Réessayer les catégories
-                          </button>
-                        )}
-                        <ActionButton
-                          action="cancel"
-                          type="button"
-                          className="one-off-button one-off-button--secondary"
-                          onClick={close}
-                        >
-                          Annuler
-                        </ActionButton>
-                      </>
-                    )
+            <p className="quick-add-context">
+              Ajouter · {dateLabel(panel.date)}
+            </p>
+            {panel.kind === "menu" ? (
+              <>
+                <div className="quick-add-choices">
+                  {choices.map(([kind, title, help, icon]) => (
+                    <button
+                      type="button"
+                      key={kind}
+                      onClick={() => {
+                        setFeedback({
+                          text: "",
+                          error: false,
+                        });
+                        setPanel((p) => ({
+                          ...p,
+                          kind,
+                        }));
+                      }}
+                    >
+                      <FontAwesomeIcon icon={icon} aria-hidden="true" />
+                      <span>
+                        <strong>{title}</strong>
+                        <small>{help}</small>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <ActionButton
+                  action="cancel"
+                  type="button"
+                  className="one-off-button one-off-button--secondary"
+                  onClick={close}
+                >
+                  Annuler
+                </ActionButton>
+              </>
+            ) : (
+              <>
+                <LiveMessage
+                  message={
+                    feedback.text ||
+                    (simulation.mutationStatus === "error"
+                      ? simulation.message
+                      : "")
+                  }
+                  isError={
+                    feedback.error || simulation.mutationStatus === "error"
+                  }
+                />
+                {["expense", "income"].includes(panel.kind) ? (
+                  categoryStatus === "success" ? (
+                    <OneOffOperationForm
+                      key={`${panel.kind}:${panel.date}`}
+                      initialKind={
+                        panel.kind === "income" ? "ENTREE" : "DEPENSE"
+                      }
+                      initialDate={panel.date}
+                      initialCurrency={panel.defaults?.currency ?? "EUR"}
+                      initialCategoryId={panel.defaults?.categoryId ?? ""}
+                      suggestedEnvelopeId={panel.defaults?.envelopeId ?? null}
+                      categories={categories}
+                      isSaving={busy}
+                      onCancel={close}
+                      onSave={save}
+                    />
                   ) : (
                     <>
-                      <p className="quick-add-help">
-                        {panel.kind === "potential"
-                          ? "À confirmer · Simulation : aucun impact sur le réel."
-                          : "Confirmé · prévision : le réel changera uniquement lors de la réalisation."}
-                      </p>
-                      <MonthlyEventForm
-                        key={`${panel.kind}:${panel.date}`}
-                        initialDate={panel.date}
-                        formTitle={
-                          panel.kind === "potential"
-                            ? "Événement à confirmer"
-                            : "Événement confirmé"
+                      <LiveMessage
+                        message={
+                          categoryStatus === "error"
+                            ? "Les catégories n’ont pas pu être chargées."
+                            : "Chargement des catégories…"
                         }
-                        minStartDate={
-                          panel.kind === "potential"
-                            ? `${forecastToday().slice(0, 7)}-01`
-                            : undefined
-                        }
-                        isSaving={busy}
-                        onCancel={close}
-                        onSave={save}
+                        isError={categoryStatus === "error"}
                       />
+                      {categoryStatus === "error" && (
+                        <button
+                          type="button"
+                          className="one-off-button"
+                          onClick={loadCategories}
+                        >
+                          Réessayer les catégories
+                        </button>
+                      )}
+                      <ActionButton
+                        action="cancel"
+                        type="button"
+                        className="one-off-button one-off-button--secondary"
+                        onClick={close}
+                      >
+                        Annuler
+                      </ActionButton>
                     </>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
+                  )
+                ) : (
+                  <>
+                    <p className="quick-add-help">
+                      {panel.kind === "potential"
+                        ? "À confirmer · Simulation : aucun impact sur le réel."
+                        : "Confirmé · prévision : le réel changera uniquement lors de la réalisation."}
+                    </p>
+                    <MonthlyEventForm
+                      key={`${panel.kind}:${panel.date}`}
+                      initialDate={panel.date}
+                      formTitle={
+                        panel.kind === "potential"
+                          ? "Événement à confirmer"
+                          : "Événement confirmé"
+                      }
+                      minStartDate={
+                        panel.kind === "potential"
+                          ? `${forecastToday().slice(0, 7)}-01`
+                          : undefined
+                      }
+                      isSaving={busy}
+                      onCancel={close}
+                      onSave={save}
+                    />
+                  </>
+                )}
+              </>
+            )}
+          </FormDialog>
         )}
       </div>
     </QuickAddContext.Provider>
