@@ -44,6 +44,13 @@
     var(--ds-color-focus-ring-on-shell);
   outline-offset: 2px;
 }
+/* The collapse button shares the caption row: the brand keeps its width. */
+.atelier-navigation__caption-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-primitive-space-2);
+}
 .atelier-navigation__caption {
   padding-inline: var(--ds-primitive-space-2);
   color: var(--ds-primitive-color-green200);
@@ -223,8 +230,11 @@
     transition: inline-size 160ms ease;
   }
   :root[data-navigation="collapsed"] .atelier-brand {
-    flex-direction: column;
+    justify-content: center;
     padding-inline: 0;
+  }
+  :root[data-navigation="collapsed"] .atelier-navigation__caption-row {
+    justify-content: center;
   }
   :root[data-navigation="collapsed"] .atelier-collapse-toggle {
     margin-inline-start: 0;
@@ -243,9 +253,7 @@
     white-space: nowrap;
   }
   :root[data-navigation="collapsed"] .atelier-navigation__caption {
-    visibility: hidden;
-    block-size: 0;
-    margin: 0;
+    display: none;
   }
   :root[data-navigation="collapsed"]
     :is(.atelier-navigation__link, .atelier-navigation__profile-row > button) {

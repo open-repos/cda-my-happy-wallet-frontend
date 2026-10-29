@@ -134,6 +134,9 @@ export default function Sidebar() {
         <div className="atelier-brand">
           <FontAwesomeIcon icon={faWallet} aria-hidden="true" />
           <span>MyHappyWallet</span>
+        </div>
+        <div className="atelier-navigation__caption-row">
+          <p className="atelier-navigation__caption">Mon budget</p>
           <button
             type="button"
             className="atelier-collapse-toggle"
@@ -155,7 +158,6 @@ export default function Sidebar() {
             />
           </button>
         </div>
-        <p className="atelier-navigation__caption">Mon budget</p>
         <ul className="atelier-navigation__links">
           {destinations.map(([to, label, icon]) => (
             <li key={to}>
