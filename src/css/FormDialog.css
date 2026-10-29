@@ -67,6 +67,9 @@
   max-width: 34rem;
 }
 .confirm-dialog__surface > :is(fieldset, div, section) {
+  /* Inline confirmations tinted their own error surface; here the dialog
+     surface is the background, so its text colour applies. */
+  color: inherit;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
@@ -81,9 +84,10 @@
   flex: 1 0 100%;
   margin: 0;
 }
-.confirm-dialog__surface legend,
+.confirm-dialog__surface > * > legend,
 .confirm-dialog__surface > div > span,
 .confirm-dialog__surface > section > p:first-child {
+  color: inherit;
   font-weight: var(--ds-primitive-font-weight-semibold);
 }
 .confirm-dialog__error:empty {

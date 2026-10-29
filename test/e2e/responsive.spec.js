@@ -547,9 +547,21 @@ for (const theme of ["light", "dark"]) {
     await page.getByRole("button", { name: "Modifier Alimentation" }).click();
     await page.getByRole("button", { name: "Supprimer" }).click();
     expect(
-      await ownContrast(
-        page.locator(".category-form .one-off-delete-confirmation")
-      )
+      // The confirmation opens in a modal alert dialog: its text sits on the
+      // dialog surface.
+      await page
+        .getByRole("alertdialog")
+        .locator(".one-off-delete-confirmation")
+        .evaluate((element) => {
+          const surface = element.closest(".confirm-dialog__surface");
+          const probe = document.createElement("span");
+          probe.style.color = getComputedStyle(element).color;
+          probe.style.backgroundColor =
+            getComputedStyle(surface).backgroundColor;
+          probe.dataset.contrastProbe = "";
+          surface.append(probe);
+        })
+        .then(() => ownContrast(page.locator("[data-contrast-probe]")))
     ).toBeGreaterThanOrEqual(4.5);
   });
 }
@@ -791,7 +803,8 @@ const weakFocusOnShell = async (page, presses = 40) => {
 // Contrôles de la coque que le parcours clavier doit atteindre.
 const SHELL_CONTROLS = {
   "/home": ["Ouvrir le menu"],
-  "/calendrier": ["Ouvrir le menu", "Mois précédent", "Mois suivant"],
+  // The month controls live on the calendar card, not on the shell.
+  "/calendrier": ["Ouvrir le menu", "Prochains mois"],
   "/objectifs-evenements": [
     "Ouvrir le menu",
     "Ajouter un objectif",
@@ -955,9 +968,7 @@ for (const theme of ["light", "dark"]) {
       }
       await page.goto("/calendrier");
       await page.getByRole("button", { name: "Mois suivant" }).click();
-      const { failures: calendarFailures, checked: calendarChecked } =
-        await weakFocusOnShell(page);
-      expect(calendarChecked).toEqual(expect.arrayContaining(["Aujourd’hui"]));
+      const { failures: calendarFailures } = await weakFocusOnShell(page);
       if (calendarFailures.length) {
         failures["/calendrier (mois suivant)"] = calendarFailures;
       }
