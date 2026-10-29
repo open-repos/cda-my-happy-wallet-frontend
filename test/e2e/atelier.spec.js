@@ -177,7 +177,7 @@ test("QuickAdd confirms once and read recovery does not repeat a committed write
   expect(state.writes).toHaveLength(1);
 });
 
-test("landscape reserves a compact add row and defers notifications during keyboard use", async ({
+test("landscape keeps a compact floating add button and defers notifications during keyboard use", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 844, height: 390 });
@@ -194,8 +194,12 @@ test("landscape reserves a compact add row and defers notifications during keybo
   await page
     .getByRole("button", { name: "Ajouter une opération ou un événement" })
     .click();
-  await expect(dock).toBeHidden();
+  // The menu grows out of the button, which turns into its close cross.
+  await expect(
+    page.getByRole("button", { name: "Fermer l’ajout rapide" })
+  ).toHaveAttribute("aria-expanded", "true");
   await page.getByRole("button", { name: /Dépense Opération réelle/ }).click();
+  await expect(dock).toBeHidden();
   await assertControlsFit(page);
   await page.getByRole("button", { name: "Annuler", exact: true }).click();
   await expect(dock).toBeVisible();

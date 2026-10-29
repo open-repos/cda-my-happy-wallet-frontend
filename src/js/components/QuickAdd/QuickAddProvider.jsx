@@ -1,6 +1,7 @@
 import { useContext } from "react";
 import { MutationFeedbackContext } from "../Notifications/MutationFeedbackContext";
 import { useVisualKeyboard } from "../../hooks/useVisualKeyboard";
+import { useHideOnScroll } from "../../hooks/useHideOnScroll";
 import { FormDialog } from "../Forms/FormDialog";
 import { useViewportBounds } from "../../hooks/useViewportBounds";
 import { ActionButton } from "../Actions/ActionButton";
@@ -58,9 +59,13 @@ export const QuickAddProvider = ({ children }) => {
       error: false,
     });
   const returnFocus = useRef(null),
-    fab = useRef(null);
+    fab = useRef(null),
+    root = useRef(null);
   const busy = simulation.mutationStatus === "loading";
   const viewportStyle = useViewportBounds();
+  // Mobile: the floating button steps aside while the page scrolls down.
+  const away = useHideOnScroll(root, ".protected-layout", location.pathname);
+  const menuOpen = panel?.kind === "menu";
   const restore = () => {
     let remaining = 4;
     const focusVisibleTrigger = () => {
@@ -170,7 +175,7 @@ export const QuickAddProvider = ({ children }) => {
         setCalendarDate,
       }}
     >
-      <div className="quick-add-root" style={viewportStyle}>
+      <div ref={root} className="quick-add-root" style={viewportStyle}>
         {children}
         <div className="quick-add-feedback">
           <LiveMessage
@@ -180,12 +185,21 @@ export const QuickAddProvider = ({ children }) => {
           />
         </div>
         <div
-          className="quick-add-dock"
+          className={[
+            "quick-add-dock",
+            away && !menuOpen ? "quick-add-dock--away" : "",
+            menuOpen ? "quick-add-dock--open" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
           hidden={
-            Boolean(panel) ||
-            notifications.blocked ||
+            // The menu grows out of the button, which then closes it.
+            Boolean(panel && !menuOpen) ||
+            (notifications.blocked && !menuOpen) ||
             keyboardVisible ||
-            Boolean(simulation.activeForm)
+            Boolean(
+              simulation.activeForm && simulation.activeForm !== "quick-add"
+            )
           }
         >
           <button
@@ -205,13 +219,11 @@ export const QuickAddProvider = ({ children }) => {
                 simulation.activeForm && simulation.activeForm !== "quick-add"
               )
             }
-            hidden={Boolean(panel && panel.kind !== "menu")}
             onClick={(e) =>
               panel ? close() : open("menu", null, e.currentTarget)
             }
           >
             <FontAwesomeIcon icon={faPlus} aria-hidden="true" />
-            <span>Ajouter</span>
           </button>
         </div>
         {panel && (
