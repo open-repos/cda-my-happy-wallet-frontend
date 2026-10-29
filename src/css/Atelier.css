@@ -391,6 +391,7 @@ a:hover {
   color: var(--ds-color-text-secondary);
 }
 :is(.login, .register, .forgotpassword, .newpassword) input:focus-visible,
+:is(.login, .register, .forgotpassword, .newpassword) a:focus-visible,
 :is(.login, .register, .forgotpassword, .newpassword)
   .submit_btn:focus-visible {
   outline-color: var(--ds-color-focus-ring);

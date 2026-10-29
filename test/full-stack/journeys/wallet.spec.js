@@ -38,13 +38,18 @@ async function login(page, project, journey) {
   await page.getByRole("button", { name: "Connexion", exact: true }).click();
   expect((await authenticated).status()).toBe(200);
   await expect(page).toHaveURL(/\/(?:home|operations)$/);
+  // Atelier: drawer toggle below 1200 px, permanent navigation above.
   await expect(
-    page.getByRole("button", { name: "Ouvrir le menu", exact: true })
+    page
+      .getByRole("button", { name: "Ouvrir le menu", exact: true })
+      .or(page.getByRole("navigation", { name: "Navigation principale" }))
   ).toBeVisible();
 }
 
 async function navigate(page, name) {
-  const link = page.getByRole("link", { name, exact: true });
+  const link = page
+    .getByRole("navigation", { name: "Navigation principale" })
+    .getByRole("link", { name, exact: true });
   if (!(await link.isVisible()))
     await page.getByRole("button", { name: "Ouvrir le menu" }).click();
   await link.click();
@@ -71,7 +76,7 @@ test("persists operation CRUD and recalculates the calendar budget", async ({
   await page.goto("/operations");
   await expect(page).toHaveURL(/\/login$/);
   await login(page, testInfo.project.name, "operations");
-  await navigate(page, "Liste Opérations");
+  await navigate(page, "Opérations");
   await expect(
     page.getByRole("heading", { name: "Pas encore d’opération" })
   ).toBeVisible();
@@ -98,7 +103,7 @@ test("persists operation CRUD and recalculates the calendar budget", async ({
   await navigate(page, "Calendrier");
   await expect(realBalance(page)).toHaveText(/1\s*157,50\s*€/);
   await expect(page.getByText("Courses E2E", { exact: true })).toBeVisible();
-  await navigate(page, "Liste Opérations");
+  await navigate(page, "Opérations");
   await page
     .getByRole("button", { name: "Modifier Courses E2E", exact: true })
     .click();
@@ -111,7 +116,7 @@ test("persists operation CRUD and recalculates the calendar budget", async ({
   ).toHaveCount(0);
   await navigate(page, "Calendrier");
   await expect(realBalance(page)).toHaveText(/1\s*150,00\s*€/);
-  await navigate(page, "Liste Opérations");
+  await navigate(page, "Opérations");
   await page
     .getByRole("button", { name: "Supprimer Courses E2E", exact: true })
     .click();
@@ -133,7 +138,7 @@ test("converts a planned event into a persisted operation without counting it tw
   page,
 }, testInfo) => {
   await login(page, testInfo.project.name, "events");
-  await navigate(page, "Objectifs-Évènements");
+  await navigate(page, "Objectifs et événements");
   await expect(
     page.getByRole("heading", { name: "Aucun événement prévu" })
   ).toBeVisible();
@@ -200,7 +205,7 @@ test("converts a planned event into a persisted operation without counting it tw
   await expect(
     page.getByRole("button", { name: /^Convertir Assurance E2E/ })
   ).toHaveCount(0);
-  await navigate(page, "Liste Opérations");
+  await navigate(page, "Opérations");
   await expect(page.getByRole("row", { name: /Assurance E2E/ })).toHaveCount(1);
 });
 
@@ -251,6 +256,11 @@ test("keeps potential events out of real balances, confirms them and clears only
     .click();
   await page.getByRole("switch", { name: "Simulation", exact: true }).check();
   await page
+    .getByText("Éléments à confirmer et gestion de la Simulation", {
+      exact: true,
+    })
+    .click();
+  await page
     .getByRole("button", {
       name: "Confirmer Voyage potentiel E2E",
       exact: true,
@@ -272,14 +282,21 @@ test("keeps potential events out of real balances, confirms them and clears only
     .getByRole("row")
     .nth(1);
   await expect(firstRow).toContainText(/900,00\s*€/);
+  await page.getByRole("button", { name: "Ajouter", exact: true }).click();
   await page
-    .getByRole("button", { name: "Ajouter un élément potentiel", exact: true })
+    .getByRole("button", { name: /^Événement à confirmer Simulation/ })
     .click();
   await page
     .getByLabel("Titre", { exact: true })
     .fill("Matériel potentiel E2E");
   await page.getByLabel(/^Montant/).fill("50.00");
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await expect(
+    page.getByRole("button", {
+      name: "Supprimer Matériel potentiel E2E",
+      exact: true,
+    })
+  ).toBeVisible();
   await page
     .getByRole("button", { name: "Vider la simulation", exact: true })
     .click();
@@ -323,7 +340,7 @@ test("shows invalid credentials and recovers from a failed API read", async ({
   // in every journey reach the real API and disposable MySQL database.
   const pattern = /\/v1\/operations(?:\?.*)?$/;
   await page.route(pattern, (route) => route.abort("failed"));
-  await navigate(page, "Liste Opérations");
+  await navigate(page, "Opérations");
   await expect(
     page.getByRole("heading", {
       name: "La liste est momentanément indisponible",
@@ -361,7 +378,7 @@ test("renews a browser session with a real rotating HttpOnly cookie and logs out
   // renewed five-minute token and rotates its persisted refresh session.
   await page.clock.setFixedTime(new Date((exp + 1) * 1000));
   const renewed = apiResponse(page, "/v1/token", "POST");
-  await navigate(page, "Liste Opérations");
+  await navigate(page, "Opérations");
   expect((await renewed).status()).toBe(200);
   await expect(
     page.getByRole("heading", { name: "Pas encore d’opération" })
@@ -530,8 +547,8 @@ for (const theme of ["light", "dark"]) {
     for (const [name, title] of [
       ["Calendrier", "Calendrier"],
       ["Accueil", "Tableau de bord"],
-      ["Objectifs-Évènements", "Objectifs et événements"],
-      ["Liste Opérations", "Opérations"],
+      ["Objectifs et événements", "Objectifs et événements"],
+      ["Opérations", "Opérations"],
       ["Catégories", "Catégories"],
       ["Analyses", "Analyses"],
     ]) {
@@ -542,7 +559,7 @@ for (const theme of ["light", "dark"]) {
       await expect(page.locator("#main-content")).toBeFocused();
       await expect(page.locator("nav a img:not([alt=''])")).toHaveCount(0);
     }
-    await navigate(page, "Liste Opérations");
+    await navigate(page, "Opérations");
     const add = page.getByRole("button", {
       name: "Ajouter une opération",
       exact: true,
@@ -754,7 +771,7 @@ test("compares server savings trajectories without persisting assumptions", asyn
   page,
 }, testInfo) => {
   await login(page, testInfo.project.name, "trajectories");
-  await navigate(page, "Objectifs-Évènements");
+  await navigate(page, "Objectifs et événements");
   const section = page.getByRole("region", {
     name: "Objectifs financiers",
     exact: true,
