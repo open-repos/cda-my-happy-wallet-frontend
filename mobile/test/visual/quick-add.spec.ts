@@ -82,7 +82,7 @@ test("quick add keeps the selected day, income direction and failed draft withou
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(trigger).toBeFocused();
   await expect(
-    page.getByText("Opérations du 3 octobre 2026", { exact: true }),
+    page.getByText("Éléments du 3 octobre 2026", { exact: true }),
   ).toBeVisible();
   expect(events).toBe(1);
   expect(writes).toBe(1);

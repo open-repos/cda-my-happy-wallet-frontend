@@ -158,6 +158,11 @@ test("manages categories from the operations screen", async ({ page }) => {
 
   await page.getByRole("button", { name: "Modifier Alimentation" }).click();
   await page.getByRole("button", { name: "Supprimer", exact: true }).click();
+  await expect(
+    page
+      .getByRole("alert")
+      .getByRole("button", { name: "Annuler", exact: true }),
+  ).toBeFocused();
   await page.getByRole("button", { name: "Oui, supprimer" }).click();
   await expect(
     page.getByText(/Cette catégorie est utilisée par des opérations/),
@@ -234,6 +239,15 @@ test("exposes the checked state of every radio option", async ({ page }) => {
   await page.getByRole("radio", { name: "Entrée" }).click();
   await expect(page.getByRole("radio", { name: "Entrée" })).toBeChecked();
   await expect(page.getByRole("radio", { name: "Dépense" })).not.toBeChecked();
+  const transport = page.getByRole("radio", { name: "Transport", exact: true });
+  await expect(transport.getByTestId("category-mark-icon")).toBeVisible();
+  await expect(
+    page
+      .getByRole("radio", { name: "Alimentation", exact: true })
+      .getByTestId("category-mark-fallback"),
+  ).toBeVisible();
+  await transport.click();
+  await expect(transport).toBeChecked();
   await page.getByRole("radio", { name: "Alimentation" }).click();
   await expect(page.getByRole("radio", { name: "Alimentation" })).toBeChecked();
   await page.getByRole("button", { name: "Fermer le formulaire" }).click();
@@ -245,7 +259,7 @@ test("exposes the checked state of every radio option", async ({ page }) => {
   await expect(page.getByRole("radio", { name: "Dépenses" })).toBeChecked();
   await expect(page.getByRole("radio", { name: "Repères" })).not.toBeChecked();
   await page
-    .getByRole("button", { name: /^Convertir Loyer du 5 octobre/ })
+    .getByRole("button", { name: /^Convertir Loyer en opération/ })
     .click();
   const category = page.getByRole("radio", { name: "Alimentation" });
   await category.click();
@@ -269,32 +283,36 @@ test("captures the budget calendar and its day filter", async ({ page }) => {
   await signIn(page);
   await page.getByRole("tab", { name: "Calendrier" }).click();
   await expect(
-    page.getByText("Opérations du mois", { exact: true }),
+    page.getByText("Éléments du mois", { exact: true }),
   ).toBeVisible();
   await expect(page.getByText("Courses", { exact: true })).toBeVisible();
 
   // Cibles tactiles d'au moins 44 px, y compris sur un écran de 360 px.
   const dayBox = await page
-    .getByRole("button", { name: /^3 .* Dépenses 42,50/ })
+    .getByRole("button", { name: /^3 octobre 2026.*1 opération réelle/ })
     .boundingBox();
   expect(dayBox?.width).toBeGreaterThanOrEqual(44);
   expect(dayBox?.height).toBeGreaterThanOrEqual(44);
 
   // File des événements : le retard d'abord, avec ses deux actions.
-  await expect(page.getByText("À traiter (1)", { exact: true })).toBeVisible();
   await expect(
-    page.getByRole("button", { name: /^Convertir Loyer du 5 octobre/ }),
+    page.getByText("Événement prévu · confirmé · en retard", { exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: /^Annuler Assurance du 20 octobre/ }),
+    page.getByRole("button", { name: /^Convertir Loyer en opération/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /^Annuler Assurance$/ }),
   ).toBeVisible();
 
   await page.getByRole("radio", { name: "Dépenses" }).click();
   await expect(page.getByText("-43", { exact: true })).toBeVisible();
   await page.getByRole("radio", { name: "Repères" }).click();
 
-  await page.getByRole("button", { name: /^3 .* Dépenses 42,50/ }).click();
-  await expect(page.getByText(/^Opérations du 3 /)).toBeVisible();
+  await page
+    .getByRole("button", { name: /^3 octobre 2026.*1 opération réelle/ })
+    .click();
+  await expect(page.getByText(/^Éléments du 3 /)).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Tout le mois" }),
   ).toBeVisible();
@@ -303,7 +321,7 @@ test("captures the budget calendar and its day filter", async ({ page }) => {
 
   await page.getByRole("button", { name: "Tout le mois" }).click();
   await expect(
-    page.getByText("Opérations du mois", { exact: true }),
+    page.getByText("Éléments du mois", { exact: true }),
   ).toBeVisible();
 });
 
@@ -441,6 +459,11 @@ test("manages monthly events from the objectives tab (#225)", async ({
       request.method() === "DELETE" &&
       new URL(request.url()).pathname.endsWith("/events/21"),
   );
+  await expect(
+    page
+      .getByRole("alert")
+      .getByRole("button", { name: "Annuler", exact: true }),
+  ).toBeFocused();
   await page.getByRole("button", { name: "Oui, supprimer" }).click();
   await deleted;
   await expect(page.getByText("Événement supprimé.")).toBeVisible();
@@ -543,6 +566,11 @@ test("manages financial goals from the objectives tab (#226)", async ({
       request.method() === "DELETE" &&
       new URL(request.url()).pathname.endsWith("/goals/1"),
   );
+  await expect(
+    page
+      .getByRole("alert")
+      .getByRole("button", { name: "Annuler", exact: true }),
+  ).toBeFocused();
   await page.getByRole("button", { name: "Oui, supprimer" }).click();
   await deleted;
   await expect(page.getByText("Objectif supprimé.")).toBeVisible();

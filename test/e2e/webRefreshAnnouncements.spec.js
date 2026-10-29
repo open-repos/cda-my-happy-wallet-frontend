@@ -116,7 +116,8 @@ for (const width of [390, 768, 1440]) {
         await page.getByLabel(/^Titre/).fill("Courses E2E");
         await page.getByLabel(/^Montant/).fill("20.00");
         await page.getByLabel(/^Date/).fill("2026-10-18");
-        await page.getByLabel(/^Catégorie/).selectOption("4");
+        await page.getByRole("combobox", { name: "Catégorie" }).click();
+        await page.getByRole("option", { name: "Alimentation" }).click();
       }
       const before = reads;
       held = gate();
@@ -131,7 +132,7 @@ for (const width of [390, 768, 1440]) {
       await expect(
         page.getByRole("status").filter({
           hasText:
-            kind === "categories" ? "Catégorie ajoutée." : "Ajout enregistré.",
+            kind === "categories" ? "Catégorie ajoutée." : "Opération ajoutée.",
         })
       ).toHaveCount(1);
     });

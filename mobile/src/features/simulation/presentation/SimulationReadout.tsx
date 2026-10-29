@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { StyleSheet, Switch, Text, View } from "react-native";
+import { StyleSheet, Switch, Text, View, useColorScheme } from "react-native";
 
 import { FeedbackState } from "@/src/design/FeedbackState";
 import { primitives, semantic, themes } from "@/src/design/tokens";
@@ -9,7 +9,12 @@ import { HttpBudgetForecastGateway } from "@/src/features/forecast/infrastructur
 import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
 import { useSimulationComparison } from "@/src/features/simulation/presentation/useSimulationComparison";
 
-const colors = themes.light.color;
+const useStyles = () => {
+  const theme: keyof typeof themes =
+    useColorScheme() === "dark" ? "dark" : "light";
+  const colors = themes[theme].color;
+  return { theme, colors, styles: useMemo(() => makeStyles(colors), [colors]) };
+};
 const semibold = `${primitives.fontWeight.semibold}` as "600";
 
 const formatMoney = (amount: string, currency: string) =>
@@ -30,6 +35,7 @@ const EXPLANATION = {
 };
 
 const Comparison = ({ month }: { month: string }) => {
+  const { styles, theme } = useStyles();
   const { httpClient } = useAuth();
   const gateway = useMemo(
     () => new HttpBudgetForecastGateway(httpClient),
@@ -44,6 +50,7 @@ const Comparison = ({ month }: { month: string }) => {
       </Text>
       {state.status === "loading" ? (
         <FeedbackState
+          theme={theme}
           description="Calcul de l’écart de simulation…"
           framed={false}
           kind="loading"
@@ -52,6 +59,7 @@ const Comparison = ({ month }: { month: string }) => {
       ) : null}
       {state.status === "error" ? (
         <FeedbackState
+          theme={theme}
           actions={[
             {
               accessibilityLabel: "Réessayer la comparaison",
@@ -99,6 +107,7 @@ export const SimulationReadout = ({
 }: {
   month?: string;
 }) => {
+  const { colors, styles } = useStyles();
   const state = useSimulation();
   if (!state.available) return null;
   return (
@@ -131,36 +140,39 @@ export const SimulationReadout = ({
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.backgroundSurface,
-    borderColor: colors.borderSubtle,
-    borderRadius: semantic.radius.card,
-    borderWidth: semantic.borderWidth.default,
-    gap: primitives.space["2"],
-    padding: primitives.space["4"],
-  },
-  toggle: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    minHeight: semantic.size.controlMinHeight,
-  },
-  toggleLabel: {
-    color: colors.textPrimary,
-    fontSize: primitives.fontSize.md,
-    fontWeight: semibold,
-  },
-  help: {
-    color: colors.textSecondary,
-    fontSize: primitives.fontSize.sm,
-    lineHeight: 20,
-  },
-  comparison: { gap: primitives.space["2"] },
-  comparisonTitle: {
-    color: colors.textPrimary,
-    fontSize: primitives.fontSize.md,
-    fontWeight: semibold,
-  },
-  amount: { color: colors.textPrimary, fontWeight: semibold },
-});
+const makeStyles = (
+  colors: typeof themes.light.color | typeof themes.dark.color,
+) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.backgroundSurface,
+      borderColor: colors.borderSubtle,
+      borderRadius: semantic.radius.card,
+      borderWidth: semantic.borderWidth.default,
+      gap: primitives.space["2"],
+      padding: primitives.space["4"],
+    },
+    toggle: {
+      alignItems: "center",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      minHeight: semantic.size.controlMinHeight,
+    },
+    toggleLabel: {
+      color: colors.textPrimary,
+      fontSize: primitives.fontSize.md,
+      fontWeight: semibold,
+    },
+    help: {
+      color: colors.textSecondary,
+      fontSize: primitives.fontSize.sm,
+      lineHeight: 20,
+    },
+    comparison: { gap: primitives.space["2"] },
+    comparisonTitle: {
+      color: colors.textPrimary,
+      fontSize: primitives.fontSize.md,
+      fontWeight: semibold,
+    },
+    amount: { color: colors.textPrimary, fontWeight: semibold },
+  });

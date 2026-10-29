@@ -1,6 +1,10 @@
+import { ActionButton } from "../Actions/ActionButton";
+import { CategorySelect } from "../Categories/CategorySelect";
 import React, { useRef, useState } from "react";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import { validateOperation } from "../../utils/oneOffOperationForm";
+import { useEnvelopeAssignment } from "../../hooks/useEnvelopeAssignment";
+import { EnvelopeAssignment } from "../Envelopes/EnvelopeAssignment";
 export const OneOffInlineEditor = ({
   operation,
   categories,
@@ -19,13 +23,21 @@ export const OneOffInlineEditor = ({
     saving = useRef(false);
   useFormFocus(titleRef);
   const formId = `one-off-inline-${operation.id}`;
+  const assignment = useEnvelopeAssignment(operation, values);
   const change = ({ target: { name, value } }) => {
-    setValues((v) => ({ ...v, [name]: value }));
-    setErrors((v) => ({ ...v, [name]: null }));
+    setValues((v) => ({
+      ...v,
+      [name]: value,
+    }));
+    setErrors((v) => ({
+      ...v,
+      [name]: null,
+    }));
   };
   const field = (name, label, type = "text") => {
     const props = {
       id: `${formId}-${name}`,
+      "aria-label": label,
       name,
       form: formId,
       value: values[name],
@@ -38,17 +50,20 @@ export const OneOffInlineEditor = ({
       <label htmlFor={props.id}>
         {label}
         {name === "categoryId" ? (
+          <CategorySelect {...props} categories={categories} />
+        ) : name === "kind" || name === "currency" ? (
           <select {...props}>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        ) : name === "kind" ? (
-          <select {...props}>
-            <option value="DEPENSE">Dépense</option>
-            <option value="ENTREE">Entrée</option>
+            {name === "currency" ? (
+              <>
+                <option>EUR</option>
+                <option>USD</option>
+              </>
+            ) : (
+              <>
+                <option value="DEPENSE">Dépense</option>
+                <option value="ENTREE">Entrée</option>
+              </>
+            )}
           </select>
         ) : (
           <input
@@ -74,6 +89,8 @@ export const OneOffInlineEditor = ({
       values,
       new Set(categories.map((c) => c.id))
     );
+    const reconciliationError = assignment.problem();
+    if (reconciliationError) next.reconciliation = reconciliationError;
     setErrors(next);
     if (Object.keys(next).length) {
       document.getElementById(`${formId}-${Object.keys(next)[0]}`)?.focus();
@@ -84,10 +101,11 @@ export const OneOffInlineEditor = ({
       await onSave({
         title: values.title.trim(),
         amount: values.amount,
-        currency: operation.currency,
+        currency: values.currency,
         kind: values.kind,
         operationDate: values.operationDate,
         categoryId: Number(values.categoryId),
+        ...assignment.body(),
       });
     } finally {
       saving.current = false;
@@ -107,7 +125,10 @@ export const OneOffInlineEditor = ({
       <th scope="row">{field("title", "Titre")}</th>
       <td>{field("categoryId", "Catégorie")}</td>
       <td>{field("kind", "Type")}</td>
-      <td>{field("amount", `Montant (${operation.currency})`)}</td>
+      <td>
+        {field("amount", `Montant (${values.currency})`)}
+        {field("currency", "Devise")}
+      </td>
       <td>
         <form
           id={formId}
@@ -115,22 +136,35 @@ export const OneOffInlineEditor = ({
           noValidate
           onSubmit={submit}
         >
+          <EnvelopeAssignment
+            assignment={assignment}
+            busy={busy}
+            error={errors.reconciliation}
+            form={formId}
+          />
           {mutationError && (
             <span className="compact-inline-error" role="alert">
               {mutationError}
             </span>
           )}
-          <button type="submit" className="one-off-button" disabled={busy}>
+          <ActionButton
+            action="save"
+            type="submit"
+            className="one-off-button"
+            disabled={busy || Boolean(assignment.link.occurrence?.closed)}
+            busy={busy}
+          >
             {busy ? "Enregistrement…" : "Enregistrer"}
-          </button>
-          <button
+          </ActionButton>
+          <ActionButton
+            action="cancel"
             type="button"
             className="one-off-button one-off-button--secondary"
             disabled={busy}
             onClick={onCancel}
           >
             Annuler
-          </button>
+          </ActionButton>
         </form>
       </td>
     </tr>

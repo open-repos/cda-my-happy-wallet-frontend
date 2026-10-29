@@ -1,3 +1,6 @@
+import { MutationMessage } from "../components/Notifications/MutationMessage";
+import { ConfirmDialog } from "../components/Forms/ConfirmDialog";
+import { ActionButton } from "../components/Actions/ActionButton";
 import { useQuickAdd } from "../components/QuickAdd/QuickAddContext";
 import { useSimulation } from "../components/Simulation/SimulationContext";
 import React, { useEffect, useRef, useState } from "react";
@@ -9,7 +12,6 @@ import { OneOffOperationForm } from "../components/OneOffOperations/OneOffOperat
 import { OneOffOperationList } from "../components/OneOffOperations/OneOffOperationList";
 import { useOneOffOperations } from "../hooks/useOneOffOperations";
 import "../../css/Operations.css";
-
 function ListeOperations() {
   const [editedOperation, setEditedOperation] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -76,7 +78,6 @@ function ListeOperations() {
       restore();
     }
   };
-
   return (
     <main className="operations-container">
       <header className="one-off-header">
@@ -91,18 +92,19 @@ function ListeOperations() {
             </Link>
           </p>
         </div>
-        <button
+        <ActionButton
+          action="add"
           ref={addRef}
           type="button"
           className="one-off-button"
           onClick={openCreate}
           disabled={state.status !== "success"}
         >
-          <img src={addIcon} alt="" aria-hidden="true" />
           Ajouter une opération
-        </button>
+        </ActionButton>
       </header>
-      <LiveMessage
+      <MutationMessage
+        success={state.mutationStatus === "success"}
         message={state.message}
         isError={
           state.status === "error" ||
@@ -143,9 +145,14 @@ function ListeOperations() {
             Ajoutez votre première entrée ou dépense pour commencer à suivre
             votre budget.
           </p>
-          <button type="button" className="one-off-button" onClick={openCreate}>
+          <ActionButton
+            action="add"
+            type="button"
+            className="one-off-button"
+            onClick={openCreate}
+          >
             Ajouter ma première opération
-          </button>
+          </ActionButton>
         </section>
       )}
       {state.status === "success" && state.operations.length > 0 && (
@@ -209,30 +216,42 @@ function ListeOperations() {
         </button>
       )}
       {deleting && (
-        <fieldset
-          className="one-off-delete-confirmation"
-          disabled={state.mutationStatus === "loading"}
+        <ConfirmDialog
+          label={`Supprimer « ${deleting.title} » ?`}
+          busy={state.mutationStatus === "loading"}
+          error={state.mutationStatus === "error" ? state.message : ""}
+          onCancel={() => {
+            setDeleting(null);
+            restore();
+          }}
         >
-          <legend>Supprimer « {deleting.title} » ?</legend>
-          <button
-            ref={keepRef}
-            type="button"
-            className="one-off-button one-off-button--secondary"
-            onClick={() => {
-              setDeleting(null);
-              restore();
-            }}
+          <fieldset
+            className="one-off-delete-confirmation"
+            disabled={state.mutationStatus === "loading"}
           >
-            Annuler
-          </button>
-          <button
-            type="button"
-            className="one-off-button one-off-button--danger"
-            onClick={remove}
-          >
-            Oui, supprimer
-          </button>
-        </fieldset>
+            <legend>Supprimer « {deleting.title} » ?</legend>
+            <ActionButton
+              action="cancel"
+              ref={keepRef}
+              type="button"
+              className="one-off-button one-off-button--secondary"
+              onClick={() => {
+                setDeleting(null);
+                restore();
+              }}
+            >
+              Annuler
+            </ActionButton>
+            <ActionButton
+              action="delete"
+              type="button"
+              className="one-off-button one-off-button--danger"
+              onClick={remove}
+            >
+              Oui, supprimer
+            </ActionButton>
+          </fieldset>
+        </ConfirmDialog>
       )}
       {isFormOpen && (
         <OneOffOperationForm
@@ -248,5 +267,4 @@ function ListeOperations() {
     </main>
   );
 }
-
 export default ListeOperations;

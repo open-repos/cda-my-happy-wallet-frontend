@@ -1,7 +1,8 @@
+import { ActionButton } from "../Actions/ActionButton";
+import { CategorySelect } from "../Categories/CategorySelect";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import React, { useEffect, useRef, useState } from "react";
 import { formatMoney, longDate } from "./budgetFormat";
-
 const amountPattern = /^(0|[1-9]\d{0,7})(?:\.\d{1,2})?$/;
 
 /**
@@ -25,12 +26,16 @@ export const RealizeOccurrenceForm = ({
   const [errors, setErrors] = useState({});
   const titleRef = useRef(null);
   useFormFocus(titleRef);
-
   const update = ({ target }) => {
-    setValues((current) => ({ ...current, [target.name]: target.value }));
-    setErrors((current) => ({ ...current, [target.name]: undefined }));
+    setValues((current) => ({
+      ...current,
+      [target.name]: target.value,
+    }));
+    setErrors((current) => ({
+      ...current,
+      [target.name]: undefined,
+    }));
   };
-
   const submit = async (event) => {
     event.preventDefault();
     const nextErrors = {};
@@ -52,7 +57,6 @@ export const RealizeOccurrenceForm = ({
       operationDate: values.operationDate,
     });
   };
-
   const field = (name) => ({
     name,
     value: values[name],
@@ -60,7 +64,6 @@ export const RealizeOccurrenceForm = ({
     "aria-invalid": Boolean(errors[name]),
     "aria-describedby": errors[name] ? `realize-${name}-error` : undefined,
   });
-
   return (
     <section
       className="monthly-event-form-panel"
@@ -106,36 +109,36 @@ export const RealizeOccurrenceForm = ({
         </label>
         <label>
           Catégorie
-          <select {...field("categoryId")}>
-            {categories.length === 0 && (
-              <option value="">Aucune catégorie</option>
-            )}
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+          <CategorySelect
+            {...field("categoryId")}
+            categories={categories}
+            disabled={isSaving}
+          />
           {errors.categoryId && (
-            <span id="realize-categoryId-error">{errors.categoryId}</span>
+            <span role="alert" id="realize-categoryId-error">
+              {errors.categoryId}
+            </span>
           )}
         </label>
         <div className="monthly-event-form__actions">
-          <button
+          <ActionButton
+            action="cancel"
             type="button"
             className="monthly-event-button monthly-event-button--secondary"
             onClick={onCancel}
             disabled={isSaving}
           >
             Annuler
-          </button>
-          <button
+          </ActionButton>
+          <ActionButton
+            action="save"
             type="submit"
             className="monthly-event-button"
             disabled={isSaving}
+            busy={isSaving}
           >
             Enregistrer l’opération
-          </button>
+          </ActionButton>
         </div>
       </form>
     </section>

@@ -1,9 +1,11 @@
+import { ActionButton } from "../Actions/ActionButton";
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPen, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { CompactMoneyList } from "../CompactOperations/CompactMoneyList";
 import { OneOffInlineEditor } from "./OneOffInlineEditor";
 import { formatMoney } from "../BudgetCalendar/budgetFormat";
+import { OperationEnvelopeLink } from "../Envelopes/OperationEnvelopeLink";
 export const OneOffOperationList = ({
   categories,
   operations,
@@ -43,40 +45,45 @@ export const OneOffOperationList = ({
       )}
       renderActions={({ raw }) => (
         <div>
-          <button
+          <ActionButton
+            action="edit"
             type="button"
             id={`one-off-edit-${raw.id}`}
-            className="one-off-icon-button"
+            className="one-off-button one-off-button--secondary"
             disabled={busy || Boolean(editingId)}
             onClick={(e) => onEdit(raw, e)}
             aria-label={`Modifier ${raw.title}`}
           >
-            <FontAwesomeIcon icon={faPen} aria-hidden="true" />
-          </button>
+            Modifier
+          </ActionButton>
           {onDelete && (
-            <button
+            <ActionButton
+              action="delete"
               type="button"
-              className="one-off-icon-button"
+              className="one-off-button one-off-button--secondary"
               disabled={busy || Boolean(editingId)}
               onClick={(e) => onDelete(raw, e)}
               aria-label={`Supprimer ${raw.title}`}
             >
-              <FontAwesomeIcon icon={faTrash} aria-hidden="true" />
-            </button>
+              Supprimer
+            </ActionButton>
           )}
         </div>
       )}
       renderDetails={({ raw, category }) => (
-        <dl>
-          <dt>Date</dt>
-          <dd>{raw.operationDate.split("-").reverse().join("/")}</dd>
-          <dt>Catégorie</dt>
-          <dd>{category?.name ?? "Catégorie indisponible"}</dd>
-          <dt>Type</dt>
-          <dd>{raw.type === "ENTREE" ? "Entrée" : "Dépense"}</dd>
-          <dt>Montant</dt>
-          <dd>{formatMoney(raw.amount, raw.currency)}</dd>
-        </dl>
+        <>
+          <OperationEnvelopeLink operation={raw} />
+          <dl>
+            <dt>Date</dt>
+            <dd>{raw.operationDate.split("-").reverse().join("/")}</dd>
+            <dt>Catégorie</dt>
+            <dd>{category?.name ?? "Catégorie indisponible"}</dd>
+            <dt>Type</dt>
+            <dd>{raw.type === "ENTREE" ? "Entrée" : "Dépense"}</dd>
+            <dt>Montant</dt>
+            <dd>{formatMoney(raw.amount, raw.currency)}</dd>
+          </dl>
+        </>
       )}
     />
   );

@@ -1,5 +1,6 @@
+import { ActionButton } from "@/src/design/ActionButton";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, useColorScheme } from "react-native";
 
 import { fontAwesomeIcon } from "@/src/features/categories/domain/categoryIcons";
 import { CategoryMark } from "@/src/features/categories/presentation/CategoryMark";
@@ -16,7 +17,6 @@ interface OperationCardProps {
   onEdit?(operation: OneOffOperation): void;
 }
 
-const colors = themes.light.color;
 const semibold = `${primitives.fontWeight.semibold}` as "600";
 
 const formatAmount = (operation: OneOffOperation): string =>
@@ -35,6 +35,8 @@ export const OperationCard = ({
   operation,
   onEdit,
 }: OperationCardProps) => {
+  const colors = themes[useColorScheme() === "dark" ? "dark" : "light"].color;
+  const styles = makeStyles(colors);
   const isIncome = operation.type === "ENTREE";
   return (
     <View style={styles.card}>
@@ -46,7 +48,8 @@ export const OperationCard = ({
           <Text style={styles.date}>{formatDate(operation.operationDate)}</Text>
         </View>
         {onEdit ? (
-          <Pressable
+          <ActionButton
+            action="edit"
             accessibilityLabel={`Modifier ${operation.title}`}
             accessibilityRole="button"
             hitSlop={primitives.space["2"]}
@@ -55,13 +58,7 @@ export const OperationCard = ({
               styles.editButton,
               pressed && styles.pressed,
             ]}
-          >
-            <Ionicons
-              color={colors.textSecondary}
-              name="create-outline"
-              size={24}
-            />
-          </Pressable>
+          ></ActionButton>
         ) : null}
       </View>
       <View style={styles.details}>
@@ -115,69 +112,72 @@ export const OperationCard = ({
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.backgroundSurface,
-    borderColor: colors.borderSubtle,
-    borderRadius: semantic.radius.card,
-    borderWidth: semantic.borderWidth.default,
-    gap: primitives.space["4"],
-    padding: primitives.space["4"],
-  },
-  heading: { flexDirection: "row", gap: primitives.space["3"] },
-  titleBlock: { flex: 1 },
-  title: {
-    color: colors.textPrimary,
-    fontSize: primitives.fontSize.lg,
-    fontWeight: semibold,
-  },
-  date: {
-    color: colors.textMuted,
-    fontSize: primitives.fontSize.sm,
-    marginTop: primitives.space["1"],
-  },
-  editButton: {
-    alignItems: "center",
-    height: primitives.size.controlSm,
-    justifyContent: "center",
-    width: primitives.size.controlSm,
-  },
-  pressed: { opacity: 0.7 },
-  details: {
-    alignItems: "center",
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: primitives.space["2"],
-    justifyContent: "space-between",
-  },
-  category: {
-    alignItems: "center",
-    flexDirection: "row",
-    flexShrink: 1,
-    gap: primitives.space["2"],
-  },
-  swatch: {
-    borderRadius: primitives.radius.pill,
-    height: primitives.space["3"],
-    width: primitives.space["3"],
-  },
-  categoryLabel: {
-    color: colors.textSecondary,
-    flexShrink: 1,
-    fontSize: primitives.fontSize.sm,
-  },
-  kind: {
-    alignItems: "center",
-    borderRadius: primitives.radius.pill,
-    flexDirection: "row",
-    gap: primitives.space["1"],
-    paddingHorizontal: primitives.space["3"],
-    paddingVertical: primitives.space["1"],
-  },
-  incomeKind: { backgroundColor: colors.statusSuccessSurface },
-  expenseKind: { backgroundColor: colors.statusErrorSurface },
-  kindLabel: { fontSize: primitives.fontSize.xs, fontWeight: semibold },
-  amount: { fontSize: primitives.fontSize.xl, fontWeight: semibold },
-  incomeText: { color: colors.dataIncome },
-  expenseText: { color: colors.dataExpense },
-});
+const makeStyles = (
+  colors: typeof themes.light.color | typeof themes.dark.color,
+) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.backgroundSurface,
+      borderColor: colors.borderSubtle,
+      borderRadius: semantic.radius.card,
+      borderWidth: semantic.borderWidth.default,
+      gap: primitives.space["4"],
+      padding: primitives.space["4"],
+    },
+    heading: { flexDirection: "row", gap: primitives.space["3"] },
+    titleBlock: { flex: 1 },
+    title: {
+      color: colors.textPrimary,
+      fontSize: primitives.fontSize.lg,
+      fontWeight: semibold,
+    },
+    date: {
+      color: colors.textMuted,
+      fontSize: primitives.fontSize.sm,
+      marginTop: primitives.space["1"],
+    },
+    editButton: {
+      alignItems: "center",
+      height: primitives.size.controlSm,
+      justifyContent: "center",
+      width: primitives.size.controlSm,
+    },
+    pressed: { opacity: 0.7 },
+    details: {
+      alignItems: "center",
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: primitives.space["2"],
+      justifyContent: "space-between",
+    },
+    category: {
+      alignItems: "center",
+      flexDirection: "row",
+      flexShrink: 1,
+      gap: primitives.space["2"],
+    },
+    swatch: {
+      borderRadius: primitives.radius.pill,
+      height: primitives.space["3"],
+      width: primitives.space["3"],
+    },
+    categoryLabel: {
+      color: colors.textSecondary,
+      flexShrink: 1,
+      fontSize: primitives.fontSize.sm,
+    },
+    kind: {
+      alignItems: "center",
+      borderRadius: primitives.radius.pill,
+      flexDirection: "row",
+      gap: primitives.space["1"],
+      paddingHorizontal: primitives.space["3"],
+      paddingVertical: primitives.space["1"],
+    },
+    incomeKind: { backgroundColor: colors.statusSuccessSurface },
+    expenseKind: { backgroundColor: colors.statusErrorSurface },
+    kindLabel: { fontSize: primitives.fontSize.xs, fontWeight: semibold },
+    amount: { fontSize: primitives.fontSize.xl, fontWeight: semibold },
+    incomeText: { color: colors.dataIncome },
+    expenseText: { color: colors.dataExpense },
+  });

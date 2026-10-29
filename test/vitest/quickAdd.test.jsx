@@ -17,6 +17,13 @@ import { SimulationProvider } from "../../src/js/components/Simulation/Simulatio
 import { oneOffOperationsService as operations } from "../../src/js/services/oneOffOperationsService";
 import { monthlyEventsService as events } from "../../src/js/services/monthlyEventsService";
 import { AcknowledgedWriteError } from "../../src/js/utils/acknowledgedWrite";
+vi.mock("../../src/js/services/envelopesService", async (original) => ({
+  ...(await original()),
+  envelopesService: {
+    allOccurrences: async () => [],
+    link: async (operationId) => ({ operationId, occurrenceId: null }),
+  },
+}));
 vi.mock("../../src/js/services/oneOffOperationsService", () => ({
   oneOffOperationsService: {
     listAllCategories: vi.fn(),
@@ -80,7 +87,13 @@ describe("shared quick add", () => {
     ).toBeChecked();
     fill("Titre", "Remboursement");
     fill(/^Montant/, "32.50");
-    fill("Catégorie", "2");
+    fireEvent.click(screen.getByRole("combobox", { name: "Catégorie" }));
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Catégorie" }), {
+      key: "End",
+    });
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Catégorie" }), {
+      key: "Enter",
+    });
     const submit = screen.getByRole("button", { name: "Enregistrer" });
     fireEvent.click(submit);
     fireEvent.click(submit);

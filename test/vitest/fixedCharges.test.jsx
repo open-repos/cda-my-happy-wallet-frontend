@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CardOperationFixe from "../../src/js/components/OperationsFixes/CardOperationFixe";
 import reducer from "../../src/js/slices/operationsFixes/operationsFixesSlice";
 import service from "../../src/js/services/operationsFixesService";
+import { envelopeMonth } from "../../src/js/utils/envelopes";
 import { SimulationProvider } from "../../src/js/components/Simulation/SimulationContext";
 
 vi.mock("../../src/js/services/operationsFixesService", () => ({
@@ -93,6 +94,7 @@ describe("charges fixes périodiques #238", () => {
         devise: "EUR",
         periodicite: "ANNUELLE",
         pourcentagePersonnel: 50,
+        isBudgetEnvelope: false,
       })
     );
     const row = await screen.findByRole("article", { name: "Abonnement" });
@@ -121,6 +123,7 @@ describe("édition, compatibilité et erreurs", () => {
       expect(service.putCharge).toHaveBeenCalledWith(7, {
         ...annualBody(),
         pourcentagePersonnel: 40,
+        effectiveMonth: envelopeMonth(),
       })
     );
     await screen.findByRole("button", { name: "Modifier Abonnement" });
@@ -263,6 +266,7 @@ const annualBody = () => ({
   devise: "EUR",
   periodicite: "ANNUELLE",
   pourcentagePersonnel: 50,
+  isBudgetEnvelope: false,
 });
 
 describe("saisie accessible", () => {

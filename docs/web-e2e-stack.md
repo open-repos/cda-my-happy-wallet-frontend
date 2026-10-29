@@ -5,7 +5,7 @@
 `npm run test:e2e:stack` construit et lance une stack Docker Compose jetable :
 
 - le backend réel du dépôt `open-repos/cda-my-happy-wallet-backend`, fixé au
-  commit `ad8f841630e3fdb8f885b93a9ed9c20d3aeb9ece` dans `compose.e2e.yml` ;
+  commit `c5d372246a18faebc4c31562b58361c5f6b5a091` dans `compose.e2e.yml` ;
 - MySQL 8.0, avec une base `mhw_e2e` exclusivement en mémoire et un utilisateur
   limité à cette base, ainsi que Redis 8.2.1 ;
 - le build Web Vite et Chromium de la version Playwright du lockfile, exécutés

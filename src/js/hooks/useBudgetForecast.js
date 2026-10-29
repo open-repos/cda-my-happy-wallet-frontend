@@ -1,3 +1,4 @@
+import { useRefreshViews } from "./useRefreshViews";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { budgetForecastService } from "../services/budgetForecastService";
 import { useSimulation } from "../components/Simulation/SimulationContext";
@@ -17,7 +18,7 @@ export const useBudgetForecast = (query, problem = null) => {
     const request = ++latest.current;
     if (problem) {
       setState({ status: "invalid", data: null, identity });
-      return;
+      return true;
     }
     setState({ status: "loading", data: null, identity });
     try {
@@ -28,11 +29,14 @@ export const useBudgetForecast = (query, problem = null) => {
           data,
           identity,
         });
+      return true;
     } catch {
       if (latest.current === request)
         setState({ status: "error", data: null, identity });
+      return false;
     }
   }, [key, problem, identity]);
+  useRefreshViews(reload);
   useEffect(() => {
     reload();
     return () => {

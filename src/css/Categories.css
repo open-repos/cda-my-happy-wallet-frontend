@@ -60,7 +60,7 @@
   font: inherit;
 }
 
-/* Neutralise le style global orange des libellés (FormControl.css). */
+/* Neutralise la marge et la couleur du style global des libellés (FormControl.css). */
 .category-form__name label,
 .category-form__custom {
   margin: 0;
@@ -213,6 +213,7 @@
 }
 
 .category-icon-option {
+  position: relative;
   display: flex;
   min-height: var(--ds-size-control-min-height);
   align-items: center;
@@ -228,6 +229,8 @@
    l'état coché et l'anneau de focus. */
 .category-icon-option input {
   position: absolute;
+  top: 50%;
+  left: 50%;
   width: 1px;
   height: 1px;
   opacity: 0;

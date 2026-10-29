@@ -34,7 +34,7 @@
   gap: var(--ds-primitive-space-3);
   min-width: 0;
   padding: var(--ds-space-card);
-  border-radius: var(--ds-radius-card);
+  border-radius: var(--ds-primitive-radius-lg);
   background: var(--ds-color-background-surface);
   box-shadow: var(--ds-shadow-card);
   color: var(--ds-color-text-primary);
@@ -45,9 +45,11 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--ds-primitive-space-2);
+  flex-wrap: wrap;
 }
 
 .goal-card__header h3 {
+  color: var(--ds-color-text-primary);
   margin: 0;
   font-size: var(--ds-primitive-font-size-lg);
   overflow-wrap: anywhere;
@@ -70,6 +72,8 @@
 }
 
 .goal-card__facts dd {
+  color: var(--ds-color-text-primary);
+  overflow-wrap: anywhere;
   margin: 0;
   font-weight: var(--ds-primitive-font-weight-semibold);
   font-variant-numeric: tabular-nums;
@@ -115,8 +119,320 @@
   color: var(--ds-color-status-error-text);
 }
 
+.goal-explorer,
+.goal-card__summary,
+.goal-trajectory {
+  display: grid;
+  gap: var(--ds-primitive-space-3);
+  min-width: 0;
+}
+
+.goal-explorer__choice,
+.goal-trajectory__header label {
+  display: grid;
+  gap: var(--ds-primitive-space-2);
+  min-width: 0;
+  color: var(--ds-color-text-primary);
+}
+
+.goal-explorer__choice {
+  color: var(--ds-color-text-on-shell);
+}
+
+.goal-explorer__choice select,
+.goal-trajectory__header select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: var(--ds-size-control-min-height);
+  padding: var(--ds-primitive-space-3);
+  border: var(--ds-border-width-default) solid var(--ds-color-field-border);
+  border-radius: var(--ds-primitive-radius-md);
+  color: var(--ds-color-field-text);
+  background: var(--ds-color-field-background);
+  font: inherit;
+}
+
+.goal-card__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  gap: var(--ds-primitive-space-6);
+  min-width: 0;
+  align-items: start;
+}
+
+.goal-card__gauge {
+  width: 100%;
+  max-width: 16rem;
+  position: relative;
+  margin: 0 auto;
+}
+
+.goal-card__gauge-chart {
+  height: 10rem;
+}
+
+.goal-card__gauge-label {
+  display: grid;
+  position: absolute;
+  inset-inline: 0;
+  bottom: 2rem;
+  margin: 0;
+  text-align: center;
+  color: var(--ds-color-text-primary);
+  pointer-events: none;
+}
+
+.goal-card__gauge-label strong {
+  color: var(--ds-color-text-primary);
+  font-size: var(--ds-primitive-font-size-2xl);
+  line-height: var(--ds-primitive-line-height-tight);
+}
+
+.goal-card__gauge-label span,
+.goal-card__help {
+  color: var(--ds-color-text-secondary);
+  font-size: var(--ds-primitive-font-size-xs);
+}
+
+.goal-card__help {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.goal-card__arrival {
+  display: grid;
+  gap: var(--ds-primitive-space-2);
+  color: var(--ds-color-text-primary);
+}
+
+.goal-card__arrival span {
+  color: var(--ds-color-text-secondary);
+  font-size: var(--ds-primitive-font-size-sm);
+}
+
+.goal-card__arrival strong,
+.goal-card__arrival time {
+  color: var(--ds-color-text-primary);
+  font-size: var(--ds-primitive-font-size-xl);
+  line-height: var(--ds-primitive-line-height-heading);
+  overflow-wrap: anywhere;
+}
+
+.goal-trajectory__header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--ds-primitive-space-3);
+}
+
+.goal-trajectory__header label {
+  width: min(100%, 10rem);
+}
+
+.goal-trajectory__header h4 {
+  color: var(--ds-color-text-primary);
+  margin: 0;
+  font-size: var(--ds-primitive-font-size-lg);
+  overflow-wrap: anywhere;
+}
+
+.goal-trajectory__chart {
+  width: 100%;
+  height: 20rem;
+  min-width: 0;
+}
+
+.goal-trajectory__outcome,
+.goal-trajectory__details,
+.goal-trajectory__details summary {
+  color: var(--ds-color-text-primary);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.goal-trajectory__details summary {
+  min-height: var(--ds-size-control-min-height);
+  padding-block: var(--ds-primitive-space-3);
+}
+
+.goal-trajectory__details table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.goal-trajectory__details :is(caption, th, td) {
+  color: var(--ds-color-text-primary);
+  overflow-wrap: anywhere;
+  font-size: var(--ds-primitive-font-size-sm);
+}
+
+.goal-trajectory__details :is(th, td) {
+  padding: var(--ds-primitive-space-2);
+  text-align: start;
+  border-bottom: var(--ds-border-width-default) solid
+    var(--ds-color-border-subtle);
+}
+
+.goal-trajectory__details td {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 900px) {
+  .goal-card__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .monthly-events-header h2 {
   margin: 0;
   font-size: var(--ds-primitive-font-size-xl);
   line-height: var(--ds-primitive-line-height-tight);
+}
+
+.savings-simulation {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--ds-primitive-space-4);
+  min-width: 0;
+}
+.savings-simulation h4,
+.savings-simulation h5 {
+  margin: 0;
+  color: var(--ds-color-text-primary);
+  overflow-wrap: anywhere;
+}
+.savings-simulation h5 {
+  font-size: var(--ds-primitive-font-size-sm);
+}
+.savings-simulation p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.savings-simulation__form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ds-primitive-space-3);
+}
+.savings-simulation__form label {
+  display: grid;
+  align-content: start;
+  gap: var(--ds-primitive-space-2);
+  min-width: 0;
+  color: var(--ds-color-text-primary);
+}
+.savings-simulation__form :is(input, select) {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  min-height: var(--ds-size-control-min-height);
+  padding: var(--ds-primitive-space-3);
+  border: var(--ds-border-width-default) solid var(--ds-color-field-border);
+  border-radius: var(--ds-primitive-radius-md);
+  background: var(--ds-color-field-background);
+  color: var(--ds-color-field-text);
+  font: inherit;
+}
+.savings-simulation__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-primitive-space-2);
+  grid-column: 1/-1;
+}
+.savings-simulation__results {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ds-primitive-space-3);
+}
+.savings-simulation__result {
+  display: grid;
+  align-content: start;
+  gap: var(--ds-primitive-space-3);
+  padding: var(--ds-primitive-space-3);
+  border: var(--ds-border-width-default) solid var(--ds-color-border-subtle);
+  border-radius: var(--ds-primitive-radius-lg);
+  min-width: 0;
+}
+.savings-simulation__result strong {
+  font-size: var(--ds-primitive-font-size-lg);
+  overflow-wrap: anywhere;
+}
+.savings-simulation__result dl {
+  display: grid;
+  gap: var(--ds-primitive-space-2);
+  margin: 0;
+}
+.savings-simulation__result dt {
+  font-size: var(--ds-primitive-font-size-xs);
+  color: var(--ds-color-text-secondary);
+}
+.savings-simulation__result dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.savings-simulation__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-primitive-space-3);
+  min-width: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.savings-simulation__legend legend {
+  padding-block: var(--ds-primitive-space-2);
+}
+.savings-simulation__legend label {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-primitive-space-2);
+  min-height: var(--ds-size-control-min-height);
+  min-width: 0;
+}
+.savings-simulation__legend input {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.savings-simulation__table {
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  overflow: auto;
+  overscroll-behavior-inline: contain;
+}
+.savings-simulation__table table {
+  min-width: 32rem;
+}
+.savings-simulation__table span {
+  display: block;
+}
+@media (max-width: 1199px) {
+  .savings-simulation__results {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .savings-simulation__form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.savings-simulation__legend label {
+  max-width: 100%;
+  color: var(--ds-color-text-primary);
+}
+.savings-simulation__legend span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Expanded details must not contribute the table's intrinsic width to the grid. */
+.goal-trajectory__details {
+  min-width: 0;
+  max-width: 100%;
 }

@@ -1,3 +1,4 @@
+import { ActionButton } from "@/src/design/ActionButton";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -66,18 +67,22 @@ export const OperationsScreen = () => {
   };
   const confirmDelete = () => {
     if (editedOperation == null) return;
-    Alert.alert("Supprimer l’opération ?", "Cette action est définitive.", [
-      { text: "Annuler", style: "cancel" },
-      {
-        text: "Supprimer",
-        style: "destructive",
-        onPress: () => {
-          void state.deleteOperation(editedOperation.id).then((succeeded) => {
-            if (succeeded) closeForm();
-          });
+    Alert.alert(
+      `Supprimer « ${editedOperation.title} » ?`,
+      "Cette action est définitive.",
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Supprimer",
+          style: "destructive",
+          onPress: () => {
+            void state.deleteOperation(editedOperation.id).then((succeeded) => {
+              if (succeeded) closeForm();
+            });
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
   const categoryById = useMemo(
     () => new Map(state.categories.map((category) => [category.id, category])),
@@ -134,7 +139,9 @@ export const OperationsScreen = () => {
               Retrouvez vos entrées et dépenses, des plus récentes aux plus
               anciennes.
             </Text>
-            <Pressable
+            <ActionButton
+              action="add"
+              label="Ajouter une opération"
               accessibilityRole="button"
               disabled={state.categories.length === 0}
               accessibilityLabel="Ajouter une opération"
@@ -144,14 +151,7 @@ export const OperationsScreen = () => {
                 pressed && styles.pressed,
                 state.categories.length === 0 && styles.disabled,
               ]}
-            >
-              <Ionicons
-                color={colors.actionPrimaryText}
-                name="add-circle-outline"
-                size={21}
-              />
-              <Text style={styles.addLabel}>Ajouter une opération</Text>
-            </Pressable>
+            ></ActionButton>
             <Pressable
               accessibilityRole="link"
               onPress={() => router.navigate("/(app)/categories")}

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { envelopeMonth } from "../../src/js/utils/envelopes";
 import {
   CHARGE_PERIODS,
   chargePreview,
@@ -84,6 +85,8 @@ describe("aperçu de charge : contrat monétaire backend", () => {
       devise: "EUR",
       periodicite: "MENSUELLE",
       pourcentagePersonnel: "100",
+      isBudgetEnvelope: false,
+      effectiveMonth: envelopeMonth(),
     });
   });
 });

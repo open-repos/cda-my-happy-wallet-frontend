@@ -1,3 +1,6 @@
+import { ConfirmDialog } from "../Forms/ConfirmDialog";
+import { MutationMessage } from "../Notifications/MutationMessage";
+import { ActionButton } from "../Actions/ActionButton";
 import React, { useEffect, useRef, useState } from "react";
 import { useFixedCharges } from "../../hooks/useFixedCharges";
 import { CHARGE_PERIODS, chargeDisplay } from "../../utils/fixedCharges";
@@ -5,7 +8,6 @@ import { formatMoney } from "../BudgetCalendar/budgetFormat";
 import { LiveMessage } from "../LiveMessage";
 import { FixedChargeForm } from "./FixedChargeForm";
 import "../../../css/FixedCharges.css";
-
 export const FixedCharges = () => {
   const charges = useFixedCharges();
   const [editing, setEditing] = useState(undefined);
@@ -40,7 +42,8 @@ export const FixedCharges = () => {
         personnelle. Ne saisissez pas aussi la même dépense dans les événements
         ou les opérations : elle serait comptée deux fois.
       </p>
-      <LiveMessage
+      <MutationMessage
+        success={charges.mutationStatus === "success"}
         message={charges.message.text}
         isError={charges.message.error}
       />
@@ -93,7 +96,8 @@ export const FixedCharges = () => {
                   </dd>
                 </dl>
                 <div className="fixed-charge-actions">
-                  <button
+                  <ActionButton
+                    action="edit"
                     type="button"
                     className="one-off-button one-off-button--secondary"
                     disabled={charges.busy || editing !== undefined}
@@ -104,8 +108,9 @@ export const FixedCharges = () => {
                     aria-label={`Modifier ${charge.titre}`}
                   >
                     Modifier
-                  </button>
-                  <button
+                  </ActionButton>
+                  <ActionButton
+                    action="delete"
                     type="button"
                     className="one-off-button one-off-button--secondary"
                     disabled={charges.busy || editing !== undefined}
@@ -113,45 +118,54 @@ export const FixedCharges = () => {
                     aria-label={`Supprimer ${charge.titre}`}
                   >
                     Supprimer
-                  </button>
+                  </ActionButton>
                 </div>
                 {deleting === charge.idOperationFixe && (
-                  <fieldset
-                    className="fixed-charge-delete"
-                    disabled={charges.busy}
+                  <ConfirmDialog
+                    label={`Supprimer « ${charge.titre} » ?`}
+                    busy={charges.busy}
+                    onCancel={() => setDeleting(null)}
                   >
-                    <legend>Supprimer « {charge.titre} » ?</legend>
-                    <p>
-                      La charge sera retirée de votre budget courant. Les mois
-                      clôturés conservent leur historique.
-                    </p>
-                    <button
-                      className="one-off-button one-off-button--secondary"
-                      type="button"
-                      onClick={() => setDeleting(null)}
+                    <fieldset
+                      className="fixed-charge-delete"
+                      disabled={charges.busy}
                     >
-                      Conserver la charge
-                    </button>
-                    <button
-                      className="one-off-button one-off-button--danger"
-                      type="button"
-                      onClick={async () => {
-                        if (await charges.remove(charge)) {
-                          returnAfterDelete.current = true;
-                          setDeleting(null);
-                        }
-                      }}
-                    >
-                      Confirmer la suppression
-                    </button>
-                  </fieldset>
+                      <legend>Supprimer « {charge.titre} » ?</legend>
+                      <p>
+                        La charge sera retirée de votre budget courant. Les mois
+                        clôturés conservent leur historique.
+                      </p>
+                      <button
+                        className="one-off-button one-off-button--secondary"
+                        type="button"
+                        onClick={() => setDeleting(null)}
+                      >
+                        Conserver la charge
+                      </button>
+                      <ActionButton
+                        action="confirm"
+                        className="one-off-button one-off-button--danger"
+                        type="button"
+                        onClick={async () => {
+                          if (await charges.remove(charge)) {
+                            returnAfterDelete.current = true;
+                            setDeleting(null);
+                          }
+                        }}
+                        variant="danger"
+                      >
+                        Confirmer la suppression
+                      </ActionButton>
+                    </fieldset>
+                  </ConfirmDialog>
                 )}
               </article>
             ))}
           </div>
         </>
       )}
-      <button
+      <ActionButton
+        action="add"
         ref={addRef}
         className="one-off-button"
         type="button"
@@ -167,7 +181,7 @@ export const FixedCharges = () => {
         }}
       >
         Ajouter une charge
-      </button>
+      </ActionButton>
       {editing !== undefined && (
         <FixedChargeForm
           key={editing?.idOperationFixe ?? "new"}

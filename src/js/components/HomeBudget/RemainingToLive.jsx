@@ -130,9 +130,9 @@ export const RemainingToLive = ({ section, period }) => {
         className="home-budget__remaining"
         aria-labelledby="home-rav-title"
       >
-        <h1 id="home-rav-title" className="home-budget__caption">
+        <h2 id="home-rav-title" className="home-budget__caption">
           {caption}
-        </h1>
+        </h2>
         <p
           className={`home-budget__amount budget-amount--${
             share.amount === null ? "neutral" : toneOf(share.amount)

@@ -1,4 +1,6 @@
+import { ActionButton } from "../Actions/ActionButton";
 import { FixedCategorySelect } from "./FixedCategorySelect";
+import { FixedEnvelopeFields } from "./FixedEnvelopeFields";
 import {
   fixedCategoryBody,
   validateFixedCategory,
@@ -19,7 +21,6 @@ import {
 import { formatMoney } from "../BudgetCalendar/budgetFormat";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import { LiveMessage } from "../LiveMessage";
-
 export const FixedInlineEditor = ({
   row,
   compact,
@@ -37,7 +38,11 @@ export const FixedInlineEditor = ({
     () =>
       draft ?? {
         ...(income ? incomeInitialValues(row) : chargeInitialValues(row)),
-        ...(categories ? { categoryId: String(row.categoryId ?? "") } : {}),
+        ...(categories
+          ? {
+              categoryId: String(row.categoryId ?? ""),
+            }
+          : {}),
       }
   );
   const [errors, setErrors] = useState({});
@@ -55,11 +60,20 @@ export const FixedInlineEditor = ({
     : chargePreview(values);
   const amount = (field) =>
     preview ? formatMoney(preview[field], values.devise) : "Indisponible";
-  const change = ({ target: { name, value } }) => {
-    const next = { ...values, [name]: value };
+  const change = ({ target: { name, value, type, checked } }) => {
+    const next = {
+      ...values,
+      [name]: type === "checkbox" ? checked : value,
+      ...(name === "periodicite" && value !== "MENSUELLE"
+        ? { isBudgetEnvelope: false }
+        : {}),
+    };
     setValues(next);
     onDraftChange(next);
-    setErrors((current) => ({ ...current, [name]: null }));
+    setErrors((current) => ({
+      ...current,
+      [name]: null,
+    }));
   };
   const field = (name, label) => {
     const id = `${formId}-${name}`;
@@ -88,7 +102,10 @@ export const FixedInlineEditor = ({
         {name === "devise" || name === "periodicite" ? (
           <select {...shared}>
             {(name === "devise"
-              ? ["EUR", "USD"].map((value) => ({ value, label: value }))
+              ? ["EUR", "USD"].map((value) => ({
+                  value,
+                  label: value,
+                }))
               : CHARGE_PERIODS
             ).map((option) => (
               <option key={option.value} value={option.value}>
@@ -151,6 +168,15 @@ export const FixedInlineEditor = ({
       onSubmit={submit}
       className="fixed-inline__controls"
     >
+      <FixedEnvelopeFields
+        values={values}
+        onChange={change}
+        income={income}
+        editing
+        disabled={busy}
+        form={formId}
+        error={errors.isBudgetEnvelope || errors.effectiveMonth}
+      />
       <LiveMessage
         isError
         message={
@@ -159,15 +185,17 @@ export const FixedInlineEditor = ({
             : ""
         }
       />
-      <button
+      <ActionButton
+        action="cancel"
         type="button"
         disabled={busy}
         onClick={onClose}
         className="one-off-button one-off-button--secondary"
       >
         Annuler
-      </button>
-      <button
+      </ActionButton>
+      <ActionButton
+        action="save"
         type="submit"
         disabled={busy}
         className="one-off-button"
@@ -178,9 +206,10 @@ export const FixedInlineEditor = ({
             ? "Enregistrer l’entrée"
             : "Enregistrer la charge"
         }
+        busy={busy}
       >
         {busy ? "Enregistrement…" : "Enregistrer"}
-      </button>
+      </ActionButton>
     </form>
   );
   const categoryField = categories ? (

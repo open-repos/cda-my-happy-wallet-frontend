@@ -1,4 +1,5 @@
 import React from "react";
+import { envelopeMonth } from "../../src/js/utils/envelopes";
 import {
   cleanup,
   fireEvent,
@@ -138,7 +139,7 @@ describe("vue commune du budget fixe #265", () => {
       exact: true,
     });
     await waitFor(() => expect(select).toBeEnabled());
-    fireEvent.change(select, { target: { value: "11" } });
+    chooseCategory(select, "Salaires");
     fireEvent.click(
       screen.getByRole("button", { name: "Enregistrer l’entrée" })
     );
@@ -166,7 +167,7 @@ describe("vue commune du budget fixe #265", () => {
       exact: true,
     });
     await waitFor(() => expect(select).toBeEnabled());
-    fireEvent.change(select, { target: { value: "10" } });
+    chooseCategory(select, "Assurances");
     fill("Montant total par échéance", "240");
     fireEvent.click(
       screen.getByRole("button", { name: "Enregistrer la charge" })
@@ -175,7 +176,7 @@ describe("vue commune du budget fixe #265", () => {
     expect(screen.getByLabelText("Montant total par échéance")).toHaveValue(
       "240"
     );
-    fireEvent.change(select, { target: { value: "" } });
+    chooseCategory(select, "Non catégorisé");
     expect(select).toHaveAttribute("aria-invalid", "false");
   });
 
@@ -200,14 +201,19 @@ describe("vue commune du budget fixe #265", () => {
     );
     const select = screen.getByRole("combobox", { name: "Catégorie" });
     await waitFor(() => expect(select).toBeEnabled());
-    expect(select).toHaveValue("10");
+    expect(select).toHaveTextContent("Assurances");
+    fireEvent.click(select);
     expect(
-      within(select).queryByRole("option", { name: "Salaires" })
+      within(screen.getByRole("listbox")).queryByRole("option", {
+        name: "Salaires",
+      })
     ).not.toBeInTheDocument();
     expect(
-      within(select).getByRole("option", { name: "Personnel" })
+      within(screen.getByRole("listbox")).getByRole("option", {
+        name: "Personnel",
+      })
     ).toBeInTheDocument();
-    fireEvent.change(select, { target: { value: "" } });
+    chooseCategory(select, "Non catégorisé");
     fireEvent.click(
       screen.getByRole("button", { name: "Enregistrer la charge" })
     );
@@ -235,9 +241,9 @@ describe("vue commune du budget fixe #265", () => {
     expect(
       await screen.findByRole("button", { name: "Réessayer les catégories" })
     ).toBeVisible();
-    expect(screen.getByRole("combobox", { name: "Catégorie" })).toHaveValue(
-      "10"
-    );
+    expect(
+      screen.getByRole("combobox", { name: "Catégorie" })
+    ).toHaveTextContent("Assurances");
     fill("Montant total par échéance", "240");
     fireEvent.click(
       screen.getByRole("button", { name: "Enregistrer la charge" })
@@ -528,6 +534,7 @@ describe("vue commune du budget fixe #265", () => {
         montant: 2100,
         devise: "EUR",
         categoryId: null,
+        effectiveMonth: envelopeMonth(),
       })
     );
     fireEvent.click(
@@ -542,3 +549,8 @@ describe("vue commune du budget fixe #265", () => {
     expect(rows()[0]).toHaveTextContent("Assurance");
   });
 });
+
+const chooseCategory = (select, name) => {
+  if (select.getAttribute("aria-expanded") !== "true") fireEvent.click(select);
+  fireEvent.click(screen.getByRole("option", { name }));
+};

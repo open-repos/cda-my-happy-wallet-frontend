@@ -1,8 +1,18 @@
-import { isAcknowledgedWrite } from "../utils/acknowledgedWrite";
+import { useRefreshViews } from "./useRefreshViews";
+import {
+  mutationErrorMessage,
+  acknowledgeMutation,
+  useMutationFeedback,
+} from "./useMutationFeedback";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { budgetErrorCode, budgetService } from "../services/budgetService";
 import { oneOffOperationsService } from "../services/oneOffOperationsService";
 import { useSimulation } from "../components/Simulation/SimulationContext";
+
+import { monthlyEventsService } from "../services/monthlyEventsService";
+import { listCalendarResolutions } from "../services/calendarResolutionsService";
+import { calendarContent } from "../utils/calendarContent";
+import { forecastToday } from "../utils/budgetForecast";
 
 const CURRENCY = "EUR";
 
@@ -11,12 +21,6 @@ export const monthEnd = (month) => {
   const lastDay = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate();
   return `${month}-${String(lastDay).padStart(2, "0")}`;
 };
-
-const operationFilter = (month, selectedDate) => ({
-  from: selectedDate ?? `${month}-01`,
-  to: selectedDate ?? monthEnd(month),
-  currency: CURRENCY,
-});
 
 const mutationErrors = {
   PERIOD_CLOSED:
@@ -30,7 +34,7 @@ const mutationErrors = {
  * traiter, opérations du mois ou du jour sélectionné et commandes associées.
  */
 export const useBudgetCalendar = (month, selectedDate) => {
-  const { scenario, revision, invalidate } = useSimulation();
+  const { scenario, revision } = useSimulation();
   const queryKey = `${month}:${scenario}:${revision}`;
   const activeKey = useRef(queryKey);
   activeKey.current = queryKey;
@@ -41,6 +45,9 @@ export const useBudgetCalendar = (month, selectedDate) => {
   const [pending, setPending] = useState([]);
   const [categories, setCategories] = useState([]);
   const [operations, setOperations] = useState([]);
+  const [content, setContent] = useState([]);
+  const [contentKey, setContentKey] = useState(null);
+  const latestOperations = useRef(0);
   const [operationsMeta, setOperationsMeta] = useState(null);
   const [operationsStatus, setOperationsStatus] = useState("loading");
   const [mutationStatus, setMutationStatus] = useState("idle");
@@ -83,22 +90,54 @@ export const useBudgetCalendar = (month, selectedDate) => {
   }, [month, scenario, queryKey]);
 
   const loadOperations = useCallback(async () => {
+    if (activeKey.current !== queryKey) return false;
+    const request = ++latestOperations.current;
+    setContentKey(queryKey);
     setOperationsStatus("loading");
+    setContent([]);
+    setOperations([]);
     try {
-      const page = await oneOffOperationsService.listOperations(
-        null,
-        operationFilter(month, selectedDate)
+      const [nextOperations, occurrences, resolutions] = await Promise.all([
+        oneOffOperationsService.listAllOperations({
+          from: `${month}-01`,
+          to: monthEnd(month),
+        }),
+        monthlyEventsService.listOccurrences(month, "simulation"),
+        listCalendarResolutions(`${month}-01`, monthEnd(month)),
+      ]);
+      if (
+        request !== latestOperations.current ||
+        activeKey.current !== queryKey
+      )
+        return false;
+      setOperations(nextOperations);
+      setContent(
+        calendarContent({
+          operations: nextOperations,
+          occurrences,
+          resolutions,
+          today: forecastToday(),
+        })
       );
-      setOperations(page.data);
-      setOperationsMeta(page.meta);
+      setOperationsMeta({ hasNext: false, nextCursor: null });
       setOperationsStatus("success");
       return true;
     } catch {
+      if (
+        request !== latestOperations.current ||
+        activeKey.current !== queryKey
+      )
+        return false;
       setOperationsStatus("error");
       return false;
     }
-  }, [month, selectedDate]);
+  }, [month, queryKey]);
 
+  const refreshViews = useRefreshViews(() =>
+    Promise.all([loadMonth(), loadOperations()])
+  );
+  const feedback = useMutationFeedback(refreshViews);
+  const writing = useRef(false);
   useEffect(() => {
     loadMonth();
     return () => {
@@ -107,53 +146,30 @@ export const useBudgetCalendar = (month, selectedDate) => {
   }, [loadMonth, revision]);
   useEffect(() => {
     loadOperations();
+    return () => {
+      latestOperations.current += 1;
+    };
   }, [loadOperations, revision]);
 
-  const loadMoreOperations = async () => {
-    if (!operationsMeta?.hasNext || operationsStatus === "paging") return;
-    setOperationsStatus("paging");
-    // Message vidé : un nouvel échec identique est de nouveau annoncé (#151).
-    setMessage({ tone: "info", text: "" });
-    try {
-      const page = await oneOffOperationsService.listOperations(
-        operationsMeta.nextCursor,
-        operationFilter(month, selectedDate)
-      );
-      setOperations((current) => [...current, ...page.data]);
-      setOperationsMeta(page.meta);
-      setOperationsStatus("success");
-    } catch {
-      setOperationsStatus("success");
-      setMessage({
-        tone: "error",
-        text: "La suite des opérations n’a pas pu être chargée.",
-      });
-    }
-  };
-
   const mutate = async (action, successText) => {
+    if (writing.current) return false;
+    writing.current = true;
     setMutationStatus("loading");
     setMessage({ tone: "info", text: "" });
     try {
-      try {
-        await action();
-      } catch (error) {
-        if (!isAcknowledgedWrite(error)) throw error;
-      }
-      // Une écriture dans un mois passé recalcule les reports : tout recharger.
-      const [monthLoaded, operationsLoaded] = await Promise.all([
-        loadMonth(),
-        loadOperations(),
-      ]);
+      const acknowledged = await acknowledgeMutation(action);
+      const reloaded = await refreshViews();
+      const loaded = Array.isArray(reloaded)
+        ? reloaded.every(Boolean)
+        : reloaded;
+      feedback.confirm(successText, { refreshed: loaded, ...acknowledged });
       setMutationStatus("success");
       setMessage({
         tone: "success",
-        text:
-          monthLoaded && operationsLoaded
-            ? successText
-            : "C’est enregistré, mais l’affichage n’a pas pu être actualisé.",
+        text: loaded
+          ? successText
+          : "C’est enregistré, mais l’affichage n’a pas pu être actualisé.",
       });
-      invalidate();
       return true;
     } catch (error) {
       const code = budgetErrorCode(error);
@@ -161,11 +177,15 @@ export const useBudgetCalendar = (month, selectedDate) => {
       setMutationStatus("error");
       setMessage({
         tone: "error",
-        text:
+        text: mutationErrorMessage(
+          error,
           mutationErrors[code] ??
-          "L’enregistrement a échoué. Vérifiez votre connexion puis réessayez.",
+            "L’enregistrement a échoué. Vérifiez votre connexion puis réessayez."
+        ),
       });
       return false;
+    } finally {
+      writing.current = false;
     }
   };
 
@@ -174,13 +194,24 @@ export const useBudgetCalendar = (month, selectedDate) => {
     summaryStatus: summaryKey === queryKey ? summaryStatus : "loading",
     pending,
     categories,
-    operations,
+    operations: contentKey === queryKey ? operations : [],
+    content: contentKey === queryKey ? content : [],
     operationsMeta,
-    operationsStatus,
+    operationsStatus: contentKey === queryKey ? operationsStatus : "loading",
     mutationStatus,
     message,
     retry: () => Promise.all([loadMonth(), loadOperations()]),
-    loadMoreOperations,
+    loadMoreOperations: () => {},
+    updateOperation: (id, operation) =>
+      mutate(
+        () => oneOffOperationsService.updateOperation(id, operation),
+        "Opération modifiée."
+      ),
+    deleteOperation: (id) =>
+      mutate(
+        () => oneOffOperationsService.deleteOperation(id),
+        "Opération supprimée."
+      ),
     createOperation: (operation) =>
       mutate(
         () => oneOffOperationsService.createOperation(operation),

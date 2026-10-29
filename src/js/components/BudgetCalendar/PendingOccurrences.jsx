@@ -1,6 +1,8 @@
+import { ActionButton } from "../Actions/ActionButton";
 import React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
 import { formatMoney, longDate } from "./budgetFormat";
-
 const OccurrenceItem = ({ occurrence, disabled, onRealize, onCancel }) => (
   <li
     className={`budget-occurrence${
@@ -11,7 +13,7 @@ const OccurrenceItem = ({ occurrence, disabled, onRealize, onCancel }) => (
       <span className="budget-occurrence__date">
         {occurrence.overdue && (
           <span className="budget-occurrence__warning" aria-hidden="true">
-            ⚠
+            <FontAwesomeIcon icon={faExclamationTriangle} />
           </span>
         )}
         {longDate(occurrence.occurrenceDate)}
@@ -30,13 +32,16 @@ const OccurrenceItem = ({ occurrence, disabled, onRealize, onCancel }) => (
             ? occurrence.amount
             : -Number(occurrence.amount),
           occurrence.currency,
-          { signed: true }
+          {
+            signed: true,
+          }
         )}{" "}
         prévu
       </span>
     </div>
     <div className="budget-occurrence__actions">
-      <button
+      <ActionButton
+        action="convert"
         type="button"
         className="monthly-event-button"
         disabled={disabled}
@@ -46,8 +51,9 @@ const OccurrenceItem = ({ occurrence, disabled, onRealize, onCancel }) => (
         )} en opération`}
       >
         Convertir en opération
-      </button>
-      <button
+      </ActionButton>
+      <ActionButton
+        action="cancel"
         type="button"
         className="monthly-event-button monthly-event-button--secondary"
         disabled={disabled}
@@ -57,7 +63,7 @@ const OccurrenceItem = ({ occurrence, disabled, onRealize, onCancel }) => (
         )}`}
       >
         Annuler
-      </button>
+      </ActionButton>
     </div>
   </li>
 );

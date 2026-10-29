@@ -7,6 +7,73 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-10-29
+
+### Added
+
+- The desktop navigation collapses to an icon rail; links keep their accessible names and a tooltip, and the choice persists per browser (#328).
+
+### Changed
+
+- Applied the approved Atelier layout across Web pages, navigation, surfaces, actions and charts (#328).
+- The calendar takes the full width with the month details below, and list type filters are pill chips with readable counts (#328).
+- Moved the month title and previous/next/today controls from the page header into a toolbar on the calendar card, next to its add action (#328).
+- Every delete or simulation confirmation now opens a modal alert dialog; Escape and the backdrop keep the item and focus returns to its trigger (#328).
+- The mobile quick add is an icon-only floating button instead of a reserved bottom row; it steps aside while scrolling down, turns into a close cross and anchors the add menu above it (#328).
+- Unified mutation confirmations and separated committed writes from failed display refreshes with read-only recovery (#328).
+- Added a sun/moon theme toggle to the navigation and the mobile header; the profile no longer holds the theme selector (#328).
+
+### Fixed
+
+- Fixed low-contrast text: overdue calendar cards, danger button hover in compact lists, dark-theme expense amounts, legacy orange form labels, the navigation scrollbar and public link focus rings (#328).
+- Bounded date filters on phones and kept the focused field visible above the software keyboard, while preserving shared forms, drafts and inline editing (#328).
+
+## [1.10.1] - 2026-10-29
+
+### Fixed
+
+- Fixed mobile fixed-budget creation with the shared operation popup and bounded date fields, preserving drafts, validation and retry behavior (#324).
+
+## [1.10.0] - 2026-10-28
+
+### Added
+
+- Added monthly and yearly envelope cards, explicit payment reconciliation and category spending trends, with dated edits to fixed expenses and income (#314).
+
+## [1.9.0] - 2026-10-27
+
+### Changed
+
+- Read complete month collections and persisted occurrence links to project calendar markers and common day details without changing financial calculations (#293).
+- Native calendar now reads complete month collections, displays simultaneous type indicators with a shared legend, and opens common day details with linked occurrence decisions and existing operation forms. Potential visibility is independent of financial simulation (#294).
+- Shared sage action buttons, compact forms and a reserved quick-add area clarified actions in both themes without covering financial content (#296).
+
+### Fixed
+
+- Kept event field labels, errors and budget-impact radios local to their form instance (#312).
+
+## [1.8.0] - 2026-10-26
+
+### Changed
+
+- Native shared action buttons now distinguish deletion with existing icons and themed danger styling. Floating add buttons gain a contrasting border and platform shadows; existing confirmations preserve cancellation focus (#297).
+
+### Fixed
+
+- Added a shared icon-capable category selector for operation, conversion and fixed-budget forms (#290).
+- Displayed existing personal category icons and fallbacks in shared native form choices with system theme colors (#291).
+- Kept expanded savings tables inside their scroll region instead of widening the page (#301).
+
+## [1.7.0] - 2026-10-25
+
+### Added
+
+- Added server-owned savings trajectory comparisons, reversible variable-expense assumptions and safety margin, coherent allocation details and accessible monthly alternatives (#284).
+
+### Changed
+
+- Displayed declared savings in a rounded gauge and added a selected-goal trajectory with the server estimate and monthly text alternatives (#282).
+
 ## [1.6.0] - 2026-10-24
 
 ### Added
@@ -178,7 +245,13 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Replaced dynamic SSH host discovery with a pre-verified `known_hosts` file.
 - Isolated SSH credentials from validation and build jobs.
 
-[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.6.0...develop
+[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.11.0...develop
+[1.11.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.10.1...v1.11.0
+[1.10.1]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.10.0...v1.10.1
+[1.10.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.9.0...v1.10.0
+[1.9.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.8.0...v1.9.0
+[1.8.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.7.0...v1.8.0
+[1.7.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.6.0...v1.7.0
 [1.6.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.5.0...v1.6.0
 [1.5.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.4.0...v1.5.0
 [1.4.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.3.0...v1.4.0

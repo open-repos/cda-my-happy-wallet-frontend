@@ -5,6 +5,13 @@ import { MemoryRouter } from "react-router-dom";
 import ListeOperations from "../../src/js/pages/ListeOperations";
 import { useOneOffOperations } from "../../src/js/hooks/useOneOffOperations";
 import { captureLiveRegions, expectAnnouncedIn } from "./liveRegions";
+vi.mock("../../src/js/services/envelopesService", async (original) => ({
+  ...(await original()),
+  envelopesService: {
+    allOccurrences: async () => [],
+    link: async (operationId) => ({ operationId, occurrenceId: null }),
+  },
+}));
 
 vi.mock("../../src/js/hooks/useOneOffOperations", () => ({
   useOneOffOperations: vi.fn(),
@@ -132,9 +139,8 @@ describe("ListeOperations", () => {
     fireEvent.change(screen.getByLabelText(/^Date/), {
       target: { value: "2026-08-18" },
     });
-    fireEvent.change(screen.getByLabelText(/^Catégorie/), {
-      target: { value: "2" },
-    });
+    fireEvent.click(screen.getByRole("combobox", { name: "Catégorie" }));
+    fireEvent.click(screen.getByRole("option", { name: "Alimentation" }));
     fireEvent.click(screen.getByLabelText("Entrée"));
     fireEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
     expect(actions.createOperation).not.toHaveBeenCalled();

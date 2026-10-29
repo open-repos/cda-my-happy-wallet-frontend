@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { prepareProtectedPage } from "./fixtures.mjs";
 import { prepareSimulationPage } from "../e2e/simulationFixture.mjs";
+import { prepareFullContentCapture } from "./fullContentCapture.mjs";
 
 const definitions = [
   { name: "login", path: "/login", ready: ".login_form" },
@@ -33,7 +34,7 @@ const definitions = [
     ready: ".analytics-chart",
     chart: true,
   },
-  { name: "profile", path: "/profil", ready: ".theme-selector" },
+  { name: "profile", path: "/profil", ready: ".profil-container h1" },
 ];
 
 async function ready(page, theme, authenticated = true, simulation = false) {
@@ -144,7 +145,7 @@ for (const theme of ["light", "dark"]) {
         // Interacting below the fold scrolls the page. Keep fixed navigation
         // at the top of the full-page reference, as on the other screens.
         await page.evaluate(() => window.scrollTo(0, 0));
-      } else if (["calendar", "budget-forecast"].includes(definition.name)) {
+      } else if (definition.name === "calendar") {
         await expect(
           page.getByText("Votre simulation est vide.", { exact: true })
         ).toBeVisible();
@@ -161,10 +162,14 @@ for (const theme of ["light", "dark"]) {
         await expect(page.locator("main canvas").first()).toBeVisible();
         await stableCharts(page);
       }
-      if (definition.name === "events-goals")
+      if (definition.name === "events-goals") {
         await expect(
           page.getByRole("article", { name: "Vélo", exact: true })
         ).toBeVisible();
+        // The taller trajectory can scroll the capacity readiness assertion.
+        // Full-page references must keep the fixed navigation at the page top.
+        await page.evaluate(() => window.scrollTo(0, 0));
+      }
       if (definition.name === "operations") {
         const ratio = await page
           .locator(".compact-money-table tbody th")
@@ -209,6 +214,7 @@ for (const theme of ["light", "dark"]) {
         }
       }
       await layout(page);
+      await prepareFullContentCapture(page);
       await expect(page).toHaveScreenshot(`${definition.name}-${theme}.png`, {
         fullPage: true,
       });
@@ -262,6 +268,7 @@ for (const theme of ["light", "dark"]) {
             page.getByRole("button", { name: "Réessayer" })
           ).toBeVisible();
         await layout(page);
+        await prepareFullContentCapture(page);
         await expect(page).toHaveScreenshot(
           `operations-${state}-${theme}.png`,
           { fullPage: true }

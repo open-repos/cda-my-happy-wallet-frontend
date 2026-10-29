@@ -1,0 +1,75 @@
+.mutation-notifications {
+  position: relative;
+  z-index: var(--ds-z-index-toast);
+}
+.mutation-notifications[hidden] {
+  display: none;
+}
+.mutation-notifications .Toastify__toast-container {
+  z-index: var(--ds-z-index-toast);
+  top: calc(
+    var(--quick-add-viewport-top, 0px) +
+      max(1rem, env(safe-area-inset-top, 0px))
+  );
+  right: max(1rem, env(safe-area-inset-right, 0px));
+  max-inline-size: calc(100vw - 2rem);
+  padding: 0;
+  max-block-size: calc(
+    var(--quick-add-viewport-height, 100dvh) - 8rem -
+      env(safe-area-inset-bottom, 0px)
+  );
+  overflow-y: auto;
+}
+.mutation-notifications .Toastify__toast {
+  background: var(--ds-color-background-surface);
+  color: var(--ds-color-text-primary);
+  border: 1px solid var(--ds-color-border-subtle);
+  border-radius: var(--ds-primitive-radius-md);
+  box-shadow: var(--ds-shadow-overlay);
+  font: var(--ds-typography-body-size) / var(--ds-typography-body-line-height)
+    var(--ds-typography-body-family);
+}
+.mutation-notifications .Toastify__toast-body {
+  overflow-wrap: anywhere;
+  min-inline-size: 0;
+}
+.mutation-notifications .Toastify__toast-icon svg {
+  fill: var(--ds-color-text-secondary);
+}
+.mutation-notifications .Toastify__close-button {
+  flex: 0 0 44px;
+  min-block-size: 44px;
+  inline-size: 44px;
+  color: var(--ds-color-text-primary);
+  opacity: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.mutation-notifications .Toastify__close-button:focus-visible {
+  outline: var(--ds-border-width-focus) solid var(--ds-color-focus-ring);
+  outline-offset: 0;
+}
+.mutation-recovery {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ds-primitive-space-3);
+  max-inline-size: var(--atelier-content-width);
+  margin: 0 auto var(--ds-primitive-space-4);
+  padding: var(--ds-primitive-space-4);
+  border-radius: var(--ds-radius-control);
+  background: var(--ds-color-status-warning-surface);
+  color: var(--ds-color-status-warning-text);
+}
+.mutation-recovery p {
+  flex: 1 1 22rem;
+}
+@media (max-width: 767px) {
+  .mutation-notifications .Toastify__toast-container {
+    left: max(1rem, env(safe-area-inset-left, 0px));
+    right: max(1rem, env(safe-area-inset-right, 0px));
+    inline-size: auto;
+    max-inline-size: none;
+  }
+}

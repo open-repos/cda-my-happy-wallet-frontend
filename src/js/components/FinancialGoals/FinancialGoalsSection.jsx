@@ -1,3 +1,5 @@
+import { MutationMessage } from "../Notifications/MutationMessage";
+import { ActionButton } from "../Actions/ActionButton";
 import React, { useEffect, useRef, useState } from "react";
 import addIcon from "../../../assets/icons/add.svg";
 import { useAnnouncesLoading } from "../../hooks/useAnnouncesLoading";
@@ -14,9 +16,23 @@ export const FinancialGoalsSection = ({ initialGoalId = null }) => {
   const announcesLoading = useAnnouncesLoading(state.status, "goals");
   const [edited, setEdited] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const selectedGoal =
+    state.goals.find((goal) => goal.id === selectedId) ?? state.goals[0];
   const opener = useRef(null);
   const heading = useRef(null);
   const openedGoal = useRef(null);
+  const beforeCreate = useRef(null);
+  useEffect(() => {
+    if (!beforeCreate.current || state.status !== "success") return;
+    const added = state.goals.find(
+      (goal) => !beforeCreate.current.has(goal.id)
+    );
+    if (added) {
+      setSelectedId(added.id);
+      beforeCreate.current = null;
+    }
+  }, [state.goals, state.status]);
   useEffect(() => {
     if (
       state.status !== "success" ||
@@ -26,6 +42,7 @@ export const FinancialGoalsSection = ({ initialGoalId = null }) => {
       return;
     const goal = state.goals.find((goal) => goal.id === initialGoalId);
     if (goal) {
+      setSelectedId(goal.id);
       openedGoal.current = initialGoalId;
       setEdited(goal);
       setFormOpen(true);
@@ -34,6 +51,7 @@ export const FinancialGoalsSection = ({ initialGoalId = null }) => {
   // Le focus revient au bouton d'origine à la fermeture du formulaire; il
   // est pris sur l'événement car Safari ne focalise pas un bouton cliqué.
   const open = (goal, trigger) => {
+    if (goal) setSelectedId(goal.id);
     opener.current = trigger;
     setEdited(goal);
     setFormOpen(true);
@@ -49,10 +67,13 @@ export const FinancialGoalsSection = ({ initialGoalId = null }) => {
     }
   };
   const save = async (goal) => {
+    if (!edited)
+      beforeCreate.current = new Set(state.goals.map(({ id }) => id));
     const succeeded = edited
       ? await state.updateGoal(edited.id, goal)
       : await state.createGoal(goal);
     if (succeeded) close();
+    else beforeCreate.current = null;
   };
   const remove = async () => {
     if (edited && (await state.deleteGoal(edited.id))) close();
@@ -69,17 +90,18 @@ export const FinancialGoalsSection = ({ initialGoalId = null }) => {
           <p>Suivez ce que vous mettez de côté et la date visée.</p>
         </div>
         {state.status === "success" && state.goals.length > 0 && (
-          <button
+          <ActionButton
+            action="add"
             type="button"
             className="monthly-event-button"
             onClick={(event) => open(null, event.currentTarget)}
           >
-            <img src={addIcon} alt="" aria-hidden="true" />
             Ajouter un objectif
-          </button>
+          </ActionButton>
         )}
       </header>
-      <LiveMessage
+      <MutationMessage
+        success={state.mutationStatus === "success"}
         message={state.message}
         isError={state.status === "error" || state.mutationStatus === "error"}
         className="monthly-events-message"
@@ -127,10 +149,29 @@ export const FinancialGoalsSection = ({ initialGoalId = null }) => {
         </div>
       )}
       {state.status === "success" && state.goals.length > 0 && (
-        <div className="goals-grid">
-          {state.goals.map((goal) => (
-            <FinancialGoalCard key={goal.id} goal={goal} onEdit={open} />
-          ))}
+        <div className="goal-explorer">
+          {state.goals.length > 1 && (
+            <label className="goal-explorer__choice" htmlFor="explored-goal">
+              Objectif à explorer
+              <select
+                id="explored-goal"
+                value={selectedGoal.id}
+                onChange={(event) => setSelectedId(Number(event.target.value))}
+              >
+                {state.goals.map((goal) => (
+                  <option key={goal.id} value={goal.id}>
+                    {goal.title} · {goal.currency}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <FinancialGoalCard
+            key={selectedGoal.id}
+            goal={selectedGoal}
+            onEdit={open}
+            onRefresh={state.retry}
+          />
         </div>
       )}
       <SavingsCapacitySection

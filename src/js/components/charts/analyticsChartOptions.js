@@ -131,8 +131,10 @@ const seriesOf = (data, metric, chart, tokens, ranks) => {
         name: metricLabel(metric),
         type: chart === "bar" ? "bar" : "line",
         ...(chart === "area" ? { areaStyle: { opacity: 0.25 } } : {}),
-        itemStyle: { color: metricColor(metric, tokens) },
-        lineStyle: { color: metricColor(metric, tokens) },
+        itemStyle: { color: metricColor(metric, tokens), borderRadius: 6 },
+        lineStyle: { color: metricColor(metric, tokens), cap: "round" },
+        smooth: 0.2,
+        smoothMonotone: "x",
         data: data.buckets.map((bucket, index) => ({
           value: valueOf(bucket, metric),
           ...(barColors ? { itemStyle: { color: barColors[index] } } : {}),
@@ -160,7 +162,14 @@ const seriesOf = (data, metric, chart, tokens, ranks) => {
       type: chart === "stacked" ? "bar" : "line",
       ...(chart === "line" ? {} : { stack: "total" }),
       ...(chart === "area" ? { areaStyle: { opacity: 0.35 } } : {}),
-      ...(color ? { itemStyle: { color }, lineStyle: { color } } : {}),
+      ...(color
+        ? {
+            itemStyle: { color, borderRadius: 6 },
+            lineStyle: { color, cap: "round" },
+          }
+        : {}),
+      smooth: 0.2,
+      smoothMonotone: "x",
       data: data.buckets.map((bucket) => valueOf(bucket.series[index], metric)),
     };
   });
@@ -189,7 +198,7 @@ export const analyticsChartOption = (
       color: tokens.muted,
       formatter: (value) => compact.format(value),
     },
-    splitLine: { lineStyle: { color: tokens.grid } },
+    splitLine: { show: false },
   };
   const categoryAxis = {
     type: "category",

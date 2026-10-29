@@ -1,3 +1,4 @@
+import { AcknowledgedWriteError } from "../../src/js/utils/acknowledgedWrite";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   categoryErrorCode,
@@ -31,7 +32,7 @@ describe("categoryService", () => {
     });
     await expect(
       categoryService.create({ name: "Loisirs", color: null })
-    ).rejects.toThrow("Invalid category response");
+    ).rejects.toThrow(AcknowledgedWriteError);
   });
   it("creates a category and validates the returned contract", async () => {
     apiPrivate.post.mockResolvedValue({ data: { data: saved } });

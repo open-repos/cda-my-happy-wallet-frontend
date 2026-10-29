@@ -1,3 +1,11 @@
+import { listCalendarResolutions } from "../../src/js/services/calendarResolutionsService";
+import { monthlyEventsService } from "../../src/js/services/monthlyEventsService";
+vi.mock("../../src/js/services/calendarResolutionsService", () => ({
+  listCalendarResolutions: vi.fn(),
+}));
+vi.mock("../../src/js/services/monthlyEventsService", () => ({
+  monthlyEventsService: { listOccurrences: vi.fn() },
+}));
 import React from "react";
 import { act, cleanup, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -19,7 +27,7 @@ vi.mock("../../src/js/services/budgetService", async (importOriginal) => ({
 }));
 vi.mock("../../src/js/services/oneOffOperationsService", () => ({
   oneOffOperationsService: {
-    listOperations: vi.fn(),
+    listAllOperations: vi.fn(),
     listAllCategories: vi.fn(),
     createOperation: vi.fn(),
   },
@@ -27,7 +35,15 @@ vi.mock("../../src/js/services/oneOffOperationsService", () => ({
 
 const occurrence = { eventId: 4, occurrenceDate: "2026-02-12" };
 const summary = { realRemaining: "1200.00", revision: 1 };
-const row = { id: 7, title: "Courses" };
+const row = {
+  id: 7,
+  title: "Courses",
+  operationDate: "2026-02-12",
+  amount: "40.00",
+  currency: "EUR",
+  type: "DEPENSE",
+  categoryId: 2,
+};
 const category = { id: 2, name: "Alimentation" };
 const page = { data: [row], meta: { hasNext: true, nextCursor: "v1.next" } };
 const apiError = (code) => ({
@@ -59,7 +75,9 @@ beforeEach(() => {
   budgetService.getSummary.mockResolvedValue(summary);
   budgetService.listPending.mockResolvedValue([occurrence]);
   operations.listAllCategories.mockResolvedValue([category]);
-  operations.listOperations.mockResolvedValue(page);
+  operations.listAllOperations.mockResolvedValue([row]);
+  listCalendarResolutions.mockResolvedValue([]);
+  monthlyEventsService.listOccurrences.mockResolvedValue([]);
 });
 afterEach(cleanup);
 
@@ -85,10 +103,9 @@ describe("useBudgetCalendar", () => {
     expect(budgetService.listPending).toHaveBeenCalledExactlyOnceWith(
       "2026-02-28"
     );
-    expect(operations.listOperations).toHaveBeenCalledExactlyOnceWith(null, {
+    expect(operations.listAllOperations).toHaveBeenCalledExactlyOnceWith({
       from: "2026-02-01",
       to: "2026-02-28",
-      currency: "EUR",
     });
     expect(result.current.summary).toEqual(summary);
     expect(result.current.pending).toEqual([occurrence]);
@@ -100,13 +117,7 @@ describe("useBudgetCalendar", () => {
     const result = mount();
     await loaded(result);
     result.select("2026-02", "2026-02-12");
-    await waitFor(() =>
-      expect(operations.listOperations).toHaveBeenLastCalledWith(null, {
-        from: "2026-02-12",
-        to: "2026-02-12",
-        currency: "EUR",
-      })
-    );
+    expect(operations.listAllOperations).toHaveBeenCalledTimes(1);
     expect(budgetService.getSummary).toHaveBeenCalledTimes(1);
     result.select("2026-03", null);
     await waitFor(() =>
@@ -116,10 +127,9 @@ describe("useBudgetCalendar", () => {
       )
     );
     expect(budgetService.listPending).toHaveBeenLastCalledWith("2026-03-31");
-    expect(operations.listOperations).toHaveBeenLastCalledWith(null, {
+    expect(operations.listAllOperations).toHaveBeenLastCalledWith({
       from: "2026-03-01",
       to: "2026-03-31",
-      currency: "EUR",
     });
     await loaded(result);
   });
@@ -146,11 +156,11 @@ describe("useBudgetCalendar", () => {
     await act(async () => result.current.retry());
     await loaded(result);
     expect(budgetService.getSummary).toHaveBeenCalledTimes(2);
-    expect(operations.listOperations).toHaveBeenCalledTimes(2);
+    expect(operations.listAllOperations).toHaveBeenCalledTimes(2);
   });
 
   it("keeps the summary usable after an operations failure", async () => {
-    operations.listOperations.mockRejectedValueOnce(new Error("offline"));
+    operations.listAllOperations.mockRejectedValueOnce(new Error("offline"));
     const result = mount();
     await waitFor(() => expect(result.current.operationsStatus).toBe("error"));
     await waitFor(() => expect(result.current.summaryStatus).toBe("success"));
@@ -159,40 +169,33 @@ describe("useBudgetCalendar", () => {
     await loaded(result);
   });
 
-  it("preserves the day filter on pagination and stops at the last page", async () => {
+  it("does not expose partial pages and clears content on a failed month", async () => {
     const result = mount();
     await loaded(result);
-    result.select("2026-02", "2026-02-12");
+    expect(result.current.operationsMeta.hasNext).toBe(false);
+    operations.listAllOperations.mockRejectedValueOnce(
+      new Error("last page offline")
+    );
+    result.select("2026-03", null);
+    await waitFor(() => expect(result.current.operationsStatus).toBe("error"));
+    expect(result.current.content).toEqual([]);
+    expect(result.current.operations).toEqual([]);
+    await act(() => result.current.retry());
     await loaded(result);
-    const next = { id: 8, title: "Prime" };
-    operations.listOperations.mockResolvedValueOnce({
-      data: [next],
-      meta: { hasNext: false, nextCursor: null },
-    });
-    await act(async () => result.current.loadMoreOperations());
-    expect(operations.listOperations).toHaveBeenLastCalledWith("v1.next", {
-      from: "2026-02-12",
-      to: "2026-02-12",
-      currency: "EUR",
-    });
-    expect(result.current.operations).toEqual([row, next]);
-    const calls = operations.listOperations.mock.calls.length;
-    await act(async () => result.current.loadMoreOperations());
-    expect(operations.listOperations).toHaveBeenCalledTimes(calls);
   });
 
-  it("keeps existing operations and the cursor after a page failure", async () => {
+  it("discards a late result from the previous month", async () => {
+    let resolveOld;
+    operations.listAllOperations.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveOld = resolve;
+      })
+    );
     const result = mount();
+    result.select("2026-03", null);
     await loaded(result);
-    operations.listOperations.mockRejectedValueOnce(new Error("offline"));
-    await act(async () => result.current.loadMoreOperations());
-    expect(result.current.operationsStatus).toBe("success");
+    await act(() => resolveOld([{ ...row, id: 99 }]));
     expect(result.current.operations).toEqual([row]);
-    expect(result.current.operationsMeta).toEqual(page.meta);
-    expect(result.current.message).toEqual({
-      tone: "error",
-      text: "La suite des opérations n’a pas pu être chargée.",
-    });
   });
 
   it.each([
@@ -230,7 +233,7 @@ describe("useBudgetCalendar", () => {
       );
       expect(gateway).toHaveBeenCalledExactlyOnceWith(...expected);
       expect(budgetService.getSummary).toHaveBeenCalledTimes(2);
-      expect(operations.listOperations).toHaveBeenCalledTimes(2);
+      expect(operations.listAllOperations).toHaveBeenCalledTimes(2);
       expect(result.current.summary).toEqual(revised);
       expect(result.current.pending).toEqual([]);
       expect(result.current.mutationStatus).toBe("success");
@@ -267,7 +270,7 @@ describe("useBudgetCalendar", () => {
       expect(result.current.mutationStatus).toBe("error");
       expect(result.current.message).toEqual({ tone: "error", text });
       expect(budgetService.getSummary).toHaveBeenCalledTimes(loads);
-      expect(operations.listOperations).toHaveBeenCalledTimes(1);
+      expect(operations.listAllOperations).toHaveBeenCalledTimes(1);
       if (code === "OCCURRENCE_ALREADY_RESOLVED")
         expect(result.current.pending).toEqual([]);
     }

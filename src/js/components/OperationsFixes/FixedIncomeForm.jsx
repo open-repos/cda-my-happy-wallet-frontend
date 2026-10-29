@@ -1,4 +1,7 @@
+import { FormActions } from "../Actions/FormActions";
+import { ActionButton } from "../Actions/ActionButton";
 import { FixedCategorySelect } from "./FixedCategorySelect";
+import { FixedEnvelopeFields } from "./FixedEnvelopeFields";
 import {
   fixedCategoryBody,
   validateFixedCategory,
@@ -11,7 +14,6 @@ import {
 import React, { useRef, useState } from "react";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import { LiveMessage } from "../LiveMessage";
-
 export const FixedIncomeForm = ({
   income,
   busy,
@@ -26,7 +28,11 @@ export const FixedIncomeForm = ({
     () =>
       draft ?? {
         ...incomeInitialValues(income),
-        ...(categories ? { categoryId: String(income?.categoryId ?? "") } : {}),
+        ...(categories
+          ? {
+              categoryId: String(income?.categoryId ?? ""),
+            }
+          : {}),
       }
   );
   const [errors, setErrors] = useState({});
@@ -35,10 +41,16 @@ export const FixedIncomeForm = ({
   const formRef = useRef(null);
   useFormFocus(titleRef);
   const change = ({ target: { name, value } }) => {
-    const next = { ...values, [name]: value };
+    const next = {
+      ...values,
+      [name]: value,
+    };
     setValues(next);
     onDraftChange?.(next);
-    setErrors((current) => ({ ...current, [name]: null }));
+    setErrors((current) => ({
+      ...current,
+      [name]: null,
+    }));
   };
   const submit = async (event) => {
     event.preventDefault();
@@ -51,7 +63,12 @@ export const FixedIncomeForm = ({
       formRef.current.elements.namedItem(Object.keys(next)[0])?.focus();
       return;
     }
-    if (await onSave({ ...incomeBody(values), ...fixedCategoryBody(values) }))
+    if (
+      await onSave({
+        ...incomeBody(values),
+        ...fixedCategoryBody(values),
+      })
+    )
       onClose();
   };
   return (
@@ -143,20 +160,35 @@ export const FixedIncomeForm = ({
           {errors.devise && (
             <span id="income-devise-error">{errors.devise}</span>
           )}
+          <FixedEnvelopeFields
+            values={values}
+            onChange={change}
+            income
+            editing={Boolean(income)}
+            disabled={busy}
+            error={errors.effectiveMonth}
+          />
         </fieldset>
-        <div className="fixed-charge-actions">
-          <button
+        <FormActions className="fixed-charge-actions">
+          <ActionButton
+            action="cancel"
             className="one-off-button one-off-button--secondary"
             type="button"
             disabled={busy}
             onClick={onClose}
           >
             Annuler
-          </button>
-          <button className="one-off-button" type="submit" disabled={busy}>
+          </ActionButton>
+          <ActionButton
+            action="save"
+            className="one-off-button"
+            type="submit"
+            disabled={busy}
+            busy={busy}
+          >
             {busy ? "Enregistrement…" : "Enregistrer l’entrée"}
-          </button>
-        </div>
+          </ActionButton>
+        </FormActions>
       </form>
     </section>
   );

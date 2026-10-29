@@ -1,3 +1,8 @@
+import { MutationMessage } from "../Notifications/MutationMessage";
+import { FormHeader } from "../Forms/FormHeader";
+import { ConfirmDialog } from "../Forms/ConfirmDialog";
+import { FormDialog } from "../Forms/FormDialog";
+import { ActionButton } from "../Actions/ActionButton";
 import { CompactMoneyList } from "../CompactOperations/CompactMoneyList";
 import { useSimulation } from "../Simulation/SimulationContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -21,9 +26,10 @@ import { LiveMessage } from "../LiveMessage";
 import { FixedBudgetSummary } from "./FixedBudgetSummary";
 import { FixedChargeForm } from "./FixedChargeForm";
 import { FixedIncomeForm } from "./FixedIncomeForm";
+import { FixedMonthPreview } from "./FixedMonthPreview";
+import "../../../css/Envelopes.css";
 import "../../../css/FixedCharges.css";
 import "../../../css/FixedOperations.css";
-
 const money = (value, currency) =>
   value == null || !/^\d+(?:\.\d+)?$/.test(String(value))
     ? "Indisponible"
@@ -32,7 +38,6 @@ const share = (row) =>
   row.pourcentagePersonnel == null
     ? "Sans objet"
     : `${String(row.pourcentagePersonnel).replace(".", ",")} %`;
-
 export const FixedOperations = () => {
   const charges = useFixedCharges();
   const incomes = useFixedIncomes();
@@ -91,7 +96,10 @@ export const FixedOperations = () => {
     hadAction.current = Boolean(editor || deleting);
   }, [editor, deleting, charges.status, incomes.status]);
   const changeSort = (field, direction) => {
-    setSort({ field, direction });
+    setSort({
+      field,
+      direction,
+    });
     setSortMessage(
       `Liste triée par ${
         FIXED_SORT_FIELDS.find((item) => item.value === field).label
@@ -105,11 +113,15 @@ export const FixedOperations = () => {
       row?.kind ?? (charges.status === "success" ? "charge" : "income");
     actionKind.current = kind;
     setDrafts({});
-    setEditor({ kind, row });
+    setEditor({
+      kind,
+      row,
+    });
   };
   const actions = (row) => (
     <div className="fixed-operations__row-actions">
-      <button
+      <ActionButton
+        action="edit"
         type="button"
         className="one-off-button one-off-button--secondary fixed-operations__icon-action"
         disabled={busy || Boolean(editor) || Boolean(deleting)}
@@ -117,9 +129,10 @@ export const FixedOperations = () => {
         id={`fixed-edit-${row.kind}-${row.idOperationFixe}`}
         onClick={(event) => openEditor(event, row)}
       >
-        <FontAwesomeIcon icon={faPen} aria-hidden="true" />
-      </button>
-      <button
+        Modifier
+      </ActionButton>
+      <ActionButton
+        action="delete"
         type="button"
         className="one-off-button one-off-button--secondary fixed-operations__icon-action"
         disabled={busy || Boolean(editor) || Boolean(deleting)}
@@ -132,8 +145,8 @@ export const FixedOperations = () => {
           setDeleting(row);
         }}
       >
-        <FontAwesomeIcon icon={faTrash} aria-hidden="true" />
-      </button>
+        Supprimer
+      </ActionButton>
     </div>
   );
   const inlineEditor = (row) => (
@@ -148,7 +161,10 @@ export const FixedOperations = () => {
       draft={drafts.inline}
       onDraftChange={(draft) => {
         collection(row.kind).clearCategoryError();
-        setDrafts((current) => ({ ...current, inline: draft }));
+        setDrafts((current) => ({
+          ...current,
+          inline: draft,
+        }));
       }}
       onSave={(body) => collection(row.kind).save(row, body)}
       onClose={() => setEditor(null)}
@@ -162,6 +178,16 @@ export const FixedOperations = () => {
       </dd>
       <dt>Type</dt>
       <dd>{fixedKindLabel(row.kind)}</dd>
+      {row.kind !== "income" && (
+        <>
+          <dt>Enveloppe budgétaire mensuelle</dt>
+          <dd>
+            {row.isBudgetEnvelope
+              ? "Oui — rattachement des dépenses disponible"
+              : "Non"}
+          </dd>
+        </>
+      )}
       <dt>Total par échéance</dt>
       <dd>{money(row.montant, row.devise)}</dd>
       <dt>Devise</dt>
@@ -183,7 +209,8 @@ export const FixedOperations = () => {
     >
       <div className="fixed-operations__heading">
         <h1>Charges et entrées fixes</h1>
-        <button
+        <ActionButton
+          action="add"
           ref={addRef}
           id="fixed-add"
           type="button"
@@ -197,22 +224,20 @@ export const FixedOperations = () => {
           onClick={(event) => openEditor(event)}
         >
           Ajouter
-        </button>
+        </ActionButton>
       </div>
-      <LiveMessage
+      <MutationMessage
+        success={charges.mutationStatus === "success"}
         message={charges.message.text}
         isError={charges.message.error}
       />
-      <LiveMessage
+      <MutationMessage
+        success={incomes.mutationStatus === "success"}
         message={incomes.message.text}
         isError={incomes.message.error}
       />
       <LiveMessage visible={false} message={sortMessage} />
-      <div
-        className={`fixed-operations__work${
-          editor && !editor.row ? " fixed-operations__work--editing" : ""
-        }`}
-      >
+      <div className="fixed-operations__work">
         <div className="fixed-operations__overview" hidden={false}>
           <FixedBudgetSummary overview />
           <div className="fixed-operations__heading">
@@ -328,21 +353,32 @@ export const FixedOperations = () => {
           )}
           <p className="fixed-operations__help">
             Les charges fixes sont réparties chaque mois selon votre part
-            personnelle. Ne saisissez pas aussi la même dépense dans les
-            événements ou les opérations : elle serait comptée deux fois. Aucun
-            événement ni réserve n’est créé automatiquement.
+            personnelle. Pour une charge mensuelle marquée comme enveloppe,
+            saisissez vos dépenses réelles en les rattachant à cette enveloppe :
+            le rapprochement évite leur double comptabilisation. Les charges
+            ordinaires et les entrées restent exclues du rapprochement ; évitez
+            de les dupliquer dans les opérations.
           </p>
+          <FixedMonthPreview />
         </div>
         {editor && !editor.row && (
-          <section
-            className="fixed-operations__editor"
-            aria-labelledby="fixed-editor-title"
+          <FormDialog
+            labelledBy="fixed-editor-title"
+            busy={busy}
+            onClose={() => setEditor(null)}
           >
-            <h2 id="fixed-editor-title">
-              {editor.row
-                ? "Modifier un élément fixe"
-                : "Ajouter un élément fixe"}
-            </h2>
+            <FormHeader
+              id="fixed-editor-title"
+              busy={busy}
+              onClose={() => setEditor(null)}
+            >
+              Ajouter un élément fixe
+            </FormHeader>
+            <MutationMessage
+              success={collection(editor.kind).mutationStatus === "success"}
+              message={collection(editor.kind).message.text}
+              isError={collection(editor.kind).message.error}
+            />
             <fieldset
               className="fixed-operations__kind"
               disabled={busy || Boolean(editor.row)}
@@ -361,7 +397,10 @@ export const FixedOperations = () => {
                     disabled={collection(kind).status !== "success"}
                     onChange={() => {
                       actionKind.current = kind;
-                      setEditor({ ...editor, kind });
+                      setEditor({
+                        ...editor,
+                        kind,
+                      });
                     }}
                   />
                   {label}
@@ -377,7 +416,10 @@ export const FixedOperations = () => {
                 draft={drafts.charge}
                 onDraftChange={(draft) => {
                   charges.clearCategoryError();
-                  setDrafts((current) => ({ ...current, charge: draft }));
+                  setDrafts((current) => ({
+                    ...current,
+                    charge: draft,
+                  }));
                 }}
                 busy={busy}
                 onClose={() => setEditor(null)}
@@ -392,42 +434,53 @@ export const FixedOperations = () => {
                 draft={drafts.income}
                 onDraftChange={(draft) => {
                   incomes.clearCategoryError();
-                  setDrafts((current) => ({ ...current, income: draft }));
+                  setDrafts((current) => ({
+                    ...current,
+                    income: draft,
+                  }));
                 }}
                 busy={busy}
                 onClose={() => setEditor(null)}
                 onSave={(body) => incomes.save(editor.row, body)}
               />
             )}
-          </section>
+          </FormDialog>
         )}
       </div>
       {deleting && (
-        <fieldset className="fixed-charge-delete" disabled={busy}>
-          <legend>Supprimer « {deleting.titre} » ?</legend>
-          <p>
-            Cet élément sera retiré du budget courant. Les mois clôturés
-            conservent leur historique.
-          </p>
-          <button
-            ref={keepRef}
-            type="button"
-            className="one-off-button one-off-button--secondary"
-            onClick={() => setDeleting(null)}
-          >
-            Conserver cet élément
-          </button>
-          <button
-            type="button"
-            className="one-off-button one-off-button--danger"
-            onClick={async () => {
-              if (await collection(deleting.kind).remove(deleting))
-                setDeleting(null);
-            }}
-          >
-            Confirmer la suppression
-          </button>
-        </fieldset>
+        <ConfirmDialog
+          label={`Supprimer « ${deleting.titre} » ?`}
+          busy={busy}
+          onCancel={() => setDeleting(null)}
+        >
+          <fieldset className="fixed-charge-delete" disabled={busy}>
+            <legend>Supprimer « {deleting.titre} » ?</legend>
+            <p>
+              Cet élément sera retiré du budget courant. Les mois clôturés
+              conservent leur historique.
+            </p>
+            <button
+              ref={keepRef}
+              type="button"
+              className="one-off-button one-off-button--secondary"
+              onClick={() => setDeleting(null)}
+            >
+              Conserver cet élément
+            </button>
+            <ActionButton
+              action="confirm"
+              type="button"
+              className="one-off-button one-off-button--danger"
+              onClick={async () => {
+                if (await collection(deleting.kind).remove(deleting))
+                  setDeleting(null);
+              }}
+              variant="danger"
+            >
+              Confirmer la suppression
+            </ActionButton>
+          </fieldset>
+        </ConfirmDialog>
       )}
     </section>
   );

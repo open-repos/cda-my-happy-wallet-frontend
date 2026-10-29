@@ -365,6 +365,7 @@
 }
 .monthly-calendar__day:hover {
   background: var(--ds-color-action-secondary-background);
+  color: var(--ds-color-action-secondary-text);
 }
 .monthly-calendar__day--outside {
   color: var(--ds-color-text-muted);
@@ -460,25 +461,6 @@
   }
 }
 
-/* Bound native iOS date controls locally, without clipping. */
-.monthly-event-form,
-.monthly-event-form > label,
-.monthly-event-form fieldset {
-  min-width: 0;
-  max-width: 100%;
-}
-.monthly-event-form input:not([type="radio"]),
-.monthly-event-form select {
-  box-sizing: border-box;
-  min-width: 0;
-  max-width: 100%;
-}
-.monthly-event-form input[type="date"] {
-  display: block;
-  inline-size: 100%;
-  min-inline-size: 0;
-  max-inline-size: 100%;
-}
 .monthly-event-form__amount {
   display: grid;
   min-width: 0;

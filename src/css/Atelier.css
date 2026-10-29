@@ -1,0 +1,572 @@
+/* Atelier composes the existing Web components and semantic Studio Sauge tokens. */
+:root {
+  --atelier-navigation-width: 14rem;
+  --atelier-content-width: 100rem;
+  --layout-sidebar-offset: var(--atelier-navigation-width);
+  --layout-page-padding: var(--ds-primitive-space-8);
+  --layout-top-offset: 0rem;
+}
+html,
+body {
+  background: var(--ds-color-background-canvas);
+  color: var(--ds-color-text-primary);
+}
+body {
+  text-align: left;
+}
+button {
+  font: inherit;
+}
+a {
+  color: var(--ds-color-text-secondary);
+}
+a:hover {
+  color: var(--ds-color-text-primary);
+}
+:focus-visible {
+  outline-offset: 2px;
+}
+.protected-layout__content {
+  min-inline-size: 0;
+  padding-block: var(--ds-primitive-space-6);
+  color: var(--ds-color-text-primary);
+}
+.protected-layout__content:focus-visible {
+  outline-color: var(--ds-color-focus-ring);
+}
+.protected-layout__content > main {
+  inline-size: 100%;
+  max-inline-size: var(--atelier-content-width);
+  min-inline-size: 0;
+  min-block-size: 0;
+  block-size: auto;
+  margin-inline: auto;
+  padding: 0 0 var(--ds-primitive-space-6);
+  gap: var(--ds-primitive-space-5);
+  color: var(--ds-color-text-primary);
+  text-align: left;
+  align-items: stretch;
+}
+.atelier-page-header,
+.protected-layout__content
+  :is(.monthly-events-header, .one-off-header, .analytics__header) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-primitive-space-4);
+  padding: 0;
+  background: transparent;
+  color: var(--ds-color-text-primary);
+  box-shadow: none;
+  border: 0;
+}
+.atelier-page-header h1,
+.protected-layout__content
+  :is(.monthly-events-header, .one-off-header, .analytics__header)
+  h1,
+.protected-layout__content .objectives-page-title {
+  color: var(--ds-color-text-primary);
+  font-size: var(--ds-primitive-font-size-2xl);
+  line-height: var(--ds-primitive-line-height-tight);
+}
+.atelier-page-header p,
+.protected-layout__content
+  :is(.monthly-events-header, .one-off-header)
+  p:not(.monthly-events-eyebrow):not(.one-off-eyebrow) {
+  color: var(--ds-color-text-secondary);
+  max-inline-size: 70ch;
+  margin-block-start: var(--ds-primitive-space-2);
+}
+.atelier-eyebrow,
+.protected-layout__content :is(.monthly-events-eyebrow, .one-off-eyebrow) {
+  color: var(--ds-color-text-secondary);
+  font-size: var(--ds-primitive-font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-block: 0 var(--ds-primitive-space-2);
+}
+.atelier-page-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-primitive-space-2);
+}
+.protected-layout__content
+  :is(.monthly-events-header, .one-off-header)
+  .action-button:focus-visible,
+.protected-layout__content
+  .one-off-header
+  :is(a, button, input, select):focus-visible {
+  outline-color: var(--ds-color-focus-ring);
+}
+.protected-layout__content
+  :is(.monthly-events-header, .one-off-header)
+  .action-button[data-variant="primary"] {
+  border-color: var(--web-action-border);
+}
+.protected-layout__content
+  :is(
+    .monthly-events-header,
+    .monthly-events-state,
+    .monthly-events-list,
+    .monthly-calendar-layout,
+    .goals-section,
+    .objectives-page-title,
+    .one-off-header,
+    .one-off-list-section,
+    .one-off-state,
+    .one-off-message,
+    .budget-forecast__panel,
+    .simulation-surface,
+    .savings-capacity,
+    .home-budget__cards,
+    .home-budget__remaining,
+    .fixed-operations
+  ) {
+  max-inline-size: 100%;
+}
+.protected-layout__content
+  :is(
+    .budget-forecast__panel,
+    .monthly-events-state,
+    .monthly-calendar,
+    .monthly-calendar-day,
+    .one-off-list-section,
+    .one-off-state,
+    .analytics__controls,
+    .analytics__result,
+    .budget-card,
+    .budget-summary--state,
+    .home-budget__remaining,
+    .home-budget__card,
+    .goal-card,
+    .savings-capacity,
+    .envelope-section,
+    .fixed-charges,
+    .fixed-budget-summary
+  ) {
+  border: var(--ds-border-width-default) solid var(--ds-color-border-subtle);
+  border-radius: var(--ds-primitive-radius-lg);
+  box-shadow: none;
+  color: var(--ds-color-text-primary);
+}
+.protected-layout__content
+  :is(
+    .budget-forecast__panel,
+    .one-off-list-section,
+    .analytics__controls,
+    .analytics__result,
+    .budget-card,
+    .home-budget__remaining,
+    .home-budget__card,
+    .goal-card,
+    .savings-capacity,
+    .envelope-section,
+    .fixed-charges,
+    .fixed-budget-summary
+  ) {
+  padding: var(--ds-primitive-space-5);
+}
+.protected-layout__content .simulation-surface {
+  margin: 0;
+  padding: var(--ds-primitive-space-4);
+  border: 1px solid var(--ds-color-border-subtle);
+  border-radius: var(--ds-primitive-radius-md);
+  box-shadow: none;
+  gap: var(--ds-primitive-space-3);
+}
+.protected-layout__content .simulation-surface > h2 {
+  font-size: var(--ds-primitive-font-size-md);
+}
+.protected-layout__content .simulation-toggle p {
+  font-size: var(--ds-primitive-font-size-sm);
+}
+.atelier-home {
+  display: flex;
+  flex-direction: column;
+}
+.atelier-home .home-budget {
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--ds-primitive-space-4);
+  align-items: stretch;
+  text-align: left;
+}
+.atelier-home .home-budget__periods {
+  justify-self: start;
+}
+.atelier-home .home-budget__illustration {
+  display: none;
+}
+.atelier-home .home-budget__cards {
+  inline-size: 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.atelier-home .home-budget__remaining {
+  align-items: flex-start;
+  text-align: left;
+}
+.atelier-home .envelope-section {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.protected-layout__content .home-forecast-link {
+  color: var(--ds-color-text-secondary);
+  margin: 0;
+  min-block-size: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.protected-layout__content .home-forecast-link:focus-visible {
+  outline-color: var(--ds-color-focus-ring);
+}
+.protected-layout__content .savings-capacity {
+  margin: 0;
+}
+.protected-layout__content .goals-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+}
+.protected-layout__content .envelope-section {
+  margin-block: 0;
+}
+.protected-layout__content .envelope-controls {
+  gap: var(--ds-primitive-space-3);
+  align-items: end;
+}
+.protected-layout__content .envelope-field {
+  flex: 0 1 14rem;
+}
+.protected-layout__content .envelope-card {
+  padding: var(--ds-primitive-space-4);
+}
+.protected-layout__content .analytics__controls {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: var(--ds-primitive-space-3);
+}
+.protected-layout__content .profil-container {
+  align-items: stretch;
+  gap: var(--ds-primitive-space-5);
+}
+.protected-layout__content .goback {
+  text-align: left;
+  margin: 0;
+}
+.protected-layout__content .goback a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ds-primitive-space-2);
+  color: var(--ds-color-text-secondary);
+  min-block-size: 44px;
+}
+.protected-layout__content .fixed-operations__heading h1 {
+  font-size: var(--ds-primitive-font-size-2xl);
+}
+.protected-layout__content .fixed-operations__sort {
+  padding-block: var(--ds-primitive-space-2);
+}
+.protected-layout__content .budget-calendar__header {
+  align-items: flex-start;
+}
+.protected-layout__content .budget-calendar__navigation {
+  flex-wrap: wrap;
+  justify-content: center;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.protected-layout__content .budget-calendar__navigation h2 {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  font-size: var(--ds-primitive-font-size-lg);
+}
+.protected-layout__content .budget-calendar__navigation > button {
+  flex-shrink: 0;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+}
+.protected-layout__content :is(input[type="date"], input[type="month"]),
+.protected-layout__content
+  :is(.envelope-field, .budget-forecast__filters, .analytics-field)
+  select {
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  font-size: max(1rem, 1em);
+}
+.protected-layout__content :is(input[type="date"], input[type="month"]) {
+  appearance: none;
+  -webkit-appearance: none;
+  display: block;
+  text-align: start;
+}
+.protected-layout__content input::-webkit-datetime-edit {
+  min-inline-size: 0;
+  padding: 0;
+}
+.protected-layout__content input::-webkit-date-and-time-value {
+  min-inline-size: 0;
+  text-align: start;
+}
+.protected-layout__content
+  :is(.envelope-field, .budget-forecast__filters label, .analytics-field) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.atelier-forecast-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--ds-primitive-space-4);
+  padding: var(--ds-primitive-space-4);
+  background: var(--ds-color-background-surface);
+  border: 1px solid var(--ds-color-border-subtle);
+  border-radius: var(--ds-primitive-radius-md);
+}
+.atelier-forecast-toolbar .budget-forecast__filters {
+  margin: 0;
+  gap: var(--ds-primitive-space-3);
+  min-inline-size: 0;
+  flex: 1 1 22rem;
+}
+.atelier-forecast-toolbar .budget-forecast__filters label {
+  flex: 0 1 14rem;
+}
+.atelier-forecast-toolbar .simulation-toggle label {
+  min-block-size: 44px;
+  margin: 0;
+}
+.atelier-forecast-toolbar .simulation-toggle input {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+.atelier-forecast-toolbar .atelier-forecast-add {
+  margin-inline-start: auto;
+}
+.atelier-forecast-details {
+  border: 1px solid var(--ds-color-border-subtle);
+  border-radius: var(--ds-primitive-radius-md);
+  background: var(--ds-color-background-surface);
+  padding: var(--ds-primitive-space-3) var(--ds-primitive-space-4);
+}
+.atelier-forecast-details > summary {
+  min-block-size: 44px;
+  align-content: center;
+  color: var(--ds-color-text-secondary);
+  font-weight: var(--ds-primitive-font-weight-semibold);
+}
+.atelier-forecast-details .simulation-surface {
+  border: 0;
+  padding-inline: 0;
+}
+.atelier-forecast-context {
+  color: var(--ds-color-text-secondary);
+  font-size: var(--ds-primitive-font-size-sm);
+}
+/* Public account pages share the same surfaces without altering authentication. */
+:is(.login, .register, .forgotpassword, .newpassword) {
+  background: var(--ds-color-background-canvas);
+  color: var(--ds-color-text-primary);
+}
+:is(.login_form, .register_form, .forgotpassword_form, .newpassword_form) {
+  background: var(--ds-color-background-surface);
+  border: 1px solid var(--ds-color-border-subtle);
+  border-radius: var(--ds-primitive-radius-lg);
+  padding: var(--ds-primitive-space-6);
+  inline-size: min(100%, 36rem);
+}
+:is(.login_form, .register_form, .forgotpassword_form, .newpassword_form)
+  > .auth-field-label {
+  color: var(--ds-color-text-secondary);
+}
+:is(.login, .register, .forgotpassword, .newpassword) :is(a, a:hover) {
+  color: var(--ds-color-text-secondary);
+}
+:is(.login, .register, .forgotpassword, .newpassword) input:focus-visible,
+:is(.login, .register, .forgotpassword, .newpassword) a:focus-visible,
+:is(.login, .register, .forgotpassword, .newpassword)
+  .submit_btn:focus-visible {
+  outline-color: var(--ds-color-focus-ring);
+  outline-offset: 0;
+}
+:is(.login, .register, .forgotpassword, .newpassword) > img {
+  max-block-size: 7rem;
+}
+.atelier-not-found {
+  max-inline-size: 36rem;
+  margin: var(--ds-primitive-space-8) auto;
+  padding: var(--ds-primitive-space-6);
+  display: grid;
+  gap: var(--ds-primitive-space-4);
+  background: var(--ds-color-background-surface);
+  border: 1px solid var(--ds-color-border-subtle);
+  border-radius: var(--ds-primitive-radius-lg);
+}
+@media (min-width: 1400px) {
+  .atelier-home .home-budget {
+    grid-template-columns: minmax(18rem, 0.65fr) minmax(0, 1.35fr);
+  }
+  .atelier-home .home-budget__periods {
+    grid-column: 1 / -1;
+  }
+  .atelier-home .home-budget__cards {
+    align-self: stretch;
+  }
+}
+@media (max-width: 1199px) {
+  :root {
+    --layout-sidebar-offset: 0rem;
+    --layout-page-padding: var(--ds-primitive-space-6);
+    --layout-top-offset: calc(4rem + env(safe-area-inset-top, 0px));
+  }
+  .protected-layout__content {
+    padding-block-start: calc(
+      var(--layout-top-offset) + var(--ds-primitive-space-5)
+    );
+  }
+}
+@media (max-width: 767px) {
+  :root {
+    --layout-page-padding: var(--ds-primitive-space-4);
+  }
+  .protected-layout__content {
+    padding-inline-start: max(
+      var(--layout-page-padding),
+      env(safe-area-inset-left, 0px)
+    );
+    padding-inline-end: max(
+      var(--layout-page-padding),
+      env(safe-area-inset-right, 0px)
+    );
+  }
+  .protected-layout__content
+    :is(
+      .budget-forecast__panel,
+      .one-off-list-section,
+      .analytics__controls,
+      .analytics__result,
+      .budget-card,
+      .home-budget__remaining,
+      .home-budget__card,
+      .goal-card,
+      .savings-capacity,
+      .envelope-section,
+      .fixed-charges,
+      .fixed-budget-summary
+    ) {
+    padding: var(--ds-primitive-space-4);
+  }
+  .atelier-home .home-budget__cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .protected-layout__content .envelope-field {
+    flex: 1 1 auto;
+    inline-size: 100%;
+  }
+  .atelier-forecast-toolbar .budget-forecast__filters {
+    flex-direction: row;
+    flex-basis: 100%;
+  }
+  .atelier-forecast-toolbar .budget-forecast__filters label {
+    flex: 1 1 8rem;
+  }
+  .atelier-forecast-toolbar .atelier-forecast-add {
+    flex: 1 1 100%;
+    margin: 0;
+  }
+  .atelier-page-header h1,
+  .protected-layout__content
+    :is(.monthly-events-header, .one-off-header, .analytics__header)
+    h1,
+  .protected-layout__content .objectives-page-title {
+    font-size: var(--ds-primitive-font-size-xl);
+  }
+}
+
+/* Legacy page actions share the same visual roles as ActionButton. */
+.protected-layout__content
+  :is(.one-off-button, .monthly-event-button, .home-budget__button):not(
+    .action-button
+  ) {
+  min-block-size: 44px;
+  max-inline-size: 100%;
+  padding: var(--ds-primitive-space-2) var(--ds-primitive-space-3);
+  border: 1px solid var(--web-action-border);
+  border-radius: var(--web-action-radius);
+  background: var(--web-action-primary-background);
+  color: var(--web-action-primary-text);
+  font: inherit;
+  font-weight: var(--ds-typography-action-weight);
+  white-space: normal;
+}
+.protected-layout__content
+  :is(.one-off-button--secondary, .monthly-event-button--secondary):not(
+    .action-button
+  ) {
+  background: var(--web-action-secondary-background);
+  color: var(--web-action-secondary-text);
+}
+.protected-layout__content
+  :is(.one-off-button--danger, .monthly-event-button--danger):not(
+    .action-button
+  ) {
+  background: var(--ds-color-status-error-surface);
+  color: var(--ds-color-status-error-text);
+  border-color: var(--ds-color-status-error-text);
+}
+.protected-layout__content
+  :is(.one-off-button, .monthly-event-button, .home-budget__button):disabled {
+  background: var(--ds-color-action-disabled-background);
+  color: var(--ds-color-action-disabled-text);
+  border-color: var(--ds-color-action-disabled-text);
+}
+.protected-layout__content
+  :is(
+    .one-off-button,
+    .monthly-event-button,
+    .home-budget__button
+  ):focus-visible {
+  outline: var(--ds-border-width-focus) solid var(--ds-color-focus-ring);
+  outline-offset: 0;
+}
+
+/* Filter basis is always horizontal, including the 768px boundary. */
+.atelier-forecast-toolbar .budget-forecast__filters {
+  flex-direction: row;
+}
+
+.atelier-empty-budget {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ds-primitive-space-4);
+  padding: var(--ds-primitive-space-6);
+  border: 1px solid var(--ds-color-border-subtle);
+  border-radius: var(--ds-primitive-radius-lg);
+  background: var(--ds-color-background-surface);
+  color: var(--ds-color-text-primary);
+}
+.atelier-empty-budget p {
+  max-inline-size: 70ch;
+  color: var(--ds-color-text-secondary);
+}
+
+.protected-layout__content .goal-explorer__choice,
+.protected-layout__content
+  .monthly-events-header
+  :is(.monthly-event-icon-button, .budget-link-button) {
+  color: var(--ds-color-text-primary);
+}
+.protected-layout__content
+  .monthly-events-header
+  .monthly-event-icon-button:hover {
+  background: var(--ds-color-action-secondary-background);
+  color: var(--ds-color-action-secondary-text);
+}
+.protected-layout__content
+  .monthly-events-header
+  :is(a, button, input, select):focus-visible {
+  outline-color: var(--ds-color-focus-ring);
+  outline-offset: 0;
+}
