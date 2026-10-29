@@ -12,7 +12,7 @@
   text-align: left;
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
+  scrollbar-width: none;
 }
 .atelier-brand {
   display: flex;
@@ -35,9 +35,15 @@
   flex: 1 1 0;
   min-block-size: 0;
   overflow-y: auto;
+  scrollbar-width: none;
   padding: var(--ds-primitive-space-1);
   gap: var(--ds-primitive-space-1);
   list-style: none;
+}
+/* Wheel, touch and focus still scroll; only the bar is hidden. */
+.atelier-navigation::-webkit-scrollbar,
+.atelier-navigation__links::-webkit-scrollbar {
+  display: none;
 }
 .atelier-navigation__link,
 .atelier-navigation__profile > button,
