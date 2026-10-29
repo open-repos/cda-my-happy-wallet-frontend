@@ -1,3 +1,4 @@
+import { FormActions } from "../Actions/FormActions";
 import { ActionButton } from "../Actions/ActionButton";
 import { FixedCategorySelect } from "./FixedCategorySelect";
 import { FixedEnvelopeFields } from "./FixedEnvelopeFields";
@@ -224,7 +225,7 @@ export const FixedChargeForm = ({
             réserve.
           </p>
         </section>
-        <div className="fixed-charge-actions">
+        <FormActions className="fixed-charge-actions">
           <ActionButton
             action="cancel"
             className="one-off-button one-off-button--secondary"
@@ -243,7 +244,7 @@ export const FixedChargeForm = ({
           >
             {busy ? "Enregistrement…" : "Enregistrer la charge"}
           </ActionButton>
-        </div>
+        </FormActions>
       </form>
     </section>
   );
