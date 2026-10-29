@@ -222,11 +222,18 @@ for (const viewport of viewports) {
     const remaining = await page
       .locator(".home-budget__remaining")
       .boundingBox();
-    expect(
-      Math.abs(
-        remaining.x + remaining.width / 2 - (content.x + content.width / 2)
-      )
-    ).toBeLessThan(2);
+    if (viewport.width >= 1200) {
+      // Atelier places the card in the desktop home grid, inside the content.
+      expect(remaining.x).toBeGreaterThanOrEqual(content.x - 1);
+      expect(remaining.x + remaining.width).toBeLessThanOrEqual(
+        content.x + content.width + 1
+      );
+    } else
+      expect(
+        Math.abs(
+          remaining.x + remaining.width / 2 - (content.x + content.width / 2)
+        )
+      ).toBeLessThan(2);
 
     await page.getByText("Semaine", { exact: true }).click();
     await expect(page.locator(".home-budget__amount")).toContainText("447,72");
@@ -801,27 +808,17 @@ const weakFocusOnShell = async (page, presses = 40) => {
 };
 
 // Contrôles de la coque que le parcours clavier doit atteindre.
+// Since Atelier the menu toggle sits on the mobile header, which has its own
+// surface: it is no longer a shell control.
 const SHELL_CONTROLS = {
-  "/home": ["Ouvrir le menu"],
+  "/home": [],
   // The month controls live on the calendar card, not on the shell.
-  "/calendrier": ["Ouvrir le menu", "Prochains mois"],
-  "/objectifs-evenements": [
-    "Ouvrir le menu",
-    "Ajouter un objectif",
-    "Ajouter un événement",
-  ],
-  "/operations": [
-    "Ouvrir le menu",
-    "Gérer les catégories",
-    "Ajouter une opération",
-  ],
-  "/categories": [
-    "Ouvrir le menu",
-    "Voir les opérations",
-    "Ajouter une catégorie",
-  ],
-  "/analyses": ["Ouvrir le menu"],
-  "/profil": ["Ouvrir le menu"],
+  "/calendrier": ["Prochains mois"],
+  "/objectifs-evenements": ["Ajouter un objectif", "Ajouter un événement"],
+  "/operations": ["Gérer les catégories", "Ajouter une opération"],
+  "/categories": ["Voir les opérations", "Ajouter une catégorie"],
+  "/analyses": [],
+  "/profil": [],
 };
 
 /** Contraste de l'anneau de focus de l'élément actif contre son fond réel. */
