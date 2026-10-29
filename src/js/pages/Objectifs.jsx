@@ -1,3 +1,4 @@
+import { MutationMessage } from "../components/Notifications/MutationMessage";
 import { ActionButton } from "../components/Actions/ActionButton";
 import React, { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -62,7 +63,8 @@ function Objectifs() {
           Ajouter un événement
         </ActionButton>
       </header>
-      <LiveMessage
+      <MutationMessage
+        success={state.mutationStatus === "success"}
         message={state.message}
         isError={state.status === "error" || state.mutationStatus === "error"}
         className="monthly-events-message"

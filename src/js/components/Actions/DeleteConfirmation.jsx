@@ -1,7 +1,8 @@
 import React, { useId, useLayoutEffect, useRef } from "react";
 import { Button } from "./Button";
 import { ActionButton } from "./ActionButton";
-/** Inline confirmation, without a second dialog or mutation implementation. */
+import { ConfirmDialog } from "../Forms/ConfirmDialog";
+/** Modal confirmation, without a second mutation implementation. */
 export const DeleteConfirmation = ({
   title,
   busy,
@@ -25,14 +26,20 @@ export const DeleteConfirmation = ({
     };
   }, [returnFocusRef]);
   return (
-    <fieldset className={className} disabled={busy} aria-labelledby={id}>
-      <legend id={id}>Supprimer « {title} » ?</legend>
-      <Button ref={keep} onClick={onCancel} disabled={busy}>
-        Annuler
-      </Button>
-      <ActionButton action="delete" onClick={onConfirm} disabled={busy}>
-        Oui, supprimer
-      </ActionButton>
-    </fieldset>
+    <ConfirmDialog
+      label={`Supprimer « ${title} » ?`}
+      busy={busy}
+      onCancel={onCancel}
+    >
+      <fieldset className={className} disabled={busy} aria-labelledby={id}>
+        <legend id={id}>Supprimer « {title} » ?</legend>
+        <Button ref={keep} onClick={onCancel} disabled={busy}>
+          Annuler
+        </Button>
+        <ActionButton action="delete" onClick={onConfirm} disabled={busy}>
+          Oui, supprimer
+        </ActionButton>
+      </fieldset>
+    </ConfirmDialog>
   );
 };

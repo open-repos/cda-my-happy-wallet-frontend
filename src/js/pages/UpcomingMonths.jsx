@@ -17,7 +17,12 @@ import { EChart } from "../components/charts/EChart";
 import { useChartTokens } from "../components/charts/useChartTokens";
 import { budgetForecastChartOption } from "../components/charts/budgetForecastChartOptions";
 import { SimulationPanel } from "../components/Simulation/SimulationPanel";
-import { ForecastPlanning } from "../components/Simulation/PlanningActions";
+import {
+  SimulationToggle,
+  SimulationReadout,
+} from "../components/Simulation/SimulationControls";
+import { ActionButton } from "../components/Actions/ActionButton";
+import { useQuickAdd } from "../components/QuickAdd/QuickAddContext";
 import { useSimulation } from "../components/Simulation/SimulationContext";
 import "../../css/MonthlyEvents.css";
 import "../../css/BudgetCalendar.css";
@@ -36,6 +41,7 @@ const columns = [
 
 export default function UpcomingMonths() {
   const simulation = useSimulation();
+  const quickAdd = useQuickAdd();
   const today = forecastToday();
   const [from, setFrom] = useState(today.slice(0, 7));
   const [months, setMonths] = useState(12);
@@ -83,7 +89,7 @@ export default function UpcomingMonths() {
         </Link>
       </header>
       <section
-        className="budget-forecast__panel"
+        className="atelier-forecast-toolbar"
         aria-label="Période de prévision"
       >
         <div className="budget-forecast__filters">
@@ -117,14 +123,27 @@ export default function UpcomingMonths() {
             </select>
           </label>
         </div>
-        <p className="budget-help">
-          La prévision part du solde réel courant et tient compte des événements
-          prévus, des charges et revenus fixes et des versements mensuels
-          actuels de vos objectifs.
-        </p>
+        <SimulationToggle compact />
+        <ActionButton
+          action="add"
+          type="button"
+          className="atelier-forecast-add"
+          disabled={
+            simulation.mutationStatus === "loading" ||
+            Boolean(simulation.activeForm)
+          }
+          onClick={(event) =>
+            quickAdd.open(
+              "menu",
+              from === today.slice(0, 7) ? today : `${from}-01`,
+              event.currentTarget
+            )
+          }
+        >
+          Ajouter
+        </ActionButton>
       </section>
-      <SimulationPanel month={from} />
-      <ForecastPlanning key={from} month={from} />
+      <SimulationReadout month={from} showToggle={false} />
       <LiveMessage
         message={message}
         isError={Boolean(problem) || forecast.status === "error"}
@@ -243,6 +262,19 @@ export default function UpcomingMonths() {
           </section>
         </>
       )}
+      <details className="atelier-forecast-details">
+        <summary>Éléments à confirmer et gestion de la Simulation</summary>
+        <SimulationPanel month={from} readout={false} />
+      </details>
+      <details className="atelier-forecast-details">
+        <summary>Comment sont établies ces prévisions ?</summary>
+        <p className="budget-help">
+          La prévision part du solde réel courant et tient compte des événements
+          prévus, des charges et revenus fixes et des versements mensuels
+          actuels de vos objectifs. La Simulation ajoute les éléments potentiels
+          sans modifier les opérations réelles.
+        </p>
+      </details>
     </main>
   );
 }

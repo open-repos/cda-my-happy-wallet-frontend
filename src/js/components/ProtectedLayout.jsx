@@ -2,6 +2,7 @@ import { QuickAddProvider } from "./QuickAdd/QuickAddProvider";
 import React from "react";
 import { RequireAuth } from "./requireAuth";
 import Sidebar from "./SideBar";
+import { MutationRecovery } from "./Notifications/MutationFeedbackProvider";
 import { SimulationProvider } from "./Simulation/SimulationContext";
 
 export const ProtectedLayout = ({ children }) => {
@@ -16,6 +17,7 @@ export const ProtectedLayout = ({ children }) => {
               id="main-content"
               tabIndex={-1}
             >
+              <MutationRecovery />
               {children}
             </div>
           </div>

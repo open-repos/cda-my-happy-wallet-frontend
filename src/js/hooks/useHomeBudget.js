@@ -1,3 +1,4 @@
+import { useRefreshViews } from "./useRefreshViews";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { budgetService } from "../services/budgetService";
 import { goalsService } from "../services/goalsService";
@@ -33,13 +34,16 @@ const useSection = (load, loadingKey) => {
       if (request === latestRequest.current) {
         setState({ status: "success", data, loader: load });
       }
+      return true;
     } catch {
       if (request === latestRequest.current) {
         setState({ status: "error", data: null, loader: load });
       }
+      return false;
     }
   }, [load]);
 
+  useRefreshViews(reload);
   useEffect(() => {
     reload();
     return () => {

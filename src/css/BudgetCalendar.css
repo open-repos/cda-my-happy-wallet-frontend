@@ -163,9 +163,10 @@
   color: var(--ds-color-status-error-text);
 }
 
+/* The calendar takes the full width; the day or month details follow it. */
 .budget-calendar__layout {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--ds-primitive-space-6);
   align-items: start;
   width: 100%;
@@ -189,6 +190,7 @@
 }
 
 .budget-mode__option {
+  position: relative;
   display: inline-flex;
   min-height: 44px;
   align-items: center;
@@ -199,8 +201,13 @@
   font-weight: var(--ds-typography-action-weight);
 }
 
+/* The native radio stays inside its label, which draws the segment. */
 .budget-mode__option input {
   position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
   opacity: 0;
   pointer-events: none;
 }
@@ -229,6 +236,18 @@
   flex-direction: column;
   gap: 2px;
   min-height: 44px;
+}
+/* Full width: bound the height instead of keeping square cells. */
+.budget-calendar__layout .budget-day {
+  aspect-ratio: auto;
+  min-block-size: clamp(3rem, 7vw, 5.5rem);
+}
+.budget-day:is(:hover, .monthly-calendar__day--selected) .budget-marker--real {
+  background: currentColor;
+}
+/* The light hover surface needs the text colour; the sign keeps the meaning. */
+.budget-day:is(:hover, .monthly-calendar__day--selected) .budget-day__value {
+  color: inherit;
 }
 
 .budget-day__value {
@@ -320,6 +339,13 @@
   border-style: solid;
   border-color: var(--ds-color-status-warning-text);
   background: var(--ds-color-status-warning-surface);
+  color: var(--ds-color-status-warning-text);
+}
+/* The surface stays light in both themes: its text must not follow the
+   theme's muted or expense colours. */
+.budget-occurrence--overdue
+  :is(.budget-occurrence__date, .budget-amount--negative) {
+  color: var(--ds-color-status-warning-text);
 }
 
 .budget-occurrence__main {
@@ -436,13 +462,23 @@
   }
 }
 
-.budget-calendar__quick-add {
+/* Month navigation sits on the calendar it scrolls, next to its add action. */
+.budget-calendar__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-primitive-space-3);
   margin-bottom: 1rem;
+}
+.budget-calendar__quick-add {
   display: flex;
   justify-content: flex-end;
-  width: 100%;
 }
 @media (max-width: 47.999rem) {
+  .budget-calendar__quick-add {
+    flex: 1 1 100%;
+  }
   .budget-calendar__quick-add .monthly-event-button {
     width: 100%;
   }

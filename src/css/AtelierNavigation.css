@@ -1,0 +1,279 @@
+.atelier-navigation {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: var(--ds-z-index-navigation);
+  inline-size: var(--atelier-navigation-width, 14rem);
+  padding: var(--ds-primitive-space-6) var(--ds-primitive-space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-primitive-space-4);
+  background: var(--ds-color-background-sidebar);
+  color: var(--ds-color-text-on-shell);
+  text-align: left;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.atelier-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-primitive-space-3);
+  padding: var(--ds-primitive-space-2);
+  font-weight: var(--ds-primitive-font-weight-semibold);
+  overflow-wrap: anywhere;
+}
+:is(.atelier-navigation, .atelier-mobile-header) .atelier-theme-toggle {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  flex: 0 0 44px;
+  min-block-size: 44px;
+  margin-inline-start: auto;
+  border: 1px solid var(--ds-color-text-on-shell);
+  border-radius: var(--ds-primitive-radius-pill);
+  background: transparent;
+  color: var(--ds-color-text-on-shell);
+}
+:is(.atelier-navigation, .atelier-mobile-header) .atelier-theme-toggle:hover {
+  background: var(--ds-color-text-on-shell);
+  color: var(--ds-color-background-sidebar);
+}
+:is(.atelier-navigation, .atelier-mobile-header)
+  .atelier-theme-toggle:focus-visible {
+  outline: var(--ds-border-width-focus) solid
+    var(--ds-color-focus-ring-on-shell);
+  outline-offset: 2px;
+}
+/* The collapse button shares the caption row: the brand keeps its width. */
+.atelier-navigation__caption-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-primitive-space-2);
+}
+.atelier-navigation__caption {
+  padding-inline: var(--ds-primitive-space-2);
+  color: var(--ds-primitive-color-green200);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: var(--ds-primitive-font-size-xs);
+}
+.atelier-navigation__links {
+  display: grid;
+  align-content: start;
+  flex: 1 1 0;
+  min-block-size: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: var(--ds-primitive-space-1);
+  gap: var(--ds-primitive-space-1);
+  list-style: none;
+}
+/* Wheel, touch and focus still scroll; only the bar is hidden. */
+.atelier-navigation::-webkit-scrollbar,
+.atelier-navigation__links::-webkit-scrollbar {
+  display: none;
+}
+.atelier-navigation__link,
+.atelier-navigation__profile > button,
+.atelier-navigation__profile a,
+.atelier-navigation__profile button {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-primitive-space-3);
+  min-block-size: 44px;
+  inline-size: 100%;
+  padding: var(--ds-primitive-space-3) var(--ds-primitive-space-2);
+  border: 0;
+  border-radius: var(--ds-primitive-radius-md);
+  color: var(--ds-color-text-on-shell);
+  background: transparent;
+  text-decoration: none;
+  font: inherit;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.atelier-navigation svg,
+.atelier-menu-toggle svg {
+  flex: 0 0 1.125rem;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+.atelier-navigation__link span {
+  min-inline-size: 0;
+}
+.atelier-navigation__link.is-active,
+.atelier-navigation__link:hover,
+.atelier-navigation__profile :is(a, button):hover {
+  background: var(--ds-primitive-color-green200);
+  color: var(--ds-primitive-color-neutral1000);
+}
+.atelier-navigation :is(a, button):focus-visible {
+  outline: var(--ds-border-width-focus) solid
+    var(--ds-color-focus-ring-on-shell);
+  outline-offset: 0;
+}
+.atelier-navigation__profile {
+  margin-block-start: auto;
+  flex-shrink: 0;
+}
+.atelier-navigation__profile-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-primitive-space-2);
+}
+.atelier-navigation__profile-row > button:first-child {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+#sidebar-profile-details {
+  padding: var(--ds-primitive-space-2);
+  border-top: 1px solid var(--ds-primitive-color-neutral700);
+}
+#sidebar-profile-details p {
+  overflow-wrap: anywhere;
+  color: var(--ds-primitive-color-green200);
+}
+.atelier-mobile-header {
+  display: none;
+}
+.atelier-backdrop {
+  display: none;
+}
+@media (max-width: 1199px) {
+  .atelier-mobile-header {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: calc(var(--ds-z-index-navigation) + 2);
+    display: flex;
+    align-items: center;
+    gap: var(--ds-primitive-space-3);
+    min-block-size: 4rem;
+    padding: env(safe-area-inset-top, 0px)
+      max(1rem, env(safe-area-inset-right, 0px)) 0
+      max(1rem, env(safe-area-inset-left, 0px));
+    background: var(--ds-color-background-sidebar);
+    color: var(--ds-color-text-on-shell);
+    font-weight: var(--ds-primitive-font-weight-semibold);
+    text-align: left;
+  }
+  .atelier-menu-toggle {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    flex: 0 0 44px;
+    min-block-size: 44px;
+    border: 0;
+    border-radius: var(--ds-radius-control);
+    background: transparent;
+    color: inherit;
+  }
+  .atelier-menu-toggle:focus-visible {
+    outline-color: var(--ds-color-focus-ring-on-shell);
+    outline-offset: 0;
+  }
+  .atelier-navigation {
+    inset-block-start: calc(4rem + env(safe-area-inset-top, 0px));
+    inline-size: min(19rem, calc(100% - 1rem));
+    padding-block-end: max(1rem, env(safe-area-inset-bottom, 0px));
+    display: none;
+    z-index: calc(var(--ds-z-index-navigation) + 1);
+  }
+  .atelier-navigation[data-open="true"] {
+    display: flex;
+  }
+  .atelier-navigation .atelier-brand {
+    display: none;
+  }
+  /* The header already carries the toggle below 1200 px. */
+  .atelier-navigation .atelier-theme-toggle {
+    display: none;
+  }
+  .atelier-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: var(--ds-z-index-navigation);
+    background: var(--ds-primitive-color-neutral1000);
+    opacity: 0.6;
+    border: 0;
+  }
+}
+
+/* Desktop rail: icons only, names kept for assistive technologies. */
+.atelier-collapse-toggle {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  flex: 0 0 44px;
+  min-block-size: 44px;
+  margin-inline-start: auto;
+  border: 0;
+  border-radius: var(--ds-primitive-radius-md);
+  background: transparent;
+  color: var(--ds-color-text-on-shell);
+}
+.atelier-collapse-toggle:hover {
+  background: var(--ds-primitive-color-green200);
+  color: var(--ds-primitive-color-neutral1000);
+}
+.atelier-collapse-toggle:focus-visible {
+  outline: var(--ds-border-width-focus) solid
+    var(--ds-color-focus-ring-on-shell);
+  outline-offset: 0;
+}
+@media (min-width: 1200px) {
+  :root[data-navigation="collapsed"] {
+    --atelier-navigation-width: 4.5rem;
+  }
+  .atelier-navigation {
+    transition: inline-size 160ms ease;
+  }
+  :root[data-navigation="collapsed"] .atelier-brand {
+    justify-content: center;
+    padding-inline: 0;
+  }
+  :root[data-navigation="collapsed"] .atelier-navigation__caption-row {
+    justify-content: center;
+  }
+  :root[data-navigation="collapsed"] .atelier-collapse-toggle {
+    margin-inline-start: 0;
+  }
+  :root[data-navigation="collapsed"]
+    :is(
+      .atelier-brand > span,
+      .atelier-navigation__link span,
+      .atelier-navigation__profile-row > button:first-child span
+    ) {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  :root[data-navigation="collapsed"] .atelier-navigation__caption {
+    display: none;
+  }
+  :root[data-navigation="collapsed"]
+    :is(.atelier-navigation__link, .atelier-navigation__profile-row > button) {
+    justify-content: center;
+  }
+  :root[data-navigation="collapsed"] .atelier-navigation__profile-row {
+    flex-direction: column;
+  }
+  :root[data-navigation="collapsed"] .atelier-theme-toggle {
+    margin-inline-start: 0;
+  }
+}
+@media (min-width: 1200px) and (prefers-reduced-motion: reduce) {
+  .atelier-navigation {
+    transition: none;
+  }
+}
+@media (max-width: 1199px) {
+  /* The drawer has its own open/close button. */
+  .atelier-collapse-toggle {
+    display: none;
+  }
+}

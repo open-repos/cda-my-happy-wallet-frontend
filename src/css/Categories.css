@@ -60,7 +60,7 @@
   font: inherit;
 }
 
-/* Neutralise le style global orange des libellés (FormControl.css). */
+/* Neutralise la marge et la couleur du style global des libellés (FormControl.css). */
 .category-form__name label,
 .category-form__custom {
   margin: 0;

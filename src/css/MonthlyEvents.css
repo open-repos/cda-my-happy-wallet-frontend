@@ -365,6 +365,7 @@
 }
 .monthly-calendar__day:hover {
   background: var(--ds-color-action-secondary-background);
+  color: var(--ds-color-action-secondary-text);
 }
 .monthly-calendar__day--outside {
   color: var(--ds-color-text-muted);

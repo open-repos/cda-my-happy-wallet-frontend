@@ -1,3 +1,7 @@
+import { useContext } from "react";
+import { MutationFeedbackContext } from "../Notifications/MutationFeedbackContext";
+import { useVisualKeyboard } from "../../hooks/useVisualKeyboard";
+import { useHideOnScroll } from "../../hooks/useHideOnScroll";
 import { FormDialog } from "../Forms/FormDialog";
 import { useViewportBounds } from "../../hooks/useViewportBounds";
 import { ActionButton } from "../Actions/ActionButton";
@@ -6,7 +10,6 @@ import { useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlus,
-  faTimes,
   faArrowUp,
   faArrowDown,
   faCalendar,
@@ -43,6 +46,8 @@ const dateLabel = (date) =>
     timeZone: "UTC",
   }).format(new Date(`${date}T00:00:00Z`));
 export const QuickAddProvider = ({ children }) => {
+  const notifications = useContext(MutationFeedbackContext);
+  const keyboardVisible = useVisualKeyboard();
   const simulation = useSimulation(),
     location = useLocation();
   const [calendarDate, setCalendarDate] = useState(null),
@@ -54,16 +59,31 @@ export const QuickAddProvider = ({ children }) => {
       error: false,
     });
   const returnFocus = useRef(null),
-    fab = useRef(null);
+    fab = useRef(null),
+    root = useRef(null);
   const busy = simulation.mutationStatus === "loading";
   const viewportStyle = useViewportBounds();
-  const restore = () =>
-    requestAnimationFrame(() =>
-      (returnFocus.current?.isConnected && !returnFocus.current.disabled
-        ? returnFocus.current
-        : fab.current
-      )?.focus()
-    );
+  // Mobile: the floating button steps aside while the page scrolls down.
+  const away = useHideOnScroll(root, ".protected-layout", location.pathname);
+  const menuOpen = panel?.kind === "menu";
+  const restore = () => {
+    let remaining = 4;
+    const focusVisibleTrigger = () => {
+      const target =
+        returnFocus.current?.isConnected && !returnFocus.current.disabled
+          ? returnFocus.current
+          : fab.current;
+      const visible =
+        target?.getClientRects().length && !target.closest("[inert],[hidden]");
+      // Last frame: focus anyway instead of giving up (no layout under jsdom).
+      if (visible || remaining === 0) target?.focus();
+      else {
+        remaining -= 1;
+        requestAnimationFrame(focusVisibleTrigger);
+      }
+    };
+    requestAnimationFrame(focusVisibleTrigger);
+  };
   const wasOpen = useRef(false);
   useEffect(() => {
     // Restore after the child form's cleanup; its focus hook also restores focus.
@@ -133,10 +153,11 @@ export const QuickAddProvider = ({ children }) => {
       setPanel(null);
       simulation.setActiveForm(null);
       setFeedback({
-        text:
-          kind === "potential"
-            ? "Événement à confirmer enregistré. Activez la Simulation pour voir son effet."
-            : "Ajout enregistré.",
+        text: notifications.available
+          ? ""
+          : kind === "potential"
+          ? "Événement à confirmer enregistré. Activez la Simulation pour voir son effet."
+          : "Ajout enregistré.",
         error: false,
       });
     } else
@@ -154,7 +175,7 @@ export const QuickAddProvider = ({ children }) => {
         setCalendarDate,
       }}
     >
-      <div className="quick-add-root" style={viewportStyle}>
+      <div ref={root} className="quick-add-root" style={viewportStyle}>
         {children}
         <div className="quick-add-feedback">
           <LiveMessage
@@ -164,19 +185,23 @@ export const QuickAddProvider = ({ children }) => {
           />
         </div>
         <div
-          className="quick-add-dock"
+          className={[
+            "quick-add-dock",
+            away && !menuOpen ? "quick-add-dock--away" : "",
+            menuOpen ? "quick-add-dock--open" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
           hidden={
-            Boolean(panel && panel.kind !== "menu") ||
+            // The menu grows out of the button, which then closes it.
+            Boolean(panel && !menuOpen) ||
+            (notifications.blocked && !menuOpen) ||
+            keyboardVisible ||
             Boolean(
               simulation.activeForm && simulation.activeForm !== "quick-add"
             )
           }
         >
-          <span className="quick-add-dock__context">
-            {location.pathname === "/calendrier"
-              ? `Calendrier · ${dateLabel(contextDate)}`
-              : "Ajouter au budget"}
-          </span>
           <button
             ref={fab}
             type="button"
@@ -194,15 +219,11 @@ export const QuickAddProvider = ({ children }) => {
                 simulation.activeForm && simulation.activeForm !== "quick-add"
               )
             }
-            hidden={Boolean(panel && panel.kind !== "menu")}
             onClick={(e) =>
               panel ? close() : open("menu", null, e.currentTarget)
             }
           >
-            <FontAwesomeIcon
-              icon={panel ? faTimes : faPlus}
-              aria-hidden="true"
-            />
+            <FontAwesomeIcon icon={faPlus} aria-hidden="true" />
           </button>
         </div>
         {panel && (

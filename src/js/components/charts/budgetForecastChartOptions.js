@@ -26,7 +26,7 @@ export const budgetForecastChartOption = (months, currency, tokens) => ({
   xAxis: {
     type: "category",
     data: months.map((month) => monthLabel(month.month)),
-    axisLabel: { color: tokens.text, rotate: 45, hideOverlap: true },
+    axisLabel: { color: tokens.text, rotate: 0, hideOverlap: true },
     axisLine: { lineStyle: { color: tokens.grid } },
   },
   yAxis: {
@@ -37,13 +37,17 @@ export const budgetForecastChartOption = (months, currency, tokens) => ({
       formatter: (value) => formatCompact(String(value)),
       hideOverlap: true,
     },
-    splitLine: { lineStyle: { color: tokens.grid } },
+    splitLine: { show: false },
   },
   series: [
     {
       name: "Reste prévisionnel de fin de mois",
-      type: "bar",
-      barMaxWidth: 40,
+      type: "line",
+      smooth: 0.2,
+      smoothMonotone: "x",
+      symbol: "circle",
+      symbolSize: 6,
+      lineStyle: { color: tokens.forecast, width: 3, cap: "round" },
       data: months.map((month) => ({
         value: Number(month.forecastRemaining),
         itemStyle: {

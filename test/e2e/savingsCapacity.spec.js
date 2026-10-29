@@ -22,9 +22,11 @@ for (const theme of ["light", "dark"]) {
         await expect(
           capacity.getByText("Indéterminé", { exact: true })
         ).toBeVisible();
-        await expect(
-          page.getByRole("button", { name: "Ouvrir le menu" })
-        ).toHaveAttribute("aria-expanded", "false");
+        // From 1200 px Atelier shows the navigation permanently, no toggle.
+        if (width < 1200)
+          await expect(
+            page.getByRole("button", { name: "Ouvrir le menu" })
+          ).toHaveAttribute("aria-expanded", "false");
         for (const zoom of ["100%", "200%"]) {
           await page.locator("html").evaluate((element, value) => {
             element.style.fontSize = value;
