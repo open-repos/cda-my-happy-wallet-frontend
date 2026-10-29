@@ -22,6 +22,28 @@
   font-weight: var(--ds-primitive-font-weight-semibold);
   overflow-wrap: anywhere;
 }
+:is(.atelier-navigation, .atelier-mobile-header) .atelier-theme-toggle {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  flex: 0 0 44px;
+  min-block-size: 44px;
+  margin-inline-start: auto;
+  border: 1px solid var(--ds-color-text-on-shell);
+  border-radius: var(--ds-primitive-radius-pill);
+  background: transparent;
+  color: var(--ds-color-text-on-shell);
+}
+:is(.atelier-navigation, .atelier-mobile-header) .atelier-theme-toggle:hover {
+  background: var(--ds-color-text-on-shell);
+  color: var(--ds-color-background-sidebar);
+}
+:is(.atelier-navigation, .atelier-mobile-header)
+  .atelier-theme-toggle:focus-visible {
+  outline: var(--ds-border-width-focus) solid
+    var(--ds-color-focus-ring-on-shell);
+  outline-offset: 2px;
+}
 .atelier-navigation__caption {
   padding-inline: var(--ds-primitive-space-2);
   color: var(--ds-primitive-color-green200);
@@ -88,6 +110,15 @@
   margin-block-start: auto;
   flex-shrink: 0;
 }
+.atelier-navigation__profile-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-primitive-space-2);
+}
+.atelier-navigation__profile-row > button:first-child {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
 #sidebar-profile-details {
   padding: var(--ds-primitive-space-2);
   border-top: 1px solid var(--ds-primitive-color-neutral700);
@@ -145,6 +176,10 @@
     display: flex;
   }
   .atelier-navigation .atelier-brand {
+    display: none;
+  }
+  /* The header already carries the toggle below 1200 px. */
+  .atelier-navigation .atelier-theme-toggle {
     display: none;
   }
   .atelier-backdrop {

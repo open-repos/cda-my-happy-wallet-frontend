@@ -1053,10 +1053,18 @@ for (const theme of ["light", "dark"]) {
       await page.goto("/profil");
 
       await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
-      await expect(page.getByRole("combobox", { name: "Thème" })).toHaveValue(
-        theme
+      // The profile no longer holds the theme: the menu toggle does.
+      await expect(page.getByRole("combobox", { name: "Thème" })).toHaveCount(
+        0
       );
-      await expect(page.locator(".theme-selector")).toBeVisible();
+      await expect(
+        page.getByRole("button", {
+          name:
+            theme === "dark"
+              ? "Activer le thème clair"
+              : "Activer le thème sombre",
+        })
+      ).toBeVisible();
 
       const hasHorizontalOverflow = await page.evaluate(
         () => document.documentElement.scrollWidth > window.innerWidth

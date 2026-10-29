@@ -143,8 +143,7 @@ a:hover {
     .savings-capacity,
     .envelope-section,
     .fixed-charges,
-    .fixed-budget-summary,
-    .theme-selector
+    .fixed-budget-summary
   ) {
   border: var(--ds-border-width-default) solid var(--ds-color-border-subtle);
   border-radius: var(--ds-primitive-radius-lg);
@@ -248,12 +247,6 @@ a:hover {
 .protected-layout__content .profil-container {
   align-items: stretch;
   gap: var(--ds-primitive-space-5);
-}
-.protected-layout__content .theme-selector {
-  inline-size: min(100%, 36rem);
-}
-.protected-layout__content .theme-selector label {
-  color: var(--ds-color-text-secondary);
 }
 .protected-layout__content .goback {
   text-align: left;

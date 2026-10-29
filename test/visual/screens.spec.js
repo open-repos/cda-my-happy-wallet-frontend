@@ -34,7 +34,7 @@ const definitions = [
     ready: ".analytics-chart",
     chart: true,
   },
-  { name: "profile", path: "/profil", ready: ".theme-selector" },
+  { name: "profile", path: "/profil", ready: ".profil-container h1" },
 ];
 
 async function ready(page, theme, authenticated = true, simulation = false) {

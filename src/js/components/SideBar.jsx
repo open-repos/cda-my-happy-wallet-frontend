@@ -18,6 +18,7 @@ import {
   faSignOutAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { logout, reset } from "../slices/auth/authSlice";
+import { ThemeToggle } from "./ThemeToggle";
 import "../../css/AtelierNavigation.css";
 
 const destinations = [
@@ -107,6 +108,7 @@ export default function Sidebar() {
           <FontAwesomeIcon icon={open ? faTimes : faBars} aria-hidden="true" />
         </button>
         <span>MyHappyWallet</span>
+        <ThemeToggle className="theme-toggle atelier-theme-toggle" />
       </div>
       {open && (
         <button
@@ -150,18 +152,21 @@ export default function Sidebar() {
           ))}
         </ul>
         <div className="atelier-navigation__profile">
-          <button
-            type="button"
-            aria-label={
-              profileOpen ? "Masquer le profil" : "Afficher le profil"
-            }
-            aria-expanded={profileOpen}
-            aria-controls="sidebar-profile-details"
-            onClick={() => setProfileOpen((value) => !value)}
-          >
-            <FontAwesomeIcon icon={faUserCircle} aria-hidden="true" />
-            <span>Mon profil</span>
-          </button>
+          <div className="atelier-navigation__profile-row">
+            <button
+              type="button"
+              aria-label={
+                profileOpen ? "Masquer le profil" : "Afficher le profil"
+              }
+              aria-expanded={profileOpen}
+              aria-controls="sidebar-profile-details"
+              onClick={() => setProfileOpen((value) => !value)}
+            >
+              <FontAwesomeIcon icon={faUserCircle} aria-hidden="true" />
+              <span>Mon profil</span>
+            </button>
+            <ThemeToggle className="theme-toggle atelier-theme-toggle" />
+          </div>
           <div id="sidebar-profile-details" hidden={!profileOpen}>
             <p>
               {user?.payload?.user?.firstname} {user?.payload?.user?.lastname}
