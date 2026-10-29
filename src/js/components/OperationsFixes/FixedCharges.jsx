@@ -1,3 +1,5 @@
+import { ConfirmDialog } from "../Forms/ConfirmDialog";
+import { MutationMessage } from "../Notifications/MutationMessage";
 import { ActionButton } from "../Actions/ActionButton";
 import React, { useEffect, useRef, useState } from "react";
 import { useFixedCharges } from "../../hooks/useFixedCharges";
@@ -40,7 +42,8 @@ export const FixedCharges = () => {
         personnelle. Ne saisissez pas aussi la même dépense dans les événements
         ou les opérations : elle serait comptée deux fois.
       </p>
-      <LiveMessage
+      <MutationMessage
+        success={charges.mutationStatus === "success"}
         message={charges.message.text}
         isError={charges.message.error}
       />
@@ -118,37 +121,43 @@ export const FixedCharges = () => {
                   </ActionButton>
                 </div>
                 {deleting === charge.idOperationFixe && (
-                  <fieldset
-                    className="fixed-charge-delete"
-                    disabled={charges.busy}
+                  <ConfirmDialog
+                    label={`Supprimer « ${charge.titre} » ?`}
+                    busy={charges.busy}
+                    onCancel={() => setDeleting(null)}
                   >
-                    <legend>Supprimer « {charge.titre} » ?</legend>
-                    <p>
-                      La charge sera retirée de votre budget courant. Les mois
-                      clôturés conservent leur historique.
-                    </p>
-                    <button
-                      className="one-off-button one-off-button--secondary"
-                      type="button"
-                      onClick={() => setDeleting(null)}
+                    <fieldset
+                      className="fixed-charge-delete"
+                      disabled={charges.busy}
                     >
-                      Conserver la charge
-                    </button>
-                    <ActionButton
-                      action="confirm"
-                      className="one-off-button one-off-button--danger"
-                      type="button"
-                      onClick={async () => {
-                        if (await charges.remove(charge)) {
-                          returnAfterDelete.current = true;
-                          setDeleting(null);
-                        }
-                      }}
-                      variant="danger"
-                    >
-                      Confirmer la suppression
-                    </ActionButton>
-                  </fieldset>
+                      <legend>Supprimer « {charge.titre} » ?</legend>
+                      <p>
+                        La charge sera retirée de votre budget courant. Les mois
+                        clôturés conservent leur historique.
+                      </p>
+                      <button
+                        className="one-off-button one-off-button--secondary"
+                        type="button"
+                        onClick={() => setDeleting(null)}
+                      >
+                        Conserver la charge
+                      </button>
+                      <ActionButton
+                        action="confirm"
+                        className="one-off-button one-off-button--danger"
+                        type="button"
+                        onClick={async () => {
+                          if (await charges.remove(charge)) {
+                            returnAfterDelete.current = true;
+                            setDeleting(null);
+                          }
+                        }}
+                        variant="danger"
+                      >
+                        Confirmer la suppression
+                      </ActionButton>
+                    </fieldset>
+                  </ConfirmDialog>
                 )}
               </article>
             ))}

@@ -4,7 +4,9 @@ import { useEffect } from "react";
 export const useFormFocus = (fieldRef) => {
   useEffect(() => {
     const trigger = document.activeElement;
-    const inDialog = Boolean(fieldRef.current?.closest('[role="dialog"]'));
+    const inDialog = Boolean(
+      fieldRef.current?.closest('[role="dialog"], [role="alertdialog"]')
+    );
     fieldRef.current?.focus({ preventScroll: inDialog });
     return () => {
       // The popup's caller restores focus after closing. Switching form types

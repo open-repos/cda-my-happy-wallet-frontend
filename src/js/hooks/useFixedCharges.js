@@ -1,16 +1,21 @@
+import { useRefreshViews } from "./useRefreshViews";
+import {
+  mutationErrorMessage,
+  acknowledgeMutation,
+  useMutationFeedback,
+} from "./useMutationFeedback";
 import { useCallback, useEffect, useRef, useState } from "react";
 import service from "../services/operationsFixesService";
-import { useSimulation } from "../components/Simulation/SimulationContext";
 import { envelopeErrorMessage } from "../services/envelopesService";
 
 const useFixedCollection = (type) => {
   const income = type === "income";
   const noun = income ? "Entrée" : "Charge";
-  const { invalidate } = useSimulation();
   const [state, setState] = useState({ status: "loading", data: [] });
   const [message, setMessage] = useState({ text: "", error: false });
   const [categoryError, setCategoryError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [mutationStatus, setMutationStatus] = useState("idle");
   const writing = useRef(false);
   const latest = useRef(0);
   const mounted = useRef(true);
@@ -32,6 +37,8 @@ const useFixedCollection = (type) => {
       return false;
     }
   }, [income]);
+  const refreshViews = useRefreshViews(reload);
+  const feedback = useMutationFeedback(refreshViews);
   useEffect(() => {
     mounted.current = true;
     reload();
@@ -44,6 +51,7 @@ const useFixedCollection = (type) => {
     if (writing.current) return false;
     writing.current = true;
     setBusy(true);
+    setMutationStatus("loading");
     setCategoryError("");
     setMessage({
       text: income
@@ -52,20 +60,20 @@ const useFixedCollection = (type) => {
       error: false,
     });
     try {
-      await action();
-      // Les synthèses, prévisions et capacités d'épargne se rechargent côté
-      // serveur via la révision commune, sans soustraction dans le navigateur.
-      invalidate();
-      const loaded = mounted.current ? await reload() : false;
+      const acknowledged = await acknowledgeMutation(action);
+      const loaded = mounted.current ? await refreshViews() : false;
+      feedback.confirm(text, { refreshed: loaded, ...acknowledged });
+      if (mounted.current) setMutationStatus("success");
       if (mounted.current)
         setMessage({
           text: loaded
             ? text
             : "La modification est enregistrée, mais la liste n’a pas pu être actualisée. Réessayez son chargement.",
-          error: !loaded,
+          error: false,
         });
       return true;
     } catch (error) {
+      setMutationStatus("error");
       if (
         mounted.current &&
         error?.response?.data?.error?.details?.code === "INVALID_FIXED_CATEGORY"
@@ -75,11 +83,14 @@ const useFixedCollection = (type) => {
         );
       if (mounted.current)
         setMessage({
-          text: envelopeErrorMessage(
+          text: mutationErrorMessage(
             error,
-            income
-              ? "L’entrée n’a pas pu être enregistrée. Vérifiez votre connexion et vos valeurs, puis réessayez."
-              : "La charge n’a pas pu être enregistrée. Vérifiez votre connexion et vos valeurs, puis réessayez."
+            envelopeErrorMessage(
+              error,
+              income
+                ? "L’entrée n’a pas pu être enregistrée. Vérifiez votre connexion et vos valeurs, puis réessayez."
+                : "La charge n’a pas pu être enregistrée. Vérifiez votre connexion et vos valeurs, puis réessayez."
+            )
           ),
           error: true,
         });
@@ -93,6 +104,7 @@ const useFixedCollection = (type) => {
     ...state,
     message,
     busy,
+    mutationStatus,
     categoryError,
     clearCategoryError: () => setCategoryError(""),
     reload,

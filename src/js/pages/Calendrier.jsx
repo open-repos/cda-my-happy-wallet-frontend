@@ -1,8 +1,14 @@
+import { MutationMessage } from "../components/Notifications/MutationMessage";
 import { Button } from "../components/Actions/Button";
 import { ActionButton } from "../components/Actions/ActionButton";
 import { useQuickAdd } from "../components/QuickAdd/QuickAddContext";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faChevronLeft,
+  faChevronRight,
+} from "@fortawesome/free-solid-svg-icons";
 import { MonthlyEventForm } from "../components/MonthlyEvents/MonthlyEventForm";
 import { OneOffOperationForm } from "../components/OneOffOperations/OneOffOperationForm";
 import { BudgetSummary } from "../components/BudgetCalendar/BudgetSummary";
@@ -217,37 +223,6 @@ function Calendrier() {
           <p className="monthly-events-eyebrow">Budget</p>
           <h1>Calendrier</h1>
         </div>
-        <div className="budget-calendar__navigation">
-          <button
-            type="button"
-            className="monthly-event-icon-button"
-            onClick={() => changeMonth(-1)}
-            aria-label="Mois précédent"
-          >
-            ‹
-          </button>
-          <h2 id="calendar-month-title">{monthLabel(month)}</h2>
-          <button
-            type="button"
-            className="monthly-event-icon-button"
-            onClick={() => changeMonth(1)}
-            aria-label="Mois suivant"
-          >
-            ›
-          </button>
-          {month !== today.slice(0, 7) && (
-            <button
-              type="button"
-              className="budget-link-button"
-              onClick={() => {
-                setMonth(today.slice(0, 7));
-                setSelectedDate(null);
-              }}
-            >
-              Aujourd’hui
-            </button>
-          )}
-        </div>
         <Link
           className="monthly-event-button monthly-event-button--secondary"
           to="/prochains-mois"
@@ -255,13 +230,15 @@ function Calendrier() {
           Prochains mois
         </Link>
       </header>
-      <LiveMessage
+      <MutationMessage
+        success={budget.mutationStatus === "success"}
         message={budget.message.text}
         isError={budget.message.tone === "error"}
         className="monthly-events-message"
         errorClassName="monthly-events-message--error"
       />
-      <LiveMessage
+      <MutationMessage
+        success={events.mutationStatus === "success"}
         message={events.message || ""}
         isError={events.status === "error" || events.mutationStatus === "error"}
         className="monthly-events-message"
@@ -294,20 +271,53 @@ function Calendrier() {
           className="monthly-calendar"
           aria-labelledby="calendar-month-title"
         >
-          <div className="budget-calendar__quick-add">
-            <ActionButton
-              action="add"
-              type="button"
-              className="monthly-event-button"
-              onClick={(event) =>
-                openCreation(quickAdd.available ? "menu" : "expense", event)
-              }
-              disabled={isSaving}
-            >
-              {selectedDate
-                ? `Ajouter le ${longDate(selectedDate)}`
-                : "Ajouter au calendrier"}
-            </ActionButton>
+          <div className="budget-calendar__toolbar">
+            <div className="budget-calendar__navigation">
+              <button
+                type="button"
+                className="monthly-event-icon-button"
+                onClick={() => changeMonth(-1)}
+                aria-label="Mois précédent"
+              >
+                <FontAwesomeIcon icon={faChevronLeft} aria-hidden="true" />
+              </button>
+              <h2 id="calendar-month-title">{monthLabel(month)}</h2>
+              <button
+                type="button"
+                className="monthly-event-icon-button"
+                onClick={() => changeMonth(1)}
+                aria-label="Mois suivant"
+              >
+                <FontAwesomeIcon icon={faChevronRight} aria-hidden="true" />
+              </button>
+              {month !== today.slice(0, 7) && (
+                <button
+                  type="button"
+                  className="budget-link-button"
+                  onClick={() => {
+                    setMonth(today.slice(0, 7));
+                    setSelectedDate(null);
+                  }}
+                >
+                  Aujourd’hui
+                </button>
+              )}
+            </div>
+            <div className="budget-calendar__quick-add">
+              <ActionButton
+                action="add"
+                type="button"
+                className="monthly-event-button"
+                onClick={(event) =>
+                  openCreation(quickAdd.available ? "menu" : "expense", event)
+                }
+                disabled={isSaving}
+              >
+                {selectedDate
+                  ? `Ajouter le ${longDate(selectedDate)}`
+                  : "Ajouter au calendrier"}
+              </ActionButton>
+            </div>
           </div>
           <CalendarModeToggle mode={mode} onChange={setMode} />
           <div className="monthly-calendar__weekdays" aria-hidden="true">

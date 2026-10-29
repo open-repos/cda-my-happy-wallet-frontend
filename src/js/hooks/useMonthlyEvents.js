@@ -1,4 +1,9 @@
-import { isAcknowledgedWrite } from "../utils/acknowledgedWrite";
+import { useRefreshViews } from "./useRefreshViews";
+import {
+  mutationErrorMessage,
+  acknowledgeMutation,
+  useMutationFeedback,
+} from "./useMutationFeedback";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { monthlyEventsService } from "../services/monthlyEventsService";
 import { useSimulation } from "../components/Simulation/SimulationContext";
@@ -7,7 +12,7 @@ const loadError =
   "Impossible de charger vos événements. Vérifiez votre connexion puis réessayez.";
 
 export const useMonthlyEvents = (month) => {
-  const { scenario, revision, invalidate } = useSimulation();
+  const { scenario, revision } = useSimulation();
   const queryKey = `${month}:${scenario}:${revision}`;
   const activeKey = useRef(queryKey);
   activeKey.current = queryKey;
@@ -47,6 +52,9 @@ export const useMonthlyEvents = (month) => {
     }
   }, [month, scenario, queryKey]);
 
+  const refreshViews = useRefreshViews(load);
+  const feedback = useMutationFeedback(refreshViews);
+  const writing = useRef(false);
   useEffect(() => {
     load();
     return () => {
@@ -55,27 +63,35 @@ export const useMonthlyEvents = (month) => {
   }, [load, revision]);
 
   const mutate = async (action, successMessage) => {
+    if (writing.current) return false;
+    writing.current = true;
     setMutationStatus("loading");
     setMessage("");
     try {
-      try {
-        await action();
-      } catch (error) {
-        if (!isAcknowledgedWrite(error)) throw error;
-      }
-      const reloaded = await load();
+      const acknowledged = await acknowledgeMutation(action);
+      const reloaded = await refreshViews();
+      feedback.confirm(successMessage, {
+        refreshed: reloaded,
+        ...acknowledged,
+      });
       setMutationStatus("success");
       setMessage(
         reloaded
           ? successMessage
           : "La modification est enregistrée, mais l’affichage n’a pas pu être actualisé."
       );
-      invalidate();
       return true;
-    } catch {
+    } catch (error) {
       setMutationStatus("error");
-      setMessage("L’événement n’a pas pu être enregistré. Réessayez.");
+      setMessage(
+        mutationErrorMessage(
+          error,
+          "L’événement n’a pas pu être enregistré. Réessayez."
+        )
+      );
       return false;
+    } finally {
+      writing.current = false;
     }
   };
 

@@ -1,3 +1,4 @@
+import { MutationMessage } from "../Notifications/MutationMessage";
 import { ActionButton } from "../Actions/ActionButton";
 import React, { useEffect, useRef, useState } from "react";
 import addIcon from "../../../assets/icons/add.svg";
@@ -99,7 +100,8 @@ export const FinancialGoalsSection = ({ initialGoalId = null }) => {
           </ActionButton>
         )}
       </header>
-      <LiveMessage
+      <MutationMessage
+        success={state.mutationStatus === "success"}
         message={state.message}
         isError={state.status === "error" || state.mutationStatus === "error"}
         className="monthly-events-message"

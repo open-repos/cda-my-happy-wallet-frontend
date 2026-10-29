@@ -7,6 +7,27 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-10-29
+
+### Added
+
+- The desktop navigation collapses to an icon rail; links keep their accessible names and a tooltip, and the choice persists per browser (#328).
+
+### Changed
+
+- Applied the approved Atelier layout across Web pages, navigation, surfaces, actions and charts (#328).
+- The calendar takes the full width with the month details below, and list type filters are pill chips with readable counts (#328).
+- Moved the month title and previous/next/today controls from the page header into a toolbar on the calendar card, next to its add action (#328).
+- Every delete or simulation confirmation now opens a modal alert dialog; Escape and the backdrop keep the item and focus returns to its trigger (#328).
+- The mobile quick add is an icon-only floating button instead of a reserved bottom row; it steps aside while scrolling down, turns into a close cross and anchors the add menu above it (#328).
+- Unified mutation confirmations and separated committed writes from failed display refreshes with read-only recovery (#328).
+- Added a sun/moon theme toggle to the navigation and the mobile header; the profile no longer holds the theme selector (#328).
+
+### Fixed
+
+- Fixed low-contrast text: overdue calendar cards, danger button hover in compact lists, dark-theme expense amounts, legacy orange form labels, the navigation scrollbar and public link focus rings (#328).
+- Bounded date filters on phones and kept the focused field visible above the software keyboard, while preserving shared forms, drafts and inline editing (#328).
+
 ## [1.10.1] - 2026-10-29
 
 ### Fixed
@@ -224,7 +245,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Replaced dynamic SSH host discovery with a pre-verified `known_hosts` file.
 - Isolated SSH credentials from validation and build jobs.
 
-[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.10.1...develop
+[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.11.0...develop
+[1.11.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.10.1...v1.11.0
 [1.10.1]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.10.0...v1.10.1
 [1.10.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.9.0...v1.10.0
 [1.9.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.8.0...v1.9.0

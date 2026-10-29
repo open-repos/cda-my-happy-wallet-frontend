@@ -1,32 +1,24 @@
 import React from "react";
-import imgCharges from "../../../assets/icons/Charges.png";
-import imgRevenus from "../../../assets/icons/Revenus.png";
 import { useNavigate } from "react-router-dom";
-import "../../../css/Home.css";
+import { ActionButton } from "../Actions/ActionButton";
 
 const CaseOpFixeEmpty = () => {
   const navigate = useNavigate();
-  const goToAddOperationsFixes = async (e) => {
-    e.preventDefault();
-    navigate("/home/operations-fixes");
-  };
   return (
-    <div className="home-container-start">
-      <h1>Commencez par calculer votre reste à vire</h1>
-      <div className="img-txt-btn-ctn">
-        <div className="img-ctn">
-          <img src={imgCharges} />
-          <img src={imgRevenus} />
-        </div>
-        <h3>
-          Renseigner vos{" "}
-          <span style={{ color: "var(--orange-light)" }}>charges</span> et{" "}
-          <span style={{ color: "var(--orange-light)" }}>revenus</span> fixes
-        </h3>
-        <button onClick={goToAddOperationsFixes}>C'est parti</button>
-      </div>
-    </div>
+    <section className="atelier-empty-budget" aria-label="Démarrer mon budget">
+      <h2>Commencez par renseigner votre budget</h2>
+      <p>
+        Ajoutez vos charges et vos entrées fixes pour retrouver votre reste à
+        vivre et préparer les mois suivants.
+      </p>
+      <ActionButton
+        action="add"
+        type="button"
+        onClick={() => navigate("/home/operations-fixes")}
+      >
+        Ajouter mes éléments fixes
+      </ActionButton>
+    </section>
   );
 };
-
 export default CaseOpFixeEmpty;

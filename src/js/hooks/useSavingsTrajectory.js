@@ -1,3 +1,4 @@
+import { useRefreshViews } from "./useRefreshViews";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSimulation } from "../components/Simulation/SimulationContext";
 import { savingsTrajectoryService } from "../services/savingsTrajectoryService";
@@ -25,6 +26,7 @@ export const useSavingsTrajectory = (goal, months, assumptions) => {
       );
       if (sequence === latest.current)
         setState({ status: "success", data, identity });
+      return true;
     } catch (error) {
       if (sequence === latest.current)
         setState({
@@ -32,8 +34,10 @@ export const useSavingsTrajectory = (goal, months, assumptions) => {
           data: null,
           identity,
         });
+      return false;
     }
   }, [request, expected, identity]);
+  useRefreshViews(reload);
   useEffect(() => {
     reload();
     return () => {

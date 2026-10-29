@@ -1,4 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useRefreshViews } from "../../hooks/useRefreshViews";
+import {
+  mutationErrorMessage,
+  acknowledgeMutation,
+  useMutationFeedback,
+} from "../../hooks/useMutationFeedback";
+import { MutationMessage } from "../Notifications/MutationMessage";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   envelopesService,
   envelopeErrorMessage,
@@ -16,7 +23,6 @@ import {
   monthLabel,
   longDate,
 } from "../BudgetCalendar/budgetFormat";
-import { isAcknowledgedWrite } from "../../utils/acknowledgedWrite";
 
 export const EnvelopeDetail = ({ occurrenceId, onClose }) => {
   const simulation = useSimulation(),
@@ -42,27 +48,34 @@ export const EnvelopeDetail = ({ occurrenceId, onClose }) => {
   useEffect(() => {
     title.current?.focus();
   }, []);
-  useEffect(() => {
-    let alive = true;
+  const latestRead = useRef(0);
+  const reloadOccurrence = useCallback(async () => {
+    const request = ++latestRead.current;
     setStatus("loading");
-    envelopesService
-      .occurrence(occurrenceId)
-      .then((o) => {
-        if (alive) {
-          setOccurrence(o);
-          setStatus("success");
-        }
-      })
-      .catch((e) => {
-        if (alive) {
-          setStatus("error");
-          setMessage({ text: envelopeErrorMessage(e), error: true });
-        }
-      });
+    try {
+      const value = await envelopesService.occurrence(occurrenceId);
+      if (request === latestRead.current) {
+        setOccurrence(value);
+        setStatus("success");
+      }
+      return true;
+    } catch (error) {
+      if (request === latestRead.current) {
+        setStatus("error");
+        setMessage({ text: envelopeErrorMessage(error), error: true });
+      }
+      return false;
+    }
+  }, [occurrenceId]);
+  const refreshViews = useRefreshViews(reloadOccurrence);
+  const feedback = useMutationFeedback(refreshViews);
+  const [committed, setCommitted] = useState(false);
+  useEffect(() => {
+    reloadOccurrence();
     return () => {
-      alive = false;
+      latestRead.current++;
     };
-  }, [occurrenceId, retry, simulation.revision]);
+  }, [reloadOccurrence, retry, simulation.revision]);
   useEffect(() => {
     if (!edited) {
       setCategories(null);
@@ -97,20 +110,22 @@ export const EnvelopeDetail = ({ occurrenceId, onClose }) => {
     if (locked.current) return false;
     locked.current = true;
     setMessage({ text: "", error: false });
+    setCommitted(false);
     try {
-      try {
-        await action();
-      } catch (e) {
-        if (!isAcknowledgedWrite(e)) throw e;
-      }
-      simulation.invalidate();
+      const acknowledged = await acknowledgeMutation(action);
+      const refreshed = await refreshViews();
+      feedback.confirm(text, { refreshed, ...acknowledged });
+      setCommitted(true);
       setMessage({ text, error: false });
       return true;
     } catch (e) {
       setMessage({
-        text: envelopeErrorMessage(
+        text: mutationErrorMessage(
           e,
-          "La modification n’a pas pu être enregistrée. Actualisez avant de réessayer."
+          envelopeErrorMessage(
+            e,
+            "La modification n’a pas pu être enregistrée. Actualisez avant de réessayer."
+          )
         ),
         error: true,
       });
@@ -166,7 +181,11 @@ export const EnvelopeDetail = ({ occurrenceId, onClose }) => {
         {occurrence?.title ?? "Enveloppe"}
         {occurrence ? ` · ${monthLabel(occurrence.month)}` : ""}
       </h3>
-      <LiveMessage message={message.text} isError={message.error} />
+      <MutationMessage
+        success={committed}
+        message={message.text}
+        isError={message.error}
+      />
       <LiveMessage
         message={loading ? "Chargement des dépenses rattachées…" : ""}
         visible={false}

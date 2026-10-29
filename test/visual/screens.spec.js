@@ -34,7 +34,7 @@ const definitions = [
     ready: ".analytics-chart",
     chart: true,
   },
-  { name: "profile", path: "/profil", ready: ".theme-selector" },
+  { name: "profile", path: "/profil", ready: ".profil-container h1" },
 ];
 
 async function ready(page, theme, authenticated = true, simulation = false) {
@@ -145,7 +145,7 @@ for (const theme of ["light", "dark"]) {
         // Interacting below the fold scrolls the page. Keep fixed navigation
         // at the top of the full-page reference, as on the other screens.
         await page.evaluate(() => window.scrollTo(0, 0));
-      } else if (["calendar", "budget-forecast"].includes(definition.name)) {
+      } else if (definition.name === "calendar") {
         await expect(
           page.getByText("Votre simulation est vide.", { exact: true })
         ).toBeVisible();

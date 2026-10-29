@@ -1,4 +1,9 @@
-import { isAcknowledgedWrite } from "../utils/acknowledgedWrite";
+import { useRefreshViews } from "./useRefreshViews";
+import {
+  mutationErrorMessage,
+  acknowledgeMutation,
+  useMutationFeedback,
+} from "./useMutationFeedback";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { budgetErrorCode, budgetService } from "../services/budgetService";
 import { oneOffOperationsService } from "../services/oneOffOperationsService";
@@ -29,7 +34,7 @@ const mutationErrors = {
  * traiter, opérations du mois ou du jour sélectionné et commandes associées.
  */
 export const useBudgetCalendar = (month, selectedDate) => {
-  const { scenario, revision, invalidate } = useSimulation();
+  const { scenario, revision } = useSimulation();
   const queryKey = `${month}:${scenario}:${revision}`;
   const activeKey = useRef(queryKey);
   activeKey.current = queryKey;
@@ -128,6 +133,11 @@ export const useBudgetCalendar = (month, selectedDate) => {
     }
   }, [month, queryKey]);
 
+  const refreshViews = useRefreshViews(() =>
+    Promise.all([loadMonth(), loadOperations()])
+  );
+  const feedback = useMutationFeedback(refreshViews);
+  const writing = useRef(false);
   useEffect(() => {
     loadMonth();
     return () => {
@@ -142,28 +152,24 @@ export const useBudgetCalendar = (month, selectedDate) => {
   }, [loadOperations, revision]);
 
   const mutate = async (action, successText) => {
+    if (writing.current) return false;
+    writing.current = true;
     setMutationStatus("loading");
     setMessage({ tone: "info", text: "" });
     try {
-      try {
-        await action();
-      } catch (error) {
-        if (!isAcknowledgedWrite(error)) throw error;
-      }
-      // Une écriture dans un mois passé recalcule les reports : tout recharger.
-      const [monthLoaded, operationsLoaded] = await Promise.all([
-        loadMonth(),
-        loadOperations(),
-      ]);
+      const acknowledged = await acknowledgeMutation(action);
+      const reloaded = await refreshViews();
+      const loaded = Array.isArray(reloaded)
+        ? reloaded.every(Boolean)
+        : reloaded;
+      feedback.confirm(successText, { refreshed: loaded, ...acknowledged });
       setMutationStatus("success");
       setMessage({
         tone: "success",
-        text:
-          monthLoaded && operationsLoaded
-            ? successText
-            : "C’est enregistré, mais l’affichage n’a pas pu être actualisé.",
+        text: loaded
+          ? successText
+          : "C’est enregistré, mais l’affichage n’a pas pu être actualisé.",
       });
-      invalidate();
       return true;
     } catch (error) {
       const code = budgetErrorCode(error);
@@ -171,11 +177,15 @@ export const useBudgetCalendar = (month, selectedDate) => {
       setMutationStatus("error");
       setMessage({
         tone: "error",
-        text:
+        text: mutationErrorMessage(
+          error,
           mutationErrors[code] ??
-          "L’enregistrement a échoué. Vérifiez votre connexion puis réessayez.",
+            "L’enregistrement a échoué. Vérifiez votre connexion puis réessayez."
+        ),
       });
       return false;
+    } finally {
+      writing.current = false;
     }
   };
 

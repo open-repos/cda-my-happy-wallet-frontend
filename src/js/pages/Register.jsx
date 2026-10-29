@@ -14,9 +14,7 @@ const ConfirmationRegister = () => {
     <main className="confirm-register" id="main-content" tabIndex={-1}>
       <section aria-labelledby="registration-feedback-title">
         <h1 id="registration-feedback-title">
-          <span style={{ color: "var(--orange-light)" }}>
-            Demande d’inscription prise en compte
-          </span>
+          Demande d’inscription prise en compte
         </h1>
         <p>
           Si cette adresse peut être utilisée pour une inscription, vous

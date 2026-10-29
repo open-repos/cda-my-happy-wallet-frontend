@@ -1,3 +1,4 @@
+import { parseAcknowledgedWrite } from "../utils/acknowledgedWrite";
 import { apiPrivate } from "../../utils/axiosHelper";
 
 export const GOALS_PAGE_LIMIT = 100;
@@ -117,14 +118,14 @@ export const goalsService = {
     const response = await apiPrivate.post("/goals", toBody(goal), {
       withCredentials: true,
     });
-    return parseGoal(response.data?.data);
+    return parseAcknowledgedWrite(parseGoal, response.data?.data);
   },
 
   async updateGoal(id, goal) {
     const response = await apiPrivate.put(`/goals/${id}`, toBody(goal), {
       withCredentials: true,
     });
-    return parseGoal(response.data?.data);
+    return parseAcknowledgedWrite(parseGoal, response.data?.data);
   },
 
   async deleteGoal(id) {

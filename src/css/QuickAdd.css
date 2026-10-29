@@ -134,7 +134,7 @@
   }
   .quick-add-dock[hidden],
   .quick-add-fab[hidden],
-  .quick-add-root:has([aria-controls="main-navigation"][aria-expanded="true"])
+  .quick-add-root:has(.atelier-menu-toggle[aria-expanded="true"])
     .quick-add-dock,
   .quick-add-root:has(
       .monthly-event-form,
@@ -153,5 +153,129 @@
         env(safe-area-inset-bottom, 0px)
     );
     justify-content: flex-end;
+  }
+}
+
+/* Atelier: one labelled floating action. Content keeps an end margin and a
+   scroll padding so its last item and any focused control stay above it;
+   the button steps aside while the page scrolls down. */
+@media (max-width: 767px), (max-width: 1199px) and (max-height: 600px) {
+  .quick-add-root {
+    display: flex;
+    flex-direction: column;
+    height: var(--quick-add-viewport-height, 100dvh);
+  }
+  /* On :root, as the menu dialog is a portal outside the quick add root. */
+  :root {
+    --quick-add-clearance: calc(
+      56px + 2 * var(--ds-primitive-space-4) + env(safe-area-inset-bottom, 0px)
+    );
+  }
+  .quick-add-root .protected-layout {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scroll-padding-block-end: var(--quick-add-clearance);
+  }
+  .quick-add-root .protected-layout__content {
+    min-height: 100%;
+    padding-bottom: var(--quick-add-clearance);
+  }
+  .quick-add-dock {
+    display: flex;
+    position: fixed;
+    inset-inline-end: max(1rem, env(safe-area-inset-right, 0px));
+    inset-block-end: calc(
+      var(--ds-primitive-space-4) + env(safe-area-inset-bottom, 0px)
+    );
+    z-index: var(--ds-z-index-navigation);
+    padding: 0;
+    background: none;
+    border: 0;
+    /* Only the button takes pointer events, never the empty dock box. */
+    pointer-events: none;
+  }
+  .quick-add-dock .quick-add-fab {
+    pointer-events: auto;
+    transition: transform 180ms ease, opacity 180ms ease;
+  }
+  .quick-add-dock--away .quick-add-fab:not(:focus-visible) {
+    transform: translateY(calc(100% + var(--ds-primitive-space-6)));
+    opacity: 0;
+    pointer-events: none;
+  }
+  /* Icon-only round button; its name comes from aria-label. */
+  .quick-add-fab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    border: 2px solid var(--ds-color-background-surface);
+    border-radius: var(--ds-primitive-radius-pill);
+    outline: 1px solid var(--web-action-primary-background);
+    background: var(--web-action-primary-background);
+    color: var(--web-action-primary-text);
+    box-shadow: var(--ds-shadow-overlay);
+    font: inherit;
+    font-weight: var(--ds-primitive-font-weight-semibold);
+  }
+  .quick-add-fab svg {
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+  }
+  .quick-add-dock[hidden],
+  .quick-add-fab[hidden] {
+    display: none;
+  }
+  /* While the menu is open the button stays above it and turns into a
+     close cross; the menu opens from the button's corner. */
+  .quick-add-dock--open {
+    z-index: calc(var(--ds-z-index-overlay) + 1);
+  }
+  .quick-add-fab svg {
+    transition: transform 200ms ease;
+  }
+  .quick-add-fab[aria-expanded="true"] svg {
+    transform: rotate(135deg);
+  }
+  .quick-add-overlay--menu {
+    justify-content: flex-end;
+    align-items: flex-end;
+    padding: var(--ds-primitive-space-4)
+      max(1rem, env(safe-area-inset-right, 0px))
+      calc(var(--quick-add-clearance) - var(--ds-primitive-space-2));
+  }
+  .quick-add-overlay--menu .form-dialog__backdrop {
+    background: rgb(0 0 0 / 25%);
+  }
+  .quick-add-overlay--menu .quick-add-surface {
+    inline-size: min(100%, 21rem);
+    border-radius: var(--ds-primitive-radius-lg) var(--ds-primitive-radius-lg)
+      var(--ds-primitive-radius-sm) var(--ds-primitive-radius-lg);
+    transform-origin: bottom right;
+    animation: quick-add-grow 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+}
+@keyframes quick-add-grow {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .quick-add-dock .quick-add-fab,
+  .quick-add-fab svg {
+    transition: none;
+  }
+  .quick-add-overlay--menu .quick-add-surface {
+    animation: none;
   }
 }

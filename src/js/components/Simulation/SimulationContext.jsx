@@ -1,4 +1,8 @@
-import { isAcknowledgedWrite } from "../../utils/acknowledgedWrite";
+import {
+  mutationErrorMessage,
+  acknowledgeMutation,
+  useMutationFeedback,
+} from "../../hooks/useMutationFeedback";
 import { envelopeErrorMessage } from "../../services/envelopesService";
 import React, {
   createContext,
@@ -56,6 +60,24 @@ export const SimulationProvider = ({ children }) => {
       document.removeEventListener("visibilitychange", refresh);
     };
   }, [invalidate]);
+  const readers = useRef(new Map());
+  const registerRefresh = useCallback((reload) => {
+    const id = Symbol("view");
+    readers.current.set(id, reload);
+    return () => readers.current.delete(id);
+  }, []);
+  const refreshViews = useCallback(async () => {
+    const registered = [...readers.current.values()];
+    if (!registered.length) {
+      invalidate();
+      return true;
+    }
+    const results = await Promise.allSettled(registered.map((read) => read()));
+    return results.every(
+      (result) => result.status === "fulfilled" && result.value !== false
+    );
+  }, [invalidate]);
+  const feedback = useMutationFeedback(refreshViews);
   const mutate = useCallback(
     async (
       action,
@@ -67,13 +89,10 @@ export const SimulationProvider = ({ children }) => {
       setMutationStatus("loading");
       setMessage("");
       try {
-        try {
-          await action();
-        } catch (error) {
-          if (!isAcknowledgedWrite(error)) throw error;
-        }
+        const acknowledged = await acknowledgeMutation(action);
+        const refreshed = await refreshViews();
+        feedback.confirm(success, { refreshed, ...acknowledged });
         if (mounted.current) {
-          invalidate();
           setMutationStatus("success");
           setMessage(success);
         }
@@ -82,14 +101,19 @@ export const SimulationProvider = ({ children }) => {
         if (mounted.current) {
           setMutationStatus("error");
           const code = error?.response?.data?.error?.details?.code;
-          setMessage(errors[code] || envelopeErrorMessage(error, failure));
+          setMessage(
+            mutationErrorMessage(
+              error,
+              errors[code] || envelopeErrorMessage(error, failure)
+            )
+          );
         }
         return false;
       } finally {
         busy.current = false;
       }
     },
-    [invalidate]
+    [refreshViews, feedback.confirm]
   );
   return (
     <SimulationContext.Provider
@@ -100,6 +124,8 @@ export const SimulationProvider = ({ children }) => {
         scenario: enabled ? "simulation" : "standard",
         revision,
         invalidate,
+        registerRefresh,
+        refreshViews,
         mutate,
         mutationStatus,
         message,

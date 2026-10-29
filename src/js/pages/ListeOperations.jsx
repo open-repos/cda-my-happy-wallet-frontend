@@ -1,3 +1,5 @@
+import { MutationMessage } from "../components/Notifications/MutationMessage";
+import { ConfirmDialog } from "../components/Forms/ConfirmDialog";
 import { ActionButton } from "../components/Actions/ActionButton";
 import { useQuickAdd } from "../components/QuickAdd/QuickAddContext";
 import { useSimulation } from "../components/Simulation/SimulationContext";
@@ -101,7 +103,8 @@ function ListeOperations() {
           Ajouter une opération
         </ActionButton>
       </header>
-      <LiveMessage
+      <MutationMessage
+        success={state.mutationStatus === "success"}
         message={state.message}
         isError={
           state.status === "error" ||
@@ -213,32 +216,42 @@ function ListeOperations() {
         </button>
       )}
       {deleting && (
-        <fieldset
-          className="one-off-delete-confirmation"
-          disabled={state.mutationStatus === "loading"}
+        <ConfirmDialog
+          label={`Supprimer « ${deleting.title} » ?`}
+          busy={state.mutationStatus === "loading"}
+          error={state.mutationStatus === "error" ? state.message : ""}
+          onCancel={() => {
+            setDeleting(null);
+            restore();
+          }}
         >
-          <legend>Supprimer « {deleting.title} » ?</legend>
-          <ActionButton
-            action="cancel"
-            ref={keepRef}
-            type="button"
-            className="one-off-button one-off-button--secondary"
-            onClick={() => {
-              setDeleting(null);
-              restore();
-            }}
+          <fieldset
+            className="one-off-delete-confirmation"
+            disabled={state.mutationStatus === "loading"}
           >
-            Annuler
-          </ActionButton>
-          <ActionButton
-            action="delete"
-            type="button"
-            className="one-off-button one-off-button--danger"
-            onClick={remove}
-          >
-            Oui, supprimer
-          </ActionButton>
-        </fieldset>
+            <legend>Supprimer « {deleting.title} » ?</legend>
+            <ActionButton
+              action="cancel"
+              ref={keepRef}
+              type="button"
+              className="one-off-button one-off-button--secondary"
+              onClick={() => {
+                setDeleting(null);
+                restore();
+              }}
+            >
+              Annuler
+            </ActionButton>
+            <ActionButton
+              action="delete"
+              type="button"
+              className="one-off-button one-off-button--danger"
+              onClick={remove}
+            >
+              Oui, supprimer
+            </ActionButton>
+          </fieldset>
+        </ConfirmDialog>
       )}
       {isFormOpen && (
         <OneOffOperationForm

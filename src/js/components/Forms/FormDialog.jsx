@@ -13,6 +13,9 @@ export const FormDialog = ({
   className = "",
   surfaceClassName = "",
   inertBackground = true,
+  role = "dialog",
+  closeLabel = "Fermer l’ajout",
+  restoreFocus = false,
 }) => {
   const dialog = useRef(null);
   const surface = useRef(null);
@@ -21,6 +24,14 @@ export const FormDialog = ({
   const revealField = () => {
     const field = document.activeElement;
     if (!surface.current?.contains(field)) return;
+    // Native focus already reveals action buttons. Moving them after pointerdown
+    // can cancel their click when the software keyboard reduces the viewport.
+    if (
+      !field.matches(
+        'input,select,textarea,[role="combobox"],[contenteditable="true"]'
+      )
+    )
+      return;
     const box = field.getBoundingClientRect();
     const bounds = surface.current.getBoundingClientRect();
     const top = bounds.top + 16;
@@ -33,8 +44,11 @@ export const FormDialog = ({
   // WebKit can report identical bounds again after the focused field has
   // changed size. Recheck after every dialog render, including those events.
   useLayoutEffect(revealField);
-  useEffect(() => {
+  // Layout cleanup runs before every passive cleanup: the page is no longer
+  // inert when a closing confirmation restores focus to its trigger.
+  useLayoutEffect(() => {
     const root = document.getElementById("root");
+    const trigger = document.activeElement;
     const wasInert = root?.hasAttribute("inert");
     const bodyOverflow = document.body.style.overflow;
     const htmlOverflow = document.documentElement.style.overflow;
@@ -46,8 +60,10 @@ export const FormDialog = ({
       document.body.style.overflow = bodyOverflow;
       document.documentElement.style.overflow = htmlOverflow;
       cancelAnimationFrame(frame.current);
+      if (restoreFocus && trigger?.isConnected && !trigger.disabled)
+        trigger.focus({ preventScroll: true });
     };
-  }, [inertBackground]);
+  }, [inertBackground, restoreFocus]);
   const focusables = () =>
     [
       ...surface.current.querySelectorAll(
@@ -59,6 +75,8 @@ export const FormDialog = ({
         !element.matches(":disabled, [type=hidden]") &&
         !element.closest("[hidden]")
     );
+  // Keep focus inside. A ConfirmDialog is a sibling portal: do not nest one in
+  // a FormDialog without excluding it here, or a parent render steals focus.
   useEffect(() => {
     if (!dialog.current.contains(document.activeElement))
       (focusables()[0] ?? surface.current).focus({ preventScroll: true });
@@ -66,7 +84,7 @@ export const FormDialog = ({
   return createPortal(
     <div
       ref={dialog}
-      role="dialog"
+      role={role}
       aria-modal="true"
       aria-label={label}
       aria-labelledby={labelledBy}
@@ -104,7 +122,7 @@ export const FormDialog = ({
         type="button"
         tabIndex={-1}
         className="form-dialog__backdrop"
-        aria-label="Fermer l’ajout"
+        aria-label={closeLabel}
         disabled={busy}
         onClick={() => !busy && onClose()}
       />

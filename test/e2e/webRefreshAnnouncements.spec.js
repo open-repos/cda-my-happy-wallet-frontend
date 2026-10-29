@@ -132,7 +132,7 @@ for (const width of [390, 768, 1440]) {
       await expect(
         page.getByRole("status").filter({
           hasText:
-            kind === "categories" ? "Catégorie ajoutée." : "Ajout enregistré.",
+            kind === "categories" ? "Catégorie ajoutée." : "Opération ajoutée.",
         })
       ).toHaveCount(1);
     });
