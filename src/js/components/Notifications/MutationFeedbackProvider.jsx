@@ -17,7 +17,8 @@ export const FORM_ACTIVITY_SELECTOR = [
   ".fixed-inline",
   ".compact-inline-controls",
   ".fixed-charge-form form",
-  '[aria-controls="main-navigation"][aria-expanded="true"]',
+  // The mobile drawer only: the desktop rail toggle shares aria-controls.
+  '.atelier-menu-toggle[aria-expanded="true"]',
 ].join(",");
 const isBlocked = () =>
   [...document.querySelectorAll(FORM_ACTIVITY_SELECTOR)].some(

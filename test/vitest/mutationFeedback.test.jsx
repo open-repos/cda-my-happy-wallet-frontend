@@ -140,4 +140,28 @@ describe("common mutation confirmations", () => {
     fireEvent.click(screen.getByRole("button", { name: "Formulaire" }));
     await waitFor(() => expect(spy).toHaveBeenCalledTimes(1));
   });
+  it("is not blocked by the expanded desktop rail toggle", async () => {
+    const spy = vi.spyOn(toast, "success");
+    // Same aria-controls as the drawer toggle, but it is not a form or a drawer.
+    const rail = document.createElement("button");
+    rail.setAttribute("aria-controls", "main-navigation");
+    rail.setAttribute("aria-expanded", "true");
+    document.body.append(rail);
+    const rects = HTMLElement.prototype.getClientRects;
+    vi.spyOn(HTMLElement.prototype, "getClientRects").mockImplementation(
+      function () {
+        return this === rail ? [{ width: 44, height: 44 }] : rects.call(this);
+      }
+    );
+    try {
+      mount({
+        write: vi.fn().mockResolvedValue({}),
+        reload: vi.fn().mockResolvedValue(true),
+      });
+      fireEvent.click(screen.getByRole("button", { name: "Ajouter" }));
+      await waitFor(() => expect(spy).toHaveBeenCalledTimes(1));
+    } finally {
+      rail.remove();
+    }
+  });
 });

@@ -134,7 +134,7 @@
   }
   .quick-add-dock[hidden],
   .quick-add-fab[hidden],
-  .quick-add-root:has([aria-controls="main-navigation"][aria-expanded="true"])
+  .quick-add-root:has(.atelier-menu-toggle[aria-expanded="true"])
     .quick-add-dock,
   .quick-add-root:has(
       .monthly-event-form,
