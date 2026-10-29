@@ -71,5 +71,5 @@ laisser Annuler focalisé. Un test unitaire et les huit variantes navigateur
 320/390/768/1440 clair/sombre couvrent cette régression.
 
 Les douze références du calendrier ont été comparées et relues sur le runner
-canonique : voir [les preuves et empreintes](evidence/293/README.md). Les seuils
+canonique : voir [les preuves et empreintes](https://github.com/open-repos/cda-my-happy-wallet-frontend/blob/v1.11.0/docs/evidence/293/README.md). Les seuils
 visuels et les workflows restent inchangés.

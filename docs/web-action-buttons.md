@@ -82,7 +82,7 @@ la couverture de deux instances indépendantes.
   183 parcours distincts au total. Les deux écarts initiaux ont été résolus :
   ancrage du radio d'icône dans sa tuile et adaptation du contrôle d'ancien
   bouton icône seule au nouveau libellé visible, avec cible ≥44 px et icône 16 px.
-- [Captures avant/après](evidence/296/README.md) : mêmes données fictives et
+- [Captures avant/après, archivées au tag v1.11.0](https://github.com/open-repos/cda-my-happy-wallet-frontend/blob/v1.11.0/docs/evidence/296/README.md) : mêmes données fictives et
   navigateur à 390/1440 px, clair/sombre, depuis v1.8.0 puis cette branche.
 
 La configuration locale utilise un Chromium disponible hors dépôt : aucun

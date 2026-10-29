@@ -54,7 +54,7 @@ côté Web ; aucune bibliothèque d'icônes supplémentaire n'est nécessaire.
 Le nom de dossier des composants ci-dessus est relatif à
 `src/js/components/`. Les fichiers absents du diff ne sont pas des nouveautés de
 v1.8.0. L'inventaire complet des 65 fichiers est joint dans
-`ux-audit-1.8.0-files.txt`.
+[`ux-audit-1.8.0-files.txt`](https://github.com/open-repos/cda-my-happy-wallet-frontend/blob/v1.11.0/docs/ux-audit-1.8.0-files.txt) (archivé au tag v1.11.0).
 
 ## Cascade, breakpoints et clavier
 
