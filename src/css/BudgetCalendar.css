@@ -190,6 +190,7 @@
 }
 
 .budget-mode__option {
+  position: relative;
   display: inline-flex;
   min-height: 44px;
   align-items: center;
@@ -200,8 +201,13 @@
   font-weight: var(--ds-typography-action-weight);
 }
 
+/* The native radio stays inside its label, which draws the segment. */
 .budget-mode__option input {
   position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
   opacity: 0;
   pointer-events: none;
 }
