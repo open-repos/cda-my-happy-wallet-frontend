@@ -1,6 +1,7 @@
 import { MutationMessage } from "../Notifications/MutationMessage";
+import { ConfirmDialog } from "../Forms/ConfirmDialog";
 import { ActionButton } from "../Actions/ActionButton";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { useSimulation } from "./SimulationContext";
 import { SimulationReadout } from "./SimulationControls";
 import { useAnnouncesLoading } from "../../hooks/useAnnouncesLoading";
@@ -12,46 +13,50 @@ import { LiveMessage } from "../LiveMessage";
 import { formatMoney, longDate } from "../BudgetCalendar/budgetFormat";
 import { potentialExpiration } from "../../utils/budgetSimulation";
 import { forecastToday } from "../../utils/budgetForecast";
-const Confirmation = ({ title, label, disabled, onConfirm, onCancel }) => {
+const Confirmation = ({
+  title,
+  label,
+  disabled,
+  error,
+  onConfirm,
+  onCancel,
+}) => {
   const cancel = useRef(null);
   useFormFocus(cancel);
-  useEffect(() => {
-    const key = (event) => {
-      if (event.key === "Escape" && !disabled) {
-        event.preventDefault();
-        onCancel();
-      }
-    };
-    document.addEventListener("keydown", key);
-    return () => document.removeEventListener("keydown", key);
-  }, [disabled, onCancel]);
   return (
-    <section
-      className="simulation-confirmation"
-      role="group"
-      aria-label={title}
+    <ConfirmDialog
+      label={title}
+      busy={disabled}
+      error={error}
+      onCancel={onCancel}
     >
-      <p>{title}</p>
-      <ActionButton
-        action="cancel"
-        type="button"
-        ref={cancel}
-        className="monthly-event-button monthly-event-button--secondary"
-        disabled={disabled}
-        onClick={onCancel}
-        aria-label="Annuler la confirmation"
+      <section
+        className="simulation-confirmation"
+        role="group"
+        aria-label={title}
       >
-        Annuler
-      </ActionButton>
-      <button
-        type="button"
-        className="monthly-event-button"
-        disabled={disabled}
-        onClick={onConfirm}
-      >
-        {label}
-      </button>
-    </section>
+        <p>{title}</p>
+        <ActionButton
+          action="cancel"
+          type="button"
+          ref={cancel}
+          className="monthly-event-button monthly-event-button--secondary"
+          disabled={disabled}
+          onClick={onCancel}
+          aria-label="Annuler la confirmation"
+        >
+          Annuler
+        </ActionButton>
+        <button
+          type="button"
+          className="monthly-event-button"
+          disabled={disabled}
+          onClick={onConfirm}
+        >
+          {label}
+        </button>
+      </section>
+    </ConfirmDialog>
   );
 };
 export const SimulationPanel = ({
@@ -243,6 +248,7 @@ export const SimulationPanel = ({
               : "Oui, vider la simulation"
           }
           disabled={busy}
+          error={state.mutationStatus === "error" ? state.message : ""}
           onCancel={() => {
             setPending(null);
             state.setActiveForm(null);

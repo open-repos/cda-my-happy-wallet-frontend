@@ -60,3 +60,39 @@
     );
   }
 }
+
+/* Confirmation modals reuse the inline confirmation markup without its
+   page-level frame. */
+.confirm-dialog__surface {
+  max-width: 34rem;
+}
+.confirm-dialog__surface > :is(fieldset, div, section) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--ds-primitive-space-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.confirm-dialog__surface > * > :is(legend, span, p) {
+  flex: 1 0 100%;
+  margin: 0;
+}
+.confirm-dialog__surface legend,
+.confirm-dialog__surface > div > span,
+.confirm-dialog__surface > section > p:first-child {
+  font-weight: var(--ds-primitive-font-weight-semibold);
+}
+.confirm-dialog__error:empty {
+  display: none;
+}
+.confirm-dialog__error {
+  margin: var(--ds-primitive-space-3) 0 0;
+  padding: var(--ds-primitive-space-3);
+  border-radius: var(--ds-radius-control);
+  background: var(--ds-color-status-error-surface);
+  color: var(--ds-color-status-error-text);
+}

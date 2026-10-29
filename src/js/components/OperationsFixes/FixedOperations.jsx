@@ -1,5 +1,6 @@
 import { MutationMessage } from "../Notifications/MutationMessage";
 import { FormHeader } from "../Forms/FormHeader";
+import { ConfirmDialog } from "../Forms/ConfirmDialog";
 import { FormDialog } from "../Forms/FormDialog";
 import { ActionButton } from "../Actions/ActionButton";
 import { CompactMoneyList } from "../CompactOperations/CompactMoneyList";
@@ -447,33 +448,39 @@ export const FixedOperations = () => {
         )}
       </div>
       {deleting && (
-        <fieldset className="fixed-charge-delete" disabled={busy}>
-          <legend>Supprimer « {deleting.titre} » ?</legend>
-          <p>
-            Cet élément sera retiré du budget courant. Les mois clôturés
-            conservent leur historique.
-          </p>
-          <button
-            ref={keepRef}
-            type="button"
-            className="one-off-button one-off-button--secondary"
-            onClick={() => setDeleting(null)}
-          >
-            Conserver cet élément
-          </button>
-          <ActionButton
-            action="confirm"
-            type="button"
-            className="one-off-button one-off-button--danger"
-            onClick={async () => {
-              if (await collection(deleting.kind).remove(deleting))
-                setDeleting(null);
-            }}
-            variant="danger"
-          >
-            Confirmer la suppression
-          </ActionButton>
-        </fieldset>
+        <ConfirmDialog
+          label={`Supprimer « ${deleting.titre} » ?`}
+          busy={busy}
+          onCancel={() => setDeleting(null)}
+        >
+          <fieldset className="fixed-charge-delete" disabled={busy}>
+            <legend>Supprimer « {deleting.titre} » ?</legend>
+            <p>
+              Cet élément sera retiré du budget courant. Les mois clôturés
+              conservent leur historique.
+            </p>
+            <button
+              ref={keepRef}
+              type="button"
+              className="one-off-button one-off-button--secondary"
+              onClick={() => setDeleting(null)}
+            >
+              Conserver cet élément
+            </button>
+            <ActionButton
+              action="confirm"
+              type="button"
+              className="one-off-button one-off-button--danger"
+              onClick={async () => {
+                if (await collection(deleting.kind).remove(deleting))
+                  setDeleting(null);
+              }}
+              variant="danger"
+            >
+              Confirmer la suppression
+            </ActionButton>
+          </fieldset>
+        </ConfirmDialog>
       )}
     </section>
   );

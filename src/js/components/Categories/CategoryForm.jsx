@@ -1,3 +1,4 @@
+import { ConfirmDialog } from "../Forms/ConfirmDialog";
 import { ActionButton } from "../Actions/ActionButton";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import React, { useEffect, useRef, useState } from "react";
@@ -225,7 +226,7 @@ export const CategoryForm = ({
           color={selectedColor(color)}
         />
         <div className="one-off-form__actions">
-          {category && !isConfirmingDelete && (
+          {category && (
             <ActionButton
               action="delete"
               type="button"
@@ -238,25 +239,31 @@ export const CategoryForm = ({
             </ActionButton>
           )}
           {category && isConfirmingDelete && (
-            <div className="one-off-delete-confirmation" role="alert">
-              <span>Supprimer « {category.name} » ?</span>
-              <ActionButton
-                action="delete"
-                type="button"
-                onClick={onDelete}
-                disabled={isSaving}
-              >
-                Oui, supprimer
-              </ActionButton>
-              <ActionButton
-                action="cancel"
-                type="button"
-                onClick={() => setIsConfirmingDelete(false)}
-                disabled={isSaving}
-              >
-                Annuler
-              </ActionButton>
-            </div>
+            <ConfirmDialog
+              label={`Supprimer « ${category.name} » ?`}
+              busy={isSaving}
+              onCancel={() => setIsConfirmingDelete(false)}
+            >
+              <div className="one-off-delete-confirmation">
+                <span>Supprimer « {category.name} » ?</span>
+                <ActionButton
+                  action="cancel"
+                  type="button"
+                  onClick={() => setIsConfirmingDelete(false)}
+                  disabled={isSaving}
+                >
+                  Annuler
+                </ActionButton>
+                <ActionButton
+                  action="delete"
+                  type="button"
+                  onClick={onDelete}
+                  disabled={isSaving}
+                >
+                  Oui, supprimer
+                </ActionButton>
+              </div>
+            </ConfirmDialog>
           )}
           <ActionButton
             action="cancel"

@@ -9,6 +9,7 @@ import "../../../css/MutationNotifications.css";
 
 export const FORM_ACTIVITY_SELECTOR = [
   '[role="dialog"][aria-modal="true"]',
+  '[role="alertdialog"][aria-modal="true"]',
   ".monthly-event-form",
   ".one-off-form",
   ".financial-goal-form",
