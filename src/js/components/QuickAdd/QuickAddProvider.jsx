@@ -68,12 +68,14 @@ export const QuickAddProvider = ({ children }) => {
         returnFocus.current?.isConnected && !returnFocus.current.disabled
           ? returnFocus.current
           : fab.current;
-      if (
-        target?.getClientRects().length &&
-        !target.closest("[inert],[hidden]")
-      )
-        target.focus();
-      else if (remaining-- > 0) requestAnimationFrame(focusVisibleTrigger);
+      const visible =
+        target?.getClientRects().length && !target.closest("[inert],[hidden]");
+      // Last frame: focus anyway instead of giving up (no layout under jsdom).
+      if (visible || remaining === 0) target?.focus();
+      else {
+        remaining -= 1;
+        requestAnimationFrame(focusVisibleTrigger);
+      }
     };
     requestAnimationFrame(focusVisibleTrigger);
   };
