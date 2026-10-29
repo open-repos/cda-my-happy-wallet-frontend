@@ -192,3 +192,80 @@
     border: 0;
   }
 }
+
+/* Desktop rail: icons only, names kept for assistive technologies. */
+.atelier-collapse-toggle {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  flex: 0 0 44px;
+  min-block-size: 44px;
+  margin-inline-start: auto;
+  border: 0;
+  border-radius: var(--ds-primitive-radius-md);
+  background: transparent;
+  color: var(--ds-color-text-on-shell);
+}
+.atelier-collapse-toggle:hover {
+  background: var(--ds-primitive-color-green200);
+  color: var(--ds-primitive-color-neutral1000);
+}
+.atelier-collapse-toggle:focus-visible {
+  outline: var(--ds-border-width-focus) solid
+    var(--ds-color-focus-ring-on-shell);
+  outline-offset: 0;
+}
+@media (min-width: 1200px) {
+  :root[data-navigation="collapsed"] {
+    --atelier-navigation-width: 4.5rem;
+  }
+  .atelier-navigation {
+    transition: inline-size 160ms ease;
+  }
+  :root[data-navigation="collapsed"] .atelier-brand {
+    flex-direction: column;
+    padding-inline: 0;
+  }
+  :root[data-navigation="collapsed"] .atelier-collapse-toggle {
+    margin-inline-start: 0;
+  }
+  :root[data-navigation="collapsed"]
+    :is(
+      .atelier-brand > span,
+      .atelier-navigation__link span,
+      .atelier-navigation__profile-row > button:first-child span
+    ) {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  :root[data-navigation="collapsed"] .atelier-navigation__caption {
+    visibility: hidden;
+    block-size: 0;
+    margin: 0;
+  }
+  :root[data-navigation="collapsed"]
+    :is(.atelier-navigation__link, .atelier-navigation__profile-row > button) {
+    justify-content: center;
+  }
+  :root[data-navigation="collapsed"] .atelier-navigation__profile-row {
+    flex-direction: column;
+  }
+  :root[data-navigation="collapsed"] .atelier-theme-toggle {
+    margin-inline-start: 0;
+  }
+}
+@media (min-width: 1200px) and (prefers-reduced-motion: reduce) {
+  .atelier-navigation {
+    transition: none;
+  }
+}
+@media (max-width: 1199px) {
+  /* The drawer has its own open/close button. */
+  .atelier-collapse-toggle {
+    display: none;
+  }
+}

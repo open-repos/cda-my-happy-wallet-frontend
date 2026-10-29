@@ -16,9 +16,12 @@ import {
   faTimes,
   faUserCircle,
   faSignOutAlt,
+  faAnglesLeft,
+  faAnglesRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { logout, reset } from "../slices/auth/authSlice";
 import { ThemeToggle } from "./ThemeToggle";
+import { useNavigationCollapse } from "../hooks/useNavigationCollapse";
 import "../../css/AtelierNavigation.css";
 
 const destinations = [
@@ -41,6 +44,7 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const rail = useNavigationCollapse();
   const close = (restore = false) => {
     setOpen(false);
     if (restore) menu.current?.focus();
@@ -130,6 +134,26 @@ export default function Sidebar() {
         <div className="atelier-brand">
           <FontAwesomeIcon icon={faWallet} aria-hidden="true" />
           <span>MyHappyWallet</span>
+          <button
+            type="button"
+            className="atelier-collapse-toggle"
+            aria-label={
+              rail.collapsed ? "Déplier la navigation" : "Réduire la navigation"
+            }
+            title={rail.collapsed ? "Déplier" : "Réduire"}
+            aria-expanded={!rail.collapsed}
+            aria-controls="main-navigation"
+            onClick={() => {
+              // The rail has no room for the profile details.
+              if (!rail.collapsed) setProfileOpen(false);
+              rail.toggle();
+            }}
+          >
+            <FontAwesomeIcon
+              icon={rail.collapsed ? faAnglesRight : faAnglesLeft}
+              aria-hidden="true"
+            />
+          </button>
         </div>
         <p className="atelier-navigation__caption">Mon budget</p>
         <ul className="atelier-navigation__links">
@@ -138,6 +162,7 @@ export default function Sidebar() {
               <NavLink
                 to={to}
                 end
+                title={rail.collapsed ? label : undefined}
                 onClick={() => close()}
                 className={({ isActive }) =>
                   isActive
@@ -160,7 +185,18 @@ export default function Sidebar() {
               }
               aria-expanded={profileOpen}
               aria-controls="sidebar-profile-details"
-              onClick={() => setProfileOpen((value) => !value)}
+              title={rail.collapsed ? "Mon profil" : undefined}
+              onClick={() => {
+                // The rail has no room for the details: open it first. The
+                // drawer below 1200 px keeps the desktop preference intact.
+                const desktop = window.matchMedia?.(
+                  "(min-width: 1200px)"
+                ).matches;
+                if (rail.collapsed && desktop) {
+                  rail.expand();
+                  setProfileOpen(true);
+                } else setProfileOpen((value) => !value);
+              }}
             >
               <FontAwesomeIcon icon={faUserCircle} aria-hidden="true" />
               <span>Mon profil</span>
