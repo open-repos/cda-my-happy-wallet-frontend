@@ -1,3 +1,4 @@
+import { MutationMessage } from "../Notifications/MutationMessage";
 import { ActionButton } from "../Actions/ActionButton";
 import React, { useEffect, useRef, useState } from "react";
 import { useFixedCharges } from "../../hooks/useFixedCharges";
@@ -40,7 +41,8 @@ export const FixedCharges = () => {
         personnelle. Ne saisissez pas aussi la même dépense dans les événements
         ou les opérations : elle serait comptée deux fois.
       </p>
-      <LiveMessage
+      <MutationMessage
+        success={charges.mutationStatus === "success"}
         message={charges.message.text}
         isError={charges.message.error}
       />

@@ -1,7 +1,12 @@
+import { useRefreshViews } from "./useRefreshViews";
+import {
+  mutationErrorMessage,
+  acknowledgeMutation,
+  useMutationFeedback,
+} from "./useMutationFeedback";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { oneOffOperationsService as service } from "../services/oneOffOperationsService";
 import { useSimulation } from "../components/Simulation/SimulationContext";
-import { isAcknowledgedWrite } from "../utils/acknowledgedWrite";
 import { envelopeErrorMessage } from "../services/envelopesService";
 const genericError =
   "Impossible de charger vos opérations. Vérifiez votre connexion puis réessayez.";
@@ -10,7 +15,7 @@ const merge = (current, incoming) => {
   return [...current, ...incoming.filter((r) => !ids.has(r.id))];
 };
 export const useOneOffOperations = () => {
-  const { revision, invalidate } = useSimulation();
+  const { revision } = useSimulation();
   const [operations, setOperations] = useState([]),
     [categories, setCategories] = useState([]),
     [meta, setMeta] = useState(null),
@@ -70,6 +75,8 @@ export const useOneOffOperations = () => {
       return false;
     }
   }, []);
+  const refreshViews = useRefreshViews(() => loadInitial({ quiet: true }));
+  const feedback = useMutationFeedback(refreshViews);
   useEffect(() => {
     mounted.current = true;
     loadInitial();
@@ -112,13 +119,9 @@ export const useOneOffOperations = () => {
     setMutationStatus("loading");
     setMessage("");
     try {
-      try {
-        await action();
-      } catch (error) {
-        if (!isAcknowledgedWrite(error)) throw error;
-      }
-      invalidate();
-      const ok = await loadInitial({ quiet: true });
+      const acknowledged = await acknowledgeMutation(action);
+      const ok = await refreshViews();
+      feedback.confirm(text, { refreshed: ok, ...acknowledged });
       if (mounted.current) {
         setMutationStatus("success");
         setMessage(
@@ -132,9 +135,12 @@ export const useOneOffOperations = () => {
       if (mounted.current) {
         setMutationStatus("error");
         setMessage(
-          envelopeErrorMessage(
+          mutationErrorMessage(
             error,
-            "L’opération n’a pas pu être enregistrée. Réessayez."
+            envelopeErrorMessage(
+              error,
+              "L’opération n’a pas pu être enregistrée. Réessayez."
+            )
           )
         );
       }

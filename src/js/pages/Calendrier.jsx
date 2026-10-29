@@ -1,3 +1,4 @@
+import { MutationMessage } from "../components/Notifications/MutationMessage";
 import { Button } from "../components/Actions/Button";
 import { ActionButton } from "../components/Actions/ActionButton";
 import { useQuickAdd } from "../components/QuickAdd/QuickAddContext";
@@ -255,13 +256,15 @@ function Calendrier() {
           Prochains mois
         </Link>
       </header>
-      <LiveMessage
+      <MutationMessage
+        success={budget.mutationStatus === "success"}
         message={budget.message.text}
         isError={budget.message.tone === "error"}
         className="monthly-events-message"
         errorClassName="monthly-events-message--error"
       />
-      <LiveMessage
+      <MutationMessage
+        success={events.mutationStatus === "success"}
         message={events.message || ""}
         isError={events.status === "error" || events.mutationStatus === "error"}
         className="monthly-events-message"

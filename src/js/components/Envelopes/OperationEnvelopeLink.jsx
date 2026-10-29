@@ -1,28 +1,35 @@
-import React, { useEffect, useState } from "react";
+import { useRefreshViews } from "../../hooks/useRefreshViews";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { envelopesService } from "../../services/envelopesService";
 import { useSimulation } from "../Simulation/SimulationContext";
 export const OperationEnvelopeLink = ({ operation }) => {
   const { revision } = useSimulation();
   const [state, setState] = useState({ status: "loading" });
+  const version = useRef(0);
+  const reload = useCallback(async () => {
+    const request = ++version.current;
+    try {
+      const link = await envelopesService.link(operation.id);
+      const occurrence =
+        link.occurrenceId === null
+          ? null
+          : await envelopesService.occurrence(link.occurrenceId);
+      if (request === version.current)
+        setState({ status: "success", occurrence });
+      return true;
+    } catch {
+      if (request === version.current) setState({ status: "error" });
+      return false;
+    }
+  }, [operation.id]);
+  useRefreshViews(reload);
   useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const link = await envelopesService.link(operation.id),
-          occurrence =
-            link.occurrenceId === null
-              ? null
-              : await envelopesService.occurrence(link.occurrenceId);
-        if (alive) setState({ status: "success", occurrence });
-      } catch {
-        if (alive) setState({ status: "error" });
-      }
-    })();
+    reload();
     return () => {
-      alive = false;
+      version.current++;
     };
-  }, [operation.id, revision]);
+  }, [reload, revision]);
   return (
     <div className="operation-envelope-link">
       {state.status === "loading" ? (

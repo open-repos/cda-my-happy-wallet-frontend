@@ -1,3 +1,4 @@
+import { MutationMessage } from "../Notifications/MutationMessage";
 import { ActionButton } from "../Actions/ActionButton";
 import React, { useEffect, useRef, useState } from "react";
 import { useSimulation } from "./SimulationContext";
@@ -53,7 +54,11 @@ const Confirmation = ({ title, label, disabled, onConfirm, onCancel }) => {
     </section>
   );
 };
-export const SimulationPanel = ({ month, disabled = false }) => {
+export const SimulationPanel = ({
+  month,
+  disabled = false,
+  readout = true,
+}) => {
   const state = useSimulation();
   const potentials = usePotentialEvents();
   // Une actualisation après modification n'annonce que son résultat (#171).
@@ -104,8 +109,9 @@ export const SimulationPanel = ({ month, disabled = false }) => {
       aria-labelledby="simulation-panel-title"
     >
       <h2 id="simulation-panel-title">Simulation</h2>
-      <SimulationReadout month={month} />
-      <LiveMessage
+      {readout && <SimulationReadout month={month} />}
+      <MutationMessage
+        success={state.mutationStatus === "success"}
         message={state.message}
         isError={state.mutationStatus === "error"}
       />

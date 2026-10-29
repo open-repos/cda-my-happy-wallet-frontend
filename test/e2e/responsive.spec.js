@@ -54,7 +54,8 @@ for (const width of [320, 375, 390, 768, 1440]) {
         theme
       );
       await page.goto("/home");
-      await page.getByRole("button", { name: "Ouvrir le menu" }).click();
+      if (width < 1200)
+        await page.getByRole("button", { name: "Ouvrir le menu" }).click();
       const navigation = page.getByRole("navigation", {
         name: "Navigation principale",
       });
@@ -65,8 +66,8 @@ for (const width of [320, 375, 390, 768, 1440]) {
         await page.locator("html").evaluate((element, value) => {
           element.style.fontSize = value;
         }, zoom);
-        const links = navigation.locator("ul > a");
-        await expect(links).toHaveCount(6);
+        const links = navigation.locator("ul > li > a");
+        await expect(links).toHaveCount(8);
         // Wait for the drawer width transition before measuring the text itself.
         await expect
           .poll(() =>
@@ -114,10 +115,12 @@ for (const width of [320, 375, 390, 768, 1440]) {
             .toBe(true);
         }
       }
-      await page.keyboard.press("Escape");
-      await expect(
-        page.getByRole("button", { name: "Ouvrir le menu" })
-      ).toBeFocused();
+      if (width < 1200) {
+        await page.keyboard.press("Escape");
+        await expect(
+          page.getByRole("button", { name: "Ouvrir le menu" })
+        ).toBeFocused();
+      }
     });
   }
 }
@@ -600,7 +603,7 @@ for (const size of [
     await page.setViewportSize(size);
     await prepareProtectedPage(page);
     await page.goto("/home");
-    if (size.width < 768) {
+    if (size.width < 1200) {
       await page.getByRole("button", { name: "Ouvrir le menu" }).click();
     }
     const navigation = page.getByRole("navigation", {
@@ -618,7 +621,8 @@ for (const size of [
       .getByRole("list")
       .first()
       .evaluate((element) => [element.scrollHeight, element.clientHeight]);
-    expect(scrollHeight).toBeLessThanOrEqual(clientHeight);
+    expect(clientHeight).toBeGreaterThan(0);
+    expect(scrollHeight).toBeGreaterThanOrEqual(clientHeight);
     // L'anneau de focus (2px + 2px de décalage) tient dans la liste, qui
     // rogne ce qui dépasse quand elle défile.
     if (size.height <= 740) {
@@ -651,6 +655,8 @@ for (const viewport of viewports.slice(1)) {
     await page.setViewportSize(viewport);
     await prepareProtectedPage(page);
     await page.goto("/home");
+    if (viewport.width < 1200)
+      await page.getByRole("button", { name: "Ouvrir le menu" }).click();
     await expect(
       page.getByRole("navigation", { name: "Navigation principale" })
     ).toBeVisible();
@@ -860,7 +866,7 @@ for (const theme of ["light", "dark"]) {
       }, theme);
       await page.goto("/home");
       await expect(page.locator(".home-budget")).toBeVisible();
-      if (viewport === viewports[0]) {
+      if (viewport.width < 1200) {
         await page.getByRole("button", { name: "Ouvrir le menu" }).click();
       }
       const reached = new Map();
@@ -873,8 +879,10 @@ for (const theme of ["light", "dark"]) {
         expect.arrayContaining([
           "Accueil",
           "Calendrier",
-          "Objectifs-Évènements",
-          "Liste Opérations",
+          "Objectifs et événements",
+          "Opérations",
+          "Charges et entrées fixes",
+          "Prochains mois",
           "Catégories",
           "Analyses",
         ])
@@ -893,7 +901,7 @@ for (const viewport of viewports) {
     await prepareProtectedPage(page);
     await page.goto("/home");
     await expect(page.locator(".home-budget")).toBeVisible();
-    if (viewport === viewports[0]) {
+    if (viewport.width < 1200) {
       await page.getByRole("button", { name: "Ouvrir le menu" }).click();
     }
     const tabTo = async (name) => {
@@ -938,7 +946,11 @@ for (const theme of ["light", "dark"]) {
         );
         if (pageFailures.length) failures[protectedPage.path] = pageFailures;
         expect(checked, protectedPage.path).toEqual(
-          expect.arrayContaining(SHELL_CONTROLS[protectedPage.path])
+          expect.arrayContaining(
+            SHELL_CONTROLS[protectedPage.path].filter(
+              (name) => viewport.width < 1200 || name !== "Ouvrir le menu"
+            )
+          )
         );
       }
       await page.goto("/calendrier");

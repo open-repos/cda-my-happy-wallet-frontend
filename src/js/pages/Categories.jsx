@@ -1,3 +1,4 @@
+import { MutationMessage } from "../components/Notifications/MutationMessage";
 import { ActionButton } from "../components/Actions/ActionButton";
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -89,7 +90,8 @@ function Categories() {
           Ajouter une catégorie
         </ActionButton>
       </header>
-      <LiveMessage
+      <MutationMessage
+        success={state.mutationStatus === "success"}
         message={state.message}
         isError={isError}
         className="one-off-message"

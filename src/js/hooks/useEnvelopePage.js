@@ -1,3 +1,4 @@
+import { useRefreshViews } from "./useRefreshViews";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   envelopesService,
@@ -32,7 +33,7 @@ export const useEnvelopePage = (resource, params, enabled = true) => {
         paging: false,
         key,
       });
-      return;
+      return true;
     }
     setState((s) => ({
       ...s,
@@ -51,6 +52,7 @@ export const useEnvelopePage = (resource, params, enabled = true) => {
           paging: false,
           key,
         });
+      return true;
     } catch (e) {
       if (request === latest.current)
         setState({
@@ -61,8 +63,10 @@ export const useEnvelopePage = (resource, params, enabled = true) => {
           paging: false,
           key,
         });
+      return false;
     }
   }, [resource, key, enabled, revision]);
+  useRefreshViews(reload);
   useEffect(() => {
     reload();
     return () => {

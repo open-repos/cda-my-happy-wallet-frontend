@@ -21,6 +21,14 @@ export const FormDialog = ({
   const revealField = () => {
     const field = document.activeElement;
     if (!surface.current?.contains(field)) return;
+    // Native focus already reveals action buttons. Moving them after pointerdown
+    // can cancel their click when the software keyboard reduces the viewport.
+    if (
+      !field.matches(
+        'input,select,textarea,[role="combobox"],[contenteditable="true"]'
+      )
+    )
+      return;
     const box = field.getBoundingClientRect();
     const bounds = surface.current.getBoundingClientRect();
     const top = bounds.top + 16;

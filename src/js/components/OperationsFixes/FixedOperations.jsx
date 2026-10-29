@@ -1,3 +1,4 @@
+import { MutationMessage } from "../Notifications/MutationMessage";
 import { FormHeader } from "../Forms/FormHeader";
 import { FormDialog } from "../Forms/FormDialog";
 import { ActionButton } from "../Actions/ActionButton";
@@ -224,11 +225,13 @@ export const FixedOperations = () => {
           Ajouter
         </ActionButton>
       </div>
-      <LiveMessage
+      <MutationMessage
+        success={charges.mutationStatus === "success"}
         message={charges.message.text}
         isError={charges.message.error}
       />
-      <LiveMessage
+      <MutationMessage
+        success={incomes.mutationStatus === "success"}
         message={incomes.message.text}
         isError={incomes.message.error}
       />
@@ -370,7 +373,8 @@ export const FixedOperations = () => {
             >
               Ajouter un élément fixe
             </FormHeader>
-            <LiveMessage
+            <MutationMessage
+              success={collection(editor.kind).mutationStatus === "success"}
               message={collection(editor.kind).message.text}
               isError={collection(editor.kind).message.error}
             />

@@ -1,3 +1,4 @@
+import { MutationMessage } from "../components/Notifications/MutationMessage";
 import { ActionButton } from "../components/Actions/ActionButton";
 import { useQuickAdd } from "../components/QuickAdd/QuickAddContext";
 import { useSimulation } from "../components/Simulation/SimulationContext";
@@ -101,7 +102,8 @@ function ListeOperations() {
           Ajouter une opération
         </ActionButton>
       </header>
-      <LiveMessage
+      <MutationMessage
+        success={state.mutationStatus === "success"}
         message={state.message}
         isError={
           state.status === "error" ||

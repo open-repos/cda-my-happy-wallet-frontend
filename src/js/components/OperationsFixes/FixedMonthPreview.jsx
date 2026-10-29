@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { useRefreshViews } from "../../hooks/useRefreshViews";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import service from "../../services/operationsFixesService";
 import {
   envelopeMonth,
@@ -15,21 +16,26 @@ const Definitions = () => {
     [retry, setRetry] = useState(0),
     [state, setState] = useState({ status: "loading", data: [] });
   const { revision } = useSimulation();
-  useEffect(() => {
-    let alive = true;
+  const version = useRef(0);
+  const reload = useCallback(async () => {
+    const request = ++version.current;
     setState({ status: "loading", data: [] });
-    service
-      .getMonthDefinitions(month)
-      .then((data) => {
-        if (alive) setState({ status: "success", data });
-      })
-      .catch(() => {
-        if (alive) setState({ status: "error", data: [] });
-      });
+    try {
+      const data = await service.getMonthDefinitions(month);
+      if (request === version.current) setState({ status: "success", data });
+      return true;
+    } catch {
+      if (request === version.current) setState({ status: "error", data: [] });
+      return false;
+    }
+  }, [month]);
+  useRefreshViews(reload);
+  useEffect(() => {
+    reload();
     return () => {
-      alive = false;
+      version.current++;
     };
-  }, [month, retry, revision]);
+  }, [reload, retry, revision]);
   return (
     <div>
       <label className="envelope-field">

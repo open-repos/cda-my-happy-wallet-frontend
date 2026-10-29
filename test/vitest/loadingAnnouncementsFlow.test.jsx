@@ -91,12 +91,27 @@ describe("loading announcements around a mutation (#171)", () => {
     expect(view.renders[0].announces).toBe(true);
 
     const before = view.renders.length;
-    await act(() => view.current.createEvent({ title: "Assurance" }));
+    let finishRead;
+    service.listEvents.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishRead = resolve;
+        })
+    );
+    let saving;
+    await act(async () => {
+      saving = view.current.createEvent({ title: "Assurance" });
+    });
+    await waitFor(() => expect(view.current.status).toBe("loading"));
+    await act(async () => {
+      finishRead([]);
+      await saving;
+    });
     await waitFor(() => expect(view.current.status).toBe("success"));
 
     const after = view.renders.slice(before);
-    // Le rechargement relancé par invalidate() a bien eu lieu…
-    expect(service.listEvents.mock.calls.length).toBeGreaterThanOrEqual(3);
+    // La relecture coordonnée a eu lieu une fois, sans GET redondant…
+    expect(service.listEvents.mock.calls.length).toBe(2);
     expect(after.some(({ status }) => status === "loading")).toBe(true);
     // …sans jamais demander l'annonce d'un chargement.
     expect(after.every(({ announces }) => !announces)).toBe(true);

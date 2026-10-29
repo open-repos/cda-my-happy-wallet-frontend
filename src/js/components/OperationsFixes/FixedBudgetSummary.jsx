@@ -1,3 +1,4 @@
+import { useRefreshViews } from "../../hooks/useRefreshViews";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { budgetService } from "../../services/budgetService";
@@ -26,10 +27,13 @@ export const FixedBudgetSummary = ({ overview = false }) => {
       );
       if (latest.current === request)
         setState({ status: "success", summary, key });
+      return true;
     } catch {
       if (latest.current === request) setState({ status: "error", key });
+      return false;
     }
   }, [month, currency, scenario, key, revenus]);
+  useRefreshViews(reload);
   useEffect(() => {
     reload();
     return () => {
