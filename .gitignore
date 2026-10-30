@@ -27,3 +27,8 @@ test-results
 *.njsproj
 *.sln
 *.sw?
+
+# Captures de recette : à joindre à la PR ou en artefact CI, pas au dépôt (#338)
+docs/evidence/
+docs/previews/
+docs/proposals/

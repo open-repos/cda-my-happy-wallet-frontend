@@ -14,7 +14,7 @@ capture ou tolérance de comparaison n'est modifiée. Aucun overflow-x:hidden.
 Le test existant vérifie désormais la largeur du document et du conteneur après
 ouverture des deux détails, à 320/390/768/1440 et dans les deux thèmes, avec texte
 200 %. Les 10 parcours de comparaison passent sur Chromium149 local après
-correction. Les captures synthétiques avant/après sont dans evidence/301 :
+correction. Les captures synthétiques avant/après sont archivées au tag v1.11.0 :
 phone et desktop, clair/sombre. Les quatre captures avant échouent à la nouvelle
 assertion de largeur. Appareil iPhone réel et Safari/WebKit non disponibles ;
 la recette physique reste nécessaire. Le signalement utilisateur reste propre
@@ -22,7 +22,7 @@ au téléphone, la couverture ordinateur/tablette est automatisée.
 
 ## Captures de revue
 
-| Format     | Avant clair                                     | Après clair                                    | Avant sombre                                   | Après sombre                                  |
-| ---------- | ----------------------------------------------- | ---------------------------------------------- | ---------------------------------------------- | --------------------------------------------- |
-| Téléphone  | [Avant](evidence/301/before-phone-light.webp)   | [Après](evidence/301/after-phone-light.webp)   | [Avant](evidence/301/before-phone-dark.webp)   | [Après](evidence/301/after-phone-dark.webp)   |
-| Ordinateur | [Avant](evidence/301/before-desktop-light.webp) | [Après](evidence/301/after-desktop-light.webp) | [Avant](evidence/301/before-desktop-dark.webp) | [Après](evidence/301/after-desktop-dark.webp) |
+| Format     | Avant clair                                                                                                                  | Après clair                                                                                                                 | Avant sombre                                                                                                                | Après sombre                                                                                                               |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Téléphone  | [Avant](https://github.com/open-repos/cda-my-happy-wallet-frontend/blob/v1.11.0/docs/evidence/301/before-phone-light.webp)   | [Après](https://github.com/open-repos/cda-my-happy-wallet-frontend/blob/v1.11.0/docs/evidence/301/after-phone-light.webp)   | [Avant](https://github.com/open-repos/cda-my-happy-wallet-frontend/blob/v1.11.0/docs/evidence/301/before-phone-dark.webp)   | [Après](https://github.com/open-repos/cda-my-happy-wallet-frontend/blob/v1.11.0/docs/evidence/301/after-phone-dark.webp)   |
+| Ordinateur | [Avant](https://github.com/open-repos/cda-my-happy-wallet-frontend/blob/v1.11.0/docs/evidence/301/before-desktop-light.webp) | [Après](https://github.com/open-repos/cda-my-happy-wallet-frontend/blob/v1.11.0/docs/evidence/301/after-desktop-light.webp) | [Avant](https://github.com/open-repos/cda-my-happy-wallet-frontend/blob/v1.11.0/docs/evidence/301/before-desktop-dark.webp) | [Après](https://github.com/open-repos/cda-my-happy-wallet-frontend/blob/v1.11.0/docs/evidence/301/after-desktop-dark.webp) |

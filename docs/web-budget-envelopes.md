@@ -6,9 +6,9 @@ commit `ef263fca1c3538001b70b70f4880848d805cea83`, lié à #139.
 Le backend doit être fusionné et ses migrations appliquées pour utiliser ces API.
 Cette PR frontend ne fusionne ni ne déploie le backend.
 
-Aperçus de la recette avec données synthétiques :
-[accueil sur téléphone, thème clair](previews/314-home-mobile-light.png) et
-[analyse sur bureau, thème sombre](previews/314-analysis-desktop-dark.png).
+Aperçus de la recette avec données synthétiques, archivés au tag v1.11.0 :
+[accueil sur téléphone, thème clair](https://github.com/open-repos/cda-my-happy-wallet-frontend/blob/v1.11.0/docs/previews/314-home-mobile-light.png) et
+[analyse sur bureau, thème sombre](https://github.com/open-repos/cda-my-happy-wallet-frontend/blob/v1.11.0/docs/previews/314-analysis-desktop-dark.png).
 
 La clarification propriétaire remplace les exemples initiaux de #314 concernant
 le loyer et le salaire : **seules les charges mensuelles explicitement marquées
