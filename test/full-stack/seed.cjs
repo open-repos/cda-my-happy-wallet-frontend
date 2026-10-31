@@ -51,6 +51,7 @@ async function seed() {
         "trajectories",
         "recovery",
         "session",
+        "multitab",
         "privacy-a",
         "privacy-b",
       ]) {

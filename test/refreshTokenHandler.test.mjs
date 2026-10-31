@@ -1,5 +1,8 @@
 import assert from "assert";
-import { createRefreshTokenHandler } from "../src/js/services/refreshTokenHandler.mjs";
+import {
+  createRefreshTokenHandler,
+  runWithSessionRefreshLock,
+} from "../src/js/services/refreshTokenHandler.mjs";
 
 const createRequest = () => ({ headers: {} });
 
@@ -170,3 +173,135 @@ assert.strictEqual(
 );
 assert.strictEqual(firstConcurrentRequest.withCredentials, true);
 assert.strictEqual(secondConcurrentRequest.withCredentials, true);
+
+// Browser tabs share the rotating cookie but not their in-memory state.
+const createSharedLocks = () => {
+  let tail = Promise.resolve();
+  return {
+    request: (_name, _options, task) => {
+      const result = tail.then(() => task());
+      tail = result.catch(() => {});
+      return result;
+    },
+  };
+};
+
+const createRotatingServer = () => {
+  const presented = [];
+  let cookie = 0;
+  let revoked = false;
+  return {
+    presented,
+    isRevoked: () => revoked,
+    renew: async () => {
+      const sent = cookie;
+      presented.push(sent);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      if (sent !== cookie) {
+        revoked = true;
+        return false;
+      }
+      cookie += 1;
+      return true;
+    },
+  };
+};
+
+const createTab = (server, locks) => {
+  const store = createStore(createUser("expired.access.token"), async () => {
+    const renewed = await server.renew();
+    return renewed ? createUser("renewed.access.token") : null;
+  });
+  return createRefreshTokenHandler({
+    store,
+    decodeToken: (token) => ({ exp: token.startsWith("expired") ? 0 : 200 }),
+    createRefreshAction: refreshAction,
+    getStoredUser: () => null,
+    now: () => 100000,
+    runExclusive: (task) => runWithSessionRefreshLock(task, locks),
+  });
+};
+
+const server = createRotatingServer();
+const locks = createSharedLocks();
+const tabRequests = [createRequest(), createRequest()];
+await Promise.all(
+  [createTab(server, locks), createTab(server, locks)].map((tab, index) =>
+    tab(tabRequests[index])
+  )
+);
+assert.deepStrictEqual(server.presented, [0, 1]);
+assert.strictEqual(server.isRevoked(), false);
+for (const request of tabRequests) {
+  assert.strictEqual(
+    request.headers.Authorization,
+    "Bearer renewed.access.token"
+  );
+}
+
+// Without Web Locks, the renewal still runs.
+assert.strictEqual(
+  await runWithSessionRefreshLock(async () => "ran", null),
+  "ran"
+);
+
+// A lock that cannot be acquired must not leave requests waiting forever.
+let lockOptions;
+assert.strictEqual(
+  await runWithSessionRefreshLock(async () => "ran", {
+    request: async (_name, options) => {
+      lockOptions = options;
+      throw new DOMException("Timed out", "TimeoutError");
+    },
+  }),
+  "ran"
+);
+assert.ok(lockOptions.signal instanceof AbortSignal);
+
+// A failure of the renewal itself is not retried outside the lock.
+let failingRuns = 0;
+await assert.rejects(
+  runWithSessionRefreshLock(
+    async () => {
+      failingRuns += 1;
+      throw new Error("renewal failed");
+    },
+    { request: async (_name, _options, task) => task() }
+  ),
+  /renewal failed/
+);
+assert.strictEqual(failingRuns, 1);
+
+// Production wiring: without an injected runner, the handler takes the browser lock.
+let lockRequests = 0;
+const browserNavigator = Object.getOwnPropertyDescriptor(
+  globalThis,
+  "navigator"
+);
+Object.defineProperty(globalThis, "navigator", {
+  configurable: true,
+  value: {
+    locks: {
+      request: async (_name, _options, task) => {
+        lockRequests += 1;
+        return task();
+      },
+    },
+  },
+});
+const wiredStore = createStore(createUser("expired.access.token"), async () =>
+  createUser("renewed.access.token")
+);
+await createRefreshTokenHandler({
+  store: wiredStore,
+  decodeToken: () => ({ exp: 0 }),
+  createRefreshAction: refreshAction,
+  getStoredUser: () => null,
+  now: () => 100000,
+})(createRequest());
+assert.strictEqual(lockRequests, 1);
+if (browserNavigator) {
+  Object.defineProperty(globalThis, "navigator", browserNavigator);
+} else {
+  delete globalThis.navigator;
+}
