@@ -353,7 +353,7 @@ test("shows invalid credentials and recovers from a failed API read", async ({
   ).toBeVisible();
 });
 
-test("renews a browser session with a real rotating HttpOnly cookie and logs out locally", async ({
+test("renews a browser session with a real rotating HttpOnly cookie and revokes it at logout", async ({
   page,
   context,
 }, testInfo) => {
@@ -396,10 +396,33 @@ test("renews a browser session with a real rotating HttpOnly cookie and logs out
   if (!(await profile.isVisible()))
     await page.getByRole("button", { name: "Ouvrir le menu" }).click();
   await profile.click();
+  const email = await page.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem(JSON.stringify("user"))).payload.user
+        .email
+  );
+  const loggedOut = apiResponse(page, "/v1/users/logout", "POST");
   await page
     .getByRole("button", { name: "Se déconnecter", exact: true })
     .click();
+  expect((await loggedOut).status()).toBe(204);
   await expect(page).toHaveURL(/\/login$/);
+  // Restore the old cookie: only a server-side revocation can refuse it now.
+  await context.addCookies([after]);
+  const replayedStatus = await page.evaluate(async (accountEmail) => {
+    const response = await fetch("/v1/token", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        grant_type: "refresh_token",
+        email: accountEmail,
+      }),
+    });
+    return response.status;
+  }, email);
+  expect(replayedStatus).toBe(401);
+  await context.clearCookies();
   expect(
     await page.evaluate(
       () => localStorage.getItem(JSON.stringify("user")) === null

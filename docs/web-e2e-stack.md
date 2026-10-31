@@ -46,8 +46,8 @@ l'expiration du premier access token ; l'API garde son horloge réelle et émet
 le token renouvelé de cinq minutes. Ce test vérifie le mécanisme client de
 renouvellement, pas l'expiration réelle côté serveur.
 
-Le logout Web actuel supprime la session locale : ce test ne revendique pas de
-révocation serveur du cookie. Les tests natifs Android/iOS, l'installation PWA,
+Le logout Web révoque la session côté serveur : ce test relance l'ancien cookie
+et attend un `401`. Les tests natifs Android/iOS, l'installation PWA,
 la délivrabilité email, la conformité visuelle et l'audit d'accessibilité restent
 des validations distinctes. Cette stack ne contacte aucun SMTP réel.
 
