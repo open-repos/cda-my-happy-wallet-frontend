@@ -13,9 +13,10 @@
 
 Aucun dépôt backend voisin n'est nécessaire ou modifié. Les migrations du commit
 fixé sont appliquées dans cette base neuve. Le seed de production du backend
-n'est jamais appelé : `test/full-stack/seed.cjs` crée uniquement vingt et un comptes
+n'est jamais appelé : `test/full-stack/seed.cjs` crée uniquement trente comptes
 `@example.com`, leurs catégories et deux opérations fixes donnant une base
-mensuelle de 1 200 EUR. Chaque couple parcours/viewport dispose de son compte.
+mensuelle de 1 200 EUR. Chaque couple parcours/viewport dispose de son compte ; seul le compte ordinateur
+des parcours à deux onglets sert : la course ne dépend pas du viewport.
 Le bootstrap exécute le seed deux fois pour vérifier sa répétabilité.
 L'URL shadow pointe vers le nom distinct `mhw_e2e_shadow`, comme l'exige Prisma ;
 `migrate deploy` ne crée ni n'utilise cette base shadow.
@@ -28,8 +29,10 @@ utilise les contrats implémentés ; elle ne transforme pas Figma en règle mét
 ## Parcours et preuves
 
 Chaque parcours tourne aux formats téléphone tactile, tablette et ordinateur,
-avec 27 tests dans `test/full-stack/journeys/wallet.spec.js`, puis
-trois parcours de confidentialité dans `pwaPrivacy.spec.js` (#50), soit 30 tests :
+avec 33 tests dans `test/full-stack/journeys/wallet.spec.js`, puis
+trois parcours de confidentialité dans `pwaPrivacy.spec.js` (#50) et deux parcours
+à deux onglets dans `multiTabSession.spec.js` (#346, ordinateur seulement), soit
+38 tests exécutés et 4 ignorés :
 
 | Parcours    | États et effets vérifiés                                                                                                                                                                                     |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -95,7 +98,7 @@ npm run test:e2e:stack
 Ne pas lancer directement `docker compose up` : le script prépare des secrets
 neufs et un nom de projet unique `mhw-e2e-<suffixe>`, puis construit, attend la
 readiness réelle de l'API et lance le navigateur. Le script propage le code de
-sortie des tests. Résultat attendu : 30 tests réussis et code `0`.
+sortie des tests. Résultat attendu : 38 tests réussis, 4 ignorés et code `0`.
 
 Le contrôle GitHub existant
 [`Web format, lint, test and build`](../.github/workflows/web-quality.yml)
@@ -111,7 +114,7 @@ npx vite build --config test/full-stack/vite.config.mjs
 MHW_E2E=1 E2E_PASSWORD=discovery-only npx playwright test --config playwright.full-stack.config.js --list
 ```
 
-La découverte seule ne prouve pas les 30 parcours ; leur validation complète
+La découverte seule ne prouve pas les 38 parcours ; leur validation complète
 est fournie par la CI Docker. L'ancienne commande `npm run test:e2e` garde les
 parcours publics et les contrôles responsive avec API simulée de `test/e2e/`.
 Le ticket #61 reste distinct pour l'intégration optionnelle dans GitLab CI.
