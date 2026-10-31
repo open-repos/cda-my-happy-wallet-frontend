@@ -7,6 +7,16 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-10-31
+
+### Changed
+
+- Displayed declared goal savings in an accessible SVG semicircle with its server-estimated month and theme-aware text (#283).
+
+### Security
+
+- Updated follow-redirects to 1.16.2 to fix a credentials advisory on a package the browser bundle does not use (#342).
+
 ## [1.11.0] - 2026-10-29
 
 ### Added
@@ -245,7 +255,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Replaced dynamic SSH host discovery with a pre-verified `known_hosts` file.
 - Isolated SSH credentials from validation and build jobs.
 
-[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.11.0...develop
+[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.12.0...develop
+[1.12.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.11.0...v1.12.0
 [1.11.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.10.1...v1.11.0
 [1.10.1]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.10.0...v1.10.1
 [1.10.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.9.0...v1.10.0
