@@ -52,6 +52,7 @@ for (const viewport of [
       .getByRole("link", { name: "Calendrier", exact: true })
       .click();
     await page
+      .getByRole("main")
       .getByRole("link", { name: "Prochains mois", exact: true })
       .click();
     await expect(
