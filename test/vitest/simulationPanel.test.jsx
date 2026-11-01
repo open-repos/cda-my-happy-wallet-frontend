@@ -40,6 +40,9 @@ const event = {
 };
 beforeEach(() => {
   vi.resetAllMocks();
+  // Les fixtures sont en octobre : seule Date est figée, waitFor reste réel.
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-10-24T12:00:00Z"));
   usePotentialEvents.mockReturnValue({
     status: "success",
     events: [event],
@@ -53,7 +56,10 @@ beforeEach(() => {
     }),
   });
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 const show = () =>
   render(
     <SimulationProvider>
@@ -67,7 +73,21 @@ it("keeps numbers standard until explicitly enabled and describes potential expi
   expect(screen.getByText("Potentiel", { exact: true })).toBeVisible();
   expect(screen.queryByText(/Avec la Simulation/)).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("switch", { name: "Simulation" }));
+  expect(screen.getByRole("switch", { name: "Simulation" })).toBeChecked();
   expect(screen.getByText(/Avec la Simulation/)).toBeVisible();
+});
+it("keeps past monthly balances unchanged after the month expires in Paris", () => {
+  vi.setSystemTime(new Date("2026-10-31T23:00:00Z"));
+  show();
+  fireEvent.click(screen.getByRole("switch", { name: "Simulation" }));
+  expect(screen.getByRole("switch", { name: "Simulation" })).toBeChecked();
+  expect(
+    screen.getByText("Les bilans des mois passés restent inchangés.")
+  ).toBeVisible();
+  expect(
+    screen.queryByRole("region", { name: "Comparaison de la Simulation" })
+  ).not.toBeInTheDocument();
+  expect(useSimulationComparison).not.toHaveBeenCalled();
 });
 it("requires confirmation, supports cancellation and restores keyboard focus", async () => {
   show();
@@ -113,6 +133,7 @@ it("opens potential editing with its date and preserves potential status through
   show();
   fireEvent.click(screen.getByRole("button", { name: "Modifier Voyage" }));
   expect(screen.getByLabelText("Titre")).toHaveValue("Voyage");
+  expect(screen.getByLabelText("Date de début")).toHaveValue("2026-10-24");
   fireEvent.change(screen.getByLabelText(/^Montant/), {
     target: { value: "250.00" },
   });
@@ -123,6 +144,35 @@ it("opens potential editing with its date and preserves potential status through
     expect(monthlyEventsService.updateEvent).toHaveBeenCalledWith(
       8,
       expect.objectContaining({ amount: "250.00", startDate: "2026-10-24" })
+    )
+  );
+});
+it("requires a current or future start date when editing an expired potential", async () => {
+  vi.setSystemTime(new Date("2026-10-31T23:00:00Z"));
+  show();
+  fireEvent.click(screen.getByRole("button", { name: "Modifier Voyage" }));
+  const startDate = screen.getByLabelText("Date de début");
+  expect(startDate).toHaveAttribute("min", "2026-11-01");
+  fireEvent.click(
+    screen.getByRole("button", { name: "Enregistrer", exact: true })
+  );
+  expect(startDate).toHaveAttribute("aria-invalid", "true");
+  expect(startDate).toHaveFocus();
+  expect(
+    screen.getByText(
+      "Un élément potentiel doit commencer dans le mois courant ou un mois futur."
+    )
+  ).toBeVisible();
+  expect(monthlyEventsService.updateEvent).not.toHaveBeenCalled();
+
+  fireEvent.change(startDate, { target: { value: "2026-11-01" } });
+  fireEvent.click(
+    screen.getByRole("button", { name: "Enregistrer", exact: true })
+  );
+  await waitFor(() =>
+    expect(monthlyEventsService.updateEvent).toHaveBeenCalledWith(
+      8,
+      expect.objectContaining({ amount: "300.00", startDate: "2026-11-01" })
     )
   );
 });
