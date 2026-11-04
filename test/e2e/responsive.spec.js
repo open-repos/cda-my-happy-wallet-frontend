@@ -125,6 +125,79 @@ for (const width of [320, 375, 390, 768, 1440]) {
   }
 }
 
+// Every auth page imports its legacy stylesheet after Auth.css in the bundle;
+// fields, labels and button must still share one width inside the card, and a
+// form taller than the viewport must start below its top edge, never above.
+for (const width of [320, 390, 768, 1024, 1440]) {
+  for (const theme of ["light", "dark"]) {
+    for (const pageDefinition of pages) {
+      test(`${pageDefinition.path} form controls align inside the card at ${width}px in ${theme}`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width, height: 700 });
+        await page.addInitScript(
+          (value) => localStorage.setItem("mhw-theme", value),
+          theme
+        );
+        await page.goto(pageDefinition.path);
+        await expect(
+          page.getByRole("button", { name: pageDefinition.action })
+        ).toBeVisible();
+
+        const layout = await page.evaluate(() => {
+          const form = document.querySelector("main form");
+          const card = form.getBoundingClientRect();
+          const style = getComputedStyle(form);
+          const inner = {
+            left: card.left + parseFloat(style.borderLeftWidth),
+            right: card.right - parseFloat(style.borderRightWidth),
+          };
+          const controls = [
+            ...form.querySelectorAll(
+              ":scope > input, :scope > .auth-field-label, :scope > .submit_btn"
+            ),
+          ].map((element) => {
+            const bounds = element.getBoundingClientRect();
+            return {
+              name: element.id || element.className,
+              left: bounds.left,
+              right: bounds.right,
+              width: bounds.width,
+            };
+          });
+          return {
+            inner,
+            controls,
+            cardTop: card.top + window.scrollY,
+            headingTop:
+              form.querySelector("h1").getBoundingClientRect().top +
+              window.scrollY,
+            scrollWidth: document.documentElement.scrollWidth,
+            innerWidth: window.innerWidth,
+          };
+        });
+
+        expect(layout.controls.length).toBeGreaterThanOrEqual(3);
+        const widths = layout.controls.map((control) => control.width);
+        expect(Math.max(...widths) - Math.min(...widths)).toBeLessThanOrEqual(
+          1
+        );
+        for (const control of layout.controls) {
+          expect(control.left, control.name).toBeGreaterThanOrEqual(
+            layout.inner.left - 0.5
+          );
+          expect(control.right, control.name).toBeLessThanOrEqual(
+            layout.inner.right + 0.5
+          );
+        }
+        expect(layout.cardTop).toBeGreaterThanOrEqual(0);
+        expect(layout.headingTop).toBeGreaterThanOrEqual(0);
+        expect(layout.scrollWidth).toBeLessThanOrEqual(layout.innerWidth);
+      });
+    }
+  }
+}
+
 for (const viewport of viewports) {
   for (const pageDefinition of pages) {
     test(`${pageDefinition.path} fits the ${viewport.name} viewport`, async ({
