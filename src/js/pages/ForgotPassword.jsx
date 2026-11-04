@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./../../css/Forgotpassword.css";
 import "./../../css/Auth.css";
 import mailSent from "../../assets/icons/Mail-sent.svg";
+import EmailDeliveryHint from "../components/EmailDeliveryHint";
 import forgotPassword from "./../../assets/icons/ForgotPassword.svg";
 // import { useforgotpasswordMutation } from "../services/authService";
 import { Link } from "react-router-dom";
@@ -62,6 +63,7 @@ const Forgotpassword = () => {
         <h2>
           Vous allez recevoir un lien par email pour changer votre mot de passe
         </h2>
+        <EmailDeliveryHint />
         <img src={mailSent} height="auto" width="40%" alt="" />
       </main>
     );

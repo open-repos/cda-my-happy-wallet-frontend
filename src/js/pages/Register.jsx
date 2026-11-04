@@ -6,6 +6,7 @@ import mailSent from "./../../assets/icons/Mail-sent.svg";
 import favIcon from "./../../assets/icons/favicon.svg";
 import { Link } from "react-router-dom";
 import Spinner from "../components/Spinner";
+import EmailDeliveryHint from "../components/EmailDeliveryHint";
 import { register, reset } from "./../slices/auth/authSlice";
 import { toast } from "react-toastify";
 
@@ -20,6 +21,7 @@ const ConfirmationRegister = () => {
           Si cette adresse peut être utilisée pour une inscription, vous
           recevrez un email de confirmation.
         </p>
+        <EmailDeliveryHint />
         <p>
           Si vous avez déjà un compte, vous pouvez vous{" "}
           <Link to="/login">connecter</Link> ou{" "}
