@@ -76,11 +76,19 @@ for (const viewport of [
     await expect(
       page.getByRole("combobox", { name: "Périodicité", exact: true })
     ).toHaveValue("ANNUELLE");
-    await expect(page.getByLabel("Ma part de la charge (%)")).toHaveValue("50");
-    await page.getByLabel("Ma part de la charge (%)").fill("101");
-    await page.getByRole("button", { name: "Enregistrer la charge" }).click();
-    await expect(page.getByLabel("Ma part de la charge (%)")).toBeFocused();
-    await expect(page.getByLabel("Ma part de la charge (%)")).toHaveAttribute(
+    // #358: in the table the personal share lives behind « Plus d’options ».
+    let scope = page;
+    if (viewport.width >= 1024) {
+      await page.getByRole("button", { name: "Plus d’options" }).click();
+      scope = page.getByRole("dialog");
+    }
+    await expect(scope.getByLabel("Ma part de la charge (%)")).toHaveValue(
+      "50"
+    );
+    await scope.getByLabel("Ma part de la charge (%)").fill("101");
+    await scope.getByRole("button", { name: "Enregistrer la charge" }).click();
+    await expect(scope.getByLabel("Ma part de la charge (%)")).toBeFocused();
+    await expect(scope.getByLabel("Ma part de la charge (%)")).toHaveAttribute(
       "aria-invalid",
       "true"
     );

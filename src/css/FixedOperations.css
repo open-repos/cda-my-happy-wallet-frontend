@@ -430,33 +430,10 @@
   border: 1px solid var(--ds-color-field-border);
   border-radius: var(--ds-radius-control);
 }
-.fixed-inline__controls {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: var(--ds-primitive-space-2);
-  flex-wrap: wrap;
-  margin-top: var(--ds-primitive-space-3);
-}
-.fixed-inline__controls > [role="alert"] {
-  flex-basis: 100%;
-}
 .fixed-inline__error {
   display: block;
   color: var(--ds-color-status-error-text);
   font-weight: var(--ds-primitive-font-weight-regular);
-  font-size: 0.875rem;
-}
-.fixed-inline__fields {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--ds-primitive-space-3);
-  margin-top: var(--ds-primitive-space-3);
-}
-.fixed-inline__footer td {
-  border-top: 0;
-}
-.fixed-inline__state {
   font-size: 0.875rem;
 }
 .fixed-inline .fixed-operations__badge {

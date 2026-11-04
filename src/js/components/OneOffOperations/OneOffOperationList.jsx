@@ -14,6 +14,7 @@ export const OneOffOperationList = ({
   editingId,
   onSave,
   onCancel,
+  onMoreOptions,
   busy = false,
   mutationError,
 }) => {
@@ -40,6 +41,7 @@ export const OneOffOperationList = ({
           busy={busy}
           onSave={onSave}
           onCancel={onCancel}
+          onMoreOptions={onMoreOptions}
           mutationError={mutationError}
         />
       )}
@@ -60,7 +62,7 @@ export const OneOffOperationList = ({
             <ActionButton
               action="delete"
               type="button"
-              className="one-off-button one-off-button--secondary"
+              className="one-off-button one-off-button--secondary inline-icon-action"
               disabled={busy || Boolean(editingId)}
               onClick={(e) => onDelete(raw, e)}
               aria-label={`Supprimer ${raw.title}`}

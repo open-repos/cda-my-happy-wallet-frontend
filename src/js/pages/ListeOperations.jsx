@@ -171,7 +171,12 @@ function ListeOperations() {
             operations={state.operations}
             categories={state.categories}
             onEdit={openEdit}
-            editingId={editedOperation?.id}
+            editingId={isFormOpen ? null : editedOperation?.id}
+            onMoreOptions={(draft) => {
+              // The full form continues the row draft of the same operation.
+              setEditedOperation(draft);
+              setIsFormOpen(true);
+            }}
             onCancel={closeForm}
             onSave={save}
             busy={state.mutationStatus === "loading" || Boolean(deleting)}

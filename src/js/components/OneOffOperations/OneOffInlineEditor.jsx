@@ -1,4 +1,3 @@
-import { ActionButton } from "../Actions/ActionButton";
 import { CategorySelect } from "../Categories/CategorySelect";
 import React, { useRef, useState } from "react";
 import { useFormFocus } from "../../hooks/useFormFocus";
@@ -6,12 +5,40 @@ import { validateOperation } from "../../utils/oneOffOperationForm";
 import { normalizeDecimal } from "../../utils/decimalInput";
 import { useEnvelopeAssignment } from "../../hooks/useEnvelopeAssignment";
 import { EnvelopeAssignment } from "../Envelopes/EnvelopeAssignment";
+import {
+  InlineActions,
+  InlineCell,
+  InlineEditorRow,
+} from "../CompactOperations/InlineEditing";
+
+const SECONDARY = new Set(["currency", "reconciliation"]);
+/** Cell-sized messages; the full message stays in the description. */
+const SHORT = {
+  operationDate: "Date invalide",
+  title: "2 à 50 caractères",
+  categoryId: "Catégorie requise",
+  kind: "Type invalide",
+  amount: "Invalide, ex. 12,50",
+};
+
+/** Operation draft in the shape of the API resource, for the full form. */
+const asOperation = (operation, values) => ({
+  ...operation,
+  title: values.title,
+  amount: values.amount,
+  currency: values.currency,
+  type: values.kind,
+  operationDate: values.operationDate,
+  categoryId: values.categoryId === "" ? "" : Number(values.categoryId),
+});
+
 export const OneOffInlineEditor = ({
   operation,
   categories,
   busy,
   onSave,
   onCancel,
+  onMoreOptions,
   mutationError,
 }) => {
   const [values, setValues] = useState(() => ({
@@ -19,7 +46,8 @@ export const OneOffInlineEditor = ({
       kind: operation.type,
       categoryId: String(operation.categoryId),
     })),
-    [errors, setErrors] = useState({});
+    [errors, setErrors] = useState({}),
+    [revealed, setRevealed] = useState(false);
   const titleRef = useRef(null),
     saving = useRef(false);
   useFormFocus(titleRef);
@@ -35,54 +63,36 @@ export const OneOffInlineEditor = ({
       [name]: null,
     }));
   };
-  const field = (name, label, type = "text") => {
-    const props = {
-      id: `${formId}-${name}`,
-      "aria-label": label,
-      name,
-      form: formId,
-      value: values[name],
-      onChange: change,
-      disabled: busy,
-      "aria-invalid": Boolean(errors[name]),
-      "aria-describedby": errors[name] ? `${formId}-${name}-error` : undefined,
-    };
-    return (
-      <label htmlFor={props.id}>
-        {label}
-        {name === "categoryId" ? (
-          <CategorySelect {...props} categories={categories} />
-        ) : name === "kind" || name === "currency" ? (
-          <select {...props}>
-            {name === "currency" ? (
-              <>
-                <option>EUR</option>
-                <option>USD</option>
-              </>
-            ) : (
-              <>
-                <option value="DEPENSE">Dépense</option>
-                <option value="ENTREE">Entrée</option>
-              </>
-            )}
-          </select>
-        ) : (
-          <input
-            {...props}
-            type={type}
-            ref={name === "title" ? titleRef : undefined}
-            maxLength={name === "title" ? 50 : undefined}
-            inputMode={name === "amount" ? "decimal" : undefined}
-          />
-        )}{" "}
-        {errors[name] && (
-          <span className="compact-inline-error" id={`${formId}-${name}-error`}>
-            {errors[name]}
-          </span>
-        )}
-      </label>
+  const cell = (name, label, control, className) => (
+    <InlineCell
+      id={`${formId}-${name}`}
+      label={label}
+      error={errors[name]}
+      shortError={SHORT[name]}
+      className={className}
+    >
+      {(aria) =>
+        control({
+          ...aria,
+          name,
+          form: formId,
+          value: values[name],
+          onChange: change,
+          disabled: busy,
+        })
+      }
+    </InlineCell>
+  );
+  const select = (options) => (props) =>
+    (
+      <select {...props}>
+        {options.map(([value, text]) => (
+          <option key={value} value={value}>
+            {text}
+          </option>
+        ))}
+      </select>
     );
-  };
   const submit = async (e) => {
     e.preventDefault();
     if (saving.current || busy) return;
@@ -93,8 +103,14 @@ export const OneOffInlineEditor = ({
     const reconciliationError = assignment.problem();
     if (reconciliationError) next.reconciliation = reconciliationError;
     setErrors(next);
-    if (Object.keys(next).length) {
-      document.getElementById(`${formId}-${Object.keys(next)[0]}`)?.focus();
+    const failed = Object.keys(next);
+    if (failed.length) {
+      // Unfold the failing secondary field next to its error: the full form
+      // would only show it after another save.
+      if (failed.some((name) => SECONDARY.has(name))) setRevealed(true);
+      requestAnimationFrame(() =>
+        document.getElementById(`${formId}-${failed[0]}`)?.focus()
+      );
       return;
     }
     saving.current = true;
@@ -113,61 +129,74 @@ export const OneOffInlineEditor = ({
     }
   };
   return (
-    <tr
-      className="compact-money-table__editor"
-      onKeyDown={(e) => {
-        if (e.key === "Escape" && !busy) {
-          e.preventDefault();
-          onCancel();
-        }
-      }}
-    >
-      <td>{field("operationDate", "Date", "date")}</td>
-      <th scope="row">{field("title", "Titre")}</th>
-      <td>{field("categoryId", "Catégorie")}</td>
-      <td>{field("kind", "Type")}</td>
+    <InlineEditorRow busy={busy} onCancel={onCancel} revealed={revealed}>
       <td>
-        {field("amount", `Montant (${values.currency})`)}
-        {field("currency", "Devise")}
+        {cell("operationDate", "Date", (props) => (
+          <input {...props} type="date" />
+        ))}
+      </td>
+      <th scope="row">
+        {cell("title", "Titre", (props) => (
+          <input {...props} ref={titleRef} maxLength={50} />
+        ))}
+      </th>
+      <td>
+        {cell("categoryId", "Catégorie", (props) => (
+          <CategorySelect {...props} categories={categories} />
+        ))}
       </td>
       <td>
-        <form
-          id={formId}
-          className="compact-inline-controls"
-          noValidate
+        {cell(
+          "kind",
+          "Type",
+          select([
+            ["DEPENSE", "Dépense"],
+            ["ENTREE", "Entrée"],
+          ])
+        )}
+      </td>
+      <td className="inline-cell-host--amount">
+        {cell(
+          "amount",
+          `Montant (${values.currency})`,
+          (props) => (
+            <input {...props} inputMode="decimal" />
+          ),
+          "inline-cell--amount"
+        )}
+      </td>
+      <td>
+        <InlineActions
+          formId={formId}
           onSubmit={submit}
+          busy={busy}
+          saveDisabled={Boolean(assignment.link.occurrence?.closed)}
+          onCancel={onCancel}
+          onMoreOptions={
+            onMoreOptions
+              ? () => onMoreOptions(asOperation(operation, values))
+              : undefined
+          }
+          revealed={revealed}
+          onReveal={() => setRevealed((current) => !current)}
+          message={mutationError || undefined}
         >
+          {cell(
+            "currency",
+            "Devise",
+            select([
+              ["EUR", "EUR"],
+              ["USD", "USD"],
+            ])
+          )}
           <EnvelopeAssignment
             assignment={assignment}
             busy={busy}
             error={errors.reconciliation}
             form={formId}
           />
-          {mutationError && (
-            <span className="compact-inline-error" role="alert">
-              {mutationError}
-            </span>
-          )}
-          <ActionButton
-            action="save"
-            type="submit"
-            className="one-off-button"
-            disabled={busy || Boolean(assignment.link.occurrence?.closed)}
-            busy={busy}
-          >
-            {busy ? "Enregistrement…" : "Enregistrer"}
-          </ActionButton>
-          <ActionButton
-            action="cancel"
-            type="button"
-            className="one-off-button one-off-button--secondary"
-            disabled={busy}
-            onClick={onCancel}
-          >
-            Annuler
-          </ActionButton>
-        </form>
+        </InlineActions>
       </td>
-    </tr>
+    </InlineEditorRow>
   );
 };
