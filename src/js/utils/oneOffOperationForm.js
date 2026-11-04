@@ -1,3 +1,5 @@
+import { isPositiveAmount } from "./decimalInput";
+
 const isCalendarDate = (value) => {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) return false;
@@ -15,11 +17,9 @@ export const validateOperation = (operation, categoryIds) => {
   const title = operation.title.trim();
   if (title.length < 2 || title.length > 50)
     errors.title = "Le titre doit contenir entre 2 et 50 caractères.";
-  if (
-    !/^(0|[1-9]\d{0,7})(?:\.\d{1,2})?$/.test(operation.amount) ||
-    Number(operation.amount) <= 0
-  )
-    errors.amount = "Saisissez un montant positif avec deux décimales maximum.";
+  if (!isPositiveAmount(operation.amount))
+    errors.amount =
+      "Saisissez un montant positif avec deux décimales maximum, par exemple 12,50.";
   if (!isCalendarDate(operation.operationDate))
     errors.operationDate = "Choisissez une date valide.";
   if (!categoryIds.has(Number(operation.categoryId)))

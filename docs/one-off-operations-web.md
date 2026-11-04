@@ -40,7 +40,8 @@ détection d'un curseur répété.
 Le client n'envoie jamais d'identifiant de propriétaire : l'identité vient de
 la session authentifiée et l'API contrôle l'appartenance des opérations et des
 catégories. Les réponses HTTP sont validées à la frontière, les montants sont
-strictement positifs avec deux décimales maximum et les erreurs affichées ne
+strictement positifs avec deux décimales maximum, saisis avec une virgule ou un
+point (voir [la saisie décimale](web-decimal-input.md)), et les erreurs affichées ne
 divulguent aucun détail serveur.
 
 ## Accessibilité et responsive

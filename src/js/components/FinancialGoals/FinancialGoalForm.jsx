@@ -3,6 +3,7 @@ import { DeleteConfirmation } from "../Actions/DeleteConfirmation";
 import { ActionButton } from "../Actions/ActionButton";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import React, { useEffect, useRef, useState } from "react";
+import { normalizeDecimal, parseHundredths } from "../../utils/decimalInput";
 const emptyGoal = {
   title: "",
   targetAmount: "",
@@ -10,7 +11,11 @@ const emptyGoal = {
   monthlyContribution: "0",
   targetDate: "",
 };
-const AMOUNT = /^(0|[1-9]\d{0,7})(?:\.\d{1,2})?$/;
+/** Centièmes d'un montant d'au plus 8 chiffres et deux décimales, ou `null`. */
+const amount = (value) => {
+  const hundredths = parseHundredths(value);
+  return hundredths !== null && hundredths <= 9999999999 ? hundredths : null;
+};
 const isDate = (value) => {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) return false;
@@ -24,23 +29,19 @@ const isDate = (value) => {
 
 /** Règles du contrat backend `docs/financial-goals.md`. */
 export const validateGoal = (input) => {
-  const goal = {
-    ...input,
-    targetAmount: decimal(input.targetAmount),
-    savedAmount: decimal(input.savedAmount),
-    monthlyContribution: decimal(input.monthlyContribution),
-  };
+  const goal = input;
+  const target = amount(goal.targetAmount);
   const errors = {};
   const title = goal.title.trim();
   if (title.length < 2 || title.length > 50)
     errors.title = "Le titre doit contenir entre 2 et 50 caractères.";
-  if (!AMOUNT.test(goal.targetAmount) || Number(goal.targetAmount) <= 0)
+  if (target === null || target <= 0)
     errors.targetAmount =
       "Saisissez un montant cible positif, par exemple 1200 ou 1200,50.";
-  if (!AMOUNT.test(goal.savedAmount))
+  if (amount(goal.savedAmount) === null)
     errors.savedAmount =
       "Saisissez un montant positif ou nul, par exemple 0 ou 150,50.";
-  if (!AMOUNT.test(goal.monthlyContribution))
+  if (amount(goal.monthlyContribution) === null)
     errors.monthlyContribution =
       "Saisissez un versement positif ou nul, par exemple 0 ou 75,50.";
   if (goal.targetDate && !isDate(goal.targetDate))
@@ -48,9 +49,6 @@ export const validateGoal = (input) => {
   return errors;
 };
 
-/** Accepte la virgule décimale saisie sur un clavier français. */
-const decimal = (value) => value.trim().replace(",", ".");
-const normalizeAmount = (value) => Number(decimal(value)).toFixed(2);
 const fields = [
   {
     name: "targetAmount",
@@ -111,9 +109,9 @@ export const FinancialGoalForm = ({
     if (Object.keys(nextErrors).length) return;
     await onSave({
       title: values.title.trim(),
-      targetAmount: normalizeAmount(values.targetAmount),
-      savedAmount: normalizeAmount(values.savedAmount),
-      monthlyContribution: normalizeAmount(values.monthlyContribution),
+      targetAmount: normalizeDecimal(values.targetAmount),
+      savedAmount: normalizeDecimal(values.savedAmount),
+      monthlyContribution: normalizeDecimal(values.monthlyContribution),
       currency: "EUR",
       targetDate: values.targetDate || null,
     });

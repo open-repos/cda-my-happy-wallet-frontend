@@ -3,6 +3,7 @@ import { CategorySelect } from "../Categories/CategorySelect";
 import React, { useRef, useState } from "react";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import { validateOperation } from "../../utils/oneOffOperationForm";
+import { normalizeDecimal } from "../../utils/decimalInput";
 import { useEnvelopeAssignment } from "../../hooks/useEnvelopeAssignment";
 import { EnvelopeAssignment } from "../Envelopes/EnvelopeAssignment";
 export const OneOffInlineEditor = ({
@@ -100,7 +101,7 @@ export const OneOffInlineEditor = ({
     try {
       await onSave({
         title: values.title.trim(),
-        amount: values.amount,
+        amount: normalizeDecimal(values.amount),
         currency: values.currency,
         kind: values.kind,
         operationDate: values.operationDate,

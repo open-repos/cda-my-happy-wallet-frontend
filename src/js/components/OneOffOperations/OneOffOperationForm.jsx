@@ -4,6 +4,7 @@ import { DeleteConfirmation } from "../Actions/DeleteConfirmation";
 import { ActionButton } from "../Actions/ActionButton";
 import { CategorySelect } from "../Categories/CategorySelect";
 import { validateOperation } from "../../utils/oneOffOperationForm";
+import { normalizeDecimal } from "../../utils/decimalInput";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import { useEnvelopeAssignment } from "../../hooks/useEnvelopeAssignment";
 import { EnvelopeAssignment } from "../Envelopes/EnvelopeAssignment";
@@ -89,7 +90,7 @@ export const OneOffOperationForm = ({
     try {
       await onSave({
         title: values.title.trim(),
-        amount: values.amount,
+        amount: normalizeDecimal(values.amount),
         currency: values.currency,
         kind: values.kind,
         operationDate: values.operationDate,

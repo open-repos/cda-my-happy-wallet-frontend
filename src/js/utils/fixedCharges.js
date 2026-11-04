@@ -1,4 +1,5 @@
 import { envelopeMonth, validEffectiveMonth } from "./envelopes";
+import { parseHundredths } from "./decimalInput";
 export const CHARGE_PERIODS = [
   { value: "MENSUELLE", label: "Mensuelle — tous les mois", months: 1 },
   {
@@ -20,13 +21,7 @@ export const CHARGE_PERIODS = [
 ];
 
 // Centimes / centièmes de pourcentage : aucun arrondi intermédiaire.
-const hundredths = (value) => {
-  const text = String(value).trim().replace(",", ".");
-  if (!/^\d+(\.\d{1,2})?$/.test(text)) return null;
-  const [whole, fraction = ""] = text.split(".");
-  const result = Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
-  return Number.isSafeInteger(result) ? result : null;
-};
+const hundredths = (value) => parseHundredths(value);
 export const validateCharge = (values) => {
   const errors = {};
   const title = values.titre.trim();

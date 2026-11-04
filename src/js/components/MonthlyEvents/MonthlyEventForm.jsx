@@ -4,6 +4,7 @@ import { DeleteConfirmation } from "../Actions/DeleteConfirmation";
 import { ActionButton } from "../Actions/ActionButton";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import React, { useEffect, useId, useRef, useState } from "react";
+import { isPositiveAmount, normalizeDecimal } from "../../utils/decimalInput";
 import {
   EVENT_RECURRENCE_OPTIONS,
   isEventRecurrence,
@@ -32,11 +33,9 @@ const validate = (event) => {
   const errors = {};
   if (event.title.trim().length < 2 || event.title.trim().length > 50)
     errors.title = "Le titre doit contenir entre 2 et 50 caractères.";
-  if (
-    !/^(0|[1-9]\d{0,7})(?:\.\d{1,2})?$/.test(event.amount) ||
-    Number(event.amount) <= 0
-  )
-    errors.amount = "Saisissez un montant positif avec deux décimales maximum.";
+  if (!isPositiveAmount(event.amount))
+    errors.amount =
+      "Saisissez un montant positif avec deux décimales maximum, par exemple 12,50.";
   if (!isDate(event.startDate))
     errors.startDate = "Choisissez une date valide.";
   if (!isEventRecurrence(event.recurrence))
@@ -123,7 +122,7 @@ export const MonthlyEventForm = ({
     try {
       await onSave({
         title: values.title.trim(),
-        amount: values.amount,
+        amount: normalizeDecimal(values.amount),
         currency: values.currency,
         kind: values.kind,
         startDate: values.startDate,
