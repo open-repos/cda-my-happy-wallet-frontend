@@ -235,6 +235,9 @@ describe("authentication forms", () => {
       )
     ).toBeInTheDocument();
     expect(screen.queryByText(/Vous allez recevoir/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/vérifiez votre dossier spam ou courrier indésirable/)
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "connecter" })).toHaveAttribute(
       "href",
       "/login"
@@ -244,6 +247,19 @@ describe("authentication forms", () => {
         name: "réinitialiser votre mot de passe",
       })
     ).toHaveAttribute("href", "/forgot-password");
+  });
+
+  it("suggests checking the spam folder after a password reset request", () => {
+    mocks.authState = {
+      ...mocks.authState,
+      isEmailSent: true,
+    };
+
+    renderForm(<ForgotPassword />);
+
+    expect(
+      screen.getByText(/vérifiez votre dossier spam ou courrier indésirable/)
+    ).toBeInTheDocument();
   });
 
   it("dispatches a password reset request", () => {
