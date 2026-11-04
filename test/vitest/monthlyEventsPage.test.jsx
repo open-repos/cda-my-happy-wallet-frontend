@@ -117,7 +117,7 @@ describe("monthly event pages", () => {
     fireEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
     expect(actions.createEvent).toHaveBeenCalledWith({
       title: "Salaire",
-      amount: "1800",
+      amount: "1800.00",
       currency: "EUR",
       kind: "ENTREE",
       startDate: "2026-10-01",

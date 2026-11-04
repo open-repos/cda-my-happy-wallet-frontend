@@ -3,7 +3,7 @@ import { CategorySelect } from "../Categories/CategorySelect";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import React, { useEffect, useRef, useState } from "react";
 import { formatMoney, longDate } from "./budgetFormat";
-const amountPattern = /^(0|[1-9]\d{0,7})(?:\.\d{1,2})?$/;
+import { isPositiveAmount, normalizeDecimal } from "../../utils/decimalInput";
 
 /**
  * Convertit une occurrence en opération réelle. Le sens reste celui de
@@ -42,8 +42,9 @@ export const RealizeOccurrenceForm = ({
     const title = values.title.trim();
     if (title.length < 2 || title.length > 50)
       nextErrors.title = "Le titre doit contenir entre 2 et 50 caractères.";
-    if (!amountPattern.test(values.amount) || Number(values.amount) <= 0)
-      nextErrors.amount = "Saisissez un montant positif.";
+    if (!isPositiveAmount(values.amount))
+      nextErrors.amount =
+        "Saisissez un montant positif avec deux décimales maximum, par exemple 12,50.";
     if (!/^\d{4}-\d{2}-\d{2}$/.test(values.operationDate))
       nextErrors.operationDate = "Choisissez une date valide.";
     if (!categories.some(({ id }) => `${id}` === values.categoryId))
@@ -53,7 +54,7 @@ export const RealizeOccurrenceForm = ({
     await onSave({
       categoryId: Number(values.categoryId),
       title,
-      amount: values.amount,
+      amount: normalizeDecimal(values.amount),
       operationDate: values.operationDate,
     });
   };

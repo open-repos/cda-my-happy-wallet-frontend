@@ -1,5 +1,6 @@
 import { ActionButton } from "../Actions/ActionButton";
 import React, { useMemo, useState } from "react";
+import { hundredthsToDecimal, parseHundredths } from "../../utils/decimalInput";
 import { useSavingsTrajectory } from "../../hooks/useSavingsTrajectory";
 import { LiveMessage } from "../LiveMessage";
 import { EChart } from "../charts/EChart";
@@ -32,8 +33,10 @@ const INPUTS = [
   ],
 ];
 export const normalizedAssumption = (value) => {
-  const match = /^(0|[1-9]\d{0,7})(?:[,.](\d{0,2}))?$/.exec(value.trim());
-  return match ? `${match[1]}.${(match[2] || "").padEnd(2, "0")}` : null;
+  const hundredths = parseHundredths(value);
+  return hundredths !== null && hundredths <= 9999999999
+    ? hundredthsToDecimal(hundredths)
+    : null;
 };
 const reachText = (projection) => {
   if (projection.reachReason === "REACHED") return "Objectif déjà atteint";
@@ -99,7 +102,7 @@ export const SavingsTrajectorySimulation = ({ goal, onRefresh }) => {
               type="text"
               inputMode="decimal"
               required
-              maxLength={11}
+              maxLength={13}
               value={draft[key]}
               aria-describedby={`saving-${goal.id}-${key}-help`}
               onChange={(event) =>
