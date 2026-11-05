@@ -103,7 +103,7 @@ it("preserves the draft through repeated budget impact changes", async () => {
   expect(onSave).toHaveBeenCalledWith(
     expect.objectContaining({
       title: "Voyage",
-      amount: "120",
+      amount: "120.00",
       startDate: "2026-10-27",
       kind: "DEPENSE",
     })

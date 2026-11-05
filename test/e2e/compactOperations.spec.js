@@ -94,7 +94,10 @@ for (const width of [320, 390, 768, 1440])
       await page
         .getByRole("button", { name: "Enregistrer", exact: true })
         .click();
-      await expect(page.locator(".compact-inline-error")).toBeVisible();
+      // A server refusal is shown in full in the row.
+      const refusal = page.locator(".inline-actions__message");
+      await expect(refusal).not.toBeEmpty();
+      await expect(refusal).toBeVisible();
       await expect(title).toHaveValue(
         "Courses du quotidien avec un long libellé"
       );

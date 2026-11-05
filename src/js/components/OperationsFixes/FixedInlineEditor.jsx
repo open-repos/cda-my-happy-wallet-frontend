@@ -1,7 +1,7 @@
-import { ActionButton } from "../Actions/ActionButton";
-import { FixedCategorySelect } from "./FixedCategorySelect";
+import { CategorySelect } from "../Categories/CategorySelect";
 import { FixedEnvelopeFields } from "./FixedEnvelopeFields";
 import {
+  compatibleFixedCategories,
   fixedCategoryBody,
   validateFixedCategory,
 } from "../../utils/fixedCategories";
@@ -21,15 +21,35 @@ import {
 import { formatMoney } from "../BudgetCalendar/budgetFormat";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import { LiveMessage } from "../LiveMessage";
+import {
+  InlineActions,
+  InlineCell,
+  InlineEditorRow,
+} from "../CompactOperations/InlineEditing";
+
+/** Cell-sized messages; the full message stays in the description. */
+const SHORT = {
+  titre: "2 à 50 caractères",
+  montant: "Invalide, ex. 120,50",
+  periodicite: "Périodicité requise",
+  categoryId: "Catégorie invalide",
+};
+const SECONDARY = new Set([
+  "pourcentagePersonnel",
+  "devise",
+  "isBudgetEnvelope",
+  "effectiveMonth",
+]);
+
+/** Inline row editor of a fixed charge or income, in the compact ledger. */
 export const FixedInlineEditor = ({
   row,
-  compact,
-  ledger = false,
   busy,
   draft,
   onDraftChange,
   onSave,
   onClose,
+  onMoreOptions,
   categories,
   categoryError,
 }) => {
@@ -46,6 +66,7 @@ export const FixedInlineEditor = ({
       }
   );
   const [errors, setErrors] = useState({});
+  const [revealed, setRevealed] = useState(false);
   const titleRef = useRef(null);
   const saving = useRef(false);
   useFormFocus(titleRef);
@@ -75,62 +96,37 @@ export const FixedInlineEditor = ({
       [name]: null,
     }));
   };
-  const field = (name, label) => {
-    const id = `${formId}-${name}`;
-    const shared = {
-      id,
-      name,
-      form: formId,
-      value: values[name],
-      onChange: change,
-      disabled: busy,
-      "aria-invalid": Boolean(errors[name]),
-      "aria-describedby": errors[name] ? `${id}-error` : undefined,
-    };
-    return (
-      <div className="fixed-inline__field">
-        <label
-          htmlFor={id}
-          className={
-            compact || (ledger && name === "pourcentagePersonnel")
-              ? undefined
-              : "sr-only"
-          }
-        >
-          {label}
-        </label>
-        {name === "devise" || name === "periodicite" ? (
-          <select {...shared}>
-            {(name === "devise"
-              ? ["EUR", "USD"].map((value) => ({
-                  value,
-                  label: value,
-                }))
-              : CHARGE_PERIODS
-            ).map((option) => (
-              <option key={option.value} value={option.value}>
-                {name === "periodicite"
-                  ? option.label.split(" — ")[0]
-                  : option.label}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <input
-            {...shared}
-            ref={name === "titre" ? titleRef : undefined}
-            maxLength={name === "titre" ? 50 : undefined}
-            inputMode={name === "titre" ? undefined : "decimal"}
-          />
-        )}
-        {errors[name] && (
-          <span id={`${id}-error`} className="fixed-inline__error">
-            {errors[name]}
-          </span>
-        )}
-      </div>
+  const cell = (name, label, control, hint) => (
+    <InlineCell
+      id={`${formId}-${name}`}
+      label={label}
+      error={errors[name]}
+      shortError={SHORT[name]}
+      hint={hint}
+    >
+      {(aria) =>
+        control({
+          ...aria,
+          name,
+          form: formId,
+          value: values[name] ?? "",
+          onChange: change,
+          disabled: busy,
+        })
+      }
+    </InlineCell>
+  );
+  const options = (list) => (props) =>
+    (
+      <select {...props}>
+        {list.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
     );
-  };
+  const decimal = (props) => <input {...props} inputMode="decimal" />;
   const submit = async (event) => {
     event.preventDefault();
     if (saving.current || busy) return;
@@ -138,8 +134,14 @@ export const FixedInlineEditor = ({
     const categoryFailure = validateFixedCategory(values, categories, row.kind);
     if (categoryFailure) next.categoryId = categoryFailure;
     setErrors(next);
-    if (Object.keys(next).length) {
-      document.getElementById(`${formId}-${Object.keys(next)[0]}`)?.focus();
+    const failed = Object.keys(next);
+    if (failed.length) {
+      // Unfold the failing secondary field next to its error: the full form
+      // would only show it after another save.
+      if (failed.some((name) => SECONDARY.has(name))) setRevealed(true);
+      requestAnimationFrame(() =>
+        document.getElementById(`${formId}-${failed[0]}`)?.focus()
+      );
       return;
     }
     saving.current = true;
@@ -155,187 +157,157 @@ export const FixedInlineEditor = ({
       saving.current = false;
     }
   };
-  const keyboard = (event) => {
-    if (event.key === "Escape" && !busy) {
-      event.preventDefault();
-      onClose();
-    }
-  };
-  const controls = (
-    <form
-      id={formId}
-      noValidate
-      onSubmit={submit}
-      className="fixed-inline__controls"
-    >
-      <FixedEnvelopeFields
-        values={values}
-        onChange={change}
-        income={income}
-        editing
-        disabled={busy}
-        form={formId}
-        error={errors.isBudgetEnvelope || errors.effectiveMonth}
-      />
-      <LiveMessage
-        isError
-        message={
-          Object.values(errors).some(Boolean)
-            ? "Vérifiez les champs indiqués."
-            : ""
-        }
-      />
-      <ActionButton
-        action="cancel"
-        type="button"
-        disabled={busy}
-        onClick={onClose}
-        className="one-off-button one-off-button--secondary"
+  const categoryCell = () => {
+    if (!categories) return null;
+    const id = `${formId}-categoryId`;
+    const choices = compatibleFixedCategories(categories.categories, row.kind);
+    const notice =
+      categories.status === "loading"
+        ? "Chargement des catégories…"
+        : categories.status === "error"
+        ? "Catégories indisponibles. Votre choix est conservé."
+        : undefined;
+    const field = (
+      <InlineCell
+        id={id}
+        label="Catégorie"
+        error={errors.categoryId || categoryError}
+        shortError={SHORT.categoryId}
+        hint={notice}
       >
-        Annuler
-      </ActionButton>
-      <ActionButton
-        action="save"
-        type="submit"
-        disabled={busy}
-        className="one-off-button"
-        aria-label={
-          busy
-            ? "Enregistrement…"
-            : income
-            ? "Enregistrer l’entrée"
-            : "Enregistrer la charge"
-        }
-        busy={busy}
-      >
-        {busy ? "Enregistrement…" : "Enregistrer"}
-      </ActionButton>
-    </form>
-  );
-  const categoryField = categories ? (
-    <FixedCategorySelect
-      id={`${formId}-categoryId`}
-      form={formId}
-      kind={row.kind}
-      value={values.categoryId ?? ""}
-      onChange={change}
-      source={categories}
-      currentCategory={row.category}
-      busy={busy}
-      compact={compact}
-      error={errors.categoryId || categoryError}
-    />
-  ) : null;
-  const title = field(
-    "titre",
-    income ? "Titre de l’entrée" : "Titre de la charge"
-  );
-  const total = field(
-    "montant",
-    income ? "Montant reçu par mois" : "Montant total par échéance"
-  );
-  const currency = field(
-    "devise",
-    income ? "Devise de l’entrée" : "Devise de la charge"
-  );
-  const period = income ? "Mensuelle" : field("periodicite", "Périodicité");
-  const share = income
-    ? "Sans objet"
-    : field("pourcentagePersonnel", "Ma part de la charge (%)");
-  const monthly = (
-    <output aria-label="Aperçu mensuel personnel">
-      {amount("montantMensuelPersonnel")}
-    </output>
-  );
-  const badge = (
-    <span
-      className={`fixed-operations__badge fixed-operations__badge--${row.kind}`}
-    >
-      {income ? "Entrée" : "Charge"}
-    </span>
-  );
-  if (ledger)
-    return (
-      <tr
-        className="fixed-inline compact-money-table__editor"
-        onKeyDown={keyboard}
-      >
-        <td>
-          {period}
-          {!income && <div className="fixed-inline__field">{share}</div>}
-        </td>
-        <th scope="row">{title}</th>
-        <td>{categoryField}</td>
-        <td>{badge}</td>
-        <td>
-          {total}
-          {currency}
-          <div className="fixed-operations__monthly">
-            {monthly}
-            <span>Aperçu personnel / mois</span>
-          </div>
-        </td>
-        <td>{controls}</td>
-      </tr>
-    );
-  if (compact)
-    return (
-      <div className="fixed-inline" onKeyDown={keyboard}>
-        <div className="fixed-operations__card-top">
-          <div>
-            {title}
-            {badge}
-          </div>
-          <div className="fixed-operations__monthly">
-            {monthly}
-            <span>Aperçu / mois</span>
-          </div>
-        </div>
-        {categoryField}
-        <div className="fixed-inline__fields">
-          {total}
-          {currency}
-          {!income && (
-            <>
-              {period}
-              {share}
-            </>
-          )}
-        </div>
-        {!income && (
-          <p>
-            Ma part par échéance : <output>{amount("montantPersonnel")}</output>
-          </p>
+        {(aria) => (
+          <CategorySelect
+            {...aria}
+            name="categoryId"
+            form={formId}
+            value={values.categoryId ?? ""}
+            onChange={change}
+            categories={choices}
+            currentCategory={
+              choices.find(
+                (category) => String(category.id) === String(values.categoryId)
+              ) ?? row.category
+            }
+            placeholder="Non catégorisé"
+            disabled={busy || categories.status !== "success"}
+          />
         )}
-        {controls}
-      </div>
+      </InlineCell>
     );
-  return (
+    // Degraded read failure, not a validation error: the row may grow here.
+    if (categories.status !== "error") return field;
+    return (
+      <>
+        {field}
+        <button
+          type="button"
+          className="one-off-button one-off-button--secondary"
+          disabled={busy}
+          onClick={categories.retry}
+        >
+          Réessayer les catégories
+        </button>
+      </>
+    );
+  };
+  const monthly = (
     <>
-      <tr className="fixed-inline" onKeyDown={keyboard}>
-        <th scope="row">
-          {title}
-          {badge}
-        </th>
-        {categories && <td>{categoryField}</td>}
-        <td>{total}</td>
-        <td>{currency}</td>
-        <td>{period}</td>
-        <td>{share}</td>
-        <td>
-          <output>{income ? "Sans objet" : amount("montantPersonnel")}</output>
-        </td>
-        <td className="fixed-operations__monthly">
-          {monthly}
-          <span>Aperçu</span>
-        </td>
-        <td>
-          <span className="fixed-inline__state">Édition</span>
-        </td>
-      </tr>
-      <tr className="fixed-inline fixed-inline__footer" onKeyDown={keyboard}>
-        <td colSpan={categories ? 9 : 8}>{controls}</td>
-      </tr>
+      <output aria-label="Aperçu mensuel personnel">
+        {amount("montantMensuelPersonnel")}
+      </output>{" "}
+      / mois
+      {!income && preview && ` · ${values.pourcentagePersonnel} %`}
     </>
+  );
+  return (
+    <InlineEditorRow
+      busy={busy}
+      onCancel={onClose}
+      revealed={revealed}
+      className="fixed-inline"
+    >
+      <td>
+        {income ? (
+          <span className="inline-cell inline-cell--static">Mensuelle</span>
+        ) : (
+          cell(
+            "periodicite",
+            "Périodicité",
+            options(
+              CHARGE_PERIODS.map((option) => ({
+                value: option.value,
+                label: option.label.split(" — ")[0],
+              }))
+            )
+          )
+        )}
+      </td>
+      <th scope="row">
+        {cell(
+          "titre",
+          income ? "Titre de l’entrée" : "Titre de la charge",
+          (props) => (
+            <input {...props} ref={titleRef} maxLength={50} />
+          )
+        )}
+      </th>
+      <td>{categoryCell()}</td>
+      <td>
+        <span
+          className={`fixed-operations__badge fixed-operations__badge--${row.kind}`}
+        >
+          {income ? "Entrée" : "Charge"}
+        </span>
+      </td>
+      <td className="inline-cell-host--amount">
+        {cell(
+          "montant",
+          income ? "Montant reçu par mois" : "Montant total par échéance",
+          decimal,
+          monthly
+        )}
+      </td>
+      <td>
+        <InlineActions
+          formId={formId}
+          onSubmit={submit}
+          busy={busy}
+          saveLabel={income ? "Enregistrer l’entrée" : "Enregistrer la charge"}
+          onCancel={onClose}
+          onMoreOptions={
+            onMoreOptions ? () => onMoreOptions(values) : undefined
+          }
+          revealed={revealed}
+          onReveal={() => setRevealed((current) => !current)}
+          live={
+            <LiveMessage
+              isError
+              message={
+                Object.values(errors).some(Boolean)
+                  ? "Vérifiez les champs indiqués."
+                  : ""
+              }
+            />
+          }
+        >
+          {!income &&
+            cell("pourcentagePersonnel", "Ma part de la charge (%)", decimal)}
+          {cell(
+            "devise",
+            income ? "Devise de l’entrée" : "Devise de la charge",
+            options(["EUR", "USD"].map((value) => ({ value, label: value })))
+          )}
+          <FixedEnvelopeFields
+            values={values}
+            onChange={change}
+            income={income}
+            editing
+            disabled={busy}
+            form={formId}
+            error={errors.isBudgetEnvelope || errors.effectiveMonth}
+          />
+        </InlineActions>
+      </td>
+    </InlineEditorRow>
   );
 };

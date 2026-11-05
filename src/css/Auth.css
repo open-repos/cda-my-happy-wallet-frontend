@@ -1,4 +1,8 @@
-:is(.login, .register, .forgotpassword, .newpassword) {
+/*
+ * `main` raises specificity above the legacy `.register { height: 100vh }` and
+ * siblings, bundled after this file, so tall forms grow instead of being cut.
+ */
+main:is(.login, .register, .forgotpassword, .newpassword) {
   min-height: 100vh;
   min-height: 100dvh;
   height: auto;
@@ -15,16 +19,22 @@
   letter-spacing: 0;
 }
 
-:is(.login_form, .register_form, .forgotpassword_form, .newpassword_form)
-  > input {
+/*
+ * Page-scoped so that legacy page stylesheets (Register.css, Forgotpassword.css,
+ * Newpassword.css), bundled after this file, cannot widen fields past the card.
+ */
+:is(.login, .register, .forgotpassword, .newpassword)
+  > :is(.login_form, .register_form, .forgotpassword_form, .newpassword_form)
+  > :is(input, .submit_btn) {
   width: min(100%, 36rem);
   min-width: 0;
-  padding: 1rem;
+  align-self: center;
 }
 
-:is(.login_form, .register_form, .forgotpassword_form, .newpassword_form)
-  > .submit_btn {
-  width: min(100%, 36rem);
+:is(.login, .register, .forgotpassword, .newpassword)
+  > :is(.login_form, .register_form, .forgotpassword_form, .newpassword_form)
+  > input {
+  padding: 1rem;
 }
 
 :is(.login_form, .register_form, .forgotpassword_form, .newpassword_form)
@@ -87,7 +97,7 @@
 }
 
 @media (max-width: 767px) {
-  :is(.login, .register, .forgotpassword, .newpassword) {
+  main:is(.login, .register, .forgotpassword, .newpassword) {
     justify-content: flex-start;
     padding-top: 1.5rem;
   }

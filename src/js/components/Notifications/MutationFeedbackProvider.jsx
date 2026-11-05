@@ -15,7 +15,7 @@ export const FORM_ACTIVITY_SELECTOR = [
   ".financial-goal-form",
   ".category-form",
   ".fixed-inline",
-  ".compact-inline-controls",
+  ".compact-money-table__editor",
   ".fixed-charge-form form",
   // The mobile drawer only: the desktop rail toggle shares aria-controls.
   '.atelier-menu-toggle[aria-expanded="true"]',
