@@ -199,3 +199,9 @@
   font-size: 0.875rem;
   font-weight: 400;
 }
+/* Une même ligne de filtres : le combobox prend la bordure des autres champs
+   (ailleurs, il garde celle de `ChoiceSelect`). */
+.compact-money-table__heading .filter-combobox__control,
+.table-query__filters .filter-combobox__control {
+  border-color: var(--ds-color-field-border);
+}
