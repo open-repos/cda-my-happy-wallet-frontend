@@ -1,7 +1,7 @@
 # Champ de filtre partagé — `FilterCombobox` (#360)
 
 Parent : #359 (tri et filtre depuis les en-têtes de colonnes). Contrat backend
-des suggestions : open-repos/cda-my-happy-wallet-backend#165, pas encore livré.
+des suggestions : open-repos/cda-my-happy-wallet-backend#174, livré.
 Maquette validée par le propriétaire le 5 novembre 2026, avec un ajout : le
 choix de plusieurs valeurs.
 
@@ -47,8 +47,10 @@ renvoie l'enveloppe des collections paginées du backend
 - `createArrayOptionSource(options)` (`utils/filterOptions.js`) sert une liste
   locale avec le même contrat, pour les tests et les petites listes.
 
-Tant que #165 n'est pas fusionné, aucun écran ne branche le composant : les
-tests utilisent une source simulée.
+Depuis #361, les en-têtes des tableaux d'opérations branchent le composant :
+libellés via `oneOffOperationsService.listTitleSuggestions` (#174), catégories
+et libellés des charges fixes via `createArrayOptionSource`. Voir
+[web-table-headers.md](web-table-headers.md).
 
 ## Comportement
 

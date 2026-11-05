@@ -262,9 +262,6 @@ a:hover {
 .protected-layout__content .fixed-operations__heading h1 {
   font-size: var(--ds-primitive-font-size-2xl);
 }
-.protected-layout__content .fixed-operations__sort {
-  padding-block: var(--ds-primitive-space-2);
-}
 .protected-layout__content .budget-calendar__header {
   align-items: flex-start;
 }

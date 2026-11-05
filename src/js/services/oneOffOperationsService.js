@@ -79,8 +79,28 @@ export const parseCategory = (category) => {
   };
 };
 
+export const TITLE_SUGGESTIONS_LIMIT = 10;
+
+/** `categoryId=1&categoryId=2`, la forme attendue par l'API (#165). */
+const repeatedParams = { indexes: null };
+
+const parseTitleSuggestion = (item) => {
+  if (
+    typeof item?.title !== "string" ||
+    item.title.length === 0 ||
+    item.title.length > 50
+  ) {
+    throw new Error("Invalid title suggestion response");
+  }
+  return { value: item.title, label: item.title };
+};
+
 export const oneOffOperationsService = {
-  /** `filter` accepte `from`, `to` (inclus) et `currency`, tous facultatifs. */
+  /**
+   * `filter` reprend les paramètres de l'API : `from`, `to` (inclus),
+   * `currency`, et depuis #165 `sort`, `order`, `title`, `categoryId`
+   * (tableau), `type`, `minAmount` et `maxAmount`, tous facultatifs.
+   */
   async listOperations(cursor = null, filter = {}) {
     const response = await apiPrivate.get("/operations", {
       params: {
@@ -88,9 +108,33 @@ export const oneOffOperationsService = {
         limit: OPERATIONS_PAGE_LIMIT,
         ...(cursor ? { cursor } : {}),
       },
+      paramsSerializer: repeatedParams,
       withCredentials: true,
     });
     return parseCollectionPage(response.data, parseOperation);
+  },
+
+  /**
+   * Source `loadOptions` du `FilterCombobox` (#360) : libellés distincts de
+   * l'utilisateur, de A à Z, par pages de 10 (#174).
+   */
+  async listTitleSuggestions({
+    query = "",
+    cursor = null,
+    limit,
+    signal,
+  } = {}) {
+    const q = query.trim();
+    const response = await apiPrivate.get("/operations/suggestions/titles", {
+      params: {
+        ...(q ? { q } : {}),
+        limit: limit ?? TITLE_SUGGESTIONS_LIMIT,
+        ...(cursor ? { cursor } : {}),
+      },
+      signal,
+      withCredentials: true,
+    });
+    return parseCollectionPage(response.data, parseTitleSuggestion);
   },
 
   /** Toutes les opérations d'une période bornée (par exemple un mois). */

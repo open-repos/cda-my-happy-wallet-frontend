@@ -470,7 +470,29 @@ describe("vue commune du budget fixe #265", () => {
         .getAllByRole("columnheader")
         .filter((h) => h.hasAttribute("aria-sort"))
     ).toHaveLength(1);
-    expect(screen.getByLabelText("Trier par").options).toHaveLength(9);
+    // Cycle d'en-tête sur la colonne par défaut : croissant puis défaut.
+    const monthly = () =>
+      screen
+        .getByRole("button", { name: /^Trier : Personnel \/ mois/ })
+        .closest("th");
+    fill("Trier par", "");
+    expect(monthly()).toHaveAttribute("aria-sort", "descending");
+    fireEvent.click(
+      screen.getByRole("button", { name: /^Trier : Personnel \/ mois/ })
+    );
+    expect(monthly()).toHaveAttribute("aria-sort", "ascending");
+    expect(
+      screen.getByRole("button", { name: /^Trier : Personnel \/ mois/ })
+    ).toHaveAccessibleName(
+      "Trier : Personnel / mois, trié par ordre croissant. Activer pour revenir à l’ordre par défaut."
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: /^Trier : Personnel \/ mois/ })
+    );
+    expect(screen.getByLabelText("Trier par")).toHaveValue("");
+    expect(monthly()).toHaveAttribute("aria-sort", "descending");
+    // Les 9 critères restent disponibles, après l'ordre par défaut (#361).
+    expect(screen.getByLabelText("Trier par").options).toHaveLength(10);
     expect(
       await screen.findByLabelText("Entrées fixes mensuelles")
     ).toHaveTextContent(/2\s*100,00/);

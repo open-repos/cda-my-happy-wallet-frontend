@@ -17,6 +17,10 @@ export const OneOffOperationList = ({
   onMoreOptions,
   busy = false,
   mutationError,
+  sortHeaders,
+  filters,
+  toolbar,
+  refreshing = false,
 }) => {
   const byId = new Map(categories.map((c) => [c.id, c]));
   const rows = operations.map((o) => ({
@@ -32,7 +36,11 @@ export const OneOffOperationList = ({
     <CompactMoneyList
       rows={rows}
       label="Opérations ponctuelles enregistrées"
-      sort={{ field: "date", direction: "desc" }}
+      sortHeaders={sortHeaders}
+      filters={filters}
+      toolbar={toolbar}
+      busy={refreshing}
+      emptyMessage="Aucune opération ne correspond à ces filtres."
       editingId={editingId ? `operation-${editingId}` : null}
       renderEditor={({ raw }) => (
         <OneOffInlineEditor
