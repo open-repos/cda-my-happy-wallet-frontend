@@ -17,7 +17,8 @@ contrat `MonthlyEvent` ne contient pas `categoryId`. Ne pas en inventer.
 
 Le menu est rendu dans le DOM du formulaire parent pour rester dans son
 périmètre de focus, avec placement fixed borné au viewport visuel, défilement
-interne et recalage au scroll/resize. Focus sur le déclencheur, option active
+interne et recalage au scroll/resize. Ce placement est partagé avec `FilterCombobox`
+(#360) via `hooks/useAnchoredPopup.js`. Focus sur le déclencheur, option active
 par aria-activedescendant ; flèches, Home/End, recherche par frappe, Entrée/Espace,
 Échap et Tab. Échap est consommé avant le formulaire parent ; une sélection
 n'est jamais une soumission. Le champ masqué conserve name/form/value. Une
