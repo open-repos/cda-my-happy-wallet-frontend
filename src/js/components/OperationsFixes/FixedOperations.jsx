@@ -11,7 +11,19 @@ import { useCategories } from "../../hooks/useCategories";
 import { CategoryLabel } from "../Categories/CategoryLabel";
 import { fixedCategory } from "../../utils/fixedCategories";
 import { FixedInlineEditor } from "./FixedInlineEditor";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useMediaQuery, WIDE_TABLE_QUERY } from "../../hooks/useMediaQuery";
+import { CHARGE_PERIODS } from "../../utils/fixedCharges";
+import {
+  FIXED_DEFAULT_SORT,
+  filterFixedRows,
+  fixedQueryParams,
+  mergeSearch,
+  parseFixedQuery,
+  sortAnnouncement,
+} from "../../utils/tableQuery";
+import { useFixedTableQuery } from "./useFixedTableQuery";
 import { useFixedCharges, useFixedIncomes } from "../../hooks/useFixedCharges";
 import { useAnnouncesLoading } from "../../hooks/useAnnouncesLoading";
 import {
@@ -30,6 +42,20 @@ import { FixedMonthPreview } from "./FixedMonthPreview";
 import "../../../css/Envelopes.css";
 import "../../../css/FixedCharges.css";
 import "../../../css/FixedOperations.css";
+const FIXED_MANAGED_PARAMS = [
+  "sort",
+  "order",
+  "title",
+  "categoryId",
+  "type",
+  "period",
+];
+const FIXED_SORT_LABELS = Object.fromEntries(
+  FIXED_SORT_FIELDS.map(({ value, label }) => [
+    value,
+    label.toLocaleLowerCase("fr"),
+  ])
+);
 const money = (value, currency) =>
   value == null || !/^\d+(?:\.\d+)?$/.test(String(value))
     ? "Indisponible"
@@ -43,10 +69,19 @@ export const FixedOperations = () => {
   const incomes = useFixedIncomes();
   const simulation = useSimulation();
   const categories = useCategories();
-  const [sort, setSort] = useState({
-    field: "montantMensuelPersonnel",
-    direction: "desc",
-  });
+  // Tri et filtres vivent dans l'URL (D3 de #359), appliqués localement (D1).
+  const [search, setSearch] = useSearchParams();
+  const searchText = search.toString();
+  const query = useMemo(
+    () =>
+      parseFixedQuery(searchText, {
+        sortFields: FIXED_SORT_FIELDS.map(({ value }) => value),
+        periods: CHARGE_PERIODS.map(({ value }) => value),
+      }),
+    [searchText]
+  );
+  const sort = query.sort ?? FIXED_DEFAULT_SORT;
+  const wide = useMediaQuery(WIDE_TABLE_QUERY);
   const [sortMessage, setSortMessage] = useState("");
   const [editor, setEditor] = useState(null);
   const [drafts, setDrafts] = useState({});
@@ -77,8 +112,9 @@ export const FixedOperations = () => {
   const rows = sortFixedOperations(
     fixedOperationRows(charges.data, incomes.data),
     sort.field,
-    sort.direction
+    sort.order
   );
+  const shownRows = filterFixedRows(rows, query.filters);
   useEffect(() => {
     if (deleting) keepRef.current?.focus();
     if (hadAction.current && !editor && !deleting) {
@@ -95,17 +131,29 @@ export const FixedOperations = () => {
     }
     hadAction.current = Boolean(editor || deleting);
   }, [editor, deleting, charges.status, incomes.status]);
-  const changeSort = (field, direction) => {
-    setSort({
-      field,
-      direction,
-    });
-    setSortMessage(
-      `Liste triée par ${
-        FIXED_SORT_FIELDS.find((item) => item.value === field).label
-      }, ordre ${direction === "asc" ? "croissant" : "décroissant"}.`
+  const changeQuery = (next) => {
+    if (
+      next.sort?.field !== query.sort?.field ||
+      next.sort?.order !== query.sort?.order
+    )
+      setSortMessage(
+        sortAnnouncement(
+          next.sort,
+          FIXED_SORT_LABELS,
+          "personnel par mois, décroissant"
+        )
+      );
+    setSearch(
+      mergeSearch(searchText, FIXED_MANAGED_PARAMS, fixedQueryParams(next))
     );
   };
+  const tableQuery = useFixedTableQuery({
+    query,
+    onChange: changeQuery,
+    rows,
+    disabled: Boolean(editor?.row),
+    wide,
+  });
   const openEditor = (event, row = null) => {
     returnFocus.current = event.currentTarget;
     returnFocusId.current = event.currentTarget.id;
@@ -294,7 +342,7 @@ export const FixedOperations = () => {
             <CompactMoneyList
               fixed
               label="Charges et entrées fixes"
-              rows={rows.map((row) => ({
+              rows={shownRows.map((row) => ({
                 id: row.key,
                 title: row.titre,
                 date: fixedPeriodLabel(row.periodicite).split(" — ")[0],
@@ -303,55 +351,14 @@ export const FixedOperations = () => {
                 category: fixedCategory(row),
                 raw: row,
               }))}
-              sort={{
-                field: {
-                  titre: "title",
-                  periodicite: "date",
-                  category: "category",
-                  kind: "kind",
-                  montantMensuelPersonnel: "amount",
-                }[sort.field],
-                direction: sort.direction,
-              }}
               editingId={editor?.dialog ? undefined : editor?.row?.key}
               renderEditor={({ raw }) => inlineEditor(raw)}
               renderActions={({ raw }) => actions(raw)}
               renderDetails={({ raw }) => details(raw)}
-              sortControls={
-                <div className="fixed-operations__sort">
-                  <div className="fixed-operations__sort-field">
-                    <label htmlFor="fixed-sort-field">Trier par</label>
-                    <select
-                      id="fixed-sort-field"
-                      disabled={Boolean(editor?.row)}
-                      value={sort.field}
-                      onChange={(event) =>
-                        changeSort(event.target.value, sort.direction)
-                      }
-                    >
-                      {FIXED_SORT_FIELDS.map((field) => (
-                        <option key={field.value} value={field.value}>
-                          {field.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="fixed-operations__sort-field">
-                    <label htmlFor="fixed-sort-order">Ordre du tri</label>
-                    <select
-                      id="fixed-sort-order"
-                      disabled={Boolean(editor?.row)}
-                      value={sort.direction}
-                      onChange={(event) =>
-                        changeSort(sort.field, event.target.value)
-                      }
-                    >
-                      <option value="desc">Décroissant</option>
-                      <option value="asc">Croissant</option>
-                    </select>
-                  </div>
-                </div>
-              }
+              sortHeaders={tableQuery.sortHeaders}
+              filters={tableQuery.filters}
+              toolbar={tableQuery.toolbar}
+              emptyMessage="Aucun élément ne correspond à ces filtres."
             />
           )}
           <p className="fixed-operations__help">

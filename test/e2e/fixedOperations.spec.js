@@ -130,6 +130,8 @@ for (const width of [320, 390, 768, 1440])
         page.getByRole("table", { name: "Charges et entrées fixes" })
       ).toBeVisible();
       await expect(page.locator(".compact-money-table__row")).toHaveCount(2);
+      // Tous les critères de tri restent dans le panneau (#361).
+      await page.getByRole("button", { name: /^Trier et filtrer/ }).click();
       await page
         .getByLabel("Trier par", { exact: true })
         .selectOption("pourcentagePersonnel");

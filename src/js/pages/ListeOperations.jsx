@@ -3,19 +3,63 @@ import { ConfirmDialog } from "../components/Forms/ConfirmDialog";
 import { ActionButton } from "../components/Actions/ActionButton";
 import { useQuickAdd } from "../components/QuickAdd/QuickAddContext";
 import { useSimulation } from "../components/Simulation/SimulationContext";
-import React, { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { LiveMessage } from "../components/LiveMessage";
 import { useAnnouncesLoading } from "../hooks/useAnnouncesLoading";
 import addIcon from "../../assets/icons/add.svg";
 import { OneOffOperationForm } from "../components/OneOffOperations/OneOffOperationForm";
 import { OneOffOperationList } from "../components/OneOffOperations/OneOffOperationList";
 import { useOneOffOperations } from "../hooks/useOneOffOperations";
+import { useOperationTableQuery } from "../components/OneOffOperations/useOperationTableQuery";
+import { useMediaQuery, WIDE_TABLE_QUERY } from "../hooks/useMediaQuery";
+import {
+  OPERATION_SORT_LABELS,
+  countActiveFilters,
+  mergeSearch,
+  operationQueryParams,
+  parseOperationQuery,
+  sortAnnouncement,
+} from "../utils/tableQuery";
 import "../../css/Operations.css";
+const MANAGED_PARAMS = [
+  "sort",
+  "order",
+  "from",
+  "to",
+  "title",
+  "categoryId",
+  "type",
+  "minAmount",
+  "maxAmount",
+];
 function ListeOperations() {
   const [editedOperation, setEditedOperation] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const state = useOneOffOperations();
+  // Tri et filtres vivent dans l'URL (D3 de #359) : Retour, rechargement et
+  // favori les retrouvent.
+  const [search, setSearch] = useSearchParams();
+  const searchText = search.toString();
+  const query = useMemo(() => parseOperationQuery(searchText), [searchText]);
+  const [sortMessage, setSortMessage] = useState("");
+  const state = useOneOffOperations(query);
+  const wide = useMediaQuery(WIDE_TABLE_QUERY);
+  const changeQuery = (next) => {
+    if (
+      next.sort?.field !== query.sort?.field ||
+      next.sort?.order !== query.sort?.order
+    )
+      setSortMessage(
+        sortAnnouncement(
+          next.sort,
+          OPERATION_SORT_LABELS,
+          "les plus récentes d’abord"
+        )
+      );
+    setSearch(
+      mergeSearch(searchText, MANAGED_PARAMS, operationQueryParams(next))
+    );
+  };
   const quickAdd = useQuickAdd(),
     simulation = useSimulation();
   useEffect(
@@ -43,6 +87,16 @@ function ListeOperations() {
     else if (simulation.activeForm === "operations")
       simulation.setActiveForm(null);
   }, [editedOperation, deleting, isFormOpen]);
+  const filtering = countActiveFilters(query.filters) > 0;
+  const tableQuery = useOperationTableQuery({
+    query,
+    onChange: changeQuery,
+    categories: state.categories,
+    disabled:
+      Boolean(editedOperation && !isFormOpen) ||
+      state.mutationStatus === "loading",
+    wide,
+  });
   // Liste générale sans filtre ; une mutation ou la pagination garde la clé.
   const announcesLoading = useAnnouncesLoading(state.status, "operations");
   const openCreate = (event) => {
@@ -109,7 +163,8 @@ function ListeOperations() {
         isError={
           state.status === "error" ||
           state.mutationStatus === "error" ||
-          state.pageStatus === "error"
+          state.pageStatus === "error" ||
+          state.queryStatus === "error"
         }
         className="one-off-message"
         errorClassName="one-off-message--error"
@@ -138,79 +193,90 @@ function ListeOperations() {
           </button>
         </section>
       )}
-      {state.status === "success" && state.operations.length === 0 && (
-        <section className="one-off-state one-off-state--empty">
-          <h2>Pas encore d’opération</h2>
-          <p>
-            Ajoutez votre première entrée ou dépense pour commencer à suivre
-            votre budget.
-          </p>
-          <ActionButton
-            action="add"
-            type="button"
-            className="one-off-button"
-            onClick={openCreate}
+      <LiveMessage visible={false} message={sortMessage} />
+      {state.status === "success" &&
+        state.operations.length === 0 &&
+        !filtering && (
+          <section className="one-off-state one-off-state--empty">
+            <h2>Pas encore d’opération</h2>
+            <p>
+              Ajoutez votre première entrée ou dépense pour commencer à suivre
+              votre budget.
+            </p>
+            <ActionButton
+              action="add"
+              type="button"
+              className="one-off-button"
+              onClick={openCreate}
+            >
+              Ajouter ma première opération
+            </ActionButton>
+          </section>
+        )}
+      {state.status === "success" &&
+        (state.operations.length > 0 || filtering) && (
+          <section
+            className="one-off-list-section"
+            aria-labelledby="operations-list-title"
           >
-            Ajouter ma première opération
-          </ActionButton>
-        </section>
-      )}
-      {state.status === "success" && state.operations.length > 0 && (
-        <section
-          className="one-off-list-section"
-          aria-labelledby="operations-list-title"
-        >
-          <div className="one-off-list-section__heading">
-            <h2 id="operations-list-title">Vos opérations</h2>
-            <span>
-              {state.operations.length} affichée
-              {state.operations.length > 1 ? "s" : ""}
-            </span>
-          </div>
-          <OneOffOperationList
-            operations={state.operations}
-            categories={state.categories}
-            onEdit={openEdit}
-            editingId={isFormOpen ? null : editedOperation?.id}
-            onMoreOptions={(draft) => {
-              // The full form continues the row draft of the same operation.
-              setEditedOperation(draft);
-              setIsFormOpen(true);
-            }}
-            onCancel={closeForm}
-            onSave={save}
-            busy={state.mutationStatus === "loading" || Boolean(deleting)}
-            mutationError={
-              state.mutationStatus === "error" ? state.message : ""
-            }
-            onDelete={(operation) => {
-              returnId.current = `one-off-edit-${operation.id}`;
-              setDeleting(operation);
-            }}
-          />
-          {state.meta?.hasNext && (
-            <button
-              type="button"
-              className="one-off-button one-off-button--secondary one-off-load-more"
-              onClick={state.loadMore}
-              disabled={state.pageStatus === "loading"}
-            >
-              {state.pageStatus === "loading"
-                ? "Chargement…"
-                : "Afficher la suite"}
-            </button>
-          )}
-          {state.pageStatus === "error" && (
-            <button
-              type="button"
-              className="one-off-link-button"
-              onClick={state.loadMore}
-            >
-              Réessayer de charger la suite
-            </button>
-          )}
-        </section>
-      )}
+            <div className="one-off-list-section__heading">
+              <h2 id="operations-list-title">Vos opérations</h2>
+              <span>
+                {state.operations.length} affichée
+                {state.operations.length > 1 ? "s" : ""}
+              </span>
+            </div>
+            <OneOffOperationList
+              operations={state.operations}
+              categories={state.categories}
+              onEdit={openEdit}
+              editingId={isFormOpen ? null : editedOperation?.id}
+              onMoreOptions={(draft) => {
+                // The full form continues the row draft of the same operation.
+                setEditedOperation(draft);
+                setIsFormOpen(true);
+              }}
+              onCancel={closeForm}
+              onSave={save}
+              busy={state.mutationStatus === "loading" || Boolean(deleting)}
+              mutationError={
+                state.mutationStatus === "error" ? state.message : ""
+              }
+              sortHeaders={tableQuery.sortHeaders}
+              filters={tableQuery.filters}
+              toolbar={tableQuery.toolbar}
+              refreshing={state.queryStatus === "loading"}
+              onDelete={(operation) => {
+                returnId.current = `one-off-edit-${operation.id}`;
+                setDeleting(operation);
+              }}
+            />
+            {state.meta?.hasNext && (
+              <button
+                type="button"
+                className="one-off-button one-off-button--secondary one-off-load-more"
+                onClick={state.loadMore}
+                disabled={
+                  state.pageStatus === "loading" ||
+                  state.queryStatus === "loading"
+                }
+              >
+                {state.pageStatus === "loading"
+                  ? "Chargement…"
+                  : "Afficher la suite"}
+              </button>
+            )}
+            {state.pageStatus === "error" && (
+              <button
+                type="button"
+                className="one-off-link-button"
+                onClick={state.loadMore}
+              >
+                Réessayer de charger la suite
+              </button>
+            )}
+          </section>
+        )}
       {state.refreshError && state.status === "success" && (
         <button
           type="button"

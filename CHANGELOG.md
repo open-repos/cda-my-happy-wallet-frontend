@@ -7,6 +7,16 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-11-05
+
+### Added
+
+- Added the shared `FilterCombobox` field: accessible editable combobox with debounced search, cancelled stale requests, cursor-paginated suggestions loaded on scroll or with the keyboard, empty/loading/error/end states and single or multiple choice. Used by the column header filters of #361; positioning is shared with `ChoiceSelect` through `useAnchoredPopup` (#360).
+
+### Changed
+
+- Replaced the separate sort selects and loaded-items search with sortable, filterable column headers on the one-off and fixed operation tables. One-off operations are sorted and filtered by the API (#165) with title suggestions (#174) and restart from the first page; fixed operations stay sorted and filtered in the browser. Sort and filters are kept in the URL, and a « Trier et filtrer » panel gives every sort criterion and, below 64rem, every filter (#361).
+
 ## [1.14.0] - 2026-11-05
 
 ### Changed
@@ -279,7 +289,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Replaced dynamic SSH host discovery with a pre-verified `known_hosts` file.
 - Isolated SSH credentials from validation and build jobs.
 
-[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.14.0...develop
+[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.15.0...develop
+[1.15.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.14.0...v1.15.0
 [1.14.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.13.0...v1.14.0
 [1.13.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.12.1...v1.13.0
 [1.12.1]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.12.0...v1.12.1
