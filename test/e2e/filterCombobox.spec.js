@@ -27,8 +27,11 @@ for (const theme of ["light", "dark"]) {
       expect(box.x + box.width).toBeLessThanOrEqual(width);
       expect(box.y + box.height).toBeLessThanOrEqual(760);
       expect(await noHorizontalScroll(page)).toBe(true);
+      // Le contour de focus est porté par le cadre du champ (#361).
       const outline = await input.evaluate(
-        (node) => getComputedStyle(node).outlineStyle
+        (node) =>
+          getComputedStyle(node.closest(".filter-combobox__control"))
+            .outlineStyle
       );
       expect(outline).toBe("solid");
       const option = listbox.getByRole("option").first();
