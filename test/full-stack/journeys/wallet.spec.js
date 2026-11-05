@@ -747,13 +747,20 @@ test("persists periodic shared fixed charges and refreshes server budgets withou
   await page
     .getByRole("button", { name: "Modifier Abonnement annuel partagé E2E" })
     .click();
-  await page.getByLabel("Ma part de la charge (%)").fill("40");
+  // #358: in the table the personal share lives behind « Plus d’options ».
+  const moreOptions = page.getByRole("button", { name: "Plus d’options" });
+  let form = page;
+  if (await moreOptions.isVisible()) {
+    await moreOptions.click();
+    form = page.getByRole("dialog");
+  }
+  await form.getByLabel("Ma part de la charge (%)").fill("40");
   const updated = apiResponse(
     page,
     `/v1/operations-fixes/charges/${charge.idOperationFixe}`,
     "PUT"
   );
-  await page.getByRole("button", { name: "Enregistrer la charge" }).click();
+  await form.getByRole("button", { name: "Enregistrer la charge" }).click();
   expect((await updated).ok()).toBe(true);
   await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*196,00/);
   await page.reload();

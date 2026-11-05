@@ -193,12 +193,6 @@
   width: 1.5rem;
   flex-shrink: 0;
 }
-.fixed-inline__controls .fixed-envelope-fields {
-  flex-basis: 100%;
-}
-.compact-inline-controls .envelope-assignment {
-  flex-basis: 100%;
-}
 .operation-envelope-link {
   margin-block: var(--ds-primitive-space-3);
 }

@@ -134,7 +134,7 @@ export const FixedOperations = () => {
       <ActionButton
         action="delete"
         type="button"
-        className="one-off-button one-off-button--secondary fixed-operations__icon-action"
+        className="one-off-button one-off-button--secondary fixed-operations__icon-action inline-icon-action"
         disabled={busy || Boolean(editor) || Boolean(deleting)}
         aria-label={`Supprimer ${row.titre}`}
         id={`fixed-delete-${row.kind}-${row.idOperationFixe}`}
@@ -153,8 +153,6 @@ export const FixedOperations = () => {
     <FixedInlineEditor
       key={row.key}
       row={row}
-      compact={false}
-      ledger
       busy={busy}
       categories={categories}
       categoryError={collection(row.kind).categoryError}
@@ -168,6 +166,11 @@ export const FixedOperations = () => {
       }}
       onSave={(body) => collection(row.kind).save(row, body)}
       onClose={() => setEditor(null)}
+      onMoreOptions={(values) => {
+        // The full form continues the row draft; closing it writes nothing.
+        setDrafts({ [row.kind]: values });
+        setEditor({ kind: row.kind, row, dialog: true });
+      }}
     />
   );
   const details = (row) => (
@@ -310,7 +313,7 @@ export const FixedOperations = () => {
                 }[sort.field],
                 direction: sort.direction,
               }}
-              editingId={editor?.row?.key}
+              editingId={editor?.dialog ? undefined : editor?.row?.key}
               renderEditor={({ raw }) => inlineEditor(raw)}
               renderActions={({ raw }) => actions(raw)}
               renderDetails={({ raw }) => details(raw)}
@@ -361,7 +364,7 @@ export const FixedOperations = () => {
           </p>
           <FixedMonthPreview />
         </div>
-        {editor && !editor.row && (
+        {editor && (!editor.row || editor.dialog) && (
           <FormDialog
             labelledBy="fixed-editor-title"
             busy={busy}
@@ -372,7 +375,9 @@ export const FixedOperations = () => {
               busy={busy}
               onClose={() => setEditor(null)}
             >
-              Ajouter un élément fixe
+              {editor.row
+                ? "Modifier un élément fixe"
+                : "Ajouter un élément fixe"}
             </FormHeader>
             <MutationMessage
               success={collection(editor.kind).mutationStatus === "success"}

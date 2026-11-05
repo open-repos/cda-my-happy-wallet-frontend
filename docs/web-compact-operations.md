@@ -19,6 +19,48 @@ Une erreur conserve le brouillon. Un verrou synchrone empêche la double
 soumission. La corbeille demande une confirmation nommant l’opération ; annuler
 n’envoie aucune requête de mutation.
 
+## Édition en ligne (#358)
+
+Dans le tableau (à partir de 64rem), une ligne garde la même géométrie en
+lecture et en édition : colonnes en largeur fixe, hauteur de 4,5rem. Chaque
+cellule contient un contrôle (2,75rem) et une ligne de message réservée (1rem),
+pour une erreur ou un aperçu. Le composant partagé
+`src/js/components/CompactOperations/InlineEditing.jsx` (`InlineCell`,
+`InlineEditorRow`, `InlineActions`) sert aux opérations ponctuelles et aux
+charges et entrées fixes.
+
+- Cellules modifiables : date, libellé, catégorie, type et montant pour une
+  opération ; périodicité, libellé, catégorie et montant par échéance pour un
+  élément fixe. Le type d’un élément fixe reste verrouillé, et le personnel par
+  mois recalculé s’affiche sous le montant.
+- Les champs secondaires (devise, rattachement à une enveloppe, part
+  personnelle, enveloppe mensuelle, mois d’application) passent par « Plus
+  d’options » (⋯). Ce bouton ouvre le formulaire complet en reprenant le
+  brouillon. Sans formulaire complet, dans le calendrier, il déplie ces champs
+  dans la ligne, qui peut alors grandir. Une erreur sur un champ secondaire
+  déplie aussi ces champs dans la ligne, pour montrer l’erreur à côté du champ ;
+  le formulaire complet ne l’afficherait qu’après un nouvel enregistrement.
+- Erreurs : dans le tableau, la cellule affiche un message court adapté à sa
+  largeur (« Invalide, ex. 12,50 ») ; la description accessible du champ garde
+  le message complet, affiché en entier sur téléphone. L’erreur renvoyée par
+  le serveur s’affiche en entier sous les actions : comme l’échec de chargement
+  des catégories, ce n’est pas une erreur de validation et la ligne peut alors
+  grandir.
+- Clavier : Entrée enregistre depuis un champ de saisie ou une liste native ;
+  sur la catégorie (liste à choix enrichi), Entrée ouvre ou valide la liste,
+  comme tout combobox. Échap annule
+  sans écriture et rend le focus au crayon. Tab suit l’ordre des colonnes, puis
+  Enregistrer, Annuler et Plus d’options. Les libellés sont masqués
+  visuellement derrière les en-têtes de colonne, mais restent les noms
+  accessibles des contrôles.
+- Sur téléphone, sous 64rem, l’édition dans la carte est conservée, avec ses
+  libellés et tous ses champs.
+- En lecture, Supprimer devient une icône nommée dans le tableau, à côté de
+  Modifier.
+- Une erreur de validation ne fait jamais grandir la ligne. Seuls une erreur
+  serveur, l’échec du chargement des catégories (bouton « Réessayer les
+  catégories ») et le dépliage des champs secondaires peuvent l’agrandir.
+
 ## Un seul accès aux formulaires existants
 
 Le bouton près du calendrier et les actions PlanningActions ouvrent les mêmes

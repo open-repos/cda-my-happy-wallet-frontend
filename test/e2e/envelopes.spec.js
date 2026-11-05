@@ -151,10 +151,16 @@ test("fixed expense and income schedule next month and expose the future definit
     page.getByLabel("Utiliser comme enveloppe budgétaire mensuelle")
   ).toBeChecked();
   await page.getByLabel("Montant total par échéance").fill("350");
+  // #358: the month lives behind « Plus d’options », in the full form.
+  await page.getByRole("button", { name: "Plus d’options" }).click();
   await page
+    .getByRole("dialog")
     .getByLabel("Appliquer la modification à partir de")
     .selectOption("2026-11");
-  await page.getByRole("button", { name: "Enregistrer la charge" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Enregistrer la charge" })
+    .click();
   await expect.poll(() => state.fixedWrites.length).toBe(1);
   expect(state.fixedWrites[0]).toMatchObject({
     isBudgetEnvelope: true,
@@ -165,10 +171,15 @@ test("fixed expense and income schedule next month and expose the future definit
   await page
     .getByRole("button", { name: "Modifier Salaire", exact: true })
     .click();
+  await page.getByRole("button", { name: "Plus d’options" }).click();
   await page
+    .getByRole("dialog")
     .getByLabel("Appliquer la modification à partir de")
     .selectOption("2026-11");
-  await page.getByRole("button", { name: "Enregistrer l’entrée" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Enregistrer l’entrée" })
+    .click();
   await expect.poll(() => state.fixedWrites.length).toBe(2);
   expect(state.fixedWrites[1]).toMatchObject({ effectiveMonth: "2026-11" });
   expect(state.fixedWrites[1]).not.toHaveProperty("isBudgetEnvelope");
