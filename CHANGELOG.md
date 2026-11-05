@@ -7,6 +7,17 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-11-05
+
+### Changed
+
+- Changed inline editing of one-off operations and fixed charges and income so the edited row keeps the same columns and height, with secondary fields behind « Plus d’options » and keyboard save and cancel (#358).
+
+### Fixed
+
+- Fixed the sign-up, forgotten password and new password forms so their fields keep the width of their labels and button inside the card at every screen width (#356).
+- Fixed amount and percentage fields so a comma or a dot both work as the decimal separator, with one shared conversion, two decimals at most and an accessible error for invalid input (#357).
+
 ## [1.13.0] - 2026-11-04
 
 ### Added
@@ -268,7 +279,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Replaced dynamic SSH host discovery with a pre-verified `known_hosts` file.
 - Isolated SSH credentials from validation and build jobs.
 
-[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.13.0...develop
+[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.14.0...develop
+[1.14.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.13.0...v1.14.0
 [1.13.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.12.1...v1.13.0
 [1.12.1]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.12.0...v1.12.1
 [1.12.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.11.0...v1.12.0
