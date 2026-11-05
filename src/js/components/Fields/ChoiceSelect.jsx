@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { useAnchoredPopup } from "../../hooks/useAnchoredPopup";
 import "../../../css/ChoiceSelect.css";
 
 /** Icon listbox, kept inside the parent dialog's DOM/focus scope.
@@ -31,7 +32,6 @@ export const ChoiceSelect = ({
     list = useRef(null);
   const [open, setOpen] = useState(false),
     [active, setActive] = useState(0);
-  const [placement, setPlacement] = useState({});
   const prefix = useRef({ text: "", time: 0 });
   const selected = Math.max(
     0,
@@ -59,52 +59,12 @@ export const ChoiceSelect = ({
   useEffect(() => {
     if (disabled) setOpen(false);
   }, [disabled]);
-  useLayoutEffect(() => {
-    if (!open) return;
-    const position = () => {
-      const rect = trigger.current.getBoundingClientRect();
-      const viewport = window.visualViewport;
-      const top = viewport?.offsetTop || 0,
-        left = viewport?.offsetLeft || 0;
-      const height = viewport?.height || window.innerHeight;
-      const width = viewport?.width || window.innerWidth;
-      const below = top + height - rect.bottom - 8,
-        above = rect.top - top - 8;
-      const down = below >= above;
-      const maxHeight = Math.max(44, Math.min(320, down ? below : above));
-      setPlacement({
-        position: "fixed",
-        left: Math.max(
-          left + 8,
-          Math.min(
-            rect.left,
-            left + width - Math.min(Math.max(rect.width, 288), width - 16) - 8
-          )
-        ),
-        width: Math.min(Math.max(rect.width, 288), width - 16),
-        maxHeight,
-        ...(down
-          ? { top: rect.bottom + 4 }
-          : { bottom: window.innerHeight - rect.top + 4 }),
-      });
-    };
-    position();
-    const outside = (e) => {
-      if (!root.current?.contains(e.target)) close();
-    };
-    window.addEventListener("resize", position);
-    window.addEventListener("scroll", position, true);
-    window.visualViewport?.addEventListener("resize", position);
-    window.visualViewport?.addEventListener("scroll", position);
-    document.addEventListener("pointerdown", outside);
-    return () => {
-      window.removeEventListener("resize", position);
-      window.removeEventListener("scroll", position, true);
-      window.visualViewport?.removeEventListener("resize", position);
-      window.visualViewport?.removeEventListener("scroll", position);
-      document.removeEventListener("pointerdown", outside);
-    };
-  }, [open]);
+  const placement = useAnchoredPopup({
+    open,
+    anchor: trigger,
+    root,
+    onDismiss: () => close(),
+  });
   useLayoutEffect(() => {
     // The first open render has no viewport bounds yet. Re-scroll once the
     // measured width/height are applied, including after a keyboard resize.
