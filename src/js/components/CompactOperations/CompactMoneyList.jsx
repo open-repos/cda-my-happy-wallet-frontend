@@ -1,7 +1,24 @@
 import React, { useRef, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faSort,
+  faSortDown,
+  faSortUp,
+} from "@fortawesome/free-solid-svg-icons";
 import { CategoryLabel, CategoryMark } from "../Categories/CategoryLabel";
 import "../../../css/CompactMoneyList.css";
 
+const SORT_ICONS = {
+  ascending: faSortUp,
+  descending: faSortDown,
+  none: faSort,
+};
+
+/**
+ * `sortHeaders[field]` (`{ ariaSort, label, onSort }`) rend l'en-tête triable ;
+ * `filters[field]` place un champ de filtre sous son nom (#361). Le tri et les
+ * filtres appartiennent à l'écran : ce composant n'en applique aucun.
+ */
 export const CompactMoneyList = ({
   rows,
   label,
@@ -10,77 +27,32 @@ export const CompactMoneyList = ({
   renderEditor,
   renderActions,
   renderDetails,
-  sortControls,
-  sort,
+  sortHeaders = {},
+  filters = {},
+  toolbar = null,
+  busy = false,
+  emptyMessage = "Aucun élément ne correspond à ces filtres.",
 }) => {
-  const [kind, setKind] = useState("all"),
-    [query, setQuery] = useState(""),
-    [expanded, setExpanded] = useState(null);
+  const [expanded, setExpanded] = useState(null);
   const frozen = useRef(null);
-  const filtered = rows.filter(
-    (row) =>
-      (kind === "all" || row.kind === kind) &&
-      `${row.title} ${row.category?.name ?? ""}`
-        .toLocaleLowerCase("fr")
-        .includes(query.toLocaleLowerCase("fr"))
-  );
   if (editingId && frozen.current?.id !== editingId)
-    frozen.current = { id: editingId, rows: filtered };
+    frozen.current = { id: editingId, rows };
   if (!editingId) frozen.current = null;
-  const visible = frozen.current?.rows ?? filtered;
-  const ariaSort = (field) =>
-    sort?.field === field
-      ? sort.direction === "asc"
-        ? "ascending"
-        : "descending"
-      : undefined;
+  const visible = frozen.current?.rows ?? rows;
+  const editing = Boolean(editingId);
   return (
     <div className="compact-money-list">
-      <div
-        className="compact-money-list__filters"
-        role="group"
-        aria-label="Filtrer par type"
+      {toolbar}
+      {fixed && (
+        <p className="compact-money-list__scope">
+          Montants personnels par mois.
+        </p>
+      )}
+      <table
+        className="compact-money-table"
+        aria-label={label}
+        aria-busy={busy || undefined}
       >
-        {[
-          ["all", "Tout"],
-          ["expense", fixed ? "Charges" : "Dépenses"],
-          ["income", "Entrées"],
-        ].map(([value, text]) => (
-          <button
-            type="button"
-            key={value}
-            aria-pressed={kind === value}
-            disabled={Boolean(editingId)}
-            onClick={() => setKind(value)}
-          >
-            {text}{" "}
-            <span>
-              {
-                rows.filter((row) => value === "all" || row.kind === value)
-                  .length
-              }
-            </span>
-          </button>
-        ))}
-      </div>
-      <div className="compact-money-list__tools">
-        <label>
-          Rechercher dans les éléments chargés
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            disabled={Boolean(editingId)}
-            placeholder="Libellé ou catégorie"
-          />
-        </label>
-        {sortControls}
-      </div>
-      <p className="compact-money-list__scope">
-        Recherche et filtres limités aux éléments chargés.
-        {fixed && " Montants personnels par mois."}
-      </p>
-      <table className="compact-money-table" aria-label={label}>
         <thead>
           <tr>
             {[
@@ -90,11 +62,41 @@ export const CompactMoneyList = ({
               ["kind", "Type"],
               ["amount", fixed ? "Personnel / mois" : "Montant"],
               ["actions", "Actions"],
-            ].map(([field, text]) => (
-              <th key={field} scope="col" aria-sort={ariaSort(field)}>
-                {text}
-              </th>
-            ))}
+            ].map(([field, text]) => {
+              const header = sortHeaders[field];
+              return (
+                <th
+                  key={field}
+                  scope="col"
+                  aria-sort={
+                    header && header.ariaSort !== "none"
+                      ? header.ariaSort
+                      : undefined
+                  }
+                >
+                  <div className="compact-money-table__heading">
+                    {header ? (
+                      <button
+                        type="button"
+                        className="compact-money-table__sort"
+                        aria-label={header.label}
+                        disabled={editing || header.disabled}
+                        onClick={header.onSort}
+                      >
+                        <span>{text}</span>
+                        <FontAwesomeIcon
+                          icon={SORT_ICONS[header.ariaSort]}
+                          aria-hidden="true"
+                        />
+                      </button>
+                    ) : (
+                      <span>{text}</span>
+                    )}
+                    {filters[field]}
+                  </div>
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
@@ -160,13 +162,10 @@ export const CompactMoneyList = ({
         </tbody>
       </table>
       {!visible.length && (
-        <p role="status">
-          Aucun élément parmi les données chargées pour ces filtres.
+        <p role="status" className="compact-money-list__empty">
+          {emptyMessage}
         </p>
       )}
-      <p className="compact-money-list__scope">
-        {visible.length} sur {rows.length} éléments chargés
-      </p>
     </div>
   );
 };

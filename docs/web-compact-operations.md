@@ -5,11 +5,12 @@ opérations ponctuelles et fixes. Le mobile déplie les détails dans la liste e
 touchant le libellé. Le signe du montant et le libellé du type complètent la
 couleur. Les catégories et icônes personnelles sont conservées.
 
-La recherche (libellé/catégorie) et les filtres Tout, Dépenses/Charges, Entrées
-portent uniquement sur les éléments déjà chargés. « Charger plus » poursuit la
-pagination de l’API ; les nombres ne prétendent pas représenter toute la base.
-Les tris existants des fixes restent disponibles. L’édition désactive les
-filtres et fige l’ordre des lignes jusqu’à Enregistrer ou Annuler.
+Depuis #361, le tri et les filtres se règlent depuis les en-têtes de colonnes
+ou le panneau « Trier et filtrer » : voir [web-table-headers.md](web-table-headers.md).
+Pour les opérations ponctuelles, ils sont appliqués par l’API sur toute la
+base ; « Afficher la suite » poursuit la pagination de cette même requête.
+L’édition désactive le tri et les filtres et fige l’ordre des lignes jusqu’à
+Enregistrer ou Annuler.
 
 L’éditeur remplace les cellules de la ligne et se déplie dans le même élément
 sur téléphone. Aucune sauvegarde au changement ou au flou. Le premier champ

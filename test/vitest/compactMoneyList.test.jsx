@@ -6,7 +6,7 @@ import {
   screen,
   within,
 } from "@testing-library/react";
-import { afterEach, expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import { CompactMoneyList } from "../../src/js/components/CompactOperations/CompactMoneyList";
 afterEach(cleanup);
 const rows = [
@@ -38,47 +38,83 @@ const props = {
     </tr>
   ),
 };
-it("filters the loaded window by direction and title/category without fetching or losing details", () => {
-  render(<CompactMoneyList {...props} />);
-  fireEvent.click(screen.getByRole("button", { name: /^Entrées/ }));
+it("renders sortable headers with aria-sort on the sorted column only, and filters under their name (#361)", () => {
+  const onSort = vi.fn();
+  render(
+    <CompactMoneyList
+      {...props}
+      sortHeaders={{
+        date: { ariaSort: "descending", label: "Date, trié", onSort },
+        amount: { ariaSort: "none", label: "Montant, non trié", onSort },
+      }}
+      filters={{ title: <input aria-label="Filtrer par libellé" /> }}
+      toolbar={<p>Barre de tri</p>}
+    />
+  );
+  expect(screen.getByText("Barre de tri")).toBeVisible();
+  const date = screen.getByRole("columnheader", { name: /Date/ });
+  expect(date).toHaveAttribute("aria-sort", "descending");
+  const amount = screen.getByRole("columnheader", { name: /Montant/ });
+  expect(amount).not.toHaveAttribute("aria-sort");
   expect(
-    screen.queryByRole("button", { name: "Courses du quotidien", exact: true })
+    screen.getByRole("columnheader", { name: /Libellé/ })
+  ).not.toHaveAttribute("aria-sort");
+  fireEvent.click(
+    within(amount).getByRole("button", { name: "Montant, non trié" })
+  );
+  expect(onSort).toHaveBeenCalledTimes(1);
+  // Une colonne sans tri garde un simple libellé.
+  expect(
+    within(screen.getByRole("columnheader", { name: /Catégorie/ })).queryByRole(
+      "button"
+    )
   ).toBeNull();
   expect(
-    screen.getByRole("button", { name: "Remboursement transport", exact: true })
+    within(
+      screen.getByRole("columnheader", { name: /Libellé/ })
+    ).getByLabelText("Filtrer par libellé")
   ).toBeVisible();
-  fireEvent.click(screen.getByRole("button", { name: /^Tout/ }));
-  fireEvent.change(screen.getByRole("searchbox"), {
-    target: { value: "FAMILLE" },
-  });
-  expect(
-    screen.getByRole("button", { name: "Courses du quotidien", exact: true })
-  ).toBeVisible();
-  expect(
-    screen.queryByRole("button", {
-      name: "Remboursement transport",
-      exact: true,
-    })
-  ).toBeNull();
   fireEvent.click(
     screen.getByRole("button", { name: "Courses du quotidien", exact: true })
   );
   expect(
     screen.getByText("Alimentation et courses de la famille", { selector: "p" })
   ).toBeVisible();
-  expect(screen.getByText("1 sur 2 éléments chargés")).toBeVisible();
+});
+it("announces an empty filtered result without hiding the headers", () => {
+  render(
+    <CompactMoneyList
+      {...props}
+      rows={[]}
+      emptyMessage="Aucune opération ne correspond à ces filtres."
+    />
+  );
+  expect(screen.getByRole("status")).toHaveTextContent(
+    "Aucune opération ne correspond à ces filtres."
+  );
+  expect(screen.getAllByRole("columnheader")).toHaveLength(6);
 });
 it("freezes the editing row's slot until explicit completion even when sorted input changes", () => {
-  const { rerender } = render(<CompactMoneyList {...props} editingId="two" />);
+  const sortHeaders = {
+    title: { ariaSort: "ascending", label: "Libellé, trié", onSort: vi.fn() },
+  };
+  const { rerender } = render(
+    <CompactMoneyList {...props} sortHeaders={sortHeaders} editingId="two" />
+  );
   rerender(
-    <CompactMoneyList {...props} rows={[...rows].reverse()} editingId="two" />
+    <CompactMoneyList
+      {...props}
+      sortHeaders={sortHeaders}
+      rows={[...rows].reverse()}
+      editingId="two"
+    />
   );
   const body = screen.getByRole("table").querySelector("tbody");
   expect(within(body).getAllByRole("row")[1]).toHaveTextContent(
     "Édition Remboursement transport"
   );
-  expect(screen.getByRole("button", { name: /^Entrées/ })).toBeDisabled();
-  expect(screen.getByRole("searchbox")).toBeDisabled();
+  // Le tri depuis l'en-tête attend la fin de l'édition.
+  expect(screen.getByRole("button", { name: "Libellé, trié" })).toBeDisabled();
   rerender(<CompactMoneyList {...props} rows={[...rows].reverse()} />);
   expect(within(body).getAllByRole("row")[0]).toHaveTextContent(
     "Remboursement transport"

@@ -5,6 +5,7 @@ import {
   useMutationFeedback,
 } from "./useMutationFeedback";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { operationApiParams, operationQueryParams } from "../utils/tableQuery";
 import { oneOffOperationsService as service } from "../services/oneOffOperationsService";
 import { useSimulation } from "../components/Simulation/SimulationContext";
 import { envelopeErrorMessage } from "../services/envelopesService";
@@ -14,8 +15,16 @@ const merge = (current, incoming) => {
   const ids = new Set(current.map((r) => r.id));
   return [...current, ...incoming.filter((r) => !ids.has(r.id))];
 };
-export const useOneOffOperations = () => {
+/**
+ * `query` (`{ sort, filters }`, voir `utils/tableQuery.js`) est appliqué par
+ * l'API (#165, #361). Chaque changement repart de la première page, sans
+ * démonter la liste : `queryStatus` signale l'actualisation en cours.
+ */
+export const useOneOffOperations = (query = null) => {
   const { revision } = useSimulation();
+  const queryKey = query ? operationQueryParams(query).toString() : "";
+  const params = useRef({});
+  params.current = query ? operationApiParams(query) : {};
   const [operations, setOperations] = useState([]),
     [categories, setCategories] = useState([]),
     [meta, setMeta] = useState(null),
@@ -23,14 +32,17 @@ export const useOneOffOperations = () => {
     [pageStatus, setPageStatus] = useState("idle"),
     [mutationStatus, setMutationStatus] = useState("idle"),
     [message, setMessage] = useState(""),
-    [refreshError, setRefreshError] = useState(false);
+    [refreshError, setRefreshError] = useState(false),
+    [queryStatus, setQueryStatus] = useState("idle");
   const writing = useRef(false),
     paging = useRef(false),
     latest = useRef(0),
     pages = useRef(1),
     loaded = useRef(false),
     mounted = useRef(true),
-    seenRevision = useRef(revision);
+    seenRevision = useRef(revision),
+    seenQuery = useRef(queryKey),
+    querying = useRef(false);
   const loadInitial = useCallback(async ({ quiet = false } = {}) => {
     const request = ++latest.current;
     if (!quiet) {
@@ -39,7 +51,7 @@ export const useOneOffOperations = () => {
     }
     try {
       const [first, available] = await Promise.all([
-        service.listOperations(),
+        service.listOperations(null, params.current),
         service.listAllCategories(),
       ]);
       let rows = first.data,
@@ -52,21 +64,26 @@ export const useOneOffOperations = () => {
       ) {
         if (seen.has(nextMeta.nextCursor)) throw new Error("Repeated cursor");
         seen.add(nextMeta.nextCursor);
-        const page = await service.listOperations(nextMeta.nextCursor);
+        const page = await service.listOperations(
+          nextMeta.nextCursor,
+          params.current
+        );
         rows = merge(rows, page.data);
         nextMeta = page.meta;
       }
-      if (!mounted.current || request !== latest.current) return false;
+      if (!mounted.current || request !== latest.current) return null;
       setOperations(rows);
       setCategories(available);
       setMeta(nextMeta);
       setStatus("success");
       setPageStatus("idle");
       setRefreshError(false);
+      setQueryStatus("idle");
+      querying.current = false;
       loaded.current = true;
       return true;
     } catch {
-      if (!mounted.current || request !== latest.current) return false;
+      if (!mounted.current || request !== latest.current) return null;
       setRefreshError(true);
       if (!quiet || !loaded.current) {
         setStatus("error");
@@ -86,19 +103,49 @@ export const useOneOffOperations = () => {
     };
   }, [loadInitial]);
   useEffect(() => {
+    if (seenQuery.current === queryKey) return;
+    seenQuery.current = queryKey;
+    // Un curseur est lié au tri et aux filtres : la liste repart du début.
+    pages.current = 1;
+    querying.current = true;
+    setQueryStatus("loading");
+    loadInitial({ quiet: true }).then((ok) => {
+      // Après un échec, `meta` reste celui de l'ancienne requête : `querying`
+      // reste levé jusqu'à un chargement réussi (relâché dans `loadInitial`).
+      if (ok === null) return;
+      if (ok || !mounted.current) return;
+      // Les lignes affichées restent celles de la requête précédente.
+      setQueryStatus("error");
+      setMessage(
+        "Le tri ou les filtres n’ont pas pu être appliqués. Réessayez l’actualisation."
+      );
+    });
+  }, [queryKey, loadInitial]);
+  useEffect(() => {
     if (seenRevision.current === revision) return;
     seenRevision.current = revision;
     if (!writing.current) loadInitial({ quiet: true });
   }, [revision, loadInitial]);
   const loadMore = async () => {
-    if (!meta?.hasNext || !meta.nextCursor || paging.current || writing.current)
+    // Pendant une nouvelle requête, `meta` décrit encore l'ancienne : son
+    // curseur serait refusé avec les nouveaux paramètres.
+    if (
+      !meta?.hasNext ||
+      !meta.nextCursor ||
+      paging.current ||
+      writing.current ||
+      querying.current
+    )
       return;
     paging.current = true;
     setPageStatus("loading");
     setMessage("");
     const request = latest.current;
     try {
-      const page = await service.listOperations(meta.nextCursor);
+      const page = await service.listOperations(
+        meta.nextCursor,
+        params.current
+      );
       if (!mounted.current || request !== latest.current) return;
       pages.current++;
       setOperations((current) => merge(current, page.data));
@@ -158,6 +205,7 @@ export const useOneOffOperations = () => {
     mutationStatus,
     message,
     refreshError,
+    queryStatus,
     retry: () => {
       setMessage("");
       return loadInitial({ quiet: loaded.current });

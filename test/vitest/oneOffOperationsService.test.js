@@ -45,6 +45,7 @@ describe("oneOffOperationsService", () => {
     });
     expect(apiPrivate.get).toHaveBeenCalledWith("/operations", {
       params: { limit: OPERATIONS_PAGE_LIMIT },
+      paramsSerializer: { indexes: null },
       withCredentials: true,
     });
   });
@@ -54,8 +55,80 @@ describe("oneOffOperationsService", () => {
     await oneOffOperationsService.listOperations("v1.opaque");
     expect(apiPrivate.get).toHaveBeenCalledWith("/operations", {
       params: { limit: OPERATIONS_PAGE_LIMIT, cursor: "v1.opaque" },
+      paramsSerializer: { indexes: null },
       withCredentials: true,
     });
+  });
+
+  it("sends sort and filters with repeated categoryId values (#361)", async () => {
+    apiPrivate.get.mockResolvedValue(page([]));
+    await oneOffOperationsService.listOperations(null, {
+      sort: "amount",
+      order: "desc",
+      categoryId: ["3", "7"],
+    });
+    const config = apiPrivate.get.mock.calls[0][1];
+    expect(config.params).toEqual({
+      sort: "amount",
+      order: "desc",
+      categoryId: ["3", "7"],
+      limit: OPERATIONS_PAGE_LIMIT,
+    });
+    // Sérialisation réelle d'axios : une clé répétée, sans crochets.
+    const { default: axios } = await vi.importActual("axios");
+    expect(
+      axios.getUri({
+        url: "/operations",
+        params: config.params,
+        paramsSerializer: config.paramsSerializer,
+      })
+    ).toBe(
+      "/operations?sort=amount&order=desc&categoryId=3&categoryId=7&limit=20"
+    );
+  });
+
+  it("maps title suggestions to filter options and forwards the abort signal (#174)", async () => {
+    const controller = new AbortController();
+    apiPrivate.get.mockResolvedValue({
+      data: {
+        data: [{ title: "Loyer" }, { title: "Électricité" }],
+        meta: { limit: 10, hasNext: true, nextCursor: "c2" },
+      },
+    });
+    const result = await oneOffOperationsService.listTitleSuggestions({
+      query: "  lo ",
+      cursor: "c1",
+      limit: 10,
+      signal: controller.signal,
+    });
+    expect(apiPrivate.get).toHaveBeenCalledWith(
+      "/operations/suggestions/titles",
+      {
+        params: { q: "lo", limit: 10, cursor: "c1" },
+        signal: controller.signal,
+        withCredentials: true,
+      }
+    );
+    expect(result).toEqual({
+      data: [
+        { value: "Loyer", label: "Loyer" },
+        { value: "Électricité", label: "Électricité" },
+      ],
+      meta: { limit: 10, hasNext: true, nextCursor: "c2" },
+    });
+    apiPrivate.get.mockResolvedValue({
+      data: {
+        data: [{ title: "" }],
+        meta: { limit: 10, hasNext: false, nextCursor: null },
+      },
+    });
+    await expect(
+      oneOffOperationsService.listTitleSuggestions({ query: "" })
+    ).rejects.toThrow("Invalid title suggestion response");
+    expect(apiPrivate.get).toHaveBeenLastCalledWith(
+      "/operations/suggestions/titles",
+      { params: { limit: 10 }, signal: undefined, withCredentials: true }
+    );
   });
 
   it("loads every category page and rejects a repeated cursor", async () => {
