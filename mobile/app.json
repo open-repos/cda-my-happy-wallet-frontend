@@ -28,6 +28,11 @@
               "scheme": "https",
               "host": "myhappywallet.andriacapai.com",
               "path": "/login"
+            },
+            {
+              "scheme": "https",
+              "host": "myhappywallet.andriacapai.com",
+              "path": "/new-password"
             }
           ],
           "category": ["BROWSABLE", "DEFAULT"]

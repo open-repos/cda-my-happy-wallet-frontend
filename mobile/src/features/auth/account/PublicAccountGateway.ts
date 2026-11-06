@@ -26,6 +26,10 @@ export class PublicAccountError extends Error {
 export interface PublicAccountGateway {
   register(draft: RegistrationDraft): Promise<void>;
   requestPasswordReset(email: string): Promise<void>;
+  /** Valide le jeton reçu par email ; l'API le dépose en cookie httpOnly. */
+  verifyPasswordResetToken(token: string): Promise<void>;
+  /** Enregistre le nouveau mot de passe avec le cookie de réinitialisation. */
+  setNewPassword(password: string, confirmPassword: string): Promise<void>;
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -61,10 +65,18 @@ export const getRegistrationValidationError = (
     return emailError;
   }
 
-  if (!STRONG_PASSWORD_PATTERN.test(draft.password)) {
+  return getPasswordValidationError(draft.password, draft.confirmpassword);
+};
+
+/** Règle du backend (`nestedStrongPassword`), partagée avec la réinitialisation. */
+export const getPasswordValidationError = (
+  password: string,
+  confirmation: string,
+): string | null => {
+  if (!STRONG_PASSWORD_PATTERN.test(password)) {
     return "Le mot de passe doit contenir au moins 8 caractères, avec une minuscule, une majuscule, un chiffre et un caractère spécial.";
   }
-  if (draft.password !== draft.confirmpassword) {
+  if (password !== confirmation) {
     return "Les mots de passe ne correspondent pas.";
   }
   return null;

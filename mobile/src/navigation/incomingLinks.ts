@@ -14,10 +14,12 @@
  * HTTP(S) : l'analyse est donc faite ici, identique en Node et sur appareil.
  */
 
+import { isPasswordResetToken } from "@/src/features/auth/password/passwordReset";
+
 export const APP_LINK_SCHEME = "myhappywallet";
 export const EMAIL_LINK_HOST = "myhappywallet.andriacapai.com";
 /** Chemins du site revendiqués par l'application Android. */
-export const EMAIL_LINK_PATHS = ["/login"] as const;
+export const EMAIL_LINK_PATHS = ["/login", "/new-password"] as const;
 
 export const REGISTRATION_CONFIRMATION_OUTCOMES = [
   "confirmed",
@@ -30,6 +32,7 @@ export type RegistrationConfirmationOutcome =
 
 const START_PATH = "/";
 const SIGN_IN_PATH = "/sign-in";
+const NEW_PASSWORD_PATH = "/new-password";
 
 const LINK_PATTERN =
   /^([a-z][a-z0-9+.-]*):\/\/([^/?#]*)(\/[^?#]*)?(?:\?([^#]*))?(?:#.*)?$/i;
@@ -104,9 +107,10 @@ const readConfirmationOutcome = (
 };
 
 /**
- * Route Expo Router d'un lien entrant. Un lien possédé mais non pris en charge
- * (dont `/new-password`, traité par #219) ouvre l'écran de départ sans sa
- * query ; un lien non possédé est rendu tel quel.
+ * Route Expo Router d'un lien entrant. `/new-password` ne garde que
+ * `resetToken`, et seulement au format du backend (#219). Un lien possédé mais
+ * non pris en charge ouvre l'écran de départ sans sa query ; un lien non
+ * possédé est rendu tel quel.
  */
 export const resolveIncomingLink = (link: string): string => {
   const owned = parseOwnedLink(link);
@@ -120,6 +124,12 @@ export const resolveIncomingLink = (link: string): string => {
     return outcome == null
       ? SIGN_IN_PATH
       : `${SIGN_IN_PATH}?confirmation=${outcome}`;
+  }
+  if (path === NEW_PASSWORD_PATH) {
+    const token = readQuery(owned.query).get("resetToken");
+    return isPasswordResetToken(token)
+      ? `${NEW_PASSWORD_PATH}?resetToken=${token}`
+      : NEW_PASSWORD_PATH;
   }
   return START_PATH;
 };

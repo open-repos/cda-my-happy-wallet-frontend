@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   AuthActionButton,
@@ -14,6 +14,7 @@ import {
   getRegistrationConfirmationFeedback,
   type RegistrationConfirmationFeedback,
 } from "@/src/features/auth/presentation/registrationConfirmation";
+import { useClearedRouteParam } from "@/src/navigation/useClearedRouteParam";
 
 export default function SignInScreen() {
   const router = useRouter();
@@ -37,11 +38,7 @@ export default function SignInScreen() {
     }
   }
 
-  useEffect(() => {
-    if (confirmation !== undefined) {
-      router.setParams({ confirmation: undefined });
-    }
-  }, [confirmation, router]);
+  useClearedRouteParam("confirmation", confirmation);
 
   const submit = async () => {
     const normalizedEmail = email.trim().toLowerCase();

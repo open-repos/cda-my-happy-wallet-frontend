@@ -32,21 +32,51 @@ export class FetchPublicAccountGateway implements PublicAccountGateway {
     return this.post("/users/reset-password", { email: normalizeEmail(email) });
   }
 
-  private async post(
+  public verifyPasswordResetToken(token: string): Promise<void> {
+    // Le cookie httpOnly posé ici est relu par POST /users/new-password.
+    return this.send(`/users/reset-password/${encodeURIComponent(token)}`, {
+      method: "GET",
+      credentials: "include",
+      headers: { Accept: "application/json" },
+    });
+  }
+
+  public setNewPassword(
+    password: string,
+    confirmPassword: string,
+  ): Promise<void> {
+    return this.post(
+      "/users/new-password",
+      { password, confirmPassword },
+      { credentials: "include" },
+    );
+  }
+
+  private post(
     path: string,
     body: Record<string, string>,
+    options: Pick<RequestInit, "credentials"> = {},
   ): Promise<void> {
+    return this.send(path, {
+      method: "POST",
+      ...options,
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+  }
+
+  private async send(path: string, init: RequestInit): Promise<void> {
     let response: Response;
     try {
-      response = await this.fetchImplementation(`${this.apiBaseUrl}${path}`, {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      });
+      response = await this.fetchImplementation(
+        `${this.apiBaseUrl}${path}`,
+        init,
+      );
     } catch {
+      // L'erreur d'origine peut contenir l'URL, donc le jeton : non relayée.
       throw new PublicAccountError("network");
     }
 

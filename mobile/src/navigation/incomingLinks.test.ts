@@ -52,10 +52,32 @@ describe("resolveIncomingLink", () => {
     );
   });
 
+  const RESET_TOKEN = "0123456789abcdef".repeat(8);
+
+  it.each([
+    webLink(`/new-password?resetToken=${RESET_TOKEN}`),
+    webLink(`/new-password/?next=/x&resetToken=${RESET_TOKEN}&a=b`),
+    `myhappywallet://new-password?resetToken=${RESET_TOKEN}`,
+  ])("opens the new password screen with its token: %s", (link) => {
+    expect(resolveIncomingLink(link)).toBe(
+      `/new-password?resetToken=${RESET_TOKEN}`,
+    );
+  });
+
   it.each([
     webLink("/new-password?resetToken=secret-value"),
-    "myhappywallet://new-password?resetToken=secret-value",
+    webLink(`/new-password?resetToken=${RESET_TOKEN.toUpperCase()}`),
+    webLink("/new-password"),
+  ])("opens the new password screen without a malformed token: %s", (link) => {
+    const resolved = resolveIncomingLink(link);
+
+    expect(resolved).toBe("/new-password");
+    expect(resolved).not.toContain("secret-value");
+  });
+
+  it.each([
     "myhappywallet://calendar?resetToken=secret-value",
+    webLink("/register?resetToken=secret-value"),
   ])(
     "sends an unsupported owned link to the start screen without its query: %s",
     (link) => {
