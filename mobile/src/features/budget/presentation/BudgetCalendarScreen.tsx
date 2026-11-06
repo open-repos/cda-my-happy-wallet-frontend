@@ -51,7 +51,10 @@ import { SimulationPanel } from "@/src/features/simulation/presentation/Simulati
 import { SimulationReadout } from "@/src/features/simulation/presentation/SimulationReadout";
 
 import { HttpCalendarContentGateway } from "../infrastructure/HttpCalendarContentGateway";
-import { calendarGridWidth } from "./calendarLayout";
+import {
+  CALENDAR_AMOUNT_TEXT_PROPS,
+  calendarGridWidth,
+} from "./calendarLayout";
 import { useCalendarContent } from "./useCalendarContent";
 import { CalendarElements } from "./CalendarElements";
 import {
@@ -359,19 +362,13 @@ export const BudgetCalendarScreen = () => {
                 partir du 1er {monthTitle(month)}.
               </Text>
             ) : null}
-            {gridWidth > gridViewportWidth && (
-              <Text style={styles.legendText}>
-                Faites défiler les jours horizontalement si nécessaire.
-              </Text>
-            )}
-            <ScrollView
-              horizontal
-              testID="calendar-grid-scroll"
+            <View
+              testID="calendar-grid"
               onLayout={(event) =>
                 setGridViewportWidth(event.nativeEvent.layout.width)
               }
             >
-              <View style={{ width: gridWidth }}>
+              <View style={{ width: gridWidth || undefined }}>
                 <View
                   accessibilityElementsHidden
                   importantForAccessibility="no-hide-descendants"
@@ -459,6 +456,7 @@ export const BudgetCalendarScreen = () => {
                             {cellContent.value !== null ? (
                               <Text
                                 testID="calendar-day-value"
+                                {...CALENDAR_AMOUNT_TEXT_PROPS}
                                 style={[
                                   styles.dayValue,
                                   cellContent.tone === "negative" &&
@@ -494,7 +492,7 @@ export const BudgetCalendarScreen = () => {
                   ))}
                 </View>
               </View>
-            </ScrollView>
+            </View>
             <View style={styles.legend}>
               {CALENDAR_TYPES.map((type) => (
                 <View key={type.key} style={styles.legendItem}>
@@ -723,6 +721,7 @@ const makeStyles = (
     dayNumber: { color: colors.textPrimary, fontSize: 15, fontWeight: "600" },
     outsideDay: { color: colors.borderStrong, fontSize: 15, opacity: 0.4 },
     dayValue: {
+      maxWidth: "100%",
       color: colors.textSecondary,
       fontSize: 11,
       fontVariant: ["tabular-nums"],

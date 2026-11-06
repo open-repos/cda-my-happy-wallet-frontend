@@ -1,16 +1,15 @@
-import { semantic } from "@/src/design/tokens";
 import { CalendarMode } from "../domain/budgetCalendar";
 
-/** Keep seven columns, scrolling within the calendar instead of shrinking text
- * or overlapping 48 dp targets. Native fontScale also grows the text column. */
+/** All modes share the available width; system font scale never grows the grid. */
 export const calendarGridWidth = (
   viewportWidth: number,
-  mode: CalendarMode,
-  fontScale: number,
-): number =>
-  Math.max(
-    viewportWidth,
-    7 *
-      (mode === "forecast" ? 96 : semantic.size.controlMinHeight) *
-      Math.max(1, fontScale),
-  );
+  _mode: CalendarMode,
+  _fontScale: number,
+): number => viewportWidth;
+
+/** Only compact cell amounts are bounded; exact amounts and spoken labels remain full size. */
+export const CALENDAR_AMOUNT_TEXT_PROPS = {
+  allowFontScaling: true,
+  maxFontSizeMultiplier: 1.3,
+  adjustsFontSizeToFit: false,
+} as const;

@@ -15,27 +15,42 @@ leur signe, y compris sous 0,50 €, sans changer l’arrondi du mode Dépenses.
 Les couleurs utilisent `dataIncome` et `dataExpense` du thème courant ; une
 case sélectionnée utilise le texte contrasté de l’action sélectionnée.
 
-La grille garde sept colonnes dans une zone défilante horizontale : aucune
-cible ne devient inférieure à 48 dp, même à 320 px. Le mode Prévisionnel
-réserve 96 dp par colonne ; la largeur minimale suit le `fontScale` natif.
-Les textes ne sont ni tronqués ni réduits automatiquement. Les autres modes
-conservent leur affichage, avec la même garantie de cible minimale.
+La grille affiche sept colonnes de largeur égale dans la largeur disponible,
+sans défilement horizontal et sans élargissement lié au `fontScale`. Les
+montants compacts suivent la police système jusqu’à ×1,3, puis restent à cette
+taille (`maxFontSizeMultiplier: 1.3`). Aucune troncature, limitation à une ligne
+ou réduction automatique ne leur est appliquée. Le détail du jour continue de
+suivre la taille de police complète ; le libellé accessible conserve le montant
+exact à toutes les tailles.
+
+Chaque cible conserve une hauteur d’au moins 48 dp. Sept cibles de 48 dp de
+large nécessitent au moins 336 dp disponibles, avant les marges du calendrier ;
+ce minimum est respecté sur Pixel 5. La largeur réelle d’une case est la largeur
+disponible divisée par sept. Sur les petits écrans (environ moins de 378 px avec
+les marges actuelles), la décision du propriétaire donne priorité aux sept
+colonnes visibles : la largeur des cibles peut donc être inférieure à 48 dp,
+notamment à 320 px, tandis que leur hauteur reste d’au moins 48 dp.
 
 Les tests couvrent le parseur, la passerelle HTTP, les valeurs quotidiennes
 indépendantes du prévisionnel mensuel, le résumé inchangé, les petits déficits,
 le détail et la largeur native avec grandes polices. Les parcours Expo Web
-couvrent 320/390/768/1440 px, clair/sombre, texte agrandi à 200 %, sélection au
+couvrent 320/390/768/1440 px, clair/sombre, texte à ×1, ×1,3 et ×2, sélection au
 clavier, annonces et absence de débordement de la page. Expo Web ne simule pas
-le `fontScale` système : le texte rendu est agrandi dans les tests navigateur.
+le `fontScale` système ni `maxFontSizeMultiplier` : le texte rendu est agrandi
+dans les tests navigateur, avec le plafond natif partagé appliqué uniquement
+aux montants compacts. Le détail est vérifié à la taille système complète.
 
-La recette sur development build Android Pixel 5 et iOS, grandes polices et
-TalkBack/VoiceOver compris, reste à effectuer dans la recette groupée de fin
-de parité #213, conformément au report autorisé.
+Le [commentaire du propriétaire](https://github.com/open-repos/cda-my-happy-wallet-frontend/pull/398#issuecomment-6695527598)
+documente la recette déjà effectuée sur `a1d7d44` : Pixel 5 / Android 35,
+contrat, signes, détail, sélection, annonces et thème sombre conformes. La
+nouvelle grille doit être revérifiée sur ce development build à ×1, ×1,3 et ×2.
+TalkBack avec la voix et iOS restent à couvrir dans la recette groupée #213.
 
-Les six références du détail Prévisionnel (clair/sombre, téléphone/tablette/bureau)
-proviennent du [rendu CI 42267986703](https://github.com/open-repos/cda-my-happy-wallet-frontend/actions/runs/42267986703),
-commit `a26fc197d307ace59a852576c92485a12d52ab11`, artefact
-`mobile-visual-failure` 13529110573. Elles ont été inspectées puis copiées sans
-modification du PNG ; aucune référence locale ni changement de seuil n’a été
-adopté. La revue du calendrier est documentée dans
-[calendar-visual-review.md](calendar-visual-review.md).
+Le bouton Prévisionnel coupé à ×1,3 et la relecture du mois au retour par
+l’onglet sont des défauts antérieurs explicitement hors périmètre ; cette
+modification ne change ni le sélecteur de modes ni les hooks de relecture.
+
+Les références visuelles sont produites par la CI puis inspectées et copiées
+sans modification. La [revue du calendrier](calendar-visual-review.md) documente
+leur provenance, leurs empreintes et les différences attendues avec la grille
+précédente à défilement horizontal.

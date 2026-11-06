@@ -1,6 +1,13 @@
-# Revue du calendrier natif — #386
+# Revue historique du calendrier natif — #386 (avant la grille fixe)
 
-Les références proviennent exclusivement du rendu de GitHub Actions :
+Cette revue conserve la provenance des références de `a1d7d44`, avant la
+[décision du propriétaire](https://github.com/open-repos/cda-my-happy-wallet-frontend/pull/398#issuecomment-6695527598)
+de supprimer le défilement horizontal. La spécification actuelle est dans
+[daily-remaining.md](daily-remaining.md) : sept colonnes toujours visibles et
+montant compact plafonné à ×1,3. Les anciennes garanties de largeur décrites
+ci-dessous appartiennent au rendu précédent.
+
+Les références historiques proviennent exclusivement du rendu de GitHub Actions :
 
 - [Mobile quality 42267986703](https://github.com/open-repos/cda-my-happy-wallet-frontend/actions/runs/42267986703), commit `a26fc197d307ace59a852576c92485a12d52ab11`, artefact `mobile-visual-failure` 13529110573.
 - [Mobile quality 42269745445](https://github.com/open-repos/cda-my-happy-wallet-frontend/actions/runs/42269745445), commit `ae3cd627a2941d5415149366780c99402cca679b`, artefact `mobile-visual-failure` 13529356171.
