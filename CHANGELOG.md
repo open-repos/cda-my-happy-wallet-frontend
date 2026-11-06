@@ -7,6 +7,13 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.16.0] - 2026-11-06
+
+### Changed
+
+- The Libellé column filter of the one-off and fixed operation tables now applies the typed text as a « contains » filter on Enter or when leaving the field, through the new `freeText` option of `FilterCombobox`; suggestions remain available (#377).
+- Calendar cells in Prévisionnel mode now show the backend `dailyRemaining` value (cumulative daily share of the base remaining minus expenses plus income, recorded or planned, up to that day) instead of the month-end `forecastRemaining`; the accessible label reads « reste à vivre du jour » and the selected-day panel explains it. The month summary is unchanged (#379).
+
 ## [1.15.0] - 2026-11-05
 
 ### Added
@@ -289,7 +296,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Replaced dynamic SSH host discovery with a pre-verified `known_hosts` file.
 - Isolated SSH credentials from validation and build jobs.
 
-[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.15.0...develop
+[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.16.0...develop
+[1.16.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.15.0...v1.16.0
 [1.15.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.14.0...v1.15.0
 [1.14.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.13.0...v1.14.0
 [1.13.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.12.1...v1.13.0
