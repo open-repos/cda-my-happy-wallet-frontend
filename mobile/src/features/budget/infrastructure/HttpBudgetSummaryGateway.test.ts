@@ -86,3 +86,45 @@ describe("HttpBudgetSummaryGateway", () => {
     ).rejects.toEqual(new BudgetSummaryRequestError(422));
   });
 });
+
+describe("daily remaining HTTP contract (#386)", () => {
+  const point = {
+    date: "2026-10-03",
+    income: "0.00",
+    expense: "42.50",
+    realRemaining: "100.00",
+    plannedIncome: "0.00",
+    plannedExpense: "0.00",
+    plannedCount: 0,
+    forecastRemaining: "887.50",
+  };
+  it.each(["17.25", "-4.17", "0.00", null, undefined])(
+    "preserves dailyRemaining %s",
+    async (dailyRemaining) => {
+      const request = vi.fn().mockResolvedValue(
+        json(200, {
+          data: { ...summary, days: [{ ...point, dailyRemaining }] },
+        }),
+      );
+      const parsed = await new HttpBudgetSummaryGateway({ request }).getMonth(
+        "2026-10",
+      );
+      expect(parsed?.days[0].dailyRemaining).toBe(dailyRemaining ?? null);
+      expect(parsed?.realRemaining).toBe("100.00");
+      expect(parsed?.days[0].forecastRemaining).toBe("887.50");
+    },
+  );
+  it.each([17, "17", "nope", "-4.001", {}])(
+    "rejects malformed dailyRemaining %j",
+    async (dailyRemaining) => {
+      const request = vi.fn().mockResolvedValue(
+        json(200, {
+          data: { ...summary, days: [{ ...point, dailyRemaining }] },
+        }),
+      );
+      await expect(
+        new HttpBudgetSummaryGateway({ request }).getSummary("2026-10"),
+      ).rejects.toThrow("Invalid budget summary");
+    },
+  );
+});

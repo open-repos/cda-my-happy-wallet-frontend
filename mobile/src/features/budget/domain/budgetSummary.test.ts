@@ -73,7 +73,9 @@ describe("parseBudgetSummary days", () => {
   };
 
   it("keeps the daily points of an open month", () => {
-    expect(parseBudgetSummary(raw({ days: [point] })).days).toEqual([point]);
+    expect(parseBudgetSummary(raw({ days: [point] })).days).toEqual([
+      { ...point, dailyRemaining: null },
+    ]);
   });
 
   it("accepts null forecast fields for a closed month", () => {
@@ -88,8 +90,30 @@ describe("parseBudgetSummary days", () => {
       parseBudgetSummary(
         raw({ status: "CLOSED", forecast: null, days: [closed] }),
       ).days[0],
-    ).toEqual(closed);
+    ).toEqual({ ...closed, dailyRemaining: null });
   });
+
+  it.each(["17.00", "-4.00", "0.00", null, undefined])(
+    "parses dailyRemaining %s without changing monthly cards",
+    (dailyRemaining) => {
+      const baseline = parseBudgetSummary(raw({ days: [point] }));
+      const parsed = parseBudgetSummary(
+        raw({ days: [{ ...point, dailyRemaining }] }),
+      );
+      expect(parsed.days[0].dailyRemaining).toBe(dailyRemaining ?? null);
+      expect(parsed.days[0].forecastRemaining).toBe(point.forecastRemaining);
+      expect(buildSummaryCards(parsed)).toEqual(buildSummaryCards(baseline));
+    },
+  );
+
+  it.each([17, "17", "NaN", "-4.001", {}, "", "1e2", "10000000000.00"])(
+    "rejects malformed dailyRemaining %j",
+    (dailyRemaining) => {
+      expect(() =>
+        parseBudgetSummary(raw({ days: [{ ...point, dailyRemaining }] })),
+      ).toThrow("Invalid budget summary");
+    },
+  );
 
   it("rejects an invalid daily point", () => {
     expect(() =>

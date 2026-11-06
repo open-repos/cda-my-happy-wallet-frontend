@@ -1,8 +1,10 @@
 import { ActionButton } from "@/src/design/ActionButton";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  AccessibilityInfo,
+  Platform,
   Alert,
   Pressable,
   ScrollView,
@@ -25,6 +27,7 @@ import {
   CalendarMode,
   WEEKDAY_LABELS,
   dayCell,
+  dailyRemainingDetail,
   longDate,
   monthGrid,
   monthTitle,
@@ -48,6 +51,7 @@ import { SimulationPanel } from "@/src/features/simulation/presentation/Simulati
 import { SimulationReadout } from "@/src/features/simulation/presentation/SimulationReadout";
 
 import { HttpCalendarContentGateway } from "../infrastructure/HttpCalendarContentGateway";
+import { calendarGridWidth } from "./calendarLayout";
 import { useCalendarContent } from "./useCalendarContent";
 import { CalendarElements } from "./CalendarElements";
 import {
@@ -59,7 +63,9 @@ import { useQuickAdd } from "@/src/features/quick-add/presentation/QuickAddProvi
 
 /** Calendrier budgétaire du mois : grille, modes, détail du jour, opérations. */
 export const BudgetCalendarScreen = () => {
-  const compact = useWindowDimensions().width < 768;
+  const { width, fontScale } = useWindowDimensions();
+  const compact = width < 768;
+  const [gridViewportWidth, setGridViewportWidth] = useState(0);
   const colors = themes[useColorScheme() === "dark" ? "dark" : "light"].color;
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const router = useRouter();
@@ -83,6 +89,22 @@ export const BudgetCalendarScreen = () => {
   const [month, setMonth] = useState(currentParisMonth());
   const [mode, setMode] = useState<CalendarMode>("markers");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [liveAnnouncement, setLiveAnnouncement] = useState("");
+  const announcementRequest = useRef<{ date: string | null } | null>(null);
+  const focused = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      focused.current = true;
+      return () => {
+        focused.current = false;
+        announcementRequest.current = null;
+      };
+    }, []),
+  );
+  const selectDate = (date: string | null) => {
+    announcementRequest.current = { date };
+    setSelectedDate(date);
+  };
   const creationDate =
     selectedDate ?? (today.startsWith(month) ? today : `${month}-01`);
   useFocusEffect(
@@ -135,7 +157,7 @@ export const BudgetCalendarScreen = () => {
     () => new Map((state.summary?.days ?? []).map((day) => [day.date, day])),
     [state.summary],
   );
-  const cells = useMemo(() => monthGrid(month, today), [month, today]);
+  const cells = monthGrid(month, today);
   // Semaines en lignes explicites : sur Android, sept cases à 14,2857 %
   // dépassaient 100 % une fois arrondies et la septième passait à la ligne.
   const weeks = useMemo(
@@ -145,7 +167,60 @@ export const BudgetCalendarScreen = () => {
       ),
     [cells],
   );
+  const gridWidth = calendarGridWidth(gridViewportWidth, mode, fontScale);
+  const currency = state.summary?.currency ?? "EUR";
+  const detail = selectedDate
+    ? dailyRemainingDetail(days.get(selectedDate), currency)
+    : null;
+  const cellLabel = (date: string, isToday: boolean) => {
+    const label = dayCell(
+      date,
+      days.get(date),
+      mode,
+      currency,
+      state.summaryStatus === "loading",
+    ).accessibilityLabel;
+    const counts = calendarCounts(
+      content.items.filter((item) => item.date === date),
+    );
+    return `${label.replace(" Aucune opération.", "").replace(/\s\d+ événements? prévus?\./u, "")}${isToday ? " Aujourd’hui." : ""}${
+      content.status === "success"
+        ? CALENDAR_TYPES.filter((type) => counts[type.key] > 0)
+            .map(
+              (type) => ` ${calendarCountLabel(type.key, counts[type.key])}.`,
+            )
+            .join("")
+        : content.status === "error"
+          ? " Contenu indisponible."
+          : " Chargement du contenu."
+    }`;
+  };
+  const announcement = selectedDate
+    ? `Éléments du ${longDate(selectedDate)}. ${cellLabel(selectedDate, selectedDate === today)}${detail ? ` ${detail}` : ""}`
+    : "Éléments du mois.";
+  useEffect(() => {
+    // Only a user selection may speak. Quiet refreshes and inactive tabs must
+    // never reannounce a selected day, even when its server value changes.
+    const request = announcementRequest.current;
+    if (!focused.current || request === null || request.date !== selectedDate)
+      return;
+    if (
+      selectedDate !== null &&
+      (state.summaryStatus === "loading" || content.status === "loading")
+    )
+      return;
+    // Queue after the committed selection so screen readers read its new state.
+    const timer = setTimeout(() => {
+      if (!focused.current || announcementRequest.current !== request) return;
+      announcementRequest.current = null;
+      if (Platform.OS === "web") setLiveAnnouncement(announcement);
+      else AccessibilityInfo.announceForAccessibility(announcement);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [announcement, selectedDate, state.summaryStatus, content.status]);
+
   const changeMonth = (offset: number) => {
+    announcementRequest.current = null;
     setSelectedDate(null);
     setMonth((current) => shiftMonth(current, offset));
   };
@@ -156,6 +231,15 @@ export const BudgetCalendarScreen = () => {
         testID="calendar-scroll-content"
         contentContainerStyle={styles.content}
       >
+        {Platform.OS === "web" && (
+          <Text
+            testID="calendar-announcement"
+            accessibilityLiveRegion="polite"
+            style={styles.announcement}
+          >
+            {liveAnnouncement}
+          </Text>
+        )}
         <View style={styles.heading}>
           <Text style={styles.eyebrow}>BUDGET</Text>
           <Text accessibilityRole="header" style={styles.title}>
@@ -275,125 +359,142 @@ export const BudgetCalendarScreen = () => {
                 partir du 1er {monthTitle(month)}.
               </Text>
             ) : null}
-            <View
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-              style={styles.week}
+            {gridWidth > gridViewportWidth && (
+              <Text style={styles.legendText}>
+                Faites défiler les jours horizontalement si nécessaire.
+              </Text>
+            )}
+            <ScrollView
+              horizontal
+              testID="calendar-grid-scroll"
+              onLayout={(event) =>
+                setGridViewportWidth(event.nativeEvent.layout.width)
+              }
             >
-              {WEEKDAY_LABELS.map((weekday) => (
-                <Text key={weekday.long} style={styles.weekday}>
-                  {weekday.short}
-                </Text>
-              ))}
-            </View>
-            <View
-              accessibilityState={{ busy: state.summaryStatus === "loading" }}
-              style={styles.grid}
-            >
-              {weeks.map((week) => (
-                <View key={week[0].date} style={styles.weekRow}>
-                  {week.map((cell) => {
-                    if (!cell.inMonth) {
-                      return (
-                        <View
-                          accessibilityElementsHidden
-                          importantForAccessibility="no-hide-descendants"
-                          key={cell.date}
-                          style={styles.cell}
-                        >
-                          <Text style={styles.outsideDay}>{cell.day}</Text>
-                        </View>
-                      );
-                    }
-                    const cellContent = dayCell(
-                      cell.date,
-                      days.get(cell.date),
-                      mode,
-                      "EUR",
-                      state.summaryStatus === "loading",
-                    );
-                    const counts = calendarCounts(
-                      content.items.filter((item) => item.date === cell.date),
-                    );
-                    const markers = CALENDAR_TYPES.filter(
-                      (type) => counts[type.key] > 0,
-                    );
-                    const selected = cell.date === selectedDate;
-                    return (
-                      <Pressable
-                        accessibilityHint={
-                          selected
-                            ? "Affiche de nouveau tout le mois"
-                            : "Affiche les opérations de ce jour"
+              <View style={{ width: gridWidth }}>
+                <View
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
+                  style={styles.week}
+                >
+                  {WEEKDAY_LABELS.map((weekday) => (
+                    <Text key={weekday.long} style={styles.weekday}>
+                      {weekday.short}
+                    </Text>
+                  ))}
+                </View>
+                <View
+                  accessibilityState={{
+                    busy: state.summaryStatus === "loading",
+                  }}
+                  style={styles.grid}
+                >
+                  {weeks.map((week) => (
+                    <View key={week[0].date} style={styles.weekRow}>
+                      {week.map((cell) => {
+                        if (!cell.inMonth) {
+                          return (
+                            <View
+                              accessibilityElementsHidden
+                              importantForAccessibility="no-hide-descendants"
+                              key={cell.date}
+                              style={styles.cell}
+                            >
+                              <Text style={styles.outsideDay}>{cell.day}</Text>
+                            </View>
+                          );
                         }
-                        accessibilityLabel={`${cellContent.accessibilityLabel.replace(" Aucune opération.", "").replace(/\s\d+ événements? prévus?\./u, "")}${
-                          (cell.isToday ? " Aujourd’hui." : "") +
-                          (content.status === "success"
-                            ? markers
-                                .map(
-                                  (type) =>
-                                    ` ${calendarCountLabel(type.key, counts[type.key])}.`,
-                                )
-                                .join("")
-                            : content.status === "error"
-                              ? " Contenu indisponible."
-                              : " Chargement du contenu.")
-                        }`}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected }}
-                        key={cell.date}
-                        onPress={() =>
-                          setSelectedDate(selected ? null : cell.date)
-                        }
-                        style={({ pressed }) => [
-                          styles.cell,
-                          styles.dayCell,
-                          cell.isToday && styles.today,
-                          selected && styles.selected,
-                          pressed && styles.pressed,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.dayNumber,
-                            selected && styles.selectedText,
-                          ]}
-                        >
-                          {cell.day}
-                        </Text>
-                        {cellContent.value !== null ? (
-                          <Text
-                            numberOfLines={1}
-                            style={[
-                              styles.dayValue,
-                              selected && styles.selectedText,
+                        const cellContent = dayCell(
+                          cell.date,
+                          days.get(cell.date),
+                          mode,
+                          currency,
+                          state.summaryStatus === "loading",
+                        );
+                        const counts = calendarCounts(
+                          content.items.filter(
+                            (item) => item.date === cell.date,
+                          ),
+                        );
+                        const markers = CALENDAR_TYPES.filter(
+                          (type) => counts[type.key] > 0,
+                        );
+                        const selected = cell.date === selectedDate;
+                        return (
+                          <Pressable
+                            accessibilityHint={
+                              selected
+                                ? "Affiche de nouveau tout le mois"
+                                : "Affiche les opérations de ce jour"
+                            }
+                            accessibilityLabel={cellLabel(
+                              cell.date,
+                              cell.isToday,
+                            )}
+                            accessibilityRole="button"
+                            accessibilityState={{ selected }}
+                            {...(Platform.OS === "web"
+                              ? { "aria-pressed": selected }
+                              : {})}
+                            key={cell.date}
+                            onPress={() =>
+                              selectDate(selected ? null : cell.date)
+                            }
+                            style={({ pressed }) => [
+                              styles.cell,
+                              styles.dayCell,
+                              cell.isToday && styles.today,
+                              selected && styles.selected,
+                              pressed && styles.pressed,
                             ]}
                           >
-                            {cellContent.value}
-                          </Text>
-                        ) : null}
-                        <View style={styles.markers}>
-                          {content.status === "success" &&
-                            markers.map((type) => (
+                            <Text
+                              style={[
+                                styles.dayNumber,
+                                selected && styles.selectedText,
+                              ]}
+                            >
+                              {cell.day}
+                            </Text>
+                            {cellContent.value !== null ? (
                               <Text
-                                key={type.key}
+                                testID="calendar-day-value"
                                 style={[
-                                  styles.markerSymbol,
+                                  styles.dayValue,
+                                  cellContent.tone === "negative" &&
+                                    styles.negativeValue,
+                                  cellContent.tone === "positive" &&
+                                    styles.positiveValue,
                                   selected && styles.selectedText,
                                 ]}
-                                importantForAccessibility="no"
-                                aria-hidden
                               >
-                                {type.symbol}
+                                {cellContent.value}
                               </Text>
-                            ))}
-                        </View>
-                      </Pressable>
-                    );
-                  })}
+                            ) : null}
+                            <View style={styles.markers}>
+                              {content.status === "success" &&
+                                markers.map((type) => (
+                                  <Text
+                                    key={type.key}
+                                    style={[
+                                      styles.markerSymbol,
+                                      selected && styles.selectedText,
+                                    ]}
+                                    importantForAccessibility="no"
+                                    aria-hidden
+                                  >
+                                    {type.symbol}
+                                  </Text>
+                                ))}
+                            </View>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  ))}
                 </View>
-              ))}
-            </View>
+              </View>
+            </ScrollView>
             <View style={styles.legend}>
               {CALENDAR_TYPES.map((type) => (
                 <View key={type.key} style={styles.legendItem}>
@@ -425,12 +526,20 @@ export const BudgetCalendarScreen = () => {
             <Pressable
               accessibilityRole="button"
               style={styles.linkButton}
-              onPress={() => setSelectedDate(null)}
+              onPress={() => selectDate(null)}
             >
               <Text style={styles.linkText}>Tout le mois</Text>
             </Pressable>
           )}
         </View>
+        {detail !== null && (
+          <Text
+            testID="calendar-daily-remaining-detail"
+            style={styles.dailyDetail}
+          >
+            {detail}
+          </Text>
+        )}
         {content.status === "loading" ? (
           <FeedbackState
             kind="loading"
@@ -513,7 +622,6 @@ const makeStyles = (
     content: {
       gap: 20,
       paddingBottom: 40,
-      // 360 − 2×16 − 2×4 (grille) − 2 (bordure) = 318 : cases de 45 px ≥ 44.
       paddingHorizontal: 16,
       paddingTop: 16,
     },
@@ -540,9 +648,9 @@ const makeStyles = (
     },
     iconButton: {
       alignItems: "center",
-      height: 44,
+      height: semantic.size.controlMinHeight,
       justifyContent: "center",
-      width: 44,
+      width: semantic.size.controlMinHeight,
     },
     monthTitle: {
       color: colors.textPrimary,
@@ -555,6 +663,7 @@ const makeStyles = (
       borderRadius: semantic.radius.control,
       borderWidth: 1,
       flexDirection: "row",
+      flexWrap: "wrap",
       padding: 4,
     },
     mode: {
@@ -562,7 +671,9 @@ const makeStyles = (
       borderRadius: semantic.radius.control,
       flex: 1,
       justifyContent: "center",
-      minHeight: 44,
+      minHeight: semantic.size.controlMinHeight,
+      minWidth: 96,
+      padding: 8,
     },
     modeActive: { backgroundColor: colors.actionPrimaryBackground },
     modeText: { color: colors.textPrimary, fontSize: 14, fontWeight: "600" },
@@ -585,6 +696,15 @@ const makeStyles = (
       fontWeight: "700",
       textAlign: "center",
     },
+    announcement: {
+      position: "absolute",
+      width: 1,
+      height: 1,
+      overflow: "hidden",
+    },
+    dailyDetail: { color: colors.textPrimary, fontSize: 16, lineHeight: 24 },
+    negativeValue: { color: colors.dataExpense },
+    positiveValue: { color: colors.dataIncome },
     grid: { gap: 0 },
     weekRow: { flexDirection: "row" },
     cell: {
@@ -648,7 +768,7 @@ const makeStyles = (
     },
     linkButton: {
       justifyContent: "center",
-      minHeight: 44,
+      minHeight: semantic.size.controlMinHeight,
       paddingHorizontal: 8,
     },
     linkText: {
@@ -664,7 +784,7 @@ const makeStyles = (
       backgroundColor: colors.actionPrimaryBackground,
       borderRadius: semantic.radius.control,
       justifyContent: "center",
-      minHeight: 44,
+      minHeight: semantic.size.controlMinHeight,
     },
     moreText: {
       color: colors.actionPrimaryText,
