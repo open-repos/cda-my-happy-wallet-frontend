@@ -708,13 +708,16 @@ const makeStyles = (
     grid: { gap: 0 },
     weekRow: { flexDirection: "row" },
     cell: {
+      // Equal borders keep Today from stealing width from its six neighbours.
+      borderColor: "transparent",
+      borderWidth: 2,
       alignItems: "center",
       justifyContent: "center",
       flex: 1,
       minHeight: 52,
     },
     dayCell: { borderRadius: 10, gap: 2, paddingVertical: 4 },
-    today: { borderColor: colors.accent, borderWidth: 2 },
+    today: { borderColor: colors.accent },
     selected: { backgroundColor: colors.actionPrimaryBackground },
     selectedText: { color: colors.actionPrimaryText },
     dayNumber: { color: colors.textPrimary, fontSize: 15, fontWeight: "600" },

@@ -21,7 +21,24 @@ for (const width of [320, 390, 768, 1440]) {
         const monthly = page.getByText(/^1\s337,50\s€$/);
         await expect(monthly).toBeVisible();
         await page.getByRole("tab", { name: "Calendrier" }).click();
-        await page.getByRole("radio", { name: "Prévisionnel" }).click();
+        // Measure every target, including the week whose Today border used to
+        // steal width from its six neighbours at the 48 dp minimum.
+        for (const mode of ["Repères", "Dépenses", "Prévisionnel"]) {
+          await page.getByRole("radio", { name: mode, exact: true }).click();
+          const targets = await page
+            .getByRole("button", { name: /^\d+ octobre 2026\./ })
+            .evaluateAll((cells) =>
+              cells.map((cell) => {
+                const { width, height } = cell.getBoundingClientRect();
+                return { width, height };
+              }),
+            );
+          expect(targets).toHaveLength(31);
+          for (const target of targets) {
+            expect(target.width).toBeGreaterThanOrEqual(48);
+            expect(target.height).toBeGreaterThanOrEqual(48);
+          }
+        }
         await expect(
           page.getByRole("radio", { name: "Prévisionnel" }),
         ).toBeChecked();
