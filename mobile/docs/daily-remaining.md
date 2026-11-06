@@ -31,3 +31,11 @@ le `fontScale` système : le texte rendu est agrandi dans les tests navigateur.
 La recette sur development build Android Pixel 5 et iOS, grandes polices et
 TalkBack/VoiceOver compris, reste à effectuer dans la recette groupée de fin
 de parité #213, conformément au report autorisé.
+
+Les six références du détail Prévisionnel (clair/sombre, téléphone/tablette/bureau)
+proviennent du [rendu CI 42267986703](https://github.com/open-repos/cda-my-happy-wallet-frontend/actions/runs/42267986703),
+commit `a26fc197d307ace59a852576c92485a12d52ab11`, artefact
+`mobile-visual-failure` 13529110573. Elles ont été inspectées puis copiées sans
+modification du PNG ; aucune référence locale ni changement de seuil n’a été
+adopté. La revue du calendrier est documentée dans
+[calendar-visual-review.md](calendar-visual-review.md).

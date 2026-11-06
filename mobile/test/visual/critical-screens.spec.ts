@@ -312,7 +312,9 @@ test("captures the budget calendar and its day filter", async ({ page }) => {
   await page
     .getByRole("button", { name: /^3 octobre 2026.*1 opération réelle/ })
     .click();
-  await expect(page.getByText(/^Éléments du 3 /)).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /^Éléments du 3 / }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Tout le mois" }),
   ).toBeVisible();
