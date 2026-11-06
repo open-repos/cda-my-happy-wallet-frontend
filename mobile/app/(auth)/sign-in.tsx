@@ -1,5 +1,5 @@
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 
 import {
   AuthActionButton,
@@ -10,14 +10,38 @@ import {
 } from "@/src/features/auth/presentation/AuthScreen";
 import { useAuth } from "@/src/features/auth/presentation/AuthProvider";
 import { getSignInErrorMessage } from "@/src/features/auth/presentation/getSignInErrorMessage";
+import {
+  getRegistrationConfirmationFeedback,
+  type RegistrationConfirmationFeedback,
+} from "@/src/features/auth/presentation/registrationConfirmation";
 
 export default function SignInScreen() {
   const router = useRouter();
+  const { confirmation } = useLocalSearchParams<{ confirmation?: string }>();
   const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [linkFeedback, setLinkFeedback] =
+    useState<RegistrationConfirmationFeedback | null>(null);
+
+  const [readConfirmation, setReadConfirmation] = useState<string>();
+
+  // Résultat du lien de confirmation reçu par email (#30) : lu une fois,
+  // puis retiré de la route pour qu'un retour arrière ne le rejoue pas.
+  if (confirmation !== readConfirmation) {
+    setReadConfirmation(confirmation);
+    if (confirmation !== undefined) {
+      setLinkFeedback(getRegistrationConfirmationFeedback(confirmation));
+    }
+  }
+
+  useEffect(() => {
+    if (confirmation !== undefined) {
+      router.setParams({ confirmation: undefined });
+    }
+  }, [confirmation, router]);
 
   const submit = async () => {
     const normalizedEmail = email.trim().toLowerCase();
@@ -28,6 +52,7 @@ export default function SignInScreen() {
 
     setIsSubmitting(true);
     setErrorMessage(null);
+    setLinkFeedback(null);
     try {
       await signIn({ email: normalizedEmail, password });
     } catch (error) {
@@ -42,6 +67,11 @@ export default function SignInScreen() {
       subtitle="Retrouvez votre espace personnel et votre budget."
       title="Bienvenue sur My Happy Wallet"
     >
+      {linkFeedback != null ? (
+        <AuthMessage kind={linkFeedback.kind}>
+          {linkFeedback.message}
+        </AuthMessage>
+      ) : null}
       <AuthField
         autoCapitalize="none"
         autoComplete="email"

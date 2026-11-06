@@ -102,3 +102,5 @@ Politique SemVer, numeros de build EAS et compatibilite `/v1` :
 Graphiques du tableau de bord : [décision, dépendances et recette Android #122](docs/mobile-echarts.md).
 
 Catégories d'opérations : [parcours, formulaire et recette Android #134](docs/mobile-categories.md).
+
+Liens email et deep links : [routage, sécurité et recette Android #30](docs/deep-links.md).
