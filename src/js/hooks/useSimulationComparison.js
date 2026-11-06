@@ -1,3 +1,4 @@
+import { useRefreshViews } from "./useRefreshViews";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { budgetForecastService } from "../services/budgetForecastService";
 import { useSimulation } from "../components/Simulation/SimulationContext";
@@ -16,7 +17,7 @@ export const useSimulationComparison = (from) => {
     const request = ++latest.current;
     if (!enabled) {
       setState({ status: "idle", standard: null, simulation: null, key });
-      return;
+      return true;
     }
     setState({ status: "loading", standard: null, simulation: null, key });
     try {
@@ -35,11 +36,14 @@ export const useSimulationComparison = (from) => {
         throw new Error("Inconsistent simulation comparison");
       if (request === latest.current)
         setState({ status: "success", standard, simulation, key });
+      return true;
     } catch {
       if (request === latest.current)
         setState({ status: "error", standard: null, simulation: null, key });
+      return false;
     }
   }, [from, enabled, key]);
+  useRefreshViews(reload);
   useEffect(() => {
     reload();
     return () => {

@@ -3,6 +3,9 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import Home from "../../src/js/pages/Home";
+vi.mock("../../src/js/components/Envelopes/EnvelopeSection", () => ({
+  EnvelopeSection: () => <div>Envelope cards</div>,
+}));
 
 const mocks = vi.hoisted(() => ({
   useOperationsFixes: vi.fn(),
@@ -23,7 +26,7 @@ vi.mock("../../src/js/components/HomeComponents/CaseOpFixeEmpty", () => ({
 }));
 
 vi.mock("../../src/js/components/HomeComponents/CaseShowRaV", () => ({
-  default: () => <div>Available reste à vivre</div>,
+  default: ({ children }) => <div>Available reste à vivre{children}</div>,
 }));
 
 afterEach(() => {
@@ -38,6 +41,7 @@ describe("Home", () => {
     render(<Home />, { wrapper: MemoryRouter });
 
     expect(screen.getByText("Empty operations state")).toBeInTheDocument();
+    expect(screen.getByText("Envelope cards")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Voir les prochains mois" })
     ).toHaveAttribute("href", "/prochains-mois");
@@ -52,6 +56,7 @@ describe("Home", () => {
     render(<Home />, { wrapper: MemoryRouter });
 
     expect(screen.getByText("Available reste à vivre")).toBeInTheDocument();
+    expect(screen.getByText("Envelope cards")).toBeInTheDocument();
     expect(
       screen.queryByText("Empty operations state")
     ).not.toBeInTheDocument();

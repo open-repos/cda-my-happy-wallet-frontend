@@ -1,3 +1,4 @@
+import { useRefreshViews } from "./useRefreshViews";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { savingsCapacityService } from "../services/savingsCapacityService";
 import { useSimulation } from "../components/Simulation/SimulationContext";
@@ -19,11 +20,14 @@ export const useSavingsCapacity = (from, refreshKey = "") => {
       const data = await savingsCapacityService.overview(JSON.parse(query));
       if (request === latest.current)
         setState({ status: "success", data, identity });
+      return true;
     } catch {
       if (request === latest.current)
         setState({ status: "error", data: null, identity });
+      return false;
     }
   }, [query, identity]);
+  useRefreshViews(reload);
   useEffect(() => {
     reload();
     return () => {

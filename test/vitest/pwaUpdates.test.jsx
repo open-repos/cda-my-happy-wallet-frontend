@@ -69,7 +69,9 @@ describe("PWA update notice", () => {
       "Terminez ou fermez les formulaires"
     );
     act(() => onState({ phase: "applying" }));
-    expect(screen.queryByRole("button")).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Préparer la mise à jour" })
+    ).toBeNull();
     act(() => onState({ phase: "reload" }));
     fireEvent.click(
       screen.getByRole("button", { name: "Recharger l’application" })
@@ -82,5 +84,87 @@ describe("PWA update notice", () => {
     expect(client.retry).toHaveBeenCalledOnce();
     unmount();
     expect(client.dispose).toHaveBeenCalledOnce();
+  });
+  it.each(["waiting", "reload"])(
+    "dismisses %s until the next foreground, without acting or stealing focus",
+    (phase) => {
+      const client = {
+        start: vi.fn(),
+        dispose: vi.fn(),
+        retry: vi.fn(),
+        activate: vi.fn(),
+        reload: vi.fn(),
+      };
+      createPwaUpdates.mockReturnValue(client);
+      const { unmount } = render(
+        <>
+          <button>Continuer</button>
+          <PwaUpdates enabled />
+        </>
+      );
+      const { onState } = createPwaUpdates.mock.calls[0][0];
+      const continueButton = screen.getByRole("button", { name: "Continuer" });
+      continueButton.focus();
+      act(() => onState({ phase }));
+      expect(continueButton).toHaveFocus();
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: "Fermer la notification de mise à jour",
+        })
+      );
+      expect(screen.queryByRole("region")).toBeNull();
+      expect(screen.getByRole("status")).toBeEmptyDOMElement();
+      act(() => onState({ phase })); // A routine check must not undo dismissal.
+      expect(screen.queryByRole("region")).toBeNull();
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        value: "hidden",
+      });
+      fireEvent(document, new Event("visibilitychange"));
+      expect(screen.queryByRole("region")).toBeNull();
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        value: "visible",
+      });
+      fireEvent(document, new Event("visibilitychange"));
+      expect(screen.getByRole("region")).toBeVisible();
+      fireEvent.click(
+        screen.getByRole("button", {
+          name: "Fermer la notification de mise à jour",
+        })
+      );
+      fireEvent(
+        window,
+        new PageTransitionEvent("pageshow", { persisted: true })
+      );
+      expect(screen.getByRole("region")).toBeVisible();
+      expect(client.retry).toHaveBeenCalledOnce();
+      expect(client.activate).not.toHaveBeenCalled();
+      expect(client.reload).not.toHaveBeenCalled();
+      act(() => onState({ phase: "idle" }));
+      fireEvent(document, new Event("visibilitychange"));
+      expect(screen.queryByRole("region")).toBeNull();
+      unmount();
+      fireEvent(
+        window,
+        new PageTransitionEvent("pageshow", { persisted: true })
+      );
+      expect(client.retry).toHaveBeenCalledOnce();
+    }
+  );
+  it("announces readiness even when the preparation notice was dismissed", () => {
+    createPwaUpdates.mockReturnValue({ start: vi.fn(), dispose: vi.fn() });
+    render(<PwaUpdates enabled />);
+    const { onState } = createPwaUpdates.mock.calls[0][0];
+    act(() => onState({ phase: "waiting" }));
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Fermer la notification de mise à jour",
+      })
+    );
+    act(() => onState({ phase: "reload" }));
+    expect(
+      screen.getByRole("button", { name: "Recharger l’application" })
+    ).toBeVisible();
   });
 });

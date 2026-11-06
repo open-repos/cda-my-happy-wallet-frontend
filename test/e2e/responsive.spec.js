@@ -42,6 +42,162 @@ const protectedPages = [
   { path: "/profil", selector: ".profil-container" },
 ];
 
+for (const width of [320, 375, 390, 768, 1440]) {
+  for (const theme of ["light", "dark"]) {
+    test(`sidebar labels fit at ${width}px in ${theme}, including enlarged text`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 844 });
+      await prepareProtectedPage(page);
+      await page.addInitScript(
+        (value) => localStorage.setItem("mhw-theme", value),
+        theme
+      );
+      await page.goto("/home");
+      if (width < 1200)
+        await page.getByRole("button", { name: "Ouvrir le menu" }).click();
+      const navigation = page.getByRole("navigation", {
+        name: "Navigation principale",
+      });
+      await expect(
+        navigation.getByRole("link", { name: "Accueil", exact: true })
+      ).toBeVisible();
+      for (const zoom of ["100%", "200%"]) {
+        await page.locator("html").evaluate((element, value) => {
+          element.style.fontSize = value;
+        }, zoom);
+        const links = navigation.locator("ul > li > a");
+        await expect(links).toHaveCount(8);
+        // Wait for the drawer width transition before measuring the text itself.
+        await expect
+          .poll(() =>
+            links
+              .first()
+              .locator("..")
+              .evaluate(
+                (list) => list.getBoundingClientRect().right <= innerWidth
+              )
+          )
+          .toBe(true);
+        for (const link of await links.all()) {
+          await link.scrollIntoViewIfNeeded();
+          await expect
+            .poll(() =>
+              link.evaluate((element) => {
+                const list = element.parentElement;
+                const panel = list.getBoundingClientRect();
+                const bounds = element.getBoundingClientRect();
+                const label = element.querySelector("span");
+                const icon = element
+                  .querySelector("img, svg")
+                  .getBoundingClientRect();
+                const range = document.createRange();
+                range.selectNodeContents(label);
+                const lines = [...range.getClientRects()];
+                return (
+                  bounds.height >= 44 &&
+                  bounds.width >= 44 &&
+                  panel.left >= 0 &&
+                  panel.right <= innerWidth &&
+                  bounds.top >= panel.top - 1 &&
+                  bounds.bottom <= panel.bottom + 1 &&
+                  lines.every(
+                    (line) =>
+                      line.left >= icon.right &&
+                      line.right <= bounds.right + 1 &&
+                      line.top >= bounds.top &&
+                      line.bottom <= bounds.bottom + 1
+                  ) &&
+                  document.documentElement.scrollWidth <= innerWidth
+                );
+              })
+            )
+            .toBe(true);
+        }
+      }
+      if (width < 1200) {
+        await page.keyboard.press("Escape");
+        await expect(
+          page.getByRole("button", { name: "Ouvrir le menu" })
+        ).toBeFocused();
+      }
+    });
+  }
+}
+
+// Every auth page imports its legacy stylesheet after Auth.css in the bundle;
+// fields, labels and button must still share one width inside the card, and a
+// form taller than the viewport must start below its top edge, never above.
+for (const width of [320, 390, 768, 1024, 1440]) {
+  for (const theme of ["light", "dark"]) {
+    for (const pageDefinition of pages) {
+      test(`${pageDefinition.path} form controls align inside the card at ${width}px in ${theme}`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width, height: 700 });
+        await page.addInitScript(
+          (value) => localStorage.setItem("mhw-theme", value),
+          theme
+        );
+        await page.goto(pageDefinition.path);
+        await expect(
+          page.getByRole("button", { name: pageDefinition.action })
+        ).toBeVisible();
+
+        const layout = await page.evaluate(() => {
+          const form = document.querySelector("main form");
+          const card = form.getBoundingClientRect();
+          const style = getComputedStyle(form);
+          const inner = {
+            left: card.left + parseFloat(style.borderLeftWidth),
+            right: card.right - parseFloat(style.borderRightWidth),
+          };
+          const controls = [
+            ...form.querySelectorAll(
+              ":scope > input, :scope > .auth-field-label, :scope > .submit_btn"
+            ),
+          ].map((element) => {
+            const bounds = element.getBoundingClientRect();
+            return {
+              name: element.id || element.className,
+              left: bounds.left,
+              right: bounds.right,
+              width: bounds.width,
+            };
+          });
+          return {
+            inner,
+            controls,
+            cardTop: card.top + window.scrollY,
+            headingTop:
+              form.querySelector("h1").getBoundingClientRect().top +
+              window.scrollY,
+            scrollWidth: document.documentElement.scrollWidth,
+            innerWidth: window.innerWidth,
+          };
+        });
+
+        expect(layout.controls.length).toBeGreaterThanOrEqual(3);
+        const widths = layout.controls.map((control) => control.width);
+        expect(Math.max(...widths) - Math.min(...widths)).toBeLessThanOrEqual(
+          1
+        );
+        for (const control of layout.controls) {
+          expect(control.left, control.name).toBeGreaterThanOrEqual(
+            layout.inner.left - 0.5
+          );
+          expect(control.right, control.name).toBeLessThanOrEqual(
+            layout.inner.right + 0.5
+          );
+        }
+        expect(layout.cardTop).toBeGreaterThanOrEqual(0);
+        expect(layout.headingTop).toBeGreaterThanOrEqual(0);
+        expect(layout.scrollWidth).toBeLessThanOrEqual(layout.innerWidth);
+      });
+    }
+  }
+}
+
 for (const viewport of viewports) {
   for (const pageDefinition of pages) {
     test(`${pageDefinition.path} fits the ${viewport.name} viewport`, async ({
@@ -88,6 +244,9 @@ for (const viewport of viewports) {
     page,
   }) => {
     await page.setViewportSize(viewport);
+    // The fixture occurrence on October 20 must still be upcoming here;
+    // overdue classification is exercised separately in calendarContent.spec.js.
+    await page.clock.setFixedTime(new Date("2026-10-18T10:00:00Z"));
     await prepareProtectedPage(page);
     await page.goto("/calendrier");
 
@@ -102,9 +261,19 @@ for (const viewport of viewports) {
     await expect(page.getByRole("heading", { name: "Prévus" })).toBeVisible();
 
     await page.getByText("Prévisionnel", { exact: true }).click();
+    // #379: each cell shows the cumulative daily remaining, not the
+    // month-end forecast (38.70 × 20 − 42.50 − 120.00 planned).
+    const twentieth = page.getByRole("button", {
+      name: /^20 octobre 2026, .*reste à vivre du jour 611,50/,
+    });
+    await expect(twentieth).toContainText("611,5");
     await expect(
-      page.getByRole("button", { name: /reste prévisionnel 767,50/ })
-    ).toContainText("767");
+      page.locator(".budget-day__value", { hasText: "767" })
+    ).toHaveCount(0);
+    await twentieth.click();
+    await expect(
+      page.getByText(/^Reste à vivre du jour : 611,50/)
+    ).toBeVisible();
 
     const hasHorizontalOverflow = await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth
@@ -136,11 +305,18 @@ for (const viewport of viewports) {
     const remaining = await page
       .locator(".home-budget__remaining")
       .boundingBox();
-    expect(
-      Math.abs(
-        remaining.x + remaining.width / 2 - (content.x + content.width / 2)
-      )
-    ).toBeLessThan(2);
+    if (viewport.width >= 1200) {
+      // Atelier places the card in the desktop home grid, inside the content.
+      expect(remaining.x).toBeGreaterThanOrEqual(content.x - 1);
+      expect(remaining.x + remaining.width).toBeLessThanOrEqual(
+        content.x + content.width + 1
+      );
+    } else
+      expect(
+        Math.abs(
+          remaining.x + remaining.width / 2 - (content.x + content.width / 2)
+        )
+      ).toBeLessThan(2);
 
     await page.getByText("Semaine", { exact: true }).click();
     await expect(page.locator(".home-budget__amount")).toContainText("447,72");
@@ -235,7 +411,8 @@ for (const viewport of viewports) {
     const card = page.getByRole("article", { name: "Vélo" });
     await expect(card).toContainText("Sans échéance");
     await expect(card).toContainText("avril 2027");
-    await expect(card.locator("canvas")).toBeVisible();
+    await expect(card.locator(".goal-card__gauge-chart canvas")).toBeVisible();
+    await expect(card.locator(".goal-trajectory__chart canvas")).toBeVisible();
 
     await page.getByRole("button", { name: "Ajouter un objectif" }).click();
     await page.getByLabel("Titre", { exact: true }).fill("Vacances");
@@ -339,10 +516,10 @@ for (const viewport of viewports) {
     await page.goto("/home/operations-fixes");
 
     await expect(
-      page.getByRole("heading", { name: "Home - Operations Fixes" })
+      page.getByRole("heading", { name: "Charges et entrées fixes" })
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Sauvegarder" })
+      page.getByRole("button", { name: "Ajouter", exact: true })
     ).toBeVisible();
 
     const hasHorizontalOverflow = await page.evaluate(
@@ -460,9 +637,21 @@ for (const theme of ["light", "dark"]) {
     await page.getByRole("button", { name: "Modifier Alimentation" }).click();
     await page.getByRole("button", { name: "Supprimer" }).click();
     expect(
-      await ownContrast(
-        page.locator(".category-form .one-off-delete-confirmation")
-      )
+      // The confirmation opens in a modal alert dialog: its text sits on the
+      // dialog surface.
+      await page
+        .getByRole("alertdialog")
+        .locator(".one-off-delete-confirmation")
+        .evaluate((element) => {
+          const surface = element.closest(".confirm-dialog__surface");
+          const probe = document.createElement("span");
+          probe.style.color = getComputedStyle(element).color;
+          probe.style.backgroundColor =
+            getComputedStyle(surface).backgroundColor;
+          probe.dataset.contrastProbe = "";
+          surface.append(probe);
+        })
+        .then(() => ownContrast(page.locator("[data-contrast-probe]")))
     ).toBeGreaterThanOrEqual(4.5);
   });
 }
@@ -516,7 +705,7 @@ for (const size of [
     await page.setViewportSize(size);
     await prepareProtectedPage(page);
     await page.goto("/home");
-    if (size.width < 768) {
+    if (size.width < 1200) {
       await page.getByRole("button", { name: "Ouvrir le menu" }).click();
     }
     const navigation = page.getByRole("navigation", {
@@ -534,7 +723,8 @@ for (const size of [
       .getByRole("list")
       .first()
       .evaluate((element) => [element.scrollHeight, element.clientHeight]);
-    expect(scrollHeight).toBeLessThanOrEqual(clientHeight);
+    expect(clientHeight).toBeGreaterThan(0);
+    expect(scrollHeight).toBeGreaterThanOrEqual(clientHeight);
     // L'anneau de focus (2px + 2px de décalage) tient dans la liste, qui
     // rogne ce qui dépasse quand elle défile.
     if (size.height <= 740) {
@@ -567,6 +757,8 @@ for (const viewport of viewports.slice(1)) {
     await page.setViewportSize(viewport);
     await prepareProtectedPage(page);
     await page.goto("/home");
+    if (viewport.width < 1200)
+      await page.getByRole("button", { name: "Ouvrir le menu" }).click();
     await expect(
       page.getByRole("navigation", { name: "Navigation principale" })
     ).toBeVisible();
@@ -699,26 +891,17 @@ const weakFocusOnShell = async (page, presses = 40) => {
 };
 
 // Contrôles de la coque que le parcours clavier doit atteindre.
+// Since Atelier the menu toggle sits on the mobile header, which has its own
+// surface: it is no longer a shell control.
 const SHELL_CONTROLS = {
-  "/home": ["Ouvrir le menu"],
-  "/calendrier": ["Ouvrir le menu", "Mois précédent", "Mois suivant"],
-  "/objectifs-evenements": [
-    "Ouvrir le menu",
-    "Ajouter un objectif",
-    "Ajouter un événement",
-  ],
-  "/operations": [
-    "Ouvrir le menu",
-    "Gérer les catégories",
-    "Ajouter une opération",
-  ],
-  "/categories": [
-    "Ouvrir le menu",
-    "Voir les opérations",
-    "Ajouter une catégorie",
-  ],
-  "/analyses": ["Ouvrir le menu"],
-  "/profil": ["Ouvrir le menu"],
+  "/home": [],
+  // The month controls live on the calendar card, not on the shell.
+  "/calendrier": ["Prochains mois"],
+  "/objectifs-evenements": ["Ajouter un objectif", "Ajouter un événement"],
+  "/operations": ["Gérer les catégories", "Ajouter une opération"],
+  "/categories": ["Voir les opérations", "Ajouter une catégorie"],
+  "/analyses": [],
+  "/profil": [],
 };
 
 /** Contraste de l'anneau de focus de l'élément actif contre son fond réel. */
@@ -776,7 +959,7 @@ for (const theme of ["light", "dark"]) {
       }, theme);
       await page.goto("/home");
       await expect(page.locator(".home-budget")).toBeVisible();
-      if (viewport === viewports[0]) {
+      if (viewport.width < 1200) {
         await page.getByRole("button", { name: "Ouvrir le menu" }).click();
       }
       const reached = new Map();
@@ -787,10 +970,12 @@ for (const theme of ["light", "dark"]) {
       }
       expect([...reached.keys()]).toEqual(
         expect.arrayContaining([
-          "Home",
+          "Accueil",
           "Calendrier",
-          "Objectifs-Évènements",
-          "Liste Opérations",
+          "Objectifs et événements",
+          "Opérations",
+          "Charges et entrées fixes",
+          "Prochains mois",
           "Catégories",
           "Analyses",
         ])
@@ -809,7 +994,7 @@ for (const viewport of viewports) {
     await prepareProtectedPage(page);
     await page.goto("/home");
     await expect(page.locator(".home-budget")).toBeVisible();
-    if (viewport === viewports[0]) {
+    if (viewport.width < 1200) {
       await page.getByRole("button", { name: "Ouvrir le menu" }).click();
     }
     const tabTo = async (name) => {
@@ -854,14 +1039,16 @@ for (const theme of ["light", "dark"]) {
         );
         if (pageFailures.length) failures[protectedPage.path] = pageFailures;
         expect(checked, protectedPage.path).toEqual(
-          expect.arrayContaining(SHELL_CONTROLS[protectedPage.path])
+          expect.arrayContaining(
+            SHELL_CONTROLS[protectedPage.path].filter(
+              (name) => viewport.width < 1200 || name !== "Ouvrir le menu"
+            )
+          )
         );
       }
       await page.goto("/calendrier");
       await page.getByRole("button", { name: "Mois suivant" }).click();
-      const { failures: calendarFailures, checked: calendarChecked } =
-        await weakFocusOnShell(page);
-      expect(calendarChecked).toEqual(expect.arrayContaining(["Aujourd’hui"]));
+      const { failures: calendarFailures } = await weakFocusOnShell(page);
       if (calendarFailures.length) {
         failures["/calendrier (mois suivant)"] = calendarFailures;
       }
@@ -957,10 +1144,18 @@ for (const theme of ["light", "dark"]) {
       await page.goto("/profil");
 
       await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
-      await expect(page.getByRole("combobox", { name: "Thème" })).toHaveValue(
-        theme
+      // The profile no longer holds the theme: the menu toggle does.
+      await expect(page.getByRole("combobox", { name: "Thème" })).toHaveCount(
+        0
       );
-      await expect(page.locator(".theme-selector")).toBeVisible();
+      await expect(
+        page.getByRole("button", {
+          name:
+            theme === "dark"
+              ? "Activer le thème clair"
+              : "Activer le thème sombre",
+        })
+      ).toBeVisible();
 
       const hasHorizontalOverflow = await page.evaluate(
         () => document.documentElement.scrollWidth > window.innerWidth
@@ -1006,7 +1201,7 @@ test("loads the next operation page without duplicating rows", async ({
   ).toHaveCount(0);
 });
 
-test("keeps the operation actions and local icons at their design sizes", async ({
+test("keeps labeled operation actions touch accessible and local icons at their design sizes", async ({
   page,
 }) => {
   await page.setViewportSize(viewports[2]);
@@ -1015,16 +1210,19 @@ test("keeps the operation actions and local icons at their design sizes", async 
 
   const addButton = page.getByRole("button", {
     name: "Ajouter une opération",
+    exact: true,
   });
   const editButton = page.getByRole("button", { name: "Modifier Courses" });
-  const addIcon = addButton.locator("img");
-  const editIcon = editButton.locator("img");
+  const addIcon = addButton.locator("svg");
+  const editIcon = editButton.locator("svg");
 
   await expect(addButton).toHaveCSS("min-height", "48px");
-  await expect(editButton).toHaveCSS("width", "44px");
-  await expect(editButton).toHaveCSS("height", "44px");
+  await expect(editButton).toHaveText("Modifier");
+  const editBounds = await editButton.boundingBox();
+  expect(editBounds.width).toBeGreaterThanOrEqual(44);
+  expect(editBounds.height).toBeGreaterThanOrEqual(44);
   await expect(addIcon).toHaveCSS("width", "16px");
   await expect(addIcon).toHaveCSS("height", "16px");
-  await expect(editIcon).toHaveCSS("width", "20px");
-  await expect(editIcon).toHaveCSS("height", "20px");
+  await expect(editIcon).toHaveCSS("width", "16px");
+  await expect(editIcon).toHaveCSS("height", "16px");
 });

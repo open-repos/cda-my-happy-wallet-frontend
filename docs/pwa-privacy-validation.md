@@ -89,7 +89,8 @@ synthétiques et booléens. Les jetons, cookies, mots de passe et corps API ne s
 pas renvoyés par les helpers d’inspection. Traces, captures et vidéos restent
 désactivées. Le décalage d’horloge pour le refresh concerne seulement le client,
 comme dans le parcours de session existant ; l’API garde son horloge réelle.
-Le logout Web est local : aucune révocation distante du cookie n’est revendiquée.
+Le logout Web appelle `POST /users/logout`, qui révoque la session côté serveur ;
+le parcours `wallet.spec.js` le vérifie en relançant l’ancien cookie.
 
 La CI backend #99 couvre en complément les vrais refus natifs, conflits,
 limitation 429, erreurs serveur 500, corps trop volumineux 413, CORS refusé et

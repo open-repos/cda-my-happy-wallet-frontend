@@ -1,5 +1,6 @@
 import React from "react";
 import { useSimulation } from "./SimulationContext";
+import { useAnnouncesLoading } from "../../hooks/useAnnouncesLoading";
 import { useSimulationComparison } from "../../hooks/useSimulationComparison";
 import { forecastToday } from "../../utils/budgetForecast";
 import { formatMoney, monthLabel } from "../BudgetCalendar/budgetFormat";
@@ -7,7 +8,7 @@ import { LiveMessage } from "../LiveMessage";
 import "../../../css/MonthlyEvents.css";
 import "../../../css/Simulation.css";
 
-export const SimulationToggle = () => {
+export const SimulationToggle = ({ compact = false }) => {
   const state = useSimulation();
   return (
     <div className="simulation-toggle">
@@ -22,11 +23,13 @@ export const SimulationToggle = () => {
         />{" "}
         Simulation
       </label>
-      <p>
-        {state.enabled
-          ? "Simulation affichée : les éléments potentiels sont inclus dans les prévisions et la capacité d’épargne. Les opérations réelles restent inchangées."
-          : "Les chiffres habituels excluent les éléments potentiels. Activez la Simulation pour voir leur effet."}
-      </p>
+      {!compact && (
+        <p>
+          {state.enabled
+            ? "Simulation affichée : les éléments potentiels sont inclus dans les prévisions et la capacité d’épargne. Les opérations réelles restent inchangées."
+            : "Les chiffres habituels excluent les éléments potentiels. Activez la Simulation pour voir leur effet."}
+        </p>
+      )}
     </div>
   );
 };
@@ -34,6 +37,12 @@ export const SimulationToggle = () => {
 const Comparison = ({ month }) => {
   const { enabled } = useSimulation();
   const state = useSimulationComparison(month);
+  // Le calcul d’un mois ou d’une activation de la Simulation est
+  // annoncé, pas l'actualisation après une modification (#171).
+  const announcesLoading = useAnnouncesLoading(
+    state.status,
+    `${month}:${enabled}`
+  );
   const message =
     state.status === "loading"
       ? "Calcul de l’écart de simulation…"
@@ -43,7 +52,7 @@ const Comparison = ({ month }) => {
   return (
     <>
       <LiveMessage
-        message={message}
+        message={state.status === "loading" && !announcesLoading ? "" : message}
         isError={state.status === "error"}
         visible={false}
       />
@@ -90,12 +99,15 @@ const Comparison = ({ month }) => {
   );
 };
 
-export const SimulationReadout = ({ month = forecastToday().slice(0, 7) }) => {
+export const SimulationReadout = ({
+  month = forecastToday().slice(0, 7),
+  showToggle = true,
+}) => {
   const state = useSimulation();
   if (!state.available) return null;
   return (
     <>
-      <SimulationToggle />
+      {showToggle && <SimulationToggle />}
       {month >= forecastToday().slice(0, 7) ? (
         <Comparison month={month} />
       ) : (

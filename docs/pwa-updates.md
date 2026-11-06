@@ -66,8 +66,13 @@ puis celle du changement de contrôleur à dix secondes. Les ports, délais et
 écouteurs sont nettoyés à la fin de leur usage ou au démontage.
 
 L’annonce accessible est montée vide avant les messages et reste stable. L’avis
-visuel participe au flux du document, utilise les tokens de thème, propose une
-cible d’au moins 44 pixels et un focus visible ; il ne vole pas le focus.
+visuel est un toast flottant compact en bas de fenêtre, sans déplacer le contenu.
+Il respecte les zones de sécurité iOS, les tokens de thème, les cibles d’au moins
+44 pixels et le focus visible ; il ne vole pas le focus. Sa fermeture masque
+l’avis jusqu’au prochain retour au premier plan ou à la restauration de la page,
+tant qu’une mise à jour reste en attente. Un changement d’étape le réaffiche aussi.
+Il ne disparaît pas sur minuterie. Aucun choix de fermeture n’est persisté et la
+fermeture ne déclenche ni activation ni rechargement.
 
 ## Vérification reproductible
 

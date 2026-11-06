@@ -1,9 +1,42 @@
+const SESSION_REFRESH_LOCK = "mhw-session-refresh";
+const SESSION_REFRESH_LOCK_WAIT_MS = 15000;
+
+// Tabs share the rotating refresh cookie: a renewal sent while another is in
+// flight presents a rotated token, which the server revokes as a replay. The
+// browser sends the latest cookie once the lock is granted.
+export const runWithSessionRefreshLock = async (
+  task,
+  locks = globalThis.navigator?.locks
+) => {
+  if (locks == null) {
+    return task();
+  }
+
+  let started = false;
+  try {
+    return await locks.request(
+      SESSION_REFRESH_LOCK,
+      { signal: AbortSignal.timeout(SESSION_REFRESH_LOCK_WAIT_MS) },
+      () => {
+        started = true;
+        return task();
+      }
+    );
+  } catch (error) {
+    if (started) {
+      throw error;
+    }
+    return task();
+  }
+};
+
 export const createRefreshTokenHandler = ({
   store,
   decodeToken,
   createRefreshAction,
   getStoredUser,
   now = () => Date.now(),
+  runExclusive = runWithSessionRefreshLock,
 }) => {
   let refreshInFlight = null;
 
@@ -31,7 +64,9 @@ export const createRefreshTokenHandler = ({
 
     if (refreshInFlight == null) {
       refreshInFlight = Promise.resolve(
-        store.dispatch(createRefreshAction({ body, accessToken }))
+        runExclusive(() =>
+          store.dispatch(createRefreshAction({ body, accessToken }))
+        )
       ).finally(() => {
         refreshInFlight = null;
       });

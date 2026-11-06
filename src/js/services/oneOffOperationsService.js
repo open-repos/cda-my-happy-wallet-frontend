@@ -1,3 +1,4 @@
+import { parseAcknowledgedWrite } from "../utils/acknowledgedWrite";
 import { apiPrivate } from "../../utils/axiosHelper";
 
 export const OPERATIONS_PAGE_LIMIT = 20;
@@ -10,7 +11,11 @@ const isPaginationMeta = (meta) =>
   (typeof meta?.nextCursor === "string" || meta?.nextCursor === null);
 
 const parseCollectionPage = (payload, parseItem) => {
-  if (!Array.isArray(payload?.data) || !isPaginationMeta(payload?.meta)) {
+  if (
+    !Array.isArray(payload?.data) ||
+    !isPaginationMeta(payload?.meta) ||
+    (payload.meta.hasNext && !payload.meta.nextCursor)
+  ) {
     throw new Error("Invalid collection response");
   }
 
@@ -57,6 +62,8 @@ export const parseCategory = (category) => {
     category.name.length < 2 ||
     category.name.length > 50 ||
     (category?.color !== null && !/^#[0-9A-F]{6}$/i.test(category?.color)) ||
+    (category.fixedKind != null &&
+      !["CHARGE", "REVENU"].includes(category.fixedKind)) ||
     // `icon` (#84) : absent d'une API plus ancienne, sinon `style:nom`.
     (category.icon != null &&
       !/^(solid|regular):[a-z0-9-]+$/.test(category.icon))
@@ -68,11 +75,32 @@ export const parseCategory = (category) => {
     name: category.name,
     color: category.color,
     icon: category.icon ?? null,
+    ...(category.fixedKind == null ? {} : { fixedKind: category.fixedKind }),
   };
 };
 
+export const TITLE_SUGGESTIONS_LIMIT = 10;
+
+/** `categoryId=1&categoryId=2`, la forme attendue par l'API (#165). */
+const repeatedParams = { indexes: null };
+
+const parseTitleSuggestion = (item) => {
+  if (
+    typeof item?.title !== "string" ||
+    item.title.length === 0 ||
+    item.title.length > 50
+  ) {
+    throw new Error("Invalid title suggestion response");
+  }
+  return { value: item.title, label: item.title };
+};
+
 export const oneOffOperationsService = {
-  /** `filter` accepte `from`, `to` (inclus) et `currency`, tous facultatifs. */
+  /**
+   * `filter` reprend les paramètres de l'API : `from`, `to` (inclus),
+   * `currency`, et depuis #165 `sort`, `order`, `title`, `categoryId`
+   * (tableau), `type`, `minAmount` et `maxAmount`, tous facultatifs.
+   */
   async listOperations(cursor = null, filter = {}) {
     const response = await apiPrivate.get("/operations", {
       params: {
@@ -80,9 +108,33 @@ export const oneOffOperationsService = {
         limit: OPERATIONS_PAGE_LIMIT,
         ...(cursor ? { cursor } : {}),
       },
+      paramsSerializer: repeatedParams,
       withCredentials: true,
     });
     return parseCollectionPage(response.data, parseOperation);
+  },
+
+  /**
+   * Source `loadOptions` du `FilterCombobox` (#360) : libellés distincts de
+   * l'utilisateur, de A à Z, par pages de 10 (#174).
+   */
+  async listTitleSuggestions({
+    query = "",
+    cursor = null,
+    limit,
+    signal,
+  } = {}) {
+    const q = query.trim();
+    const response = await apiPrivate.get("/operations/suggestions/titles", {
+      params: {
+        ...(q ? { q } : {}),
+        limit: limit ?? TITLE_SUGGESTIONS_LIMIT,
+        ...(cursor ? { cursor } : {}),
+      },
+      signal,
+      withCredentials: true,
+    });
+    return parseCollectionPage(response.data, parseTitleSuggestion);
   },
 
   /** Toutes les opérations d'une période bornée (par exemple un mois). */
@@ -141,14 +193,14 @@ export const oneOffOperationsService = {
     const response = await apiPrivate.post("/operations", operation, {
       withCredentials: true,
     });
-    return parseOperation(response.data?.data);
+    return parseAcknowledgedWrite(parseOperation, response.data?.data);
   },
 
   async updateOperation(id, operation) {
     const response = await apiPrivate.put(`/operations/${id}`, operation, {
       withCredentials: true,
     });
-    return parseOperation(response.data?.data);
+    return parseAcknowledgedWrite(parseOperation, response.data?.data);
   },
 
   async deleteOperation(id) {

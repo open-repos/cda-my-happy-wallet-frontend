@@ -5,6 +5,8 @@ export const THEME_PREFERENCES = [
   ...Object.keys(tokenContract.themes),
 ];
 export const THEME_STORAGE_KEY = tokenContract.meta.themeStorageKey;
+export const THEME_CHANGE_EVENT = "mhw-theme-change";
+export const DARK_SCHEME_QUERY = "(prefers-color-scheme: dark)";
 
 const isThemePreference = (value) => THEME_PREFERENCES.includes(value);
 
@@ -38,7 +40,17 @@ export const applyThemePreference = (
     // The visual preference still applies when storage is unavailable.
   }
 
+  // Every theme toggle (navigation, mobile header) follows it.
+  window.dispatchEvent(
+    new CustomEvent(THEME_CHANGE_EVENT, { detail: preference })
+  );
   return preference;
+};
+
+/** Theme actually displayed: "system" follows the device setting. */
+export const resolveTheme = (preference, matchMedia = window.matchMedia) => {
+  if (preference !== "system") return preference;
+  return matchMedia?.(DARK_SCHEME_QUERY).matches ? "dark" : "light";
 };
 
 export const initializeTheme = () => {

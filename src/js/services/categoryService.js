@@ -1,3 +1,4 @@
+import { parseAcknowledgedWrite } from "../utils/acknowledgedWrite";
 import { apiPrivate } from "../../utils/axiosHelper";
 import {
   oneOffOperationsService,
@@ -27,7 +28,7 @@ export const categoryService = {
       body(category),
       { withCredentials: true }
     );
-    return parseCategory(response.data?.data);
+    return parseAcknowledgedWrite(parseCategory, response.data?.data);
   },
 
   async update(id, category) {
@@ -37,7 +38,7 @@ export const categoryService = {
       body(category),
       { withCredentials: true }
     );
-    return parseCategory(response.data?.data);
+    return parseAcknowledgedWrite(parseCategory, response.data?.data);
   },
 
   async remove(id) {

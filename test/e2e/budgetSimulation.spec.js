@@ -62,6 +62,11 @@ for (const viewport of [
       .getByRole("main")
       .getByRole("link", { name: "Prochains mois", exact: true })
       .click();
+    await page
+      .getByText("Éléments à confirmer et gestion de la Simulation", {
+        exact: true,
+      })
+      .click();
     await expect(
       page.getByRole("switch", { name: "Simulation" })
     ).toBeChecked();
@@ -98,18 +103,16 @@ for (const viewport of [
         .getByRole("row", { name: /octobre 2026.*Solde négatif/ })
     ).toBeVisible();
     for (const title of ["Matériel", "Anniversaire"]) {
+      await page.getByRole("button", { name: "Ajouter", exact: true }).click();
       await page
-        .getByLabel("Date pour les ajouts", { exact: true })
-        .fill("2026-10-26");
-      await page
-        .getByRole("button", {
-          name: "Ajouter un élément potentiel",
-          exact: true,
-        })
+        .getByRole("button", { name: /^Événement à confirmer Simulation/ })
         .click();
       await expect(
         page.getByLabel("Date de début", { exact: true })
-      ).toHaveValue("2026-10-26");
+      ).toHaveValue("2026-10-18");
+      await page
+        .getByLabel("Date de début", { exact: true })
+        .fill("2026-10-26");
       await page.getByLabel("Titre", { exact: true }).fill(title);
       await page.getByLabel(/^Montant/).fill("50.00");
       await page

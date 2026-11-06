@@ -1,78 +1,100 @@
+import { ActionButton } from "../Actions/ActionButton";
 import React from "react";
-import editIcon from "../../../assets/icons/edit.svg";
-import { CategoryLabel } from "../Categories/CategoryLabel";
-
-const formatAmount = (amount, currency) => {
-  const value = Number(amount);
-  return Number.isFinite(value)
-    ? new Intl.NumberFormat("fr-FR", { style: "currency", currency }).format(
-        value
-      )
-    : `${amount} ${currency}`;
-};
-const formatDate = (date) =>
-  new Intl.DateTimeFormat("fr-FR", { timeZone: "UTC" }).format(
-    new Date(`${date}T00:00:00.000Z`)
-  );
-
-export const OneOffOperationList = ({ categories, operations, onEdit }) => {
-  const categoryById = new Map(
-    categories.map((category) => [category.id, category])
-  );
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPen, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { CompactMoneyList } from "../CompactOperations/CompactMoneyList";
+import { OneOffInlineEditor } from "./OneOffInlineEditor";
+import { formatMoney } from "../BudgetCalendar/budgetFormat";
+import { OperationEnvelopeLink } from "../Envelopes/OperationEnvelopeLink";
+export const OneOffOperationList = ({
+  categories,
+  operations,
+  onEdit,
+  onDelete,
+  editingId,
+  onSave,
+  onCancel,
+  onMoreOptions,
+  busy = false,
+  mutationError,
+  sortHeaders,
+  filters,
+  toolbar,
+  refreshing = false,
+}) => {
+  const byId = new Map(categories.map((c) => [c.id, c]));
+  const rows = operations.map((o) => ({
+    id: `operation-${o.id}`,
+    title: o.title,
+    kind: o.type === "ENTREE" ? "income" : "expense",
+    amount: formatMoney(o.amount, o.currency),
+    date: o.operationDate.split("-").reverse().join("/"),
+    category: byId.get(o.categoryId),
+    raw: o,
+  }));
   return (
-    <div className="one-off-table-wrap">
-      <table className="one-off-table">
-        <caption className="sr-only">
-          Opérations ponctuelles enregistrées
-        </caption>
-        <thead>
-          <tr>
-            <th scope="col">Titre</th>
-            <th scope="col">Montant</th>
-            <th scope="col">Date</th>
-            <th scope="col">Catégorie</th>
-            <th scope="col">Type</th>
-            <th scope="col">
-              <span className="sr-only">Actions</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {operations.map((operation) => (
-            <tr key={operation.id}>
-              <th scope="row" data-label="Titre">
-                {operation.title}
-              </th>
-              <td data-label="Montant">
-                {formatAmount(operation.amount, operation.currency)}
-              </td>
-              <td data-label="Date">{formatDate(operation.operationDate)}</td>
-              <td data-label="Catégorie">
-                <CategoryLabel
-                  category={categoryById.get(operation.categoryId)}
-                />
-              </td>
-              <td data-label="Type">
-                <span
-                  className={`one-off-kind one-off-kind--${operation.type.toLowerCase()}`}
-                >
-                  {operation.type === "ENTREE" ? "Entrée" : "Dépense"}
-                </span>
-              </td>
-              <td data-label="Action" className="one-off-table__action">
-                <button
-                  type="button"
-                  className="one-off-icon-button"
-                  onClick={() => onEdit(operation)}
-                  aria-label={`Modifier ${operation.title}`}
-                >
-                  <img src={editIcon} alt="" aria-hidden="true" />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <CompactMoneyList
+      rows={rows}
+      label="Opérations ponctuelles enregistrées"
+      sortHeaders={sortHeaders}
+      filters={filters}
+      toolbar={toolbar}
+      busy={refreshing}
+      emptyMessage="Aucune opération ne correspond à ces filtres."
+      editingId={editingId ? `operation-${editingId}` : null}
+      renderEditor={({ raw }) => (
+        <OneOffInlineEditor
+          operation={raw}
+          categories={categories}
+          busy={busy}
+          onSave={onSave}
+          onCancel={onCancel}
+          onMoreOptions={onMoreOptions}
+          mutationError={mutationError}
+        />
+      )}
+      renderActions={({ raw }) => (
+        <div>
+          <ActionButton
+            action="edit"
+            type="button"
+            id={`one-off-edit-${raw.id}`}
+            className="one-off-button one-off-button--secondary"
+            disabled={busy || Boolean(editingId)}
+            onClick={(e) => onEdit(raw, e)}
+            aria-label={`Modifier ${raw.title}`}
+          >
+            Modifier
+          </ActionButton>
+          {onDelete && (
+            <ActionButton
+              action="delete"
+              type="button"
+              className="one-off-button one-off-button--secondary inline-icon-action"
+              disabled={busy || Boolean(editingId)}
+              onClick={(e) => onDelete(raw, e)}
+              aria-label={`Supprimer ${raw.title}`}
+            >
+              Supprimer
+            </ActionButton>
+          )}
+        </div>
+      )}
+      renderDetails={({ raw, category }) => (
+        <>
+          <OperationEnvelopeLink operation={raw} />
+          <dl>
+            <dt>Date</dt>
+            <dd>{raw.operationDate.split("-").reverse().join("/")}</dd>
+            <dt>Catégorie</dt>
+            <dd>{category?.name ?? "Catégorie indisponible"}</dd>
+            <dt>Type</dt>
+            <dd>{raw.type === "ENTREE" ? "Entrée" : "Dépense"}</dd>
+            <dt>Montant</dt>
+            <dd>{formatMoney(raw.amount, raw.currency)}</dd>
+          </dl>
+        </>
+      )}
+    />
   );
 };

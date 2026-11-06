@@ -23,6 +23,10 @@ import {
 interface OperationDatePickerProps {
   disabled: boolean;
   invalid: boolean;
+  /** Nom lu par les lecteurs d'écran, « Date » par défaut. */
+  label?: string;
+  /** Première date choisissable `AAAA-MM-JJ` (date de fin d'un événement). */
+  minDate?: string;
   value: string;
   onChange(value: string): void;
 }
@@ -34,6 +38,8 @@ const semibold = `${primitives.fontWeight.semibold}` as "600";
 export const OperationDatePicker = ({
   disabled,
   invalid,
+  label = "Date",
+  minDate,
   value,
   onChange,
 }: OperationDatePickerProps) => {
@@ -49,9 +55,18 @@ export const OperationDatePicker = ({
   const longDate = formatLongCalendarDate(value);
 
   const open = () => {
-    setDisplayedMonth(selectedDate ?? new Date());
+    // Sans date choisie, ouverture sur le premier mois choisissable.
+    setDisplayedMonth(
+      selectedDate ??
+        (minDate != null ? parseCalendarDate(minDate) : null) ??
+        new Date(),
+    );
     setIsOpen(true);
   };
+  const todayValue = formatCalendarDate(new Date());
+  const isBeforeMin = (date: string) => minDate != null && date < minDate;
+  // Deux sélecteurs dans un formulaire : « Aujourd'hui » dit lequel il remplit.
+  const todayLabel = label === "Date" ? undefined : `${label} : aujourd’hui`;
   const selectToday = () => {
     const today = new Date();
     onChange(formatCalendarDate(today));
@@ -71,7 +86,7 @@ export const OperationDatePicker = ({
     <>
       <View style={styles.fieldRow}>
         <Pressable
-          accessibilityLabel={`Date : ${longDate ?? "non renseignée"}. Ouvrir le calendrier`}
+          accessibilityLabel={`${label} : ${longDate ?? "non renseignée"}. Ouvrir le calendrier`}
           accessibilityRole="button"
           disabled={disabled}
           onPress={open}
@@ -89,10 +104,15 @@ export const OperationDatePicker = ({
           />
         </Pressable>
         <Pressable
+          accessibilityLabel={todayLabel}
           accessibilityRole="button"
-          disabled={disabled}
+          accessibilityState={{ disabled: disabled || isBeforeMin(todayValue) }}
+          disabled={disabled || isBeforeMin(todayValue)}
           onPress={selectToday}
-          style={styles.todayButton}
+          style={[
+            styles.todayButton,
+            isBeforeMin(todayValue) && styles.unavailable,
+          ]}
         >
           <Text style={styles.todayLabel}>Aujourd’hui</Text>
         </Pressable>
@@ -150,6 +170,15 @@ export const OperationDatePicker = ({
                 if (day == null) {
                   return <View key={`empty-${index}`} style={styles.dayCell} />;
                 }
+                const unavailable = isBeforeMin(
+                  formatCalendarDate(
+                    new Date(
+                      displayedMonth.getFullYear(),
+                      displayedMonth.getMonth(),
+                      day,
+                    ),
+                  ),
+                );
                 const isSelected =
                   selectedDate?.getFullYear() ===
                     displayedMonth.getFullYear() &&
@@ -160,7 +189,11 @@ export const OperationDatePicker = ({
                     <Pressable
                       accessibilityLabel={`${day} ${formatCalendarMonth(displayedMonth)}`}
                       accessibilityRole="button"
-                      accessibilityState={{ selected: isSelected }}
+                      accessibilityState={{
+                        disabled: unavailable,
+                        selected: isSelected,
+                      }}
+                      disabled={unavailable}
                       {...(Platform.OS === "web"
                         ? { "aria-pressed": isSelected }
                         : {})}
@@ -168,6 +201,7 @@ export const OperationDatePicker = ({
                       style={[
                         styles.dayButton,
                         isSelected && styles.selectedDay,
+                        unavailable && styles.unavailable,
                       ]}
                     >
                       <Text
@@ -193,9 +227,15 @@ export const OperationDatePicker = ({
                 <Text style={styles.actionLabel}>Annuler</Text>
               </Pressable>
               <Pressable
+                accessibilityLabel={todayLabel}
                 accessibilityRole="button"
+                disabled={isBeforeMin(todayValue)}
                 onPress={selectToday}
-                style={[styles.actionButton, styles.todayCalendarButton]}
+                style={[
+                  styles.actionButton,
+                  styles.todayCalendarButton,
+                  isBeforeMin(todayValue) && styles.unavailable,
+                ]}
               >
                 <Text style={styles.todayCalendarLabel}>Aujourd’hui</Text>
               </Pressable>
@@ -299,6 +339,7 @@ const styles = StyleSheet.create({
     width: "84%",
   },
   selectedDay: { backgroundColor: colors.actionPrimaryBackground },
+  unavailable: { opacity: 0.35 },
   dayLabel: { color: colors.textPrimary, fontSize: primitives.fontSize.md },
   selectedDayLabel: { color: colors.actionPrimaryText, fontWeight: semibold },
   calendarActions: {

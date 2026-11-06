@@ -494,3 +494,12 @@
     text-align: left;
   }
 }
+
+.one-off-form__amount {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) max-content;
+}
+.one-off-form label > span[id$="-error"] {
+  overflow-wrap: anywhere;
+}

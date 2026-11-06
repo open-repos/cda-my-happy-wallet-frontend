@@ -41,7 +41,7 @@ sont inclus.
 | --- | --- | --- |
 | Shell Web | `App`, `ProtectedLayout`, `SideBar`, `RequireAuth` | `App.css`, styled-components dans `SideBar`, React Router |
 | Auth Web | login, inscription, oubli et nouveau mot de passe | `Auth.css` plus quatre feuilles presque dupliquées, Formik/Yup, toast, `Spinner` |
-| Budget fixe | formulaires, cartes et listes charges/revenus, calcul RaV | `FormControl.css`, `Operations.css`, Semantic UI Table, Font Awesome |
+| Budget fixe | formulaires, cartes et listes charges/revenus, calcul RaV | `FormControl.css`, `Operations.css`, tableau HTML (`.table-opfixe`), Font Awesome |
 | Tableau de bord | état initial, RaV, périodes mois/semaine/jour, résumés vides | `Home.css`, `CaseRaV.css`, `SegmentedControl.css` |
 | Fonctions à compléter | calendrier, objectifs/événements, opérations ponctuelles, profil | pages et conteneurs présents, contenu encore réduit à un libellé |
 | Mobile | bootstrap de session, connexion, tableau de bord/healthcheck | `StyleSheet` local par écran, Expo Router, Ionicons |

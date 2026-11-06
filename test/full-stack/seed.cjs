@@ -45,10 +45,13 @@ async function seed() {
     for (const project of ["mobile", "tablet", "desktop"]) {
       for (const journey of [
         "operations",
+        "fixed-charges",
         "events",
         "simulation",
+        "trajectories",
         "recovery",
         "session",
+        "multitab",
         "privacy-a",
         "privacy-b",
       ]) {
@@ -68,6 +71,20 @@ async function seed() {
           where: { userId_name: { userId: user.id, name: "Courant" } },
           create: { userId: user.id, name: "Courant", color: "#275DAD" },
           update: {},
+        });
+        const templates = await prisma.operationCategoryTemplate.findMany({
+          where: { active: true },
+        });
+        await prisma.operationCategory.createMany({
+          data: templates.map((template) => ({
+            userId: user.id,
+            name: template.name,
+            color: template.color,
+            icon: template.icon,
+            fixedKind: template.fixedKind,
+            templateId: template.id,
+          })),
+          skipDuplicates: true,
         });
         for (const [typeOperation, titre, montant] of [
           ["REVENU", "E2E revenu fixe", "2000.00"],

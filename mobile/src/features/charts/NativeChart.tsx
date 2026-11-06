@@ -1,11 +1,11 @@
 import SvgChart, { SVGRenderer } from "@wuba/react-native-echarts/svgChart";
-import { BarChart, PieChart } from "echarts/charts";
+import { BarChart, GaugeChart, PieChart } from "echarts/charts";
 import { GridComponent } from "echarts/components";
 import * as echarts from "echarts/core";
 import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 
-echarts.use([SVGRenderer, BarChart, PieChart, GridComponent]);
+echarts.use([SVGRenderer, BarChart, GaugeChart, PieChart, GridComponent]);
 
 /** SVG uniquement : l'entrée globale chargerait également Skia. */
 export const NativeChart = ({

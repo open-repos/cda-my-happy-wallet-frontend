@@ -42,6 +42,13 @@ accueil et objectifs/événements incluent la synthèse dans les deux thèmes.
 Aucune migration ni configuration. Une régression se retire par revert de la
 PR ; les écritures utilisent le contrat existant des objectifs.
 
+Le suivi #261 borne la largeur minimale des colonnes de la synthèse à l’espace
+disponible, ainsi que celle des cartes de la page Objectifs. Les montants et
+actions restent dans la page à 320 pixels avec un texte agrandi à 200 %, sans
+masquer de contenu. Les scénarios de reflow vérifient l’accueil et Objectifs,
+menu fermé, dans les deux thèmes, de 320 à 1440 pixels : largeur globale,
+rectangles des textes et accès par défilement/focus au bouton d’ajustement.
+
 Les tests visuels attendent explicitement la synthèse avant de capturer l'accueil
 ou la page Objectifs. Le titre d'objectif est recherché dans sa carte pour ne
 pas confondre la progression et la synthèse d'effort. Les références sont relues

@@ -134,7 +134,7 @@ export const expensesChartOption = (
       // se touchent (« 0 100200300 ») sur un écran de 360 px (#172).
       splitNumber: 3,
       axisLabel: { color: tokens.muted, hideOverlap: true },
-      splitLine: { lineStyle: { color: tokens.grid } },
+      splitLine: { show: false },
     },
     yAxis: {
       type: "category",
@@ -166,6 +166,7 @@ export const expensesChartOption = (
         type: "bar",
         data,
         barMaxWidth: 24,
+        itemStyle: { borderRadius: 6 },
         label: {
           show: true,
           position: "right",

@@ -7,6 +7,194 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-11-05
+
+### Added
+
+- Added the shared `FilterCombobox` field: accessible editable combobox with debounced search, cancelled stale requests, cursor-paginated suggestions loaded on scroll or with the keyboard, empty/loading/error/end states and single or multiple choice. Used by the column header filters of #361; positioning is shared with `ChoiceSelect` through `useAnchoredPopup` (#360).
+
+### Changed
+
+- Replaced the separate sort selects and loaded-items search with sortable, filterable column headers on the one-off and fixed operation tables. One-off operations are sorted and filtered by the API (#165) with title suggestions (#174) and restart from the first page; fixed operations stay sorted and filtered in the browser. Sort and filters are kept in the URL, and a « Trier et filtrer » panel gives every sort criterion and, below 64rem, every filter (#361).
+
+## [1.14.0] - 2026-11-05
+
+### Changed
+
+- Changed inline editing of one-off operations and fixed charges and income so the edited row keeps the same columns and height, with secondary fields behind « Plus d’options » and keyboard save and cancel (#358).
+
+### Fixed
+
+- Fixed the sign-up, forgotten password and new password forms so their fields keep the width of their labels and button inside the card at every screen width (#356).
+- Fixed amount and percentage fields so a comma or a dot both work as the decimal separator, with one shared conversion, two decimals at most and an accessible error for invalid input (#357).
+
+## [1.13.0] - 2026-11-04
+
+### Added
+
+- Added a reminder to check the spam folder after registration and password-reset requests (#362).
+
+## [1.12.1] - 2026-10-31
+
+### Fixed
+
+- Serialized session renewals across browser tabs with Web Locks, so that tabs no longer present an already rotated refresh token (#346).
+- Web logout now calls `POST /users/logout` to revoke the refresh session and clear its cookies; the local sign-out does not wait for the response (#348).
+
+## [1.12.0] - 2026-10-31
+
+### Changed
+
+- Displayed declared goal savings in an accessible SVG semicircle with its server-estimated month and theme-aware text (#283).
+
+### Security
+
+- Updated follow-redirects to 1.16.2 to fix a credentials advisory on a package the browser bundle does not use (#342).
+
+## [1.11.0] - 2026-10-29
+
+### Added
+
+- The desktop navigation collapses to an icon rail; links keep their accessible names and a tooltip, and the choice persists per browser (#328).
+
+### Changed
+
+- Applied the approved Atelier layout across Web pages, navigation, surfaces, actions and charts (#328).
+- The calendar takes the full width with the month details below, and list type filters are pill chips with readable counts (#328).
+- Moved the month title and previous/next/today controls from the page header into a toolbar on the calendar card, next to its add action (#328).
+- Every delete or simulation confirmation now opens a modal alert dialog; Escape and the backdrop keep the item and focus returns to its trigger (#328).
+- The mobile quick add is an icon-only floating button instead of a reserved bottom row; it steps aside while scrolling down, turns into a close cross and anchors the add menu above it (#328).
+- Unified mutation confirmations and separated committed writes from failed display refreshes with read-only recovery (#328).
+- Added a sun/moon theme toggle to the navigation and the mobile header; the profile no longer holds the theme selector (#328).
+
+### Fixed
+
+- Fixed low-contrast text: overdue calendar cards, danger button hover in compact lists, dark-theme expense amounts, legacy orange form labels, the navigation scrollbar and public link focus rings (#328).
+- Bounded date filters on phones and kept the focused field visible above the software keyboard, while preserving shared forms, drafts and inline editing (#328).
+
+## [1.10.1] - 2026-10-29
+
+### Fixed
+
+- Fixed mobile fixed-budget creation with the shared operation popup and bounded date fields, preserving drafts, validation and retry behavior (#324).
+
+## [1.10.0] - 2026-10-28
+
+### Added
+
+- Added monthly and yearly envelope cards, explicit payment reconciliation and category spending trends, with dated edits to fixed expenses and income (#314).
+
+## [1.9.0] - 2026-10-27
+
+### Changed
+
+- Read complete month collections and persisted occurrence links to project calendar markers and common day details without changing financial calculations (#293).
+- Native calendar now reads complete month collections, displays simultaneous type indicators with a shared legend, and opens common day details with linked occurrence decisions and existing operation forms. Potential visibility is independent of financial simulation (#294).
+- Shared sage action buttons, compact forms and a reserved quick-add area clarified actions in both themes without covering financial content (#296).
+
+### Fixed
+
+- Kept event field labels, errors and budget-impact radios local to their form instance (#312).
+
+## [1.8.0] - 2026-10-26
+
+### Changed
+
+- Native shared action buttons now distinguish deletion with existing icons and themed danger styling. Floating add buttons gain a contrasting border and platform shadows; existing confirmations preserve cancellation focus (#297).
+
+### Fixed
+
+- Added a shared icon-capable category selector for operation, conversion and fixed-budget forms (#290).
+- Displayed existing personal category icons and fallbacks in shared native form choices with system theme colors (#291).
+- Kept expanded savings tables inside their scroll region instead of widening the page (#301).
+
+## [1.7.0] - 2026-10-25
+
+### Added
+
+- Added server-owned savings trajectory comparisons, reversible variable-expense assumptions and safety margin, coherent allocation details and accessible monthly alternatives (#284).
+
+### Changed
+
+- Displayed declared savings in a rounded gauge and added a selected-goal trajectory with the server estimate and monthly text alternatives (#282).
+
+## [1.6.0] - 2026-10-24
+
+### Added
+
+- Added contextual quick creation on phone using existing native operation and event forms, with separate potential events and acknowledged writes (#274).
+
+### Changed
+
+- Unified compact operation lists with explicit inline editing, bounded date fields and shared calendar/mobile quick creation while preserving real and simulated budgets (#273).
+
+## [1.5.0] - 2026-10-24
+
+### Added
+
+- Added personal category selection, icons and sorting to fixed expenses and income, preserving assignments and drafts when category loading or saving fails (#266).
+
+### Changed
+
+- Unified fixed expenses and income in a sortable responsive overview with shared entry, editing and deletion controls, preserved drafts and server budget summaries (#265).
+
+### Fixed
+
+- Preserved the existing shared form stylesheet when replacing the fixed-operation components, preventing unrelated pages from changing their controls and table spacing (#265).
+
+## [1.4.0] - 2026-10-23
+
+### Changed
+
+- Replaced the update card with a dismissible floating notification that returns when the application is reopened while an update remains pending (#255).
+
+### Fixed
+
+- Fixed sidebar labels wrapping beyond the navigation panel on small screens and translated the home link (#257).
+- Fixed savings summaries and goal cards overflowing narrow viewports with enlarged text (#261).
+
+## [1.3.0] - 2026-10-22
+
+### Added
+
+- Added the upcoming months forecast to the mobile app, opened from the dashboard and the calendar: month-end balance and allowances per month, week and day, with negative months flagged by text (#214).
+- Added an analytics screen to the mobile app: expenses, income or net balance by category, month, week or day over preset periods, with a chart and an equivalent text list using the dashboard category colours (#215).
+- Added weekly, quarterly and yearly repetitions to the mobile event form; the end date picker no longer offers days before the start date (#216).
+- Added the savings capacity to the mobile dashboard and objectives tab: planned and required contributions, balances and allowances after goals, sustainability indicator and per-goal effort, with an "adjust contribution" shortcut to the goal form (#217).
+- Added monthly events to the mobile app: list, create, edit and delete them from the objectives tab, with the Web validations; the calendar refreshes its summary and pending occurrences when it regains focus (#225).
+- Added financial goals to the mobile app: list them with their progress and backend forecast, and create, edit or delete them from the objectives tab with the Web validations (#226).
+- Added periodic fixed charges with an adjustable personal share, monthly previews and edit/delete controls (#238).
+- Added the Simulation switch to the mobile calendar, upcoming months and savings capacity: budget reads include potential items when it is on, and a comparison shows the usual and simulated month-end balance (#240).
+- Added potential items management to the mobile Simulation: list with expiry date, add and edit with the event form, confirm, delete and clear with explicit confirmation; every affected figure refreshes after a change (#241).
+
+### Fixed
+
+- Verified gzip compression and immutable caching for the public category icon catalogue after the owner updated Nginx (#153).
+- Stopped repeated loading announcements when refreshing already displayed Web lists, forecasts and home sections, while preserving first-load, new-view and error announcements (#221).
+
+### Security
+
+- Updated the Web development server to Vite 6.4.5 to preserve file access restrictions on imports with query parameters (#246).
+
+## [1.2.0] - 2026-10-21
+
+### Added
+
+- Added explicit budget simulation across forecasts and savings capacity, with potential event management, confirmation and automatic expiry information (#130).
+- Added weekly, quarterly and annual event choices with optional inclusive end dates and preserved the dated occurrences returned by the API (#192).
+- Added a twelve-month budget forecast with an accessible chart and data table, explicit negative balances and links from the home page and calendar (#193).
+- Added a savings capacity summary with backend sustainability explanations, monthly/weekly/daily allowances and direct goal editing (#194).
+
+### Fixed
+
+- Corrected unavailable icon descriptions and search result counts in the Web and mobile category icon pickers (#152).
+- Fixed truncated mobile tab bar labels with large system font sizes: labels now scale up to 1.3 and shrink to fit on one line (#155).
+- Fixed screen-reader announcements on the calendar, objectives and simulation sections: refreshing data that is already displayed (after a change, a simulation update or a return to the tab) now announces only its outcome, and the spinner and Analyses states use always-mounted live regions (#171).
+
+### Security
+
+- Updated transitive mobile dependencies (shell-quote, js-yaml, @xmldom/xmldom, brace-expansion, source-map-js and the vite development server) to their latest compatible patch or minor versions (#205).
+
 ## [1.1.1] - 2026-10-19
 
 ### Fixed
@@ -101,7 +289,23 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Replaced dynamic SSH host discovery with a pre-verified `known_hosts` file.
 - Isolated SSH credentials from validation and build jobs.
 
-[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.1.1...develop
+[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.15.0...develop
+[1.15.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.14.0...v1.15.0
+[1.14.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.13.0...v1.14.0
+[1.13.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.12.1...v1.13.0
+[1.12.1]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.12.0...v1.12.1
+[1.12.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.11.0...v1.12.0
+[1.11.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.10.1...v1.11.0
+[1.10.1]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.10.0...v1.10.1
+[1.10.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.9.0...v1.10.0
+[1.9.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.8.0...v1.9.0
+[1.8.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.7.0...v1.8.0
+[1.7.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.6.0...v1.7.0
+[1.6.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.5.0...v1.6.0
+[1.5.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.4.0...v1.5.0
+[1.4.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.3.0...v1.4.0
+[1.3.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.2.0...v1.3.0
+[1.2.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.1.1...v1.2.0
 [1.1.1]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.1.0...v1.1.1
 [1.1.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.0.0...v1.1.0
 [1.0.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/commits/v1.0.0

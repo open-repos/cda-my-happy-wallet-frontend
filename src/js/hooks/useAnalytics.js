@@ -1,3 +1,4 @@
+import { useRefreshViews } from "./useRefreshViews";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   analyticsErrorCode,
@@ -17,7 +18,7 @@ export const useAnalytics = (query, problem) => {
     const request = ++latest.current;
     if (problem) {
       setState({ status: "invalid", data: null, message: problem });
-      return;
+      return true;
     }
     setState({ status: "loading", data: null });
     try {
@@ -29,6 +30,7 @@ export const useAnalytics = (query, problem) => {
           : "success",
         data,
       });
+      return true;
     } catch (error) {
       if (request !== latest.current) return;
       setState({
@@ -36,9 +38,11 @@ export const useAnalytics = (query, problem) => {
         data: null,
         code: analyticsErrorCode(error),
       });
+      return false;
     }
   }, [key, problem]);
 
+  useRefreshViews(load);
   useEffect(() => {
     load();
   }, [load]);

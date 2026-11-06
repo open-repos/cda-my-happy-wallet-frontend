@@ -1,5 +1,24 @@
 import { expect, test } from "@playwright/test";
 
+test("renders Font Awesome navigation without development warnings", async ({
+  page,
+}) => {
+  const warnings = [];
+  page.on("console", (message) => {
+    const text = message.text();
+    if (text.includes("FontAwesomeIcon") && text.includes("defaultProps")) {
+      warnings.push(text);
+    }
+  });
+  await page.goto("/new-password");
+  const back = page.getByRole("link", { name: /Annuler et revenir/ });
+  await expect(back).toBeVisible();
+  await expect(back.locator("svg path")).toHaveCount(1);
+  await back.click();
+  await expect(page).toHaveURL(/\/login$/);
+  expect(warnings).toEqual([]);
+});
+
 test("navigates from login to registration", async ({ page }) => {
   await page.goto("/login");
 

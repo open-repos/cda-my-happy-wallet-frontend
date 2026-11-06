@@ -33,7 +33,11 @@ const TEXTS = {
 export const GoalsCard = ({ section, currency }) => (
   <article className="home-budget__card" aria-labelledby="home-goals-title">
     <h2 id="home-goals-title">Mes objectifs</h2>
-    <SectionAnnouncement status={section.status} {...TEXTS} />
+    <SectionAnnouncement
+      status={section.status}
+      loadingKey={section.loadingKey}
+      {...TEXTS}
+    />
     {section.status !== "success" ? (
       <SectionState
         status={section.status}

@@ -1,6 +1,6 @@
 import React from "react";
 import "./../css/App.css";
-import { ToastContainer } from "react-toastify";
+import { MutationFeedbackProvider } from "./components/Notifications/MutationFeedbackProvider";
 //Components
 import { RouteAccessibility } from "./components/RouteAccessibility";
 import { ProtectedLayout } from "./components/ProtectedLayout";
@@ -23,114 +23,108 @@ import Analyses from "./pages/Analyses";
 import Categories from "./pages/Categories";
 import CalculRaV from "./components/CalculRaV";
 
+import "../css/ActionForms.css";
+import "../css/Atelier.css";
+
 function App() {
   return (
     <>
-      <div className="App">
-        <RouteAccessibility />
-        <div className="app-routes">
-          <ToastContainer
-            position="top-right"
-            autoClose={5000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-          />
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/new-password" element={<NewPassword />} />
+      <MutationFeedbackProvider>
+        <div className="App">
+          <RouteAccessibility />
+          <div className="app-routes">
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/new-password" element={<NewPassword />} />
 
-            {/* <Route path="/home" element={<RequireAuth><Sidebar /><Home /> </RequireAuth>}>
+              {/* <Route path="/home" element={<RequireAuth><Sidebar /><Home /> </RequireAuth>}>
               <Route path="rav-mois" element={<CalculRaV period={"mois"} />}/>
               <Route path="rav-semaine" element={<CalculRaV period={"semaine"} />}/>
               <Route path="rav-jour" element={<CalculRaV period={"jour"} />}/>
               </Route> */}
 
-            <Route
-              path="home"
-              element={
-                <ProtectedLayout>
-                  <Home />{" "}
-                </ProtectedLayout>
-              }
-            />
-            <Route
-              path="home/operations-fixes"
-              element={
-                <ProtectedLayout>
-                  <OperationsFixes />{" "}
-                </ProtectedLayout>
-              }
-            />
-            <Route path="/" element={<Navigate replace to="/home" />} />
-            <Route
-              path="/prochains-mois"
-              element={
-                <ProtectedLayout>
-                  <UpcomingMonths />
-                </ProtectedLayout>
-              }
-            />
+              <Route
+                path="home"
+                element={
+                  <ProtectedLayout>
+                    <Home />{" "}
+                  </ProtectedLayout>
+                }
+              />
+              <Route
+                path="home/operations-fixes"
+                element={
+                  <ProtectedLayout>
+                    <OperationsFixes />{" "}
+                  </ProtectedLayout>
+                }
+              />
+              <Route path="/" element={<Navigate replace to="/home" />} />
+              <Route
+                path="/prochains-mois"
+                element={
+                  <ProtectedLayout>
+                    <UpcomingMonths />
+                  </ProtectedLayout>
+                }
+              />
 
-            <Route
-              path="/calendrier"
-              element={
-                <ProtectedLayout>
-                  <Calendrier />
-                </ProtectedLayout>
-              }
-            ></Route>
-            <Route
-              path="/objectifs-evenements"
-              element={
-                <ProtectedLayout>
-                  <Objectifs />
-                </ProtectedLayout>
-              }
-            ></Route>
-            <Route
-              path="/operations"
-              element={
-                <ProtectedLayout>
-                  <ListeOperations />
-                </ProtectedLayout>
-              }
-            ></Route>
-            <Route
-              path="/categories"
-              element={
-                <ProtectedLayout>
-                  <Categories />
-                </ProtectedLayout>
-              }
-            ></Route>
-            <Route
-              path="/analyses"
-              element={
-                <ProtectedLayout>
-                  <Analyses />
-                </ProtectedLayout>
-              }
-            ></Route>
-            <Route
-              path="/profil"
-              element={
-                <ProtectedLayout>
-                  <Profil />
-                </ProtectedLayout>
-              }
-            ></Route>
-            {/* </Route> */}
-            <Route path="*" element={<NotFound />}></Route>
-          </Routes>
+              <Route
+                path="/calendrier"
+                element={
+                  <ProtectedLayout>
+                    <Calendrier />
+                  </ProtectedLayout>
+                }
+              ></Route>
+              <Route
+                path="/objectifs-evenements"
+                element={
+                  <ProtectedLayout>
+                    <Objectifs />
+                  </ProtectedLayout>
+                }
+              ></Route>
+              <Route
+                path="/operations"
+                element={
+                  <ProtectedLayout>
+                    <ListeOperations />
+                  </ProtectedLayout>
+                }
+              ></Route>
+              <Route
+                path="/categories"
+                element={
+                  <ProtectedLayout>
+                    <Categories />
+                  </ProtectedLayout>
+                }
+              ></Route>
+              <Route
+                path="/analyses"
+                element={
+                  <ProtectedLayout>
+                    <Analyses />
+                  </ProtectedLayout>
+                }
+              ></Route>
+              <Route
+                path="/profil"
+                element={
+                  <ProtectedLayout>
+                    <Profil />
+                  </ProtectedLayout>
+                }
+              ></Route>
+              {/* </Route> */}
+              <Route path="*" element={<NotFound />}></Route>
+            </Routes>
+          </div>
         </div>
-      </div>
+      </MutationFeedbackProvider>
     </>
   );
 }

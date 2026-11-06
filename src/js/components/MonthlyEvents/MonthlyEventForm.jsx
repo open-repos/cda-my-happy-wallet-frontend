@@ -1,11 +1,15 @@
+import { FormHeader } from "../Forms/FormHeader";
+import { FormActions } from "../Actions/FormActions";
+import { DeleteConfirmation } from "../Actions/DeleteConfirmation";
+import { ActionButton } from "../Actions/ActionButton";
 import { useFormFocus } from "../../hooks/useFormFocus";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
+import { isPositiveAmount, normalizeDecimal } from "../../utils/decimalInput";
 import {
   EVENT_RECURRENCE_OPTIONS,
   isEventRecurrence,
   isRepeatingEvent,
 } from "../../utils/eventRecurrences";
-
 const emptyEvent = {
   title: "",
   amount: "",
@@ -25,16 +29,13 @@ const isDate = (value) => {
     date.getUTCDate() === Number(match[3])
   );
 };
-
 const validate = (event) => {
   const errors = {};
   if (event.title.trim().length < 2 || event.title.trim().length > 50)
     errors.title = "Le titre doit contenir entre 2 et 50 caractères.";
-  if (
-    !/^(0|[1-9]\d{0,7})(?:\.\d{1,2})?$/.test(event.amount) ||
-    Number(event.amount) <= 0
-  )
-    errors.amount = "Saisissez un montant positif avec deux décimales maximum.";
+  if (!isPositiveAmount(event.amount))
+    errors.amount =
+      "Saisissez un montant positif avec deux décimales maximum, par exemple 12,50.";
   if (!isDate(event.startDate))
     errors.startDate = "Choisissez une date valide.";
   if (!isEventRecurrence(event.recurrence))
@@ -48,7 +49,6 @@ const validate = (event) => {
       "Choisissez une date de fin valide, au plus tôt à la date de début.";
   return errors;
 };
-
 export const MonthlyEventForm = ({
   event,
   initialDate = "",
@@ -61,12 +61,22 @@ export const MonthlyEventForm = ({
 }) => {
   const [values, setValues] = useState(() =>
     event
-      ? { ...event, endDate: event.endDate || "" }
-      : { ...emptyEvent, startDate: initialDate }
+      ? {
+          ...event,
+          endDate: event.endDate || "",
+        }
+      : {
+          ...emptyEvent,
+          startDate: initialDate,
+        }
   );
+  const formId = useId();
+  const controlId = (name) => `monthly-event-${formId}-${name}`;
   const [errors, setErrors] = useState({});
   const [confirmDelete, setConfirmDelete] = useState(false);
   const titleRef = useRef(null);
+  const deleteTrigger = useRef(null);
+  const saving = useRef(false);
   useFormFocus(titleRef);
   useEffect(() => {
     const close = (keyboardEvent) =>
@@ -78,18 +88,25 @@ export const MonthlyEventForm = ({
     setValues((current) => ({
       ...current,
       [name]: value,
-      ...(name === "recurrence" && value === "AUCUNE" ? { endDate: "" } : {}),
+      ...(name === "recurrence" && value === "AUCUNE"
+        ? {
+            endDate: "",
+          }
+        : {}),
     }));
     setErrors((current) => ({
       ...current,
       [name]: undefined,
       ...(name === "recurrence" && value === "AUCUNE"
-        ? { endDate: undefined }
+        ? {
+            endDate: undefined,
+          }
         : {}),
     }));
   };
   const submit = async (submitEvent) => {
     submitEvent.preventDefault();
+    if (saving.current || isSaving) return;
     const nextErrors = validate(values);
     if (minStartDate && values.startDate && values.startDate < minStartDate)
       nextErrors.startDate =
@@ -101,48 +118,47 @@ export const MonthlyEventForm = ({
         ?.focus();
       return;
     }
-    await onSave({
-      title: values.title.trim(),
-      amount: values.amount,
-      currency: values.currency,
-      kind: values.kind,
-      startDate: values.startDate,
-      recurrence: values.recurrence,
-      endDate:
-        isRepeatingEvent(values.recurrence) && values.endDate
-          ? values.endDate
-          : null,
-    });
+    saving.current = true;
+    try {
+      await onSave({
+        title: values.title.trim(),
+        amount: normalizeDecimal(values.amount),
+        currency: values.currency,
+        kind: values.kind,
+        startDate: values.startDate,
+        recurrence: values.recurrence,
+        endDate:
+          isRepeatingEvent(values.recurrence) && values.endDate
+            ? values.endDate
+            : null,
+      });
+    } finally {
+      saving.current = false;
+    }
   };
   const field = (name) => ({
     "aria-invalid": Boolean(errors[name]),
-    "aria-describedby": errors[name] ? `${name}-error` : undefined,
+    "aria-describedby": errors[name] ? controlId(`${name}-error`) : undefined,
   });
   return (
     <section
       className="monthly-event-form-panel"
-      aria-labelledby="monthly-event-form-title"
+      aria-labelledby={controlId("form-title")}
     >
-      <div className="monthly-event-form-panel__header">
-        <h2 id="monthly-event-form-title">
-          {formTitle ||
-            (event ? "Modifier l’événement" : "Ajouter un événement")}
-        </h2>
-        <button
-          type="button"
-          className="monthly-event-icon-button"
-          onClick={onCancel}
-          disabled={isSaving}
-          aria-label="Fermer le formulaire"
-        >
-          ×
-        </button>
-      </div>
+      <FormHeader
+        id={controlId("form-title")}
+        busy={isSaving}
+        onClose={onCancel}
+        className="monthly-event-form-panel__header"
+        closeClassName="monthly-event-icon-button"
+      >
+        {formTitle || (event ? "Modifier l’événement" : "Ajouter un événement")}
+      </FormHeader>
       <form className="monthly-event-form" onSubmit={submit} noValidate>
-        <label htmlFor="monthly-event-title">
+        <label htmlFor={controlId("title")}>
           Titre
           <input
-            id="monthly-event-title"
+            id={controlId("title")}
             ref={titleRef}
             name="title"
             value={values.title}
@@ -150,13 +166,15 @@ export const MonthlyEventForm = ({
             maxLength={50}
             {...field("title")}
           />
-          {errors.title && <span id="title-error">{errors.title}</span>}
+          {errors.title && (
+            <span id={controlId("title-error")}>{errors.title}</span>
+          )}
         </label>
-        <label htmlFor="monthly-event-amount">
+        <label htmlFor={controlId("amount")}>
           Montant
           <span className="monthly-event-form__amount">
             <input
-              id="monthly-event-amount"
+              id={controlId("amount")}
               name="amount"
               inputMode="decimal"
               value={values.amount}
@@ -166,12 +184,14 @@ export const MonthlyEventForm = ({
             />
             <span>EUR</span>
           </span>
-          {errors.amount && <span id="amount-error">{errors.amount}</span>}
+          {errors.amount && (
+            <span id={controlId("amount-error")}>{errors.amount}</span>
+          )}
         </label>
-        <label htmlFor="monthly-event-start-date">
+        <label htmlFor={controlId("start-date")}>
           Date de début
           <input
-            id="monthly-event-start-date"
+            id={controlId("start-date")}
             type="date"
             min={minStartDate}
             name="startDate"
@@ -180,13 +200,13 @@ export const MonthlyEventForm = ({
             {...field("startDate")}
           />
           {errors.startDate && (
-            <span id="startDate-error">{errors.startDate}</span>
+            <span id={controlId("startDate-error")}>{errors.startDate}</span>
           )}
         </label>
-        <label htmlFor="monthly-event-recurrence">
+        <label htmlFor={controlId("recurrence")}>
           Récurrence
           <select
-            id="monthly-event-recurrence"
+            id={controlId("recurrence")}
             name="recurrence"
             value={values.recurrence}
             onChange={update}
@@ -199,14 +219,14 @@ export const MonthlyEventForm = ({
             ))}
           </select>
           {errors.recurrence && (
-            <span id="recurrence-error">{errors.recurrence}</span>
+            <span id={controlId("recurrence-error")}>{errors.recurrence}</span>
           )}
         </label>
         {isRepeatingEvent(values.recurrence) && (
-          <label htmlFor="monthly-event-end-date">
+          <label htmlFor={controlId("end-date")}>
             Date de fin <span>(facultative)</span>
             <input
-              id="monthly-event-end-date"
+              id={controlId("end-date")}
               type="date"
               name="endDate"
               value={values.endDate}
@@ -214,14 +234,16 @@ export const MonthlyEventForm = ({
               onChange={update}
               {...field("endDate")}
             />
-            {errors.endDate && <span id="endDate-error">{errors.endDate}</span>}
+            {errors.endDate && (
+              <span id={controlId("endDate-error")}>{errors.endDate}</span>
+            )}
           </label>
         )}
         <fieldset>
           <legend>Impact sur le budget</legend>
-          <label htmlFor="monthly-event-expense">
+          <label htmlFor={controlId("expense")}>
             <input
-              id="monthly-event-expense"
+              id={controlId("expense")}
               type="radio"
               name="kind"
               value="DEPENSE"
@@ -230,9 +252,9 @@ export const MonthlyEventForm = ({
             />
             Dépense
           </label>
-          <label htmlFor="monthly-event-income">
+          <label htmlFor={controlId("income")}>
             <input
-              id="monthly-event-income"
+              id={controlId("income")}
               type="radio"
               name="kind"
               value="ENTREE"
@@ -242,48 +264,54 @@ export const MonthlyEventForm = ({
             Entrée
           </label>
         </fieldset>
-        <div className="monthly-event-form__actions">
-          {event && !confirmDelete && (
-            <button
-              type="button"
-              className="monthly-event-button monthly-event-button--danger"
-              onClick={() => setConfirmDelete(true)}
-              disabled={isSaving}
-            >
-              Supprimer
-            </button>
-          )}
-          {event && confirmDelete && (
-            <div className="monthly-event-delete-confirmation" role="alert">
-              <span>Confirmer la suppression ?</span>
-              <button type="button" onClick={onDelete} disabled={isSaving}>
-                Oui, supprimer
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmDelete(false)}
-                disabled={isSaving}
-              >
-                Annuler
-              </button>
-            </div>
-          )}
-          <button
+        <FormActions
+          className="monthly-event-form__actions"
+          destructive={
+            <>
+              {event && !confirmDelete && (
+                <ActionButton
+                  action="delete"
+                  ref={deleteTrigger}
+                  type="button"
+                  className="monthly-event-button monthly-event-button--danger"
+                  onClick={() => setConfirmDelete(true)}
+                  disabled={isSaving}
+                >
+                  Supprimer
+                </ActionButton>
+              )}
+              {event && confirmDelete && (
+                <DeleteConfirmation
+                  title={event.title}
+                  busy={isSaving}
+                  onConfirm={onDelete}
+                  onCancel={() => setConfirmDelete(false)}
+                  returnFocusRef={deleteTrigger}
+                  className="monthly-event-delete-confirmation"
+                />
+              )}
+            </>
+          }
+        >
+          <ActionButton
+            action="cancel"
             type="button"
             className="monthly-event-button monthly-event-button--secondary"
             onClick={onCancel}
             disabled={isSaving}
           >
             Annuler
-          </button>
-          <button
+          </ActionButton>
+          <ActionButton
+            action="save"
             type="submit"
             className="monthly-event-button"
             disabled={isSaving}
+            busy={isSaving}
           >
             {isSaving ? "Enregistrement…" : "Enregistrer"}
-          </button>
-        </div>
+          </ActionButton>
+        </FormActions>
       </form>
     </section>
   );

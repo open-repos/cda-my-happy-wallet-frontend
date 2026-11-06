@@ -236,6 +236,13 @@ Le parcours local relie quatre elements :
 l'emulateur sous l'adresse `127.0.0.1`. Il n'est donc pas necessaire de chercher
 l'adresse IP du PC pour un emulateur Android local.
 
+Metro doit donc ecouter en IPv4. Dans Node 22, `localhost` se resout d'abord
+en `::1` : `compose.dev-client.yml` fixe
+`NODE_OPTIONS=--dns-result-order=ipv4first`, et le lanceur verifie Metro sur
+`http://127.0.0.1:8081/status`. Si le development build reste sur l'ecran
+« Development servers », verifier `ss -ltn | grep 8081` : une seule ecoute
+`[::1]:8081` signale ce probleme (#222).
+
 ## Choisir l'origine API Android
 
 Le lanceur utilise par defaut `http://127.0.0.1:4200`. Cette origine fonctionne
@@ -412,6 +419,7 @@ docker run --rm -it \
   -e HOME=/tmp \
   -e npm_config_cache=/tmp/npm-cache \
   -e EXPO_UNSTABLE_HEADLESS=1 \
+  -e NODE_OPTIONS=--dns-result-order=ipv4first \
   -e EXPO_PUBLIC_API_ORIGIN=http://127.0.0.1:4200 \
   -v "$PATH_TO_APP/my-happy-wallet-frontend/mobile:/app" \
   -w /app \
@@ -594,7 +602,9 @@ Un serveur Metro est peut-etre deja actif. Ne pas accepter automatiquement le
 port `8082`, car le development build et la commande `adb reverse` utilisent
 `8081` dans ce guide.
 
-Identifier d'abord le processus et les conteneurs actifs :
+Identifier d'abord le processus et les conteneurs actifs. Une seule ecoute
+`[::1]:8081` signale un Metro lance sans `NODE_OPTIONS` : il est injoignable
+par l'emulateur ; l'arreter et le relancer (#222).
 
 ```bash
 ss -ltnp 'sport = :8081'

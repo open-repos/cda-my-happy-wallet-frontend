@@ -1,0 +1,102 @@
+.form-dialog {
+  position: fixed;
+  inset-inline: 0;
+  top: var(--quick-add-viewport-top, 0px);
+  height: var(--quick-add-viewport-height, 100dvh);
+  z-index: var(--ds-z-index-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ds-primitive-space-4);
+  text-align: left;
+}
+.form-dialog__backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: rgb(0 0 0 / 40%);
+}
+.form-dialog__surface {
+  position: relative;
+  background: var(--ds-color-background-elevated);
+  color: var(--ds-color-text-primary);
+  width: 100%;
+  max-width: 42rem;
+  max-height: calc(var(--quick-add-viewport-height, 100dvh) - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: var(--ds-border-width-default) solid var(--ds-color-border-subtle);
+  border-radius: var(--ds-primitive-radius-lg);
+  padding: var(--ds-primitive-space-4);
+  box-shadow: var(--ds-shadow-overlay);
+  min-width: 0;
+  overflow-wrap: anywhere;
+  scroll-padding-block: var(--ds-primitive-space-4);
+}
+.form-dialog__surface
+  :is(.one-off-form-panel, .monthly-event-form-panel, .fixed-charge-form) {
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+}
+.form-dialog :is(button, input, select, textarea):focus-visible {
+  outline: var(--ds-border-width-focus) solid var(--ds-color-focus-ring);
+  outline-offset: 0;
+}
+@media (max-width: 767px) {
+  .form-dialog {
+    padding: var(--ds-primitive-space-3);
+    align-items: flex-end;
+    padding-bottom: calc(
+      var(--ds-primitive-space-3) + env(safe-area-inset-bottom, 0px)
+    );
+  }
+  .form-dialog__surface {
+    max-height: calc(
+      var(--quick-add-viewport-height, 100dvh) - 1.5rem -
+        env(safe-area-inset-bottom, 0px)
+    );
+  }
+}
+
+/* Confirmation modals reuse the inline confirmation markup without its
+   page-level frame. */
+.confirm-dialog__surface {
+  max-width: 34rem;
+}
+.confirm-dialog__surface > :is(fieldset, div, section) {
+  /* Inline confirmations tinted their own error surface; here the dialog
+     surface is the background, so its text colour applies. */
+  color: inherit;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--ds-primitive-space-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.confirm-dialog__surface > * > :is(legend, span, p) {
+  flex: 1 0 100%;
+  margin: 0;
+}
+.confirm-dialog__surface > * > legend,
+.confirm-dialog__surface > div > span,
+.confirm-dialog__surface > section > p:first-child {
+  color: inherit;
+  font-weight: var(--ds-primitive-font-weight-semibold);
+}
+.confirm-dialog__error:empty {
+  display: none;
+}
+.confirm-dialog__error {
+  margin: var(--ds-primitive-space-3) 0 0;
+  padding: var(--ds-primitive-space-3);
+  border-radius: var(--ds-radius-control);
+  background: var(--ds-color-status-error-surface);
+  color: var(--ds-color-status-error-text);
+}

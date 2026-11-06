@@ -1,12 +1,19 @@
 import { expect, test } from "@playwright/test";
 import { prepareProtectedPage } from "./fixtures.mjs";
 import { prepareSimulationPage } from "../e2e/simulationFixture.mjs";
+import { prepareFullContentCapture } from "./fullContentCapture.mjs";
 
 const definitions = [
   { name: "login", path: "/login", ready: ".login_form" },
   { name: "register", path: "/register", ready: ".register_form" },
   { name: "home", path: "/home", ready: ".home-budget__amount", chart: true },
   { name: "calendar", path: "/calendrier", ready: ".budget-day" },
+  {
+    name: "calendar-forecast",
+    path: "/calendrier",
+    ready: ".budget-day__value",
+    mode: "forecast",
+  },
   {
     name: "simulation-calendar",
     path: "/calendrier",
@@ -33,7 +40,7 @@ const definitions = [
     ready: ".analytics-chart",
     chart: true,
   },
-  { name: "profile", path: "/profil", ready: ".theme-selector" },
+  { name: "profile", path: "/profil", ready: ".profil-container h1" },
 ];
 
 async function ready(page, theme, authenticated = true, simulation = false) {
@@ -124,8 +131,21 @@ for (const theme of ["light", "dark"]) {
         !["/login", "/register"].includes(definition.path),
         definition.simulation
       );
+      if (definition.mode)
+        await page.addInitScript(
+          (mode) => localStorage.setItem("mhw.calendar.mode", mode),
+          definition.mode
+        );
       await page.goto(definition.path);
       await expect(page.locator(definition.ready).first()).toBeVisible();
+      if (definition.name === "calendar-forecast") {
+        // #379: the selected day explains its cumulative daily remaining.
+        await page.getByRole("button", { name: /^20 octobre 2026,/ }).click();
+        await expect(
+          page.getByText(/^Reste à vivre du jour : 611,50/)
+        ).toBeVisible();
+        await page.evaluate(() => window.scrollTo(0, 0));
+      }
       if (definition.simulation) {
         await page
           .getByRole("switch", { name: "Simulation", exact: true })
@@ -144,7 +164,7 @@ for (const theme of ["light", "dark"]) {
         // Interacting below the fold scrolls the page. Keep fixed navigation
         // at the top of the full-page reference, as on the other screens.
         await page.evaluate(() => window.scrollTo(0, 0));
-      } else if (["calendar", "budget-forecast"].includes(definition.name)) {
+      } else if (definition.name === "calendar") {
         await expect(
           page.getByText("Votre simulation est vide.", { exact: true })
         ).toBeVisible();
@@ -161,13 +181,17 @@ for (const theme of ["light", "dark"]) {
         await expect(page.locator("main canvas").first()).toBeVisible();
         await stableCharts(page);
       }
-      if (definition.name === "events-goals")
+      if (definition.name === "events-goals") {
         await expect(
           page.getByRole("article", { name: "Vélo", exact: true })
         ).toBeVisible();
+        // The taller trajectory can scroll the capacity readiness assertion.
+        // Full-page references must keep the fixed navigation at the page top.
+        await page.evaluate(() => window.scrollTo(0, 0));
+      }
       if (definition.name === "operations") {
         const ratio = await page
-          .locator(".one-off-table tbody th")
+          .locator(".compact-money-table tbody th")
           .first()
           .evaluate((cell) => {
             const rgb = (value) =>
@@ -187,14 +211,14 @@ for (const theme of ["light", "dark"]) {
                 );
             const [high, low] = [
               light(getComputedStyle(cell).color),
-              light(getComputedStyle(cell.closest("tbody")).backgroundColor),
+              light(getComputedStyle(cell.closest("table")).backgroundColor),
             ].sort((a, b) => b - a);
             return (high + 0.05) / (low + 0.05);
           });
         expect(ratio).toBeGreaterThanOrEqual(4.5);
-        if (page.viewportSize().width >= 768) {
+        if (page.viewportSize().width >= 1024) {
           const alignment = await page
-            .locator(".one-off-table")
+            .locator(".compact-money-table")
             .evaluate((table) => {
               const headers = [...table.querySelectorAll("thead th")];
               const cells = [...table.querySelector("tbody tr").children];
@@ -209,6 +233,7 @@ for (const theme of ["light", "dark"]) {
         }
       }
       await layout(page);
+      await prepareFullContentCapture(page);
       await expect(page).toHaveScreenshot(`${definition.name}-${theme}.png`, {
         fullPage: true,
       });
@@ -245,9 +270,13 @@ for (const theme of ["light", "dark"]) {
           empty: "Pas encore d’opération",
           error: "La liste est momentanément indisponible",
         }[state];
-        await expect(
-          page.getByRole("heading", { name: heading })
-        ).toBeVisible();
+        const stateHeading =
+          state === "loading"
+            ? page
+                .locator('h2[aria-hidden="true"]')
+                .filter({ hasText: heading })
+            : page.getByRole("heading", { name: heading });
+        await expect(stateHeading).toBeVisible();
         // Chargement annoncé par une région live toujours montée (#164).
         if (state === "loading")
           await expect(
@@ -258,6 +287,7 @@ for (const theme of ["light", "dark"]) {
             page.getByRole("button", { name: "Réessayer" })
           ).toBeVisible();
         await layout(page);
+        await prepareFullContentCapture(page);
         await expect(page).toHaveScreenshot(
           `operations-${state}-${theme}.png`,
           { fullPage: true }

@@ -78,15 +78,17 @@ const login = async (page, email) => {
   await page.getByRole("button", { name: "Connexion", exact: true }).click();
   await assertResponse(await authenticated, 200);
   await expect(page).toHaveURL(/\/(?:home|operations)$/);
+  // Atelier: drawer toggle below 1200 px, permanent navigation above.
   await expect(
-    page.getByRole("button", { name: "Ouvrir le menu", exact: true })
+    page
+      .getByRole("button", { name: "Ouvrir le menu", exact: true })
+      .or(page.getByRole("navigation", { name: "Navigation principale" }))
   ).toBeVisible();
 };
 const navigateOperations = async (page) => {
-  const link = page.getByRole("link", {
-    name: "Liste Opérations",
-    exact: true,
-  });
+  const link = page
+    .getByRole("navigation", { name: "Navigation principale" })
+    .getByRole("link", { name: "Opérations", exact: true });
   if (!(await link.isVisible()))
     await page
       .getByRole("button", { name: "Ouvrir le menu", exact: true })

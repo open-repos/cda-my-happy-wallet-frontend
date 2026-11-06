@@ -1,5 +1,6 @@
+import { ActionButton } from "@/src/design/ActionButton";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { primitives, semantic, themes } from "@/src/design/tokens";
 import { FixedOperation } from "@/src/features/dashboard/domain/fixedBudget";
@@ -53,19 +54,14 @@ export const FixedOperationCard = ({
       >
         {isIncome ? "+" : "−"} {formatAmount(operation)}
       </Text>
-      <Pressable
+      <ActionButton
+        action="edit"
         accessibilityLabel={`Modifier ${operation.title}`}
         accessibilityRole="button"
         hitSlop={primitives.space["2"]}
         onPress={() => onEdit(operation)}
         style={({ pressed }) => [styles.edit, pressed && styles.pressed]}
-      >
-        <Ionicons
-          color={colors.textSecondary}
-          name="create-outline"
-          size={23}
-        />
-      </Pressable>
+      ></ActionButton>
     </View>
   );
 };

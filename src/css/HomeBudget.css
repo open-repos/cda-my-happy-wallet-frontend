@@ -172,9 +172,10 @@
   min-width: 0;
 }
 
+/* Square ring that never outgrows its card, even with enlarged text. */
 .home-ring {
-  width: 10rem;
-  height: 10rem;
+  width: min(10rem, 100%);
+  aspect-ratio: 1;
 }
 
 .home-goals {

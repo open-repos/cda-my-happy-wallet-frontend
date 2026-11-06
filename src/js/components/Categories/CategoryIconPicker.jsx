@@ -27,22 +27,32 @@ const Glyph = ({ definition }) => {
 export const CategoryIconPicker = ({ value, onChange, name, color }) => {
   const { pack, failed, retry } = useCategoryIconPack();
   const [query, setQuery] = useState("");
+  const results = useMemo(
+    () => (pack ? searchCategoryIcons(query, [...pack.keys()]) : []),
+    [pack, query]
+  );
   const options = useMemo(() => {
     if (!pack) return [];
-    const results = searchCategoryIcons(query, [...pack.keys()]);
     // L'icône actuelle reste visible et cochée, même hors des résultats ou
     // retirée de la liste Web (elle s'affiche alors sans tracé).
     return value && !results.includes(value) ? [value, ...results] : results;
-  }, [pack, query, value]);
+  }, [pack, results, value]);
+  const unavailableLabel = "icône indisponible, pastille de couleur";
+  const previewLabel =
+    value && pack
+      ? pack.has(value)
+        ? `icône ${iconLabel(value)}`
+        : unavailableLabel
+      : "pastille de couleur";
   const displayName = name.trim() || "Nouvelle catégorie";
   const status = failed
     ? ""
     : pack === null
     ? "Chargement des icônes…"
-    : options.length === 0
+    : results.length === 0
     ? `Aucune icône ne correspond à « ${query.trim()} ».`
-    : `${options.length} icône${options.length > 1 ? "s" : ""} proposée${
-        options.length > 1 ? "s" : ""
+    : `${results.length} icône${results.length > 1 ? "s" : ""} proposée${
+        results.length > 1 ? "s" : ""
       }.`;
 
   const handleSearchKey = (event) => {
@@ -78,9 +88,7 @@ export const CategoryIconPicker = ({ value, onChange, name, color }) => {
         <div
           className="category-icons__preview"
           role="img"
-          aria-label={`Aperçu : ${displayName}, ${
-            value ? `icône ${iconLabel(value)}` : "pastille de couleur"
-          }`}
+          aria-label={`Aperçu : ${displayName}, ${previewLabel}`}
         >
           <CategoryMark category={{ icon: value, color }} size="2rem" />
           <span aria-hidden="true">{displayName}</span>
@@ -115,12 +123,9 @@ export const CategoryIconPicker = ({ value, onChange, name, color }) => {
         <div className="category-icons__grid">
           {options.map((icon) => {
             const definition = pack.get(icon);
+            const label = definition ? iconLabel(icon) : unavailableLabel;
             return (
-              <label
-                key={icon}
-                className="category-icon-option"
-                title={iconLabel(icon)}
-              >
+              <label key={icon} className="category-icon-option" title={label}>
                 <input
                   type="radio"
                   name="categoryIcon"
@@ -133,7 +138,7 @@ export const CategoryIconPicker = ({ value, onChange, name, color }) => {
                 ) : (
                   <CategoryMark category={{ color }} />
                 )}
-                <span className="sr-only">{iconLabel(icon)}</span>
+                <span className="sr-only">{label}</span>
               </label>
             );
           })}

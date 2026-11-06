@@ -1,6 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import { MutationMessage } from "../Notifications/MutationMessage";
+import { ConfirmDialog } from "../Forms/ConfirmDialog";
+import { ActionButton } from "../Actions/ActionButton";
+import React, { useRef, useState } from "react";
 import { useSimulation } from "./SimulationContext";
 import { SimulationReadout } from "./SimulationControls";
+import { useAnnouncesLoading } from "../../hooks/useAnnouncesLoading";
 import { usePotentialEvents } from "../../hooks/usePotentialEvents";
 import { useFormFocus } from "../../hooks/useFormFocus";
 import { monthlyEventsService } from "../../services/monthlyEventsService";
@@ -9,52 +13,64 @@ import { LiveMessage } from "../LiveMessage";
 import { formatMoney, longDate } from "../BudgetCalendar/budgetFormat";
 import { potentialExpiration } from "../../utils/budgetSimulation";
 import { forecastToday } from "../../utils/budgetForecast";
-
-const Confirmation = ({ title, label, disabled, onConfirm, onCancel }) => {
+const Confirmation = ({
+  title,
+  label,
+  disabled,
+  error,
+  onConfirm,
+  onCancel,
+}) => {
   const cancel = useRef(null);
   useFormFocus(cancel);
-  useEffect(() => {
-    const key = (event) => {
-      if (event.key === "Escape" && !disabled) {
-        event.preventDefault();
-        onCancel();
-      }
-    };
-    document.addEventListener("keydown", key);
-    return () => document.removeEventListener("keydown", key);
-  }, [disabled, onCancel]);
   return (
-    <section
-      className="simulation-confirmation"
-      role="group"
-      aria-label={title}
+    <ConfirmDialog
+      label={title}
+      busy={disabled}
+      error={error}
+      onCancel={onCancel}
     >
-      <p>{title}</p>
-      <button
-        type="button"
-        ref={cancel}
-        className="monthly-event-button monthly-event-button--secondary"
-        disabled={disabled}
-        onClick={onCancel}
-        aria-label="Annuler la confirmation"
+      <section
+        className="simulation-confirmation"
+        role="group"
+        aria-label={title}
       >
-        Annuler
-      </button>
-      <button
-        type="button"
-        className="monthly-event-button"
-        disabled={disabled}
-        onClick={onConfirm}
-      >
-        {label}
-      </button>
-    </section>
+        <p>{title}</p>
+        <ActionButton
+          action="cancel"
+          type="button"
+          ref={cancel}
+          className="monthly-event-button monthly-event-button--secondary"
+          disabled={disabled}
+          onClick={onCancel}
+          aria-label="Annuler la confirmation"
+        >
+          Annuler
+        </ActionButton>
+        <button
+          type="button"
+          className="monthly-event-button"
+          disabled={disabled}
+          onClick={onConfirm}
+        >
+          {label}
+        </button>
+      </section>
+    </ConfirmDialog>
   );
 };
-
-export const SimulationPanel = ({ month, disabled = false }) => {
+export const SimulationPanel = ({
+  month,
+  disabled = false,
+  readout = true,
+}) => {
   const state = useSimulation();
   const potentials = usePotentialEvents();
+  // Une actualisation après modification n'annonce que son résultat (#171).
+  const announcesPotentials = useAnnouncesLoading(
+    potentials.status,
+    "potentials"
+  );
   const [pending, setPending] = useState(null);
   const [edited, setEdited] = useState(null);
   const busy = disabled || state.mutationStatus === "loading";
@@ -63,7 +79,10 @@ export const SimulationPanel = ({ month, disabled = false }) => {
     trigger.focus();
     setEdited(null);
     state.setActiveForm("simulation-confirmation");
-    setPending({ action, event });
+    setPending({
+      action,
+      event,
+    });
   };
   const confirm = async () => {
     const { action, event } = pending;
@@ -95,14 +114,15 @@ export const SimulationPanel = ({ month, disabled = false }) => {
       aria-labelledby="simulation-panel-title"
     >
       <h2 id="simulation-panel-title">Simulation</h2>
-      <SimulationReadout month={month} />
-      <LiveMessage
+      {readout && <SimulationReadout month={month} />}
+      <MutationMessage
+        success={state.mutationStatus === "success"}
         message={state.message}
         isError={state.mutationStatus === "error"}
       />
       <LiveMessage
         message={
-          potentials.status === "loading"
+          announcesPotentials
             ? "Chargement des éléments potentiels…"
             : potentials.status === "error"
             ? "Les éléments potentiels n’ont pas pu être chargés."
@@ -161,7 +181,8 @@ export const SimulationPanel = ({ month, disabled = false }) => {
                       mois.
                     </p>
                     <div className="planning-actions">
-                      <button
+                      <ActionButton
+                        action="confirm"
                         type="button"
                         className="monthly-event-button"
                         disabled={busy}
@@ -175,8 +196,9 @@ export const SimulationPanel = ({ month, disabled = false }) => {
                         }
                       >
                         Confirmer
-                      </button>
-                      <button
+                      </ActionButton>
+                      <ActionButton
+                        action="edit"
                         type="button"
                         className="monthly-event-button monthly-event-button--secondary"
                         disabled={busy}
@@ -188,8 +210,9 @@ export const SimulationPanel = ({ month, disabled = false }) => {
                         }}
                       >
                         Modifier
-                      </button>
-                      <button
+                      </ActionButton>
+                      <ActionButton
+                        action="delete"
                         type="button"
                         className="monthly-event-button monthly-event-button--secondary"
                         disabled={busy}
@@ -199,7 +222,7 @@ export const SimulationPanel = ({ month, disabled = false }) => {
                         }
                       >
                         Supprimer
-                      </button>
+                      </ActionButton>
                     </div>
                   </li>
                 ))}
@@ -225,6 +248,7 @@ export const SimulationPanel = ({ month, disabled = false }) => {
               : "Oui, vider la simulation"
           }
           disabled={busy}
+          error={state.mutationStatus === "error" ? state.message : ""}
           onCancel={() => {
             setPending(null);
             state.setActiveForm(null);

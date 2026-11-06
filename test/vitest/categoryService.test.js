@@ -1,3 +1,4 @@
+import { AcknowledgedWriteError } from "../../src/js/utils/acknowledgedWrite";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   categoryErrorCode,
@@ -19,6 +20,20 @@ const saved = { id: 9, name: "Loisirs", color: "#275DAD", icon: null };
 beforeEach(() => vi.clearAllMocks());
 
 describe("categoryService", () => {
+  it("preserves the fixed-kind restriction and rejects an unknown kind", async () => {
+    apiPrivate.post.mockResolvedValueOnce({
+      data: { data: { ...saved, fixedKind: "REVENU" } },
+    });
+    await expect(
+      categoryService.create({ name: "Loisirs", color: null })
+    ).resolves.toMatchObject({ fixedKind: "REVENU" });
+    apiPrivate.post.mockResolvedValueOnce({
+      data: { data: { ...saved, fixedKind: "UNKNOWN" } },
+    });
+    await expect(
+      categoryService.create({ name: "Loisirs", color: null })
+    ).rejects.toThrow(AcknowledgedWriteError);
+  });
   it("creates a category and validates the returned contract", async () => {
     apiPrivate.post.mockResolvedValue({ data: { data: saved } });
 

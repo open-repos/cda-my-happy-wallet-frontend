@@ -1,10 +1,27 @@
 import React from "react";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import ListeOperations from "../../src/js/pages/ListeOperations";
 import { useOneOffOperations } from "../../src/js/hooks/useOneOffOperations";
 import { captureLiveRegions, expectAnnouncedIn } from "./liveRegions";
+
+// Les en-têtes triables portent aussi « Date », « Montant »… (#361).
+const formField = (label) =>
+  within(document.querySelector("form.one-off-form")).getByLabelText(label);
+vi.mock("../../src/js/services/envelopesService", async (original) => ({
+  ...(await original()),
+  envelopesService: {
+    allOccurrences: async () => [],
+    link: async (operationId) => ({ operationId, occurrenceId: null }),
+  },
+}));
 
 vi.mock("../../src/js/hooks/useOneOffOperations", () => ({
   useOneOffOperations: vi.fn(),
@@ -90,7 +107,7 @@ describe("ListeOperations", () => {
     });
     const { rerender } = render(<ListeOperations />, { wrapper: MemoryRouter });
     expect(
-      screen.getByRole("heading", { name: "Chargement des opérations…" })
+      screen.getByText("Chargement des opérations…", { selector: "h2" })
     ).toBeInTheDocument();
 
     useOneOffOperations.mockReturnValue({
@@ -123,24 +140,23 @@ describe("ListeOperations", () => {
     fireEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
     expect(screen.getByText(/titre doit contenir/i)).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(/^Titre/), {
+    fireEvent.change(formField(/^Titre/), {
       target: { value: "Prime" },
     });
-    fireEvent.change(screen.getByLabelText(/^Montant/), {
+    fireEvent.change(formField(/^Montant/), {
       target: { value: "0" },
     });
-    fireEvent.change(screen.getByLabelText(/^Date/), {
+    fireEvent.change(formField(/^Date/), {
       target: { value: "2026-08-18" },
     });
-    fireEvent.change(screen.getByLabelText(/^Catégorie/), {
-      target: { value: "2" },
-    });
+    fireEvent.click(screen.getByRole("combobox", { name: "Catégorie" }));
+    fireEvent.click(screen.getByRole("option", { name: "Alimentation" }));
     fireEvent.click(screen.getByLabelText("Entrée"));
     fireEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
     expect(actions.createOperation).not.toHaveBeenCalled();
     expect(screen.getByText(/montant positif/i)).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(/^Montant/), {
+    fireEvent.change(formField(/^Montant/), {
       target: { value: "125.50" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
@@ -162,11 +178,67 @@ describe("ListeOperations", () => {
     render(<ListeOperations />, { wrapper: MemoryRouter });
     fireEvent.click(screen.getByRole("button", { name: "Modifier Courses" }));
     expect(
-      screen.getByRole("heading", { name: "Modifier l’opération" })
+      screen.getByRole("textbox", { name: "Titre" }).closest("tr")
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Modifier l’opération" })
+    ).not.toBeInTheDocument();
     expect(screen.getByLabelText("Titre")).toHaveValue("Courses");
-    fireEvent.click(screen.getByRole("button", { name: "Supprimer" }));
+    fireEvent.click(screen.getByRole("button", { name: "Annuler" }));
+    fireEvent.click(screen.getByRole("button", { name: "Supprimer Courses" }));
     fireEvent.click(screen.getByRole("button", { name: "Oui, supprimer" }));
     expect(actions.deleteOperation).toHaveBeenCalledWith(7);
+  });
+
+  it("reads sort and filters from the URL and updates it from the headers (#361)", () => {
+    let location;
+    const Spy = () => {
+      location = useLocation();
+      return null;
+    };
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/operations?sort=amount&order=asc&type=ENTREE&tab=keep",
+        ]}
+      >
+        <ListeOperations />
+        <Spy />
+      </MemoryRouter>
+    );
+    expect(useOneOffOperations).toHaveBeenLastCalledWith({
+      sort: { field: "amount", order: "asc" },
+      filters: expect.objectContaining({ type: "ENTREE", categoryIds: [] }),
+    });
+    const amount = screen.getByRole("columnheader", { name: /Montant/ });
+    expect(amount).toHaveAttribute("aria-sort", "ascending");
+    expect(
+      // jsdom ne reprend pas l'aria-label du bouton dans le nom du `th`.
+      screen.getByRole("button", { name: /^Trier : Date/ }).closest("th")
+    ).not.toHaveAttribute("aria-sort");
+    // Le filtre actif reste visible même si aucune ligne ne correspond.
+    useOneOffOperations.mockReturnValue({ ...successfulState, operations: [] });
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Trier : Montant, trié par ordre croissant. Activer pour trier par ordre décroissant.",
+      })
+    );
+    expect(new URLSearchParams(location.search).get("order")).toBe("desc");
+    expect(new URLSearchParams(location.search).get("tab")).toBe("keep");
+    expect(useOneOffOperations).toHaveBeenLastCalledWith(
+      expect.objectContaining({ sort: { field: "amount", order: "desc" } })
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Trier et filtrer (1 filtre)" })
+    );
+    expect(
+      screen.getByText("Aucune opération ne correspond à ces filtres.")
+    ).toHaveAttribute("role", "status");
+    expect(screen.queryByText("Pas encore d’opération")).toBeNull();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Effacer les filtres" })
+    );
+    expect(location.search).toBe("?tab=keep&sort=amount&order=desc");
+    expect(screen.getByText("Pas encore d’opération")).toBeVisible();
   });
 });

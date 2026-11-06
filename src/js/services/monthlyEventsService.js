@@ -1,3 +1,4 @@
+import { parseAcknowledgedWrite } from "../utils/acknowledgedWrite";
 import { apiPrivate } from "../../utils/axiosHelper";
 import { isEventRecurrence } from "../utils/eventRecurrences";
 import { scenarioParams } from "../utils/budgetSimulation";
@@ -115,7 +116,7 @@ export const monthlyEventsService = {
       { ...toBody(event), status: "POTENTIEL" },
       { withCredentials: true }
     );
-    return parsePotential(response.data?.data);
+    return parseAcknowledgedWrite(parsePotential, response.data?.data);
   },
   async confirmPotentialEvent(id) {
     const response = await apiPrivate.post(`/events/${id}/confirm`, undefined, {
@@ -133,13 +134,13 @@ export const monthlyEventsService = {
     const response = await apiPrivate.post("/events", toBody(event), {
       withCredentials: true,
     });
-    return parseMonthlyEvent(response.data?.data);
+    return parseAcknowledgedWrite(parseMonthlyEvent, response.data?.data);
   },
   async updateEvent(id, event) {
     const response = await apiPrivate.put(`/events/${id}`, toBody(event), {
       withCredentials: true,
     });
-    return parseMonthlyEvent(response.data?.data);
+    return parseAcknowledgedWrite(parseMonthlyEvent, response.data?.data);
   },
   async deleteEvent(id) {
     await apiPrivate.delete(`/events/${id}`, { withCredentials: true });

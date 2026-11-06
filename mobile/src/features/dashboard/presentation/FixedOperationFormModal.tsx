@@ -1,3 +1,4 @@
+import { ActionButton } from "@/src/design/ActionButton";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useMemo, useState } from "react";
 import {
@@ -169,14 +170,14 @@ export const FixedOperationFormModal = ({
 
               <View style={styles.actions}>
                 {operation != null ? (
-                  <Pressable
+                  <ActionButton
+                    action="delete"
+                    label="Supprimer"
                     accessibilityRole="button"
                     disabled={isSaving}
                     onPress={onDelete}
                     style={[styles.button, styles.deleteButton]}
-                  >
-                    <Text style={styles.deleteLabel}>Supprimer</Text>
-                  </Pressable>
+                  ></ActionButton>
                 ) : null}
                 <Pressable
                   accessibilityRole="button"

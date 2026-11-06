@@ -1,4 +1,4 @@
-import { BarChart, PieChart } from "echarts/charts";
+import { BarChart, GaugeChart, PieChart } from "echarts/charts";
 import { GridComponent } from "echarts/components";
 import * as echarts from "echarts/core";
 import { SVGRenderer } from "echarts/renderers";
@@ -7,7 +7,7 @@ import { View } from "react-native";
 
 // Un élément HTML utilise le moteur ECharts standard. Le moteur Wuba natif
 // attend getChartSize/patch sur son hôte et ne fonctionne pas sur un div.
-echarts.use([SVGRenderer, BarChart, PieChart, GridComponent]);
+echarts.use([SVGRenderer, BarChart, GaugeChart, PieChart, GridComponent]);
 
 export const NativeChart = ({
   option,

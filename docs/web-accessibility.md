@@ -43,6 +43,12 @@ avec VoiceOver/TalkBack ou un appareil iOS/Android. Le zoom testé agrandit le t
 CSS ; il ne prétend pas reproduire toutes les fonctions de zoom des navigateurs.
 L'installation PWA appartient aux tickets dédiés.
 
+Le suivi #257 borne la largeur du menu ouvert à la fenêtre et permet le retour
+à la ligne des libellés longs, sans les tronquer. Les icônes gardent leur taille,
+la liste défile au-dessus du profil si la hauteur manque et les liens conservent
+une cible d’au moins 44 pixels. Les tests responsive vérifient les limites réelles
+des textes à 320, 375 et 390 pixels, à 200 %, et dans les deux thèmes.
+
 ## Livraison et retour arrière
 
 Aucune configuration, migration, dépendance ou donnée persistante nouvelle.

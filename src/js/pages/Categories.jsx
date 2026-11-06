@@ -1,6 +1,9 @@
+import { MutationMessage } from "../components/Notifications/MutationMessage";
+import { ActionButton } from "../components/Actions/ActionButton";
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { LiveMessage } from "../components/LiveMessage";
+import { useAnnouncesLoading } from "../hooks/useAnnouncesLoading";
 import addIcon from "../../assets/icons/add.svg";
 import { CategoryForm } from "../components/Categories/CategoryForm";
 import { CategoryMark } from "../components/Categories/CategoryLabel";
@@ -12,6 +15,8 @@ function Categories() {
   const [editedCategory, setEditedCategory] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const state = useCategories();
+  // Une seule liste sans filtre : les commandes ne changent pas sa clé.
+  const announcesLoading = useAnnouncesLoading(state.status, "categories");
   const isError = state.status === "error" || state.mutationStatus === "error";
   const addButtonRef = useRef(null);
   const triggerRef = useRef(null);
@@ -74,18 +79,19 @@ function Categories() {
             </Link>
           </p>
         </div>
-        <button
+        <ActionButton
+          action="add"
           ref={addButtonRef}
           type="button"
           className="one-off-button"
           onClick={openCreate}
           disabled={state.status !== "success"}
         >
-          <img src={addIcon} alt="" aria-hidden="true" />
           Ajouter une catégorie
-        </button>
+        </ActionButton>
       </header>
-      <LiveMessage
+      <MutationMessage
+        success={state.mutationStatus === "success"}
         message={state.message}
         isError={isError}
         className="one-off-message"
@@ -103,13 +109,13 @@ function Categories() {
       )}
       {/* Chargement annoncé par une région live toujours montée (#164). */}
       <LiveMessage
-        message={state.status === "loading" ? "Chargement des catégories…" : ""}
+        message={announcesLoading ? "Chargement des catégories…" : ""}
         visible={false}
       />
       {state.status === "loading" && (
         <section className="one-off-state">
           <span className="one-off-loader" aria-hidden="true" />
-          <h2>Chargement des catégories…</h2>
+          <h2 aria-hidden="true">Chargement des catégories…</h2>
         </section>
       )}
       {state.status === "error" && (
@@ -159,14 +165,15 @@ function Categories() {
                     <span className="categories-list__hint">Sans couleur</span>
                   )}
                 </span>
-                <button
+                <ActionButton
+                  action="edit"
                   type="button"
                   className="one-off-button one-off-button--secondary"
                   onClick={(event) => openEdit(category, event)}
                   aria-label={`Modifier ${category.name}`}
                 >
                   Modifier
-                </button>
+                </ActionButton>
               </li>
             ))}
           </ul>

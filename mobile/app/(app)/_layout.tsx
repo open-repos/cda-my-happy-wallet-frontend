@@ -1,12 +1,21 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Tabs } from "expo-router";
-import { Platform, useWindowDimensions, type ColorValue } from "react-native";
+import { Tabs, useTheme } from "expo-router";
+import {
+  Platform,
+  Text,
+  useWindowDimensions,
+  type ColorValue,
+} from "react-native";
 
 import {
   APP_DESTINATIONS,
   AppDestination,
 } from "@/src/navigation/appDestinations";
 import { primitives, semantic, themes } from "@/src/design/tokens";
+import { SimulationProvider } from "@/src/features/simulation/presentation/SimulationContext";
+import { TAB_LABEL_TEXT_PROPS } from "@/src/navigation/tabLabel";
+
+import { QuickAddProvider } from "@/src/features/quick-add/presentation/QuickAddProvider";
 
 const colors = themes.light.color;
 const desktopNavigationBreakpoint = 1024;
@@ -15,8 +24,36 @@ const desktopNavigationBreakpoint = 1024;
 const tabletBreakpoint = 768;
 const semiboldFontWeight = `${primitives.fontWeight.semibold}` as "600";
 
-const createTabOptions = (destination: AppDestination) => ({
+type TabLabelProps = {
+  color: ColorValue;
+  children: string;
+};
+
+// Libellé sous l'icône borné avec les grandes polices (#155) ; le nom
+// accessible complet reste `tabBarAccessibilityLabel`. La police du thème
+// est celle du libellé par défaut de React Navigation.
+const BoundedTabLabel = ({ color, children }: TabLabelProps) => {
+  const { fonts } = useTheme();
+  return (
+    <Text
+      {...TAB_LABEL_TEXT_PROPS}
+      style={[fonts.medium, styles.tabLabel, { color }]}
+    >
+      {children}
+    </Text>
+  );
+};
+
+const renderBoundedTabLabel = (props: TabLabelProps) => (
+  <BoundedTabLabel {...props} />
+);
+
+const createTabOptions = (
+  destination: AppDestination,
+  labelBelowIcon: boolean,
+) => ({
   title: destination.label,
+  ...(labelBelowIcon ? { tabBarLabel: renderBoundedTabLabel } : {}),
   tabBarAccessibilityLabel: destination.accessibilityLabel,
   tabBarIcon: ({ color, focused, size }: TabIconProps) => (
     <Ionicons
@@ -37,41 +74,49 @@ export default function AppLayout() {
   const { width } = useWindowDimensions();
   const usesDesktopNavigation =
     Platform.OS === "web" && width >= desktopNavigationBreakpoint;
+  const labelBelowIcon = !usesDesktopNavigation && width < tabletBreakpoint;
 
+  // Simulation partagée par les onglets, perdue en quittant la zone (#240).
   return (
-    <Tabs
-      backBehavior="history"
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.navigationActive,
-        tabBarInactiveTintColor: colors.navigationText,
-        tabBarHideOnKeyboard: true,
-        tabBarItemStyle: usesDesktopNavigation
-          ? styles.desktopTabItem
-          : styles.tabItem,
-        tabBarLabelPosition:
-          usesDesktopNavigation || width < tabletBreakpoint
-            ? "below-icon"
-            : "beside-icon",
-        tabBarLabelStyle: styles.tabLabel,
-        tabBarPosition: usesDesktopNavigation ? "left" : "bottom",
-        tabBarShowLabel: !usesDesktopNavigation,
-        tabBarStyle: usesDesktopNavigation
-          ? styles.desktopTabBar
-          : styles.tabBar,
-        tabBarVariant: usesDesktopNavigation ? "material" : "uikit",
-      }}
-    >
-      {APP_DESTINATIONS.map((destination) => (
-        <Tabs.Screen
-          key={destination.route}
-          name={destination.route}
-          options={createTabOptions(destination)}
-        />
-      ))}
-      <Tabs.Screen name="fixed-budget" options={{ href: null }} />
-      <Tabs.Screen name="categories" options={{ href: null }} />
-    </Tabs>
+    <SimulationProvider>
+      <QuickAddProvider>
+        <Tabs
+          backBehavior="history"
+          screenOptions={{
+            headerShown: false,
+            tabBarActiveTintColor: colors.navigationActive,
+            tabBarInactiveTintColor: colors.navigationText,
+            tabBarHideOnKeyboard: true,
+            tabBarItemStyle: usesDesktopNavigation
+              ? styles.desktopTabItem
+              : styles.tabItem,
+            tabBarLabelPosition:
+              usesDesktopNavigation || labelBelowIcon
+                ? "below-icon"
+                : "beside-icon",
+            tabBarLabelStyle: styles.tabLabel,
+            tabBarPosition: usesDesktopNavigation ? "left" : "bottom",
+            tabBarShowLabel: !usesDesktopNavigation,
+            tabBarStyle: usesDesktopNavigation
+              ? styles.desktopTabBar
+              : styles.tabBar,
+            tabBarVariant: usesDesktopNavigation ? "material" : "uikit",
+          }}
+        >
+          {APP_DESTINATIONS.map((destination) => (
+            <Tabs.Screen
+              key={destination.route}
+              name={destination.route}
+              options={createTabOptions(destination, labelBelowIcon)}
+            />
+          ))}
+          <Tabs.Screen name="fixed-budget" options={{ href: null }} />
+          <Tabs.Screen name="categories" options={{ href: null }} />
+          <Tabs.Screen name="upcoming-months" options={{ href: null }} />
+          <Tabs.Screen name="analyses" options={{ href: null }} />
+        </Tabs>
+      </QuickAddProvider>
+    </SimulationProvider>
   );
 }
 
@@ -100,5 +145,6 @@ const styles = {
   tabLabel: {
     fontSize: primitives.fontSize.xs,
     fontWeight: semiboldFontWeight,
+    textAlign: "center",
   },
 } as const;

@@ -2,6 +2,7 @@ import React from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { captureLiveRegions, expectAnnouncedIn } from "./liveRegions";
 import ForgotPassword from "../../src/js/pages/ForgotPassword";
 import Login from "../../src/js/pages/Login";
 import NewPassword from "../../src/js/pages/NewPassword";
@@ -234,6 +235,9 @@ describe("authentication forms", () => {
       )
     ).toBeInTheDocument();
     expect(screen.queryByText(/Vous allez recevoir/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/vérifiez votre dossier spam ou courrier indésirable/)
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "connecter" })).toHaveAttribute(
       "href",
       "/login"
@@ -243,6 +247,19 @@ describe("authentication forms", () => {
         name: "réinitialiser votre mot de passe",
       })
     ).toHaveAttribute("href", "/forgot-password");
+  });
+
+  it("suggests checking the spam folder after a password reset request", () => {
+    mocks.authState = {
+      ...mocks.authState,
+      isEmailSent: true,
+    };
+
+    renderForm(<ForgotPassword />);
+
+    expect(
+      screen.getByText(/vérifiez votre dossier spam ou courrier indésirable/)
+    ).toBeInTheDocument();
   });
 
   it("dispatches a password reset request", () => {
@@ -336,13 +353,16 @@ describe("accessible authentication controls", () => {
   );
   it.each([Login, Register, ForgotPassword])(
     "announces loading inside the page landmark",
-    (Component) => {
+    async (Component) => {
       mocks.authState.isLoading = true;
       renderForm(<Component />);
+      // Spinner passe par LiveMessage : région montée vide, texte au tick
+      // suivant (#164, #171).
+      const captured = captureLiveRegions();
+      await expectAnnouncedIn(captured, "status", "Chargement en cours");
       expect(screen.getByRole("main")).toContainElement(
-        screen.getByRole("status", { name: "Chargement en cours" })
+        screen.getByRole("status")
       );
-      expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");
     }
   );
 });

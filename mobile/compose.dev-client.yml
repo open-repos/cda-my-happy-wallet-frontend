@@ -10,6 +10,9 @@ services:
     environment:
       EXPO_PUBLIC_API_ORIGIN: ${EXPO_PUBLIC_API_ORIGIN:-http://127.0.0.1:4200}
       EXPO_UNSTABLE_HEADLESS: "1"
+      # Node 22 resout `localhost` en ::1 d'abord : sans IPv4, Metro serait
+      # injoignable par `adb reverse` et 127.0.0.1 dans l'emulateur (#222).
+      NODE_OPTIONS: --dns-result-order=ipv4first
       HOME: /tmp
       npm_config_cache: /tmp/npm-cache
     volumes:

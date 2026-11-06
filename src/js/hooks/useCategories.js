@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useRefreshViews } from "./useRefreshViews";
+import {
+  mutationErrorMessage,
+  acknowledgeMutation,
+  useMutationFeedback,
+} from "./useMutationFeedback";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   categoryErrorCode,
   categoryService,
@@ -41,17 +47,26 @@ export const useCategories = () => {
     }
   }, []);
 
+  const refreshViews = useRefreshViews(() => load(true));
+  const feedback = useMutationFeedback(refreshViews);
+  const writing = useRef(false);
   useEffect(() => {
     load();
   }, [load]);
 
   /** Résout `{ ok, code }` : le formulaire place l'erreur près du champ. */
   const mutate = async (action, successMessage, failureMessage) => {
+    if (writing.current) return { ok: false, code: null };
+    writing.current = true;
     setMutationStatus("loading");
     setMessage("");
     try {
-      await action();
-      const reloaded = await load(true);
+      const acknowledged = await acknowledgeMutation(action);
+      const reloaded = await refreshViews();
+      feedback.confirm(successMessage, {
+        refreshed: reloaded,
+        ...acknowledged,
+      });
       setMutationStatus("success");
       setMessage(
         reloaded
@@ -63,8 +78,12 @@ export const useCategories = () => {
       const code = categoryErrorCode(error);
       if (code === "CATEGORY_NOT_FOUND") await load(true);
       setMutationStatus("error");
-      setMessage(errorMessages[code] ?? failureMessage);
+      setMessage(
+        mutationErrorMessage(error, errorMessages[code] ?? failureMessage)
+      );
       return { ok: false, code };
+    } finally {
+      writing.current = false;
     }
   };
 

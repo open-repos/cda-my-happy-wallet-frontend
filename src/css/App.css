@@ -92,7 +92,11 @@ h6 {
 .skip-link:focus {
   transform: none;
   color: var(--ds-color-action-primary-text);
-  outline-color: var(--ds-color-focus-ring-on-shell);
+  /* The light canvas equals the on-shell ring: use the regular ring, with a
+     light halo for the dark sidebar and header it may sit over. */
+  outline: var(--ds-border-width-focus) solid var(--ds-color-focus-ring);
+  box-shadow: 0 0 0 calc(var(--ds-border-width-focus) * 2)
+    var(--ds-color-focus-ring-on-shell);
 }
 
 .protected-layout__content:focus-visible {

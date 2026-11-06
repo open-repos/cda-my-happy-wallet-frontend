@@ -44,7 +44,8 @@ export type OperationDraftErrors = Partial<
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-const isCalendarDate = (value: string): boolean => {
+/** Date civile `AAAA-MM-JJ` réelle (le 30 février est refusé). */
+export const isCalendarDate = (value: string): boolean => {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (match == null) return false;
   const date = new Date(`${value}T00:00:00.000Z`);

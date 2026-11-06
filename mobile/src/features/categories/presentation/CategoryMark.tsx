@@ -1,10 +1,8 @@
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, useColorScheme, View } from "react-native";
 
 import { primitives, semantic, themes } from "@/src/design/tokens";
 import { fontAwesomeIcon } from "@/src/features/categories/domain/categoryIcons";
-
-const colors = themes.light.color;
 
 interface CategoryMarkProps {
   category: { color: string | null; icon?: string | null } | undefined;
@@ -17,10 +15,12 @@ interface CategoryMarkProps {
  * porte le sens pour les lecteurs d'écran.
  */
 export const CategoryMark = ({ category, size = 20 }: CategoryMarkProps) => {
+  const colors = themes[useColorScheme() === "dark" ? "dark" : "light"].color;
   const icon = fontAwesomeIcon(category?.icon);
   if (icon) {
     return (
       <View
+        testID="category-mark-icon"
         accessibilityElementsHidden
         aria-hidden
         importantForAccessibility="no-hide-descendants"
@@ -37,15 +37,18 @@ export const CategoryMark = ({ category, size = 20 }: CategoryMarkProps) => {
   }
   return (
     <View
+      testID="category-mark-fallback"
       accessibilityElementsHidden
       aria-hidden
       importantForAccessibility="no-hide-descendants"
       style={[
         styles.swatch,
+        {
+          borderColor: colors.borderStrong,
+          backgroundColor: colors.backgroundCanvas,
+        },
         { height: size, width: size },
-        category?.color
-          ? { backgroundColor: category.color }
-          : styles.swatchNone,
+        category?.color ? { backgroundColor: category.color } : undefined,
       ]}
     />
   );
@@ -54,9 +57,7 @@ export const CategoryMark = ({ category, size = 20 }: CategoryMarkProps) => {
 const styles = StyleSheet.create({
   iconBox: { alignItems: "center", justifyContent: "center" },
   swatch: {
-    borderColor: colors.borderStrong,
     borderRadius: primitives.radius.pill,
     borderWidth: semantic.borderWidth.default,
   },
-  swatchNone: { backgroundColor: colors.backgroundCanvas },
 });

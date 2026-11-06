@@ -99,6 +99,35 @@ la PR (package.json, lockfile, entrée React et tests associés), exécuter npm 
 et toutes les validations ; ce retour réintroduit les avis connus et doit rester
 transitoire. Ne pas mélanger l'ancien lockfile avec la nouvelle entrée React.
 
+## Correctif Vite — reprise de la PR #229, ticket #246
+
+Vite passe de 6.4.3 à 6.4.5 dans les dépendances de développement Web.
+La plage reste `^6.4.5` et le lockfile fixe 6.4.5 ; aucune autre version
+verrouillée n'est modifiée. Les réglages Vite de l'application restent identiques.
+
+Le correctif vérifie les restrictions d'accès aux fichiers aussi après retrait
+de la query d'un import. Un fichier interdit par `server.fs.deny` doit rester
+interdit avec `?raw` ou `?url`. Cela protège le serveur de développement ; ce
+changement ne modifie ni les charges fixes ni le comportement de la PWA livrée.
+Il ne remplace pas l'isolation réseau d'un serveur de développement.
+
+`test/vitest/viteFileAccess.test.js` utilise l'API publique `createServer` et
+`transformRequest`, dans un dossier temporaire avec uniquement des sentinelles
+synthétiques. Les deux assertions de refus échouent avec 6.4.3, qui accepte les
+imports du faux certificat interdit, puis réussissent avec 6.4.5. Un fichier
+hors de la liste autorisée est également refusé ; un texte autorisé reste lisible.
+Le test n'ouvre aucun port et ne charge aucun fichier d'environnement applicatif.
+Il fait partie de `npm test`.
+
+Cette mise à jour est validée avec une installation propre, les commandes Web
+d'AGENTS.md et les audits npm runtime et complet. Les résultats précis et les
+limites locales des validations navigateur figurent dans la PR. Pour annuler
+uniquement ce correctif, révoquer son commit puis refaire `npm ci` et les
+validations Web ; cela réintroduirait le défaut corrigé du serveur de développement.
+
+Sources du correctif : [changelog Vite 6.4.5](https://github.com/vitejs/vite/blob/v6.4.5/packages/vite/CHANGELOG.md)
+et [contrôle des chemins après retrait de query](https://github.com/vitejs/vite/commit/91e40d7bf9777057bbd31c3eb036a54c9465697e).
+
 ## Sources primaires
 
 - [Avis du mainteneur React Router GHSA-wrjc-x8rr-h8h6](https://github.com/remix-run/react-router/security/advisories/GHSA-wrjc-x8rr-h8h6)

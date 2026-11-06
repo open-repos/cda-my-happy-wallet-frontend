@@ -1,3 +1,5 @@
+import { useConfirmationFocus } from "@/src/design/useConfirmationFocus";
+import { ActionButton } from "@/src/design/ActionButton";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState } from "react";
 import {
@@ -116,6 +118,8 @@ export const CategoryFormModal = ({
   const [icon, setIcon] = useState<string | null>(category?.icon ?? null);
   const [errors, setErrors] = useState<CategoryDraftErrors>({});
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const { cancel: confirmationCancelRef, setTrigger: setDeleteTrigger } =
+    useConfirmationFocus(isConfirmingDelete);
 
   const choose = (choice: string) => {
     setColor((current) => ({ ...current, choice }));
@@ -290,6 +294,7 @@ export const CategoryFormModal = ({
                   ) : null}
                   <View style={styles.confirmationActions}>
                     <Pressable
+                      ref={confirmationCancelRef}
                       accessibilityRole="button"
                       disabled={isSaving}
                       onPress={() => {
@@ -300,21 +305,24 @@ export const CategoryFormModal = ({
                     >
                       <Text style={styles.secondaryLabel}>Annuler</Text>
                     </Pressable>
-                    <Pressable
+                    <ActionButton
+                      action="delete"
+                      label="Oui, supprimer"
                       accessibilityRole="button"
                       disabled={isSaving}
                       onPress={() => void onDelete()}
                       style={[styles.button, styles.deleteButton]}
-                    >
-                      <Text style={styles.deleteLabel}>Oui, supprimer</Text>
-                    </Pressable>
+                    ></ActionButton>
                   </View>
                 </View>
               ) : null}
 
               <View style={styles.actions}>
                 {category != null && !isConfirmingDelete ? (
-                  <Pressable
+                  <ActionButton
+                    action="delete"
+                    ref={setDeleteTrigger}
+                    label="Supprimer"
                     accessibilityRole="button"
                     disabled={isSaving}
                     onPress={() => {
@@ -326,9 +334,7 @@ export const CategoryFormModal = ({
                       styles.deleteButton,
                       styles.pushLeft,
                     ]}
-                  >
-                    <Text style={styles.deleteLabel}>Supprimer</Text>
-                  </Pressable>
+                  ></ActionButton>
                 ) : null}
                 <Pressable
                   accessibilityRole="button"

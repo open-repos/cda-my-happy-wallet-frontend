@@ -18,7 +18,11 @@ The auto-merge workflow checks the author, repository, explicit selection and
 changed paths without checking out or executing pull request code. GitHub then
 waits for all branch protection requirements before performing a merge commit.
 The primary Issue declared as `Primary issue: Refs #N` is closed after the merge
-to `develop`; related Issues remain open.
+to `develop`; related Issues remain open. The `Primary Issue declared` check
+(`pr-primary-issue.yml`) fails a pull request to `develop` that does not carry
+exactly one such line naming an Issue, because any other wording leaves the
+Issue open after the merge. Release sync pull requests from `main` are exempt.
+Make this check required in the `develop` branch protection.
 
 ## GitLab mirror
 
@@ -33,7 +37,10 @@ Register the matching public key as a writable GitLab deploy key for the
 frontend project. Keep the private key only in GitHub Actions secrets. The
 workflow mirrors the current branch and does not create tags, releases or call a
 deployment endpoint. Tags and releases come from the `publish-release`
-workflow described in `docs/release-process.md`.
+workflow described in `docs/release-process.md`. The post-release `main` to
+`develop` sync PR remains open for a maintainer to approve its workflows, wait
+for every configured quality check to pass, then review and merge it. A
+successful publication does not mean that this sync is complete.
 
 A push to GitLab `main` can start the existing GitLab pipeline, but its
 production deployment job remains manual. Only the project owner starts that

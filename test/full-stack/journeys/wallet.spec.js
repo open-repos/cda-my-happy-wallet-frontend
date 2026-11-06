@@ -1,3 +1,7 @@
+import {
+  fixedOperationItem,
+  openFixedActions,
+} from "../../e2e/fixedOperationsActions.mjs";
 import { expect, test } from "@playwright/test";
 
 const today = () =>
@@ -34,13 +38,18 @@ async function login(page, project, journey) {
   await page.getByRole("button", { name: "Connexion", exact: true }).click();
   expect((await authenticated).status()).toBe(200);
   await expect(page).toHaveURL(/\/(?:home|operations)$/);
+  // Atelier: drawer toggle below 1200 px, permanent navigation above.
   await expect(
-    page.getByRole("button", { name: "Ouvrir le menu", exact: true })
+    page
+      .getByRole("button", { name: "Ouvrir le menu", exact: true })
+      .or(page.getByRole("navigation", { name: "Navigation principale" }))
   ).toBeVisible();
 }
 
 async function navigate(page, name) {
-  const link = page.getByRole("link", { name, exact: true });
+  const link = page
+    .getByRole("navigation", { name: "Navigation principale" })
+    .getByRole("link", { name, exact: true });
   if (!(await link.isVisible()))
     await page.getByRole("button", { name: "Ouvrir le menu" }).click();
   await link.click();
@@ -67,13 +76,14 @@ test("persists operation CRUD and recalculates the calendar budget", async ({
   await page.goto("/operations");
   await expect(page).toHaveURL(/\/login$/);
   await login(page, testInfo.project.name, "operations");
-  await navigate(page, "Liste Opérations");
+  await navigate(page, "Opérations");
   await expect(
     page.getByRole("heading", { name: "Pas encore d’opération" })
   ).toBeVisible();
   await page
     .getByRole("button", { name: "Ajouter une opération", exact: true })
     .click();
+  await page.getByRole("button", { name: /^Dépense Opération réelle/ }).click();
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(
     page.getByText("Le titre doit contenir entre 2 et 50 caractères.")
@@ -81,7 +91,7 @@ test("persists operation CRUD and recalculates the calendar budget", async ({
   await page.getByLabel(/^Titre/).fill("Courses E2E");
   await page.getByLabel(/^Montant/).fill("42.50");
   await page.getByLabel(/^Date/).fill(today());
-  await page.getByLabel(/^Catégorie/).selectOption({ label: "Courant" });
+  await chooseCategory(page, "Courant");
   const created = apiResponse(page, "/v1/operations", "POST");
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   const creation = await created;
@@ -93,7 +103,7 @@ test("persists operation CRUD and recalculates the calendar budget", async ({
   await navigate(page, "Calendrier");
   await expect(realBalance(page)).toHaveText(/1\s*157,50\s*€/);
   await expect(page.getByText("Courses E2E", { exact: true })).toBeVisible();
-  await navigate(page, "Liste Opérations");
+  await navigate(page, "Opérations");
   await page
     .getByRole("button", { name: "Modifier Courses E2E", exact: true })
     .click();
@@ -106,11 +116,10 @@ test("persists operation CRUD and recalculates the calendar budget", async ({
   ).toHaveCount(0);
   await navigate(page, "Calendrier");
   await expect(realBalance(page)).toHaveText(/1\s*150,00\s*€/);
-  await navigate(page, "Liste Opérations");
+  await navigate(page, "Opérations");
   await page
-    .getByRole("button", { name: "Modifier Courses E2E", exact: true })
+    .getByRole("button", { name: "Supprimer Courses E2E", exact: true })
     .click();
-  await page.getByRole("button", { name: "Supprimer", exact: true }).click();
   const deleted = apiResponse(page, `/v1/operations/${operationId}`, "DELETE");
   await page
     .getByRole("button", { name: "Oui, supprimer", exact: true })
@@ -129,7 +138,7 @@ test("converts a planned event into a persisted operation without counting it tw
   page,
 }, testInfo) => {
   await login(page, testInfo.project.name, "events");
-  await navigate(page, "Objectifs-Évènements");
+  await navigate(page, "Objectifs et événements");
   await expect(
     page.getByRole("heading", { name: "Aucun événement prévu" })
   ).toBeVisible();
@@ -151,7 +160,7 @@ test("converts a planned event into a persisted operation without counting it tw
   await expect(realBalance(page)).toHaveText(/1\s*200,00\s*€/);
   await expect(forecastBalance(page)).toHaveText(/1\s*080,00\s*€/);
   await page.getByRole("button", { name: /^Convertir Assurance E2E/ }).click();
-  await page.getByLabel(/^Catégorie/).selectOption({ label: "Courant" });
+  await chooseCategory(page, "Courant");
   const realized = page.waitForResponse((response) =>
     /\/event-occurrences\/\d+\/\d{4}-\d{2}-\d{2}\/realize$/.test(
       new URL(response.url()).pathname
@@ -160,18 +169,43 @@ test("converts a planned event into a persisted operation without counting it tw
   await page
     .getByRole("button", { name: "Enregistrer l’opération", exact: true })
     .click();
-  expect((await realized).status()).toBe(201);
+  const realizedResponse = await realized;
+  expect(realizedResponse.status()).toBe(201);
+  const converted = (await realizedResponse.json()).data;
+  expect(converted.status).toBe("REALIZED");
   await expect(realBalance(page)).toHaveText(/1\s*080,00\s*€/);
   await expect(forecastBalance(page)).toHaveText(/1\s*080,00\s*€/);
   await expect(
     page.getByRole("button", { name: /^Convertir Assurance E2E/ })
   ).toHaveCount(0);
+  const resolutionsRead = apiResponse(
+    page,
+    "/v1/event-occurrence-resolutions",
+    "GET"
+  );
   await page.reload();
+  const persisted = await resolutionsRead;
+  expect(persisted.status()).toBe(200);
+  expect(
+    (await persisted.json()).data.some(
+      (r) => r.operation?.id === converted.operation.id
+    )
+  ).toBe(true);
+  const realizedDay = page.getByRole("button", {
+    name: new RegExp(`^${Number(today().slice(8))} .*1 opération réelle`),
+  });
+  await expect(realizedDay.locator(".budget-marker--real")).toHaveCount(1);
+  await expect(realizedDay.locator(".budget-marker--planned")).toHaveCount(0);
+  await realizedDay.click();
+  await expect(
+    page.getByRole("heading", { name: /^Éléments du / })
+  ).toBeVisible();
+  await expect(page.getByRole("row", { name: /Assurance E2E/ })).toHaveCount(1);
   await expect(realBalance(page)).toHaveText(/1\s*080,00\s*€/);
   await expect(
     page.getByRole("button", { name: /^Convertir Assurance E2E/ })
   ).toHaveCount(0);
-  await navigate(page, "Liste Opérations");
+  await navigate(page, "Opérations");
   await expect(page.getByRole("row", { name: /Assurance E2E/ })).toHaveCount(1);
 });
 
@@ -206,7 +240,7 @@ test("keeps potential events out of real balances, confirms them and clears only
   await page.getByRole("switch", { name: "Simulation", exact: true }).check();
   await expect(forecastBalance(page)).toHaveText(/900,00\s*€/);
   await expect(realBalance(page)).toHaveText(/1\s*200,00\s*€/);
-  await navigate(page, "Home");
+  await navigate(page, "Accueil");
   const capacity = page.getByRole("region", {
     name: "Capacité d’épargne",
     exact: true,
@@ -221,6 +255,11 @@ test("keeps potential events out of real balances, confirms them and clears only
     .getByRole("link", { name: "Voir les prochains mois", exact: true })
     .click();
   await page.getByRole("switch", { name: "Simulation", exact: true }).check();
+  await page
+    .getByText("Éléments à confirmer et gestion de la Simulation", {
+      exact: true,
+    })
+    .click();
   await page
     .getByRole("button", {
       name: "Confirmer Voyage potentiel E2E",
@@ -243,14 +282,21 @@ test("keeps potential events out of real balances, confirms them and clears only
     .getByRole("row")
     .nth(1);
   await expect(firstRow).toContainText(/900,00\s*€/);
+  await page.getByRole("button", { name: "Ajouter", exact: true }).click();
   await page
-    .getByRole("button", { name: "Ajouter un élément potentiel", exact: true })
+    .getByRole("button", { name: /^Événement à confirmer Simulation/ })
     .click();
   await page
     .getByLabel("Titre", { exact: true })
     .fill("Matériel potentiel E2E");
   await page.getByLabel(/^Montant/).fill("50.00");
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await expect(
+    page.getByRole("button", {
+      name: "Supprimer Matériel potentiel E2E",
+      exact: true,
+    })
+  ).toBeVisible();
   await page
     .getByRole("button", { name: "Vider la simulation", exact: true })
     .click();
@@ -294,7 +340,7 @@ test("shows invalid credentials and recovers from a failed API read", async ({
   // in every journey reach the real API and disposable MySQL database.
   const pattern = /\/v1\/operations(?:\?.*)?$/;
   await page.route(pattern, (route) => route.abort("failed"));
-  await navigate(page, "Liste Opérations");
+  await navigate(page, "Opérations");
   await expect(
     page.getByRole("heading", {
       name: "La liste est momentanément indisponible",
@@ -307,7 +353,7 @@ test("shows invalid credentials and recovers from a failed API read", async ({
   ).toBeVisible();
 });
 
-test("renews a browser session with a real rotating HttpOnly cookie and logs out locally", async ({
+test("renews a browser session with a real rotating HttpOnly cookie and revokes it at logout", async ({
   page,
   context,
 }, testInfo) => {
@@ -332,7 +378,7 @@ test("renews a browser session with a real rotating HttpOnly cookie and logs out
   // renewed five-minute token and rotates its persisted refresh session.
   await page.clock.setFixedTime(new Date((exp + 1) * 1000));
   const renewed = apiResponse(page, "/v1/token", "POST");
-  await navigate(page, "Liste Opérations");
+  await navigate(page, "Opérations");
   expect((await renewed).status()).toBe(200);
   await expect(
     page.getByRole("heading", { name: "Pas encore d’opération" })
@@ -350,10 +396,33 @@ test("renews a browser session with a real rotating HttpOnly cookie and logs out
   if (!(await profile.isVisible()))
     await page.getByRole("button", { name: "Ouvrir le menu" }).click();
   await profile.click();
+  const email = await page.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem(JSON.stringify("user"))).payload.user
+        .email
+  );
+  const loggedOut = apiResponse(page, "/v1/users/logout", "POST");
   await page
     .getByRole("button", { name: "Se déconnecter", exact: true })
     .click();
+  expect((await loggedOut).status()).toBe(204);
   await expect(page).toHaveURL(/\/login$/);
+  // Restore the old cookie: only a server-side revocation can refuse it now.
+  await context.addCookies([after]);
+  const replayedStatus = await page.evaluate(async (accountEmail) => {
+    const response = await fetch("/v1/token", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        grant_type: "refresh_token",
+        email: accountEmail,
+      }),
+    });
+    return response.status;
+  }, email);
+  expect(replayedStatus).toBe(401);
+  await context.clearCookies();
   expect(
     await page.evaluate(
       () => localStorage.getItem(JSON.stringify("user")) === null
@@ -500,9 +569,9 @@ for (const theme of ["light", "dark"]) {
     await login(page, testInfo.project.name, "recovery");
     for (const [name, title] of [
       ["Calendrier", "Calendrier"],
-      ["Home", "Tableau de bord"],
-      ["Objectifs-Évènements", "Objectifs et événements"],
-      ["Liste Opérations", "Opérations"],
+      ["Accueil", "Tableau de bord"],
+      ["Objectifs et événements", "Objectifs et événements"],
+      ["Opérations", "Opérations"],
       ["Catégories", "Catégories"],
       ["Analyses", "Analyses"],
     ]) {
@@ -513,7 +582,7 @@ for (const theme of ["light", "dark"]) {
       await expect(page.locator("#main-content")).toBeFocused();
       await expect(page.locator("nav a img:not([alt=''])")).toHaveCount(0);
     }
-    await navigate(page, "Liste Opérations");
+    await navigate(page, "Opérations");
     const add = page.getByRole("button", {
       name: "Ajouter une opération",
       exact: true,
@@ -521,6 +590,10 @@ for (const theme of ["light", "dark"]) {
     await expect(add).toBeEnabled();
     await add.focus();
     await expect(add).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(
+      page.getByRole("button", { name: /^Dépense Opération réelle/ })
+    ).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(page.getByLabel(/^Titre/)).toBeFocused();
     await page.keyboard.press("Escape");
@@ -535,3 +608,322 @@ for (const theme of ["light", "dark"]) {
     await expect(page.locator("#main-content")).toBeFocused();
   });
 }
+
+test("persists periodic shared fixed charges and refreshes server budgets without duplicate events", async ({
+  page,
+}, testInfo) => {
+  await login(page, testInfo.project.name, "fixed-charges");
+  const unexpectedWrites = [];
+  page.on("request", (request) => {
+    if (
+      ["POST", "PUT", "DELETE", "PATCH"].includes(request.method()) &&
+      /\/v1\/(?:operations(?:\/|$)|events(?:\/|$)|event-occurrences(?:\/|$))/.test(
+        new URL(request.url()).pathname
+      )
+    )
+      unexpectedWrites.push(request.method());
+  });
+  await page.goto("/home/operations-fixes");
+  await page
+    .getByText("Voir le reste à vivre du mois", { exact: true })
+    .click();
+  const budget = page.getByRole("region", {
+    name: "Reste à vivre du mois en euros",
+  });
+  await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*200,00/);
+  await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+  await page.getByRole("radio", { name: "Entrée", exact: true }).check();
+  await page.getByLabel("Titre de l’entrée").fill("Entrée mensuelle E2E");
+  await page.getByLabel("Montant reçu par mois").fill("200");
+  await chooseCategory(page, "Salaires");
+  const incomeCreated = apiResponse(
+    page,
+    "/v1/operations-fixes/revenus",
+    "POST"
+  );
+  await page.getByRole("button", { name: "Enregistrer l’entrée" }).click();
+  const incomeResponse = await incomeCreated;
+  expect(incomeResponse.status()).toBe(201);
+  const income = (await incomeResponse.json()).data;
+  expect(income.category).toMatchObject({
+    name: "Salaires",
+    icon: "solid:money-bill-wave",
+    fixedKind: "REVENU",
+  });
+  expect(income.categoryId).toBe(income.category.id);
+  await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*400,00/);
+  await openFixedActions(page, "Entrée mensuelle E2E");
+  await page
+    .getByRole("button", { name: "Modifier Entrée mensuelle E2E" })
+    .click();
+  await expect(page.getByRole("radio")).toHaveCount(0);
+  await page.getByLabel("Montant reçu par mois").fill("250");
+  const incomeUpdated = apiResponse(
+    page,
+    `/v1/operations-fixes/revenus/${income.idOperationFixe}`,
+    "PUT"
+  );
+  await page.getByRole("button", { name: "Enregistrer l’entrée" }).click();
+  expect((await incomeUpdated).ok()).toBe(true);
+  await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*450,00/);
+  await openFixedActions(page, "Entrée mensuelle E2E");
+  await page
+    .getByRole("button", { name: "Supprimer Entrée mensuelle E2E" })
+    .click();
+  const incomeDeleted = apiResponse(
+    page,
+    `/v1/operations-fixes/revenus/${income.idOperationFixe}`,
+    "DELETE"
+  );
+  await page.getByRole("button", { name: "Confirmer la suppression" }).click();
+  expect((await incomeDeleted).ok()).toBe(true);
+  await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*200,00/);
+  await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+  await page
+    .getByLabel("Titre de la charge")
+    .fill("Abonnement annuel partagé E2E");
+  await page.getByLabel("Montant total par échéance").fill("120");
+  await page
+    .getByRole("combobox", { name: "Périodicité", exact: true })
+    .selectOption("ANNUELLE");
+  await page.getByLabel("Ma part de la charge (%)").fill("50");
+  await chooseCategory(page, "Assurances");
+  await expect(
+    page.getByRole("region", { name: "Aperçu de la charge" })
+  ).toContainText(/5,00/);
+  const created = apiResponse(page, "/v1/operations-fixes/charges", "POST");
+  await page.getByRole("button", { name: "Enregistrer la charge" }).click();
+  const response = await created;
+  expect(response.status()).toBe(201);
+  const charge = (await response.json()).data;
+  expect(charge).toMatchObject({
+    periodicite: "ANNUELLE",
+    pourcentagePersonnel: 50,
+    montantMensuelPersonnel: "5.00",
+  });
+  expect(Number(charge.montant)).toBe(120);
+  expect(charge.category).toMatchObject({
+    name: "Assurances",
+    icon: "solid:shield-halved",
+    fixedKind: "CHARGE",
+  });
+  expect(charge.categoryId).toBe(charge.category.id);
+  await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*195,00/);
+  await page.reload();
+  await page
+    .getByText("Voir le reste à vivre du mois", { exact: true })
+    .click();
+  await openFixedActions(page, "Abonnement annuel partagé E2E");
+  await page
+    .getByRole("button", { name: "Modifier Abonnement annuel partagé E2E" })
+    .click();
+  await expect(
+    page.getByRole("combobox", { name: "Périodicité", exact: true })
+  ).toHaveValue("ANNUELLE");
+  await expect(page.getByLabel("Ma part de la charge (%)")).toHaveValue("50");
+  await expect(
+    page.getByRole("combobox", { name: "Catégorie", exact: true })
+  ).toContainText("Assurances");
+  await expect(
+    page.locator('input[type="hidden"][name="categoryId"]')
+  ).toHaveValue(String(charge.categoryId));
+  await page.getByRole("button", { name: "Annuler", exact: true }).click();
+  await page.getByRole("link", { name: /Revenir à la page d'accueil/ }).click();
+  await expect(page.locator(".home-budget__amount")).toHaveText(/1\s*195,00/);
+  await navigate(page, "Calendrier");
+  await expect(realBalance(page)).toHaveText(/1\s*195,00/);
+  const forecastResponse = apiResponse(page, "/v1/budget-forecast", "GET");
+  await navigate(page, "Prochains mois");
+  expect(
+    (await (await forecastResponse).json()).data.months[0].fixedExpense
+  ).toBe("805.00");
+  const forecast = page.getByRole("table", { name: "Prévisions mensuelles" });
+  await expect(forecast.getByRole("row").nth(1)).toContainText(/1\s*195,00/);
+  await page.goto("/home/operations-fixes");
+  await page
+    .getByText("Voir le reste à vivre du mois", { exact: true })
+    .click();
+  await openFixedActions(page, "Abonnement annuel partagé E2E");
+  await page
+    .getByRole("button", { name: "Modifier Abonnement annuel partagé E2E" })
+    .click();
+  // #358: in the table the personal share lives behind « Plus d’options ».
+  const moreOptions = page.getByRole("button", { name: "Plus d’options" });
+  let form = page;
+  if (await moreOptions.isVisible()) {
+    await moreOptions.click();
+    form = page.getByRole("dialog");
+  }
+  await form.getByLabel("Ma part de la charge (%)").fill("40");
+  const updated = apiResponse(
+    page,
+    `/v1/operations-fixes/charges/${charge.idOperationFixe}`,
+    "PUT"
+  );
+  await form.getByRole("button", { name: "Enregistrer la charge" }).click();
+  expect((await updated).ok()).toBe(true);
+  await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*196,00/);
+  await page.reload();
+  await page
+    .getByText("Voir le reste à vivre du mois", { exact: true })
+    .click();
+  await expect(
+    fixedOperationItem(page, "Abonnement annuel partagé E2E")
+  ).toContainText(/4,00/);
+  await openFixedActions(page, "Abonnement annuel partagé E2E");
+  await page
+    .getByRole("button", { name: "Supprimer Abonnement annuel partagé E2E" })
+    .click();
+  const deleted = apiResponse(
+    page,
+    `/v1/operations-fixes/charges/${charge.idOperationFixe}`,
+    "DELETE"
+  );
+  await page.getByRole("button", { name: "Confirmer la suppression" }).click();
+  expect((await deleted).ok()).toBe(true);
+  await expect(budget.locator(".fixed-budget-amount")).toHaveText(/1\s*200,00/);
+  await page.reload();
+  await page
+    .getByText("Voir le reste à vivre du mois", { exact: true })
+    .click();
+  await expect(
+    fixedOperationItem(page, "Abonnement annuel partagé E2E")
+  ).toHaveCount(0);
+  expect(unexpectedWrites).toEqual([]);
+});
+
+async function chooseCategory(page, name) {
+  await page.getByRole("combobox", { name: "Catégorie", exact: true }).click();
+  await page.getByRole("option", { name, exact: true }).click();
+}
+
+test("compares server savings trajectories without persisting assumptions", async ({
+  page,
+}, testInfo) => {
+  await login(page, testInfo.project.name, "trajectories");
+  await navigate(page, "Objectifs et événements");
+  const section = page.getByRole("region", {
+    name: "Objectifs financiers",
+    exact: true,
+  });
+  const reference = today().slice(0, 7),
+    [year, month] = reference.split("-").map(Number);
+  const desired = new Date(Date.UTC(year, month - 1 + 7, 28))
+    .toISOString()
+    .slice(0, 10);
+  const create = async (title, amount, saved, contribution, first) => {
+    await section
+      .getByRole("button", {
+        name: first ? "C’est parti" : "Ajouter un objectif",
+        exact: true,
+      })
+      .click();
+    const form = page.getByRole("region", {
+      name: "Ajouter un objectif",
+      exact: true,
+    });
+    await form.getByLabel("Titre", { exact: true }).fill(title);
+    await form.getByLabel(/^Montant cible/).fill(amount);
+    await form.getByLabel(/^Déjà épargné/).fill(saved);
+    await form.getByLabel(/^Versement mensuel prévu/).fill(contribution);
+    await form.getByLabel(/^Date souhaitée/).fill(desired);
+    const response = apiResponse(page, "/v1/goals", "POST");
+    await form
+      .getByRole("button", { name: "Enregistrer", exact: true })
+      .click();
+    const created = await response;
+    expect(created.status()).toBe(201);
+    return (await created.json()).data.id;
+  };
+  const goalId = await create(
+    "Voyage familial et découverte des régions alpines",
+    "6000",
+    "1800",
+    "350",
+    true
+  );
+  await create(
+    "Travaux de rénovation et réserve pour les imprévus",
+    "90000",
+    "0",
+    "150",
+    false
+  );
+  await section.getByLabel("Objectif à explorer").selectOption(String(goalId));
+  const card = page.getByRole("article", {
+    name: "Voyage familial et découverte des régions alpines",
+    exact: true,
+  });
+  await card.getByRole("button", { name: "Simuler avec mon budget" }).click();
+  const simulation = page.getByRole("region", {
+    name: "Comparaison des trajectoires d’épargne",
+  });
+  await expect(
+    simulation.getByRole("article", {
+      name: "Estimation raisonnable",
+      exact: true,
+    })
+  ).toBeVisible();
+  const writes = [];
+  page.on("request", (request) => {
+    if (
+      ["POST", "PUT", "PATCH", "DELETE"].includes(request.method()) &&
+      !request.url().endsWith("/savings-capacity/trajectories")
+    )
+      writes.push(request.method() + " " + new URL(request.url()).pathname);
+  });
+  await simulation
+    .getByLabel(/Complément variable restant ce mois-ci/)
+    .fill("100");
+  await simulation.getByLabel(/Complément variable par mois futur/).fill("300");
+  await simulation.getByLabel(/Marge de sécurité mensuelle/).fill("100");
+  const response = apiResponse(
+    page,
+    "/v1/savings-capacity/trajectories",
+    "POST"
+  );
+  await simulation
+    .getByRole("button", { name: "Appliquer les hypothèses" })
+    .click();
+  const projected = await response;
+  expect(projected.status()).toBe(200);
+  const data = (await projected.json()).data;
+  expect(data.projections.reasonable.current.remainingUnderAssumptions).toBe(
+    "500.00"
+  );
+  expect(data.projections.reasonable.months[0].selectedTotalContribution).toBe(
+    "650.00"
+  );
+  expect(
+    data.projections.reasonable.months[0].allocations.find(
+      (item) => item.goalId !== goalId
+    ).reservedContribution
+  ).toBe("150.00");
+  expect(data.projections.planned.points[0].savedAmount).toBe("1800.00");
+  const expected = new Intl.DateTimeFormat("fr-FR", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(
+    new Date(data.projections.reasonable.estimatedReachMonth + "-01T00:00:00Z")
+  );
+  await expect(
+    simulation.getByRole("article", {
+      name: "Estimation raisonnable",
+      exact: true,
+    })
+  ).toContainText(expected);
+  await expect(
+    simulation.getByRole("article", {
+      name: "Estimation raisonnable",
+      exact: true,
+    })
+  ).toContainText(/650,00\s*€/);
+  expect(writes).toEqual([]);
+  await page.reload();
+  await section.getByLabel("Objectif à explorer").selectOption(String(goalId));
+  await expect(
+    card.getByRole("img", { name: /30 % de l’objectif/ })
+  ).toBeVisible();
+  await expect(card).toContainText(/1\s*800,00\s*€/);
+});

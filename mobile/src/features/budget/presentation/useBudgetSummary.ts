@@ -1,11 +1,12 @@
-import { useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   BudgetSummary,
   currentParisMonth,
 } from "@/src/features/budget/domain/budgetSummary";
 import { BudgetSummaryGateway } from "@/src/features/budget/infrastructure/HttpBudgetSummaryGateway";
+
+import { useQuietRefresh } from "@/src/features/simulation/presentation/useQuietRefresh";
 
 type LoadStatus = "loading" | "success" | "error";
 
@@ -24,24 +25,24 @@ export const useBudgetSummary = (gateway: BudgetSummaryGateway) => {
     }
   }, [gateway]);
 
-  useFocusEffect(
-    useCallback(() => {
-      let isActive = true;
-      void gateway
-        .getSummary(currentParisMonth())
-        .then((next) => {
-          if (!isActive) return;
-          setSummary(next);
-          setStatus("success");
-        })
-        .catch(() => {
-          if (isActive) setStatus("error");
-        });
-      return () => {
-        isActive = false;
-      };
-    }, [gateway]),
-  );
+  const refresh = useCallback(() => {
+    let isActive = true;
+    void gateway
+      .getSummary(currentParisMonth())
+      .then((next) => {
+        if (!isActive) return;
+        setSummary(next);
+        setStatus("success");
+      })
+      .catch(() => {
+        if (isActive) setStatus("error");
+      });
+    return () => {
+      isActive = false;
+    };
+  }, [gateway]);
+  useEffect(refresh, [refresh]);
+  useQuietRefresh(refresh);
 
   return { retry: load, status, summary };
 };

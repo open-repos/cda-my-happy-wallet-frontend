@@ -92,7 +92,7 @@ label {
   font-weight: bold;
   display: flex;
   margin-bottom: 5px;
-  color: var(--orange-light);
+  color: var(--ds-color-text-secondary);
 }
 
 .form-container > input + label {

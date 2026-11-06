@@ -1,4 +1,3 @@
-import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
@@ -8,6 +7,8 @@ import {
   PaginationMeta,
 } from "@/src/features/operations/domain/oneOffOperation";
 import { OneOffOperationsGateway } from "@/src/features/operations/infrastructure/HttpOneOffOperationsGateway";
+
+import { useQuietRefresh } from "@/src/features/simulation/presentation/useQuietRefresh";
 
 type LoadStatus = "loading" | "success" | "error";
 type AsyncStatus = "idle" | "loading" | "error";
@@ -21,6 +22,7 @@ const mergeUniqueOperations = (
 };
 
 export const useOneOffOperations = (gateway: OneOffOperationsGateway) => {
+  const loadedPages = useRef(1);
   const [operations, setOperations] = useState<OneOffOperation[]>([]);
   const [categories, setCategories] = useState<OperationCategory[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
@@ -37,6 +39,7 @@ export const useOneOffOperations = (gateway: OneOffOperationsGateway) => {
         gateway.listOperations(),
         gateway.listAllCategories(),
       ]);
+      loadedPages.current = 1;
       setOperations(operationPage.data);
       setCategories(availableCategories);
       setMeta(operationPage.meta);
@@ -73,26 +76,36 @@ export const useOneOffOperations = (gateway: OneOffOperationsGateway) => {
     };
   }, [gateway]);
 
-  // Les onglets restent montés : au retour sur l'écran, les catégories sont
-  // relues sans masquer la liste (créées, renommées ou supprimées entre-temps
-  // depuis l'écran des catégories). Le premier focus suit le montage.
-  const hasFocused = useRef(false);
-  useFocusEffect(
+  // Same screen and loaded pagination window survive a global quick addition.
+  useQuietRefresh(
     useCallback(() => {
-      if (!hasFocused.current) {
-        hasFocused.current = true;
-        return undefined;
-      }
-      let isActive = true;
-      gateway
-        .listAllCategories()
-        .then((next) => {
-          if (isActive) setCategories(next);
-        })
-        // Échec silencieux : les catégories déjà affichées restent valables.
-        .catch(() => {});
+      let active = true;
+      void (async () => {
+        try {
+          let page = await gateway.listOperations();
+          let next = page.data;
+          for (
+            let index = 1;
+            index < loadedPages.current && page.meta.hasNext;
+            index++
+          ) {
+            page = await gateway.listOperations(page.meta.nextCursor);
+            next = mergeUniqueOperations(next, page.data);
+          }
+          const availableCategories = await gateway.listAllCategories();
+          if (!active) return;
+          setOperations(next);
+          setMeta(page.meta);
+          setCategories(availableCategories);
+        } catch {
+          if (active)
+            setMessage(
+              "Les opérations n’ont pas pu être actualisées. Revenez sur cet écran pour les relire.",
+            );
+        }
+      })();
       return () => {
-        isActive = false;
+        active = false;
       };
     }, [gateway]),
   );
@@ -109,6 +122,7 @@ export const useOneOffOperations = (gateway: OneOffOperationsGateway) => {
     setMessage(null);
     try {
       const page = await gateway.listOperations(meta.nextCursor);
+      loadedPages.current += 1;
       setOperations((current) => mergeUniqueOperations(current, page.data));
       setMeta(page.meta);
       setPageStatus("idle");

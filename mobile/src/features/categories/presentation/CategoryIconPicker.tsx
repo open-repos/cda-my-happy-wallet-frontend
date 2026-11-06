@@ -3,12 +3,9 @@ import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { primitives, semantic, themes } from "@/src/design/tokens";
-import {
-  fontAwesomeIcon,
-  iconLabel,
-  searchCategoryIcons,
-} from "@/src/features/categories/domain/categoryIcons";
+import { fontAwesomeIcon } from "@/src/features/categories/domain/categoryIcons";
 import { CategoryMark } from "@/src/features/categories/presentation/CategoryMark";
+import { getCategoryIconPickerState } from "./categoryIconPickerState";
 
 const colors = themes.light.color;
 const semibold = `${primitives.fontWeight.semibold}` as "600";
@@ -34,27 +31,17 @@ export const CategoryIconPicker = ({
   onChange,
 }: CategoryIconPickerProps) => {
   const [query, setQuery] = useState("");
-  const options = useMemo(() => {
-    const results = searchCategoryIcons(query);
-    // L'icône actuelle reste visible et cochée, même hors des résultats ou
-    // retirée de la liste (elle s'affiche alors en pastille).
-    return value && !results.includes(value) ? [value, ...results] : results;
-  }, [query, value]);
+  const { options, status, previewLabel } = useMemo(
+    () => getCategoryIconPickerState(query, value),
+    [query, value],
+  );
   const displayName = name.trim() || "Nouvelle catégorie";
-  const status =
-    options.length === 0
-      ? `Aucune icône ne correspond à « ${query.trim()} ».`
-      : `${options.length} icône${options.length > 1 ? "s" : ""} proposée${
-          options.length > 1 ? "s" : ""
-        }.`;
 
   return (
     <View style={styles.picker}>
       <Text style={styles.label}>Icône</Text>
       <View
-        accessibilityLabel={`Aperçu : ${displayName}, ${
-          value ? `icône ${iconLabel(value)}` : "pastille de couleur"
-        }`}
+        accessibilityLabel={`Aperçu : ${displayName}, ${previewLabel}`}
         accessible
         style={styles.preview}
       >
@@ -93,13 +80,13 @@ export const CategoryIconPicker = ({
             Sans icône
           </Text>
         </Pressable>
-        {options.map((icon) => {
+        {options.map(({ icon, label }) => {
           const glyph = fontAwesomeIcon(icon);
           const checked = value === icon;
           return (
             <Pressable
               key={icon}
-              accessibilityLabel={iconLabel(icon)}
+              accessibilityLabel={label}
               accessibilityRole="radio"
               aria-checked={checked}
               aria-disabled={disabled}

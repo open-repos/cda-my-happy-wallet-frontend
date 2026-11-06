@@ -91,6 +91,76 @@ describe("FinancialGoalsSection", () => {
     );
   });
 
+  it("shows the server estimated month even for a behind goal", () => {
+    useFinancialGoals.mockReturnValue(state());
+    render(<FinancialGoalsSection />);
+    expect(screen.getByText("avril 2027")).toHaveAttribute(
+      "datetime",
+      "2027-04"
+    );
+    fireEvent.click(screen.getByText("Lire les montants projetés"));
+    const table = screen.getByRole("table");
+    expect(normalize(table.textContent)).toContain(
+      "novembre 2026 · projeté450,00 €"
+    );
+  });
+
+  it("switches goals without changing savings and retains a valid selection on reload", () => {
+    const second = goal({
+      id: 4,
+      title: "Réserve de précaution pour les dépenses imprévues",
+      currency: "CHF",
+    });
+    useFinancialGoals.mockReturnValue(state({ goals: [goal(), second] }));
+    const { rerender } = render(<FinancialGoalsSection />);
+    fireEvent.change(screen.getByLabelText("Objectif à explorer"), {
+      target: { value: "4" },
+    });
+    expect(
+      screen.getByRole("article", { name: second.title })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("article", { name: "Vélo" })
+    ).not.toBeInTheDocument();
+    useFinancialGoals.mockReturnValue(
+      state({ goals: [goal(), { ...second }] })
+    );
+    rerender(<FinancialGoalsSection />);
+    expect(screen.getByLabelText("Objectif à explorer")).toHaveValue("4");
+    useFinancialGoals.mockReturnValue(state({ goals: [goal()] }));
+    rerender(<FinancialGoalsSection />);
+    expect(screen.getByRole("article", { name: "Vélo" })).toBeInTheDocument();
+  });
+
+  it("keeps a far server estimate while distinguishing the visible horizon", () => {
+    useFinancialGoals.mockReturnValue(
+      state({
+        goals: [
+          goal({
+            targetAmount: "3000.00",
+            forecast: {
+              ...goal().forecast,
+              remainingAmount: "2700.00",
+              estimatedReachMonth: "2028-04",
+              contributionsNeeded: 18,
+            },
+          }),
+        ],
+      })
+    );
+    render(<FinancialGoalsSection />);
+    expect(screen.getByText("avril 2028")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Objectif non atteint dans l’horizon affiché de 12 mois/)
+    ).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Horizon"), {
+      target: { value: "24" },
+    });
+    expect(
+      screen.queryByText(/Objectif non atteint dans l’horizon affiché/)
+    ).not.toBeInTheDocument();
+  });
+
   it("announces loading and failure in regions mounted beforehand (#164)", async () => {
     useFinancialGoals.mockReturnValue(state());
     const { rerender } = render(<FinancialGoalsSection />);
@@ -215,14 +285,14 @@ describe("FinancialGoalsSection", () => {
       screen.getByRole("button", { name: "Modifier l’objectif Vélo" })
     );
     fireEvent.click(screen.getByRole("button", { name: "Supprimer" }));
-    // La section garde aussi sa région d'alerte, vide (#151).
+    expect(
+      screen.getByRole("group", { name: "Supprimer « Vélo » ?" })
+    ).toBeVisible();
     expect(
       screen
-        .getAllByRole("alert")
-        .some((element) =>
-          element.textContent.includes("Supprimer cet objectif ?")
-        )
-    ).toBe(true);
+        .getByRole("group", { name: "Supprimer « Vélo » ?" })
+        .querySelector("button")
+    ).toHaveFocus();
     fireEvent.click(screen.getByRole("button", { name: "Oui, supprimer" }));
     await waitFor(() => expect(current.deleteGoal).toHaveBeenCalledWith(3));
   });

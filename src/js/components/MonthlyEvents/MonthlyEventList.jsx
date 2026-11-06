@@ -1,3 +1,4 @@
+import { ActionButton } from "../Actions/ActionButton";
 import React from "react";
 import editIcon from "../../../assets/icons/edit.svg";
 import {
@@ -24,14 +25,15 @@ export const MonthlyEventList = ({ events, onEdit }) => (
           >
             {event.kind === "ENTREE" ? "Entrée prévue" : "Dépense prévue"}
           </span>
-          <button
+          <ActionButton
+            action="edit"
             type="button"
-            className="monthly-event-icon-button"
+            className="monthly-event-button monthly-event-button--secondary"
             onClick={() => onEdit(event)}
             aria-label={`Modifier ${event.title}`}
           >
-            <img src={editIcon} alt="" aria-hidden="true" />
-          </button>
+            Modifier
+          </ActionButton>
         </div>
         <h3>{event.title}</h3>
         <strong>{formatEventAmount(event.amount, event.currency)}</strong>

@@ -1,11 +1,5 @@
-import { DestinationScreen } from "@/src/navigation/DestinationScreen";
+import { MonthlyEventsScreen } from "@/src/features/events/presentation/MonthlyEventsScreen";
 
 export default function GoalsScreen() {
-  return (
-    <DestinationScreen
-      description="Retrouvez bientôt vos objectifs financiers et les événements qui influencent votre budget."
-      icon="radio-button-on-outline"
-      title="Objectifs et événements"
-    />
-  );
+  return <MonthlyEventsScreen />;
 }

@@ -365,6 +365,7 @@
 }
 .monthly-calendar__day:hover {
   background: var(--ds-color-action-secondary-background);
+  color: var(--ds-color-action-secondary-text);
 }
 .monthly-calendar__day--outside {
   color: var(--ds-color-text-muted);
@@ -458,4 +459,13 @@
   .monthly-events-loader {
     animation: none;
   }
+}
+
+.monthly-event-form__amount {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) max-content;
+}
+.monthly-event-form label > span[id$="-error"] {
+  overflow-wrap: anywhere;
 }

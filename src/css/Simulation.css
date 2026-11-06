@@ -102,3 +102,13 @@
     padding: var(--ds-primitive-space-4);
   }
 }
+
+.planning-date,
+.planning-date input {
+  min-width: 0;
+  box-sizing: border-box;
+}
+.planning-date input {
+  width: 100%;
+  max-width: 100%;
+}

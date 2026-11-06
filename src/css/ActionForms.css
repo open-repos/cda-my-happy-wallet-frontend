@@ -1,0 +1,166 @@
+/* Shared event, operation, fixed budget and goal forms: compact controls, explicit theme roles. */
+:is(.monthly-event-form-panel, .one-off-form-panel) {
+  max-width: 52rem;
+  color: var(--ds-color-text-primary);
+  background: var(--ds-color-background-surface);
+}
+:is(.monthly-event-form-panel__header, .one-off-form-panel__header)
+  :is(h2, h3) {
+  color: var(--ds-color-text-primary);
+  font-size: var(--ds-primitive-font-size-lg);
+  line-height: var(--ds-primitive-line-height-heading);
+}
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form) {
+  gap: var(--ds-primitive-space-3);
+}
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form)
+  :is(label, legend) {
+  color: var(--ds-color-text-secondary);
+  font-weight: var(--ds-primitive-font-weight-semibold);
+}
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form)
+  input:not([type="radio"]):not([type="checkbox"]),
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form) select {
+  min-height: var(--web-action-min-size);
+  font-size: max(1rem, var(--ds-primitive-font-size-md));
+  padding: var(--ds-primitive-space-2) var(--ds-primitive-space-3);
+  color: var(--ds-color-field-text);
+  -webkit-text-fill-color: var(--ds-color-field-text);
+  background: var(--ds-color-field-background);
+  border-color: var(--web-action-border);
+}
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form)
+  input[type="date"]::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: start;
+}
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form)
+  input[type="radio"] {
+  appearance: auto;
+  flex: 0 0 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  accent-color: var(--web-action-primary-background);
+}
+:is(.monthly-event-form, .one-off-form)
+  fieldset:not(
+    :is(.monthly-event-delete-confirmation, .one-off-delete-confirmation)
+  ) {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-primitive-space-2);
+  padding: 0;
+  border: 0;
+}
+:is(.monthly-event-form, .one-off-form) fieldset label {
+  display: flex;
+  align-items: center;
+  flex: 1 1 8em;
+  min-height: var(--web-action-min-size);
+  margin: 0;
+  padding: var(--ds-primitive-space-2) var(--ds-primitive-space-3);
+  border: var(--ds-border-width-default) solid var(--web-action-border);
+  border-radius: var(--web-action-radius);
+  background: var(--ds-color-background-surface);
+  color: var(--ds-color-text-primary);
+}
+:is(.monthly-event-form, .one-off-form) fieldset label:has(input:checked) {
+  background: var(--ds-color-background-canvas);
+}
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form)
+  :is(input, select):focus-visible {
+  outline: var(--ds-border-width-focus) solid var(--ds-color-focus-ring);
+  outline-offset: 0;
+}
+.form-actions[class],
+.monthly-event-form__actions,
+.one-off-form__actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ds-primitive-space-2);
+  grid-column: 1 / -1;
+}
+.form-actions__destructive {
+  flex: 1 1 100%;
+  margin-top: var(--ds-primitive-space-3);
+  padding-top: var(--ds-primitive-space-3);
+  border-top: var(--ds-border-width-default) solid var(--ds-color-border-subtle);
+}
+.form-actions__destructive:empty {
+  display: none;
+}
+.form-actions__destructive > .action-button {
+  margin: 0;
+}
+:is(.monthly-event-delete-confirmation, .one-off-delete-confirmation) {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--ds-primitive-space-2);
+  padding: var(--ds-primitive-space-3);
+  border: var(--ds-border-width-default) solid var(--ds-color-status-error-text);
+  border-radius: var(--web-action-radius);
+  color: var(--ds-color-status-error-text);
+  background: var(--ds-color-status-error-surface);
+  margin: 0;
+}
+:is(.monthly-event-delete-confirmation, .one-off-delete-confirmation) legend {
+  color: var(--ds-color-status-error-text);
+}
+.monthly-events-state {
+  min-height: 12rem;
+  padding: var(--ds-primitive-space-6);
+}
+@media (max-width: 767px) {
+  .form-actions[class] > .action-button {
+    flex: 1 1 8em;
+  }
+  .budget-occurrence__actions .action-button {
+    flex: 1 1 10em;
+  }
+}
+
+/* Native date/month controls must use the same border box as other fields.
+   Safari's native appearance can otherwise grow past a narrow grid column. */
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form),
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form)
+  :is(label, fieldset, .fixed-charge-field) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form)
+  :is(input:not([type="radio"]):not([type="checkbox"]), select) {
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form) select {
+  /* WebKit otherwise propagates a long selected label beyond its border box. */
+  white-space: normal;
+}
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form)
+  :is(input[type="date"], input[type="month"]) {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  text-align: start;
+}
+:is(.monthly-event-form, .one-off-form, .fixed-charge-form form)
+  input::-webkit-datetime-edit {
+  min-inline-size: 0;
+  padding: 0;
+}
+.fixed-charge-form form > fieldset,
+.fixed-charge-form form > fieldset > fieldset {
+  display: block;
+  padding: 0;
+  border: 0;
+}
