@@ -32,7 +32,15 @@ calendaire, les événements à traiter et les opérations du mois ou du jour.
 ## Grille et liste
 
 La commande `Repères | Dépenses | Prévisionnel` change la seule valeur courte
-de chaque jour; la préférence est mémorisée sur l'appareil. Les repères
+de chaque jour; la préférence est mémorisée sur l'appareil. En mode
+`Prévisionnel`, la case affiche le reste à vivre cumulé du jour
+(`dailyRemaining`, #379) : la part quotidienne du socle cumulée jusqu'au jour,
+moins les dépenses et plus les entrées saisies ou prévues jusqu'à cette date
+(règle dans `docs/budget-projection-api.md` du backend). Une valeur négative
+garde son signe moins en plus de la couleur; le libellé accessible la nomme
+« reste à vivre du jour » et le détail d'un jour sélectionné l'explique en une
+phrase. Le résumé du mois garde le reste prévisionnel de fin de mois. Un
+backend sans ce champ laisse la case vide. Les repères
 distinguent opération réelle (point plein), événement prévu (cercle pointillé)
 et événement en retard (pictogramme `!`), avec une légende et un libellé
 accessible complet par jour. Un clic filtre la liste sur le jour; un second

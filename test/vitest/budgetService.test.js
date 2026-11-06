@@ -49,6 +49,7 @@ export const summaryFixture = (overrides = {}) => ({
       plannedExpense: "0.00",
       plannedCount: 0,
       forecastRemaining: "890.00",
+      dailyRemaining: "-1.30",
     },
   ],
   ...overrides,
@@ -88,6 +89,29 @@ describe("budgetService", () => {
     expect(() =>
       parseBudgetSummary(
         summaryFixture({ days: Array.from({ length: 32 }, () => ({})) })
+      )
+    ).toThrow();
+  });
+
+  it("reads the cumulative daily remaining of each day (#379)", () => {
+    expect(parseBudgetSummary(summaryFixture()).days[0].dailyRemaining).toBe(
+      "-1.30"
+    );
+    const day = summaryFixture().days[0];
+    const closed = { ...day, forecastRemaining: null, dailyRemaining: null };
+    expect(
+      parseBudgetSummary(summaryFixture({ days: [closed] })).days[0]
+        .dailyRemaining
+    ).toBeNull();
+    // A backend released before #179 omits the field: no forecast value.
+    const { dailyRemaining: _omitted, ...legacy } = day;
+    expect(
+      parseBudgetSummary(summaryFixture({ days: [legacy] })).days[0]
+        .dailyRemaining
+    ).toBeNull();
+    expect(() =>
+      parseBudgetSummary(
+        summaryFixture({ days: [{ ...day, dailyRemaining: -1.3 }] })
       )
     ).toThrow();
   });

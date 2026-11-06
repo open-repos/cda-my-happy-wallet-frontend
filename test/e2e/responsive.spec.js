@@ -261,9 +261,19 @@ for (const viewport of viewports) {
     await expect(page.getByRole("heading", { name: "Prévus" })).toBeVisible();
 
     await page.getByText("Prévisionnel", { exact: true }).click();
+    // #379: each cell shows the cumulative daily remaining, not the
+    // month-end forecast (38.70 × 20 − 42.50 − 120.00 planned).
+    const twentieth = page.getByRole("button", {
+      name: /^20 octobre 2026, .*reste à vivre du jour 611,50/,
+    });
+    await expect(twentieth).toContainText("611,5");
     await expect(
-      page.getByRole("button", { name: /reste prévisionnel 767,50/ })
-    ).toContainText("767");
+      page.locator(".budget-day__value", { hasText: "767" })
+    ).toHaveCount(0);
+    await twentieth.click();
+    await expect(
+      page.getByText(/^Reste à vivre du jour : 611,50/)
+    ).toBeVisible();
 
     const hasHorizontalOverflow = await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth

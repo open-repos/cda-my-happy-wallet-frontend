@@ -71,6 +71,18 @@ const summary = (overrides = {}) => ({
       plannedExpense: "0.00",
       plannedCount: 0,
       forecastRemaining: "890.00",
+      dailyRemaining: "17.00",
+    },
+    {
+      date: `${month}-03`,
+      income: "0.00",
+      expense: "60.00",
+      realRemaining: "980.00",
+      plannedIncome: "0.00",
+      plannedExpense: "0.00",
+      plannedCount: 0,
+      forecastRemaining: "830.00",
+      dailyRemaining: "-4.00",
     },
   ],
   ...overrides,
@@ -174,7 +186,9 @@ describe("budget calendar page", () => {
       message: "Les événements n’ont pas pu être chargés.",
     });
     render(<Calendrier />);
-    fireEvent.click(screen.getByRole("button", { name: /reste prévisionnel/ }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /reste à vivre du jour 17,00/ })
+    );
     expect(
       screen.getByRole("button", { name: "Ajouter un événement prévu" })
     ).toBeDisabled();
@@ -199,7 +213,9 @@ describe("budget calendar page", () => {
       createEvent,
     });
     render(<Calendrier />);
-    fireEvent.click(screen.getByRole("button", { name: /reste prévisionnel/ }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /reste à vivre du jour 17,00/ })
+    );
     fireEvent.click(
       screen.getByRole("button", { name: "Ajouter un événement prévu" })
     );
@@ -306,11 +322,36 @@ describe("budget calendar page", () => {
     expect(day).toHaveTextContent("−40");
     expect(window.localStorage.getItem("mhw.calendar.mode")).toBe("expenses");
     fireEvent.click(screen.getByLabelText("Prévisionnel"));
-    expect(day).toHaveTextContent("890");
+    expect(day).toHaveTextContent("17");
+    expect(day).not.toHaveTextContent("890");
     fireEvent.click(
       screen.getByRole("button", { name: "Masquer les montants" })
     );
-    expect(day).not.toHaveTextContent("890");
+    expect(day).not.toHaveTextContent("17");
+  });
+
+  it("shows the cumulative daily remaining in forecast cells and explains it (#379)", () => {
+    window.localStorage.setItem("mhw.calendar.mode", "forecast");
+    render(<Calendrier />);
+    const day = screen.getByRole("button", {
+      name: /reste à vivre du jour 17,00/,
+    });
+    expect(day).toHaveTextContent("17");
+    expect(day.getAttribute("aria-label")).not.toMatch(/reste prévisionnel/);
+    // A negative value carries its minus sign, not only a colour.
+    const negative = screen.getByRole("button", {
+      name: /reste à vivre du jour [−-]4,00/,
+    });
+    const value = negative.querySelector(".budget-day__value");
+    expect(value.textContent).toMatch(/^[−-]4$/);
+    expect(value).toHaveClass("budget-amount--negative");
+
+    expect(screen.queryByText(/^Reste à vivre du jour :/)).toBeNull();
+    fireEvent.click(day);
+    const explanation = screen.getByText(/^Reste à vivre du jour :/);
+    expect(explanation).toHaveTextContent(
+      /Reste à vivre du jour : 17,00 €, soit votre part quotidienne du reste à vivre de base cumulée jusqu’à ce jour, moins les dépenses et plus les entrées saisies ou prévues jusqu’à cette date\./
+    );
   });
 
   it("labels each operation with its category and icon", async () => {

@@ -52,9 +52,12 @@ const parseDay = (day) => {
   if (
     !isDate(day?.date) ||
     ![day?.income, day?.expense, day?.realRemaining].every(isAmount) ||
-    ![day?.plannedIncome, day?.plannedExpense, day?.forecastRemaining].every(
-      isOptionalAmount
-    ) ||
+    ![
+      day?.plannedIncome,
+      day?.plannedExpense,
+      day?.forecastRemaining,
+      day?.dailyRemaining ?? null,
+    ].every(isOptionalAmount) ||
     !(day?.plannedCount === null || isCount(day?.plannedCount))
   ) {
     invalid("budget day");
@@ -68,6 +71,8 @@ const parseDay = (day) => {
     plannedExpense: day.plannedExpense,
     plannedCount: day.plannedCount,
     forecastRemaining: day.forecastRemaining,
+    // Absent d'un backend antérieur à #179 : traité comme sans prévision.
+    dailyRemaining: day.dailyRemaining ?? null,
   };
 };
 

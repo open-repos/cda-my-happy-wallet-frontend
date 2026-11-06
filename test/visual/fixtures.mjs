@@ -15,9 +15,38 @@ const storedUser = {
   },
 };
 
+const cents = (value) => (value / 100).toFixed(2);
+
+/**
+ * Every day of the month, as the backend returns them: a 42.50 expense on the
+ * 18th, a 120.00 planned event on the 20th, and the cumulative daily
+ * remaining of #379 (base 1200.00, share truncated, last day exact).
+ */
+const summaryDays = (month) => {
+  const [year, monthIndex] = month.split("-").map(Number);
+  const length = new Date(Date.UTC(year, monthIndex, 0)).getUTCDate();
+  const share = Math.trunc(120000 / length);
+  return Array.from({ length }, (_, index) => {
+    const day = index + 1;
+    const spent = (day >= 18 ? 4250 : 0) + (day >= 20 ? 12000 : 0);
+    const accrued = day === length ? 120000 : share * day;
+    return {
+      date: `${month}-${String(day).padStart(2, "0")}`,
+      income: "0.00",
+      expense: day === 18 ? "42.50" : "0.00",
+      realRemaining: day >= 18 ? "1037.50" : "1080.00",
+      plannedIncome: "0.00",
+      plannedExpense: day === 20 ? "120.00" : "0.00",
+      plannedCount: day === 20 ? 1 : 0,
+      forecastRemaining: day >= 20 ? "767.50" : day >= 18 ? "887.50" : "930.00",
+      dailyRemaining: cents(accrued - spent),
+    };
+  });
+};
+
 export const prepareProtectedPage = async (
   page,
-  { authenticated = true } = {}
+  { authenticated = true, dailyRemaining = {} } = {}
 ) => {
   await page.route("**/*", (route) => {
     const url = new URL(route.request().url());
@@ -238,28 +267,12 @@ export const prepareProtectedPage = async (
             unresolvedCount: 1,
             overdueCount: 0,
           },
-          days: [
-            {
-              date: `${month}-18`,
-              income: "0.00",
-              expense: "42.50",
-              realRemaining: "1037.50",
-              plannedIncome: "0.00",
-              plannedExpense: "0.00",
-              plannedCount: 0,
-              forecastRemaining: "887.50",
-            },
-            {
-              date: `${month}-20`,
-              income: "0.00",
-              expense: "0.00",
-              realRemaining: "1037.50",
-              plannedIncome: "0.00",
-              plannedExpense: "120.00",
-              plannedCount: 1,
-              forecastRemaining: "767.50",
-            },
-          ],
+          // `dailyRemaining` overrides chosen days, e.g. a long negative.
+          days: summaryDays(month).map((day) =>
+            day.date in dailyRemaining
+              ? { ...day, dailyRemaining: dailyRemaining[day.date] }
+              : day
+          ),
         },
       },
     });

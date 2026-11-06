@@ -201,6 +201,63 @@ for (const width of [320, 390, 768, 1440])
         fullPage: false,
       });
     });
+
+// #379: every cell shows its cumulative daily remaining, which must fit the
+// narrowest day cell, including a long negative value.
+for (const width of [320, 390, 768, 1440])
+  for (const theme of ["light", "dark"])
+    test(`forecast cells show the daily remaining at ${width} ${theme}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 1000 });
+      await page.clock.setFixedTime(new Date("2026-10-18T10:00:00Z"));
+      await prepareProtectedPage(page, {
+        dailyRemaining: { "2026-10-23": "-1234.50" },
+      });
+      await page.addInitScript((t) => {
+        localStorage.setItem("mhw-theme", t);
+        localStorage.setItem("mhw.calendar.mode", "forecast");
+      }, theme);
+      await page.goto("/calendrier");
+      // 38.70 × 20 − 42.50 expense − 120.00 planned event.
+      const twentieth = page.getByRole("button", {
+        name: /^20 octobre 2026, .*reste à vivre du jour 611,50/,
+      });
+      await expect(twentieth).toContainText("611,5");
+      const negative = page.getByRole("button", {
+        name: /^23 octobre 2026, .*reste à vivre du jour [−-]1\u202f?\s?234,50/,
+      });
+      await expect(negative.locator(".budget-day__value")).toHaveText(
+        /^[−-]1,2\s?k$/
+      );
+      await expect(page.locator(".budget-day__value")).toHaveCount(31);
+      const overflowing = await page
+        .locator(".budget-day__value")
+        .evaluateAll((values) =>
+          values
+            .filter((value) => {
+              const cell = value.closest(".budget-day").getBoundingClientRect();
+              const box = value.getBoundingClientRect();
+              return (
+                value.scrollWidth > value.clientWidth + 1 ||
+                box.left < cell.left - 1 ||
+                box.right > cell.right + 1
+              );
+            })
+            .map((value) => value.textContent)
+        );
+      expect(overflowing).toEqual([]);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth > window.innerWidth
+        )
+      ).toBe(false);
+      await twentieth.click();
+      await expect(
+        page.getByText(/^Reste à vivre du jour : 611,50/)
+      ).toBeVisible();
+    });
+
 test("future without summary and incomplete read retry", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-26T10:00:00Z"));
   await prepareProtectedPage(page);
