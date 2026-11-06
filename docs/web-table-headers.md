@@ -91,9 +91,10 @@ paramètres de l’URL sont conservés.
 ## Limites connues
 
 - Le tri par montant compare les nombres sans conversion de devise (D7).
-- Le filtre de libellé applique une valeur choisie dans les suggestions, comme
-  tout `FilterCombobox` en mode simple. La recherche contient le texte et
-  ignore la casse et les accents (#165, #174).
+- Le filtre de libellé accepte le texte saisi librement (`freeText`, #377),
+  appliqué avec Entrée ou en quittant le champ, ou une suggestion. La
+  recherche contient le texte et ignore la casse et les accents (#165, #174) ;
+  la saisie est bornée à 50 caractères, comme l'API.
 - Les maquettes Figma n’étaient pas accessibles depuis la session de
   réalisation (MCP Figma non autorisé) : la présentation suit les composants
   et tokens existants.

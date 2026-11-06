@@ -27,7 +27,8 @@ import { FilterCombobox } from "../Fields/FilterCombobox";
 ```
 
 Props facultatives : `hideLabel`, `placeholder` (« Rechercher… »), `pageSize`
-(10), `debounceMs` (250), `disabled`, `id`, `className`.
+(10), `debounceMs` (250), `disabled`, `id`, `className`, `freeText` et
+`maxLength` (#377).
 
 ### Source de données
 
@@ -65,11 +66,18 @@ et libellés des charges fixes via `createArrayOptionSource`. Voir
   ne remplit pas la liste, la suivante est demandée sans défilement.
 - Seule une valeur de la liste s'applique. En mode simple, le texte libre ne
   sert qu'à chercher : en quittant le champ, il revient au libellé de la
-  valeur choisie.
-  La réouverture affiche à nouveau les premières valeurs, la valeur choisie
-  cochée.
-- Entrée sans valeur active n'est pas interceptée : dans un `<form>`, elle
-  soumet le formulaire. L'intégration aux tableaux (#359) devra en tenir compte.
+  valeur choisie. La réouverture affiche à nouveau les premières valeurs, la
+  valeur choisie cochée.
+- Avec `freeText` (mode simple seulement, #377), le texte saisi est lui-même
+  une valeur : Entrée sans valeur active, Tab, un clic à l'extérieur ou la
+  sortie du champ l'appliquent comme `{ value: texte, label: texte }`, sans
+  espaces aux extrémités ; vidé, il donne `null`. Entrée est alors consommée
+  et ne soumet pas un formulaire parent. Échap annule toujours la saisie en
+  cours et rétablit le libellé appliqué. Choisir une suggestion reste
+  possible. Une même valeur n'est pas réappliquée deux fois. `maxLength`
+  borne la saisie.
+- Sans `freeText`, Entrée sans valeur active n'est pas interceptée : dans un
+  `<form>`, elle soumet le formulaire.
 - En mode `multiple`, chaque choix coche ou décoche une valeur. La liste reste
   ouverte et la saisie est conservée. Les valeurs choisies apparaissent en
   étiquettes sous le champ, chacune avec un bouton « Retirer … ».

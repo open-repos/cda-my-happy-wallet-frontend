@@ -169,14 +169,15 @@ for (const width of [320, 390, 768, 1440])
         const title = page.getByRole("combobox", {
           name: "Filtrer par libellé",
         });
-        await title.click();
-        await page.getByRole("option", { name: "Loyer" }).click();
+        // Saisie libre (#377) : le texte tapé s’applique avec Entrée.
+        await title.fill("loy");
+        await title.press("Enter");
         await expect.poll(() => titles(page)).toEqual(["Loyer"]);
         await fits(page);
       }
       const last = requests.at(-1);
       expect(last.get("type")).toBe("DEPENSE");
-      expect(last.get("title")).toBe("Loyer");
+      expect(last.get("title")).toBe(wide ? "Loyer" : "loy");
       expect(last.has("cursor")).toBe(false);
       await fits(page);
       if (theme === "light" && [390, 1440].includes(width))
@@ -232,5 +233,47 @@ for (const width of [320, 390, 768, 1440])
       await fits(page);
       await page.getByRole("button", { name: "Effacer les filtres" }).click();
       await expect(rows).toHaveCount(2);
+      // Saisie libre (#377) : un texte sans suggestion filtre aussi.
+      const title = page.getByRole("combobox", { name: "Filtrer par libellé" });
+      await title.fill("introuvable");
+      await title.press("Enter");
+      await expect(rows).toHaveCount(0);
+      await expect(
+        page.getByText("Aucun élément ne correspond à ces filtres.")
+      ).toBeVisible();
+      expect(page.url()).toContain("title=introuvable");
+      await page.getByRole("button", { name: "Effacer les filtres" }).click();
+      await expect(rows).toHaveCount(2);
     });
   }
+
+test("free text title filter applies once on outside click and with Tab (#377)", async ({
+  page,
+}) => {
+  const requests = await prepare(page, { width: 1440, theme: "light" });
+  await page.goto("/operations");
+  await expect(
+    page.getByRole("button", { name: "Courses", exact: true })
+  ).toBeVisible();
+  const title = page.getByRole("combobox", { name: "Filtrer par libellé" });
+  const historyBefore = await page.evaluate(() => history.length);
+  await title.fill("loy");
+  await expect(title).toHaveAttribute("aria-expanded", "true");
+  await page.getByRole("heading", { level: 1 }).click();
+  await expect.poll(() => titles(page)).toEqual(["Loyer"]);
+  expect(await page.evaluate(() => history.length)).toBe(historyBefore + 1);
+  expect(requests.filter((p) => p.get("title") === "loy")).toHaveLength(1);
+  // Retour revient à la liste sans filtre, en une seule étape.
+  await page.goBack();
+  await expect.poll(() => titles(page)).toHaveLength(3);
+  await expect(title).toHaveValue("");
+  // Tab applique le texte et ferme la liste.
+  await title.fill("prime");
+  await title.press("Tab");
+  await expect(title).toHaveAttribute("aria-expanded", "false");
+  await expect.poll(() => titles(page)).toEqual(["Prime"]);
+  expect(page.url()).toContain("title=prime");
+  // Le texte est restauré dans le champ au rechargement.
+  await page.reload();
+  await expect(title).toHaveValue("prime");
+});
