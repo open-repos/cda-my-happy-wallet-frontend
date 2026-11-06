@@ -151,7 +151,9 @@ for (const viewport of viewports) {
       page.getByRole("button", { name: /Convertir Abonnement annuel/ })
     ).toHaveCount(1);
     await expect(
-      page.getByRole("button", { name: /31 octobre 2026, 2 événements prévus/ })
+      page.getByRole("button", {
+        name: /^31 octobre 2026, .*2 événements prévus/,
+      })
     ).toBeVisible();
     await page.getByRole("button", { name: /^23 octobre 2026/ }).click();
     const add = page.getByRole("button", {

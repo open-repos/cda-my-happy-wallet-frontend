@@ -9,6 +9,12 @@ const definitions = [
   { name: "home", path: "/home", ready: ".home-budget__amount", chart: true },
   { name: "calendar", path: "/calendrier", ready: ".budget-day" },
   {
+    name: "calendar-forecast",
+    path: "/calendrier",
+    ready: ".budget-day__value",
+    mode: "forecast",
+  },
+  {
     name: "simulation-calendar",
     path: "/calendrier",
     ready: ".budget-day",
@@ -125,8 +131,21 @@ for (const theme of ["light", "dark"]) {
         !["/login", "/register"].includes(definition.path),
         definition.simulation
       );
+      if (definition.mode)
+        await page.addInitScript(
+          (mode) => localStorage.setItem("mhw.calendar.mode", mode),
+          definition.mode
+        );
       await page.goto(definition.path);
       await expect(page.locator(definition.ready).first()).toBeVisible();
+      if (definition.name === "calendar-forecast") {
+        // #379: the selected day explains its cumulative daily remaining.
+        await page.getByRole("button", { name: /^20 octobre 2026,/ }).click();
+        await expect(
+          page.getByText(/^Reste à vivre du jour : 611,50/)
+        ).toBeVisible();
+        await page.evaluate(() => window.scrollTo(0, 0));
+      }
       if (definition.simulation) {
         await page
           .getByRole("switch", { name: "Simulation", exact: true })

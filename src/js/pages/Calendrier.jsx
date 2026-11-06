@@ -90,9 +90,7 @@ const cellValue = (mode, day) => {
   if (mode === "expenses") {
     return Number(day.expense) > 0 ? `−${formatCompact(day.expense)}` : null;
   }
-  return day.forecastRemaining === null
-    ? null
-    : formatCompact(day.forecastRemaining);
+  return day.dailyRemaining === null ? null : formatCompact(day.dailyRemaining);
 };
 const cellLabel = (
   date,
@@ -120,9 +118,9 @@ const cellLabel = (
         potentialCount > 1 ? "s" : ""
       }`
     );
-  if (day && day.forecastRemaining !== null)
+  if (day && day.dailyRemaining !== null)
     parts.push(
-      `reste prévisionnel ${formatMoney(day.forecastRemaining, currency)}`
+      `reste à vivre du jour ${formatMoney(day.dailyRemaining, currency)}`
     );
   return parts.join(", ");
 };
@@ -182,6 +180,7 @@ function Calendrier() {
     [budget.summary]
   );
   const currency = budget.summary?.currency || "EUR";
+  const selectedDay = selectedDate ? summaryDays.get(selectedDate) : null;
   const isSaving =
     budget.mutationStatus === "loading" ||
     events.mutationStatus === "loading" ||
@@ -402,6 +401,17 @@ function Calendrier() {
               ? `Éléments du ${longDate(selectedDate)}`
               : `Éléments de ${monthLabel(month)}`}
           </h2>
+          {selectedDate && selectedDay?.dailyRemaining != null && (
+            <p className="budget-day-remaining">
+              Reste à vivre du jour :{" "}
+              <strong>
+                {formatMoney(selectedDay.dailyRemaining, currency)}
+              </strong>
+              , soit votre part quotidienne du reste à vivre de base cumulée
+              jusqu’à ce jour, moins les dépenses et plus les entrées saisies ou
+              prévues jusqu’à cette date.
+            </p>
+          )}
           <PlanningActions
             onOperation={(event) => openCreation("expense", event)}
             onEvent={(event) => openCreation("event", event)}

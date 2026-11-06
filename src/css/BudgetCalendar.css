@@ -310,6 +310,16 @@
   text-transform: none;
 }
 
+.budget-day-remaining {
+  margin: 0 0 var(--ds-primitive-space-3);
+  color: var(--ds-color-text-secondary);
+  font-size: var(--ds-primitive-font-size-sm);
+}
+
+.budget-day-remaining strong {
+  color: var(--ds-color-text-primary);
+}
+
 .budget-subtitle {
   margin: var(--ds-primitive-space-3) 0 var(--ds-primitive-space-2);
   color: var(--ds-color-text-secondary);
