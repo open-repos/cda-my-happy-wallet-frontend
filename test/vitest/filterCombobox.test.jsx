@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { startTransition, useState } from "react";
 import {
   act,
   cleanup,
@@ -332,6 +332,131 @@ describe("FilterCombobox (#360)", () => {
       );
       expect(onChange).toHaveBeenLastCalledWith([]);
       expect(input).toHaveValue("");
+    });
+  });
+
+  describe("saisie libre (#377)", () => {
+    it("applique le texte saisi avec Entrée, sans choisir de suggestion", async () => {
+      const { input, onChange, onParentKeyDown } = setup({
+        freeText: true,
+        maxLength: 50,
+      });
+      expect(input).toHaveAttribute("maxLength", "50");
+      input.focus();
+      fireEvent.change(input, { target: { value: "  loy " } });
+      fireEvent.keyDown(input, { key: "Enter" });
+      expect(onChange).toHaveBeenLastCalledWith({ value: "loy", label: "loy" });
+      expect(input).toHaveValue("loy");
+      expect(input).toHaveAttribute("aria-expanded", "false");
+      // Entrée est consommée : un formulaire parent n'est pas soumis.
+      expect(onParentKeyDown.mock.calls.at(-1)[0].defaultPrevented).toBe(true);
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "Filtre appliqué : loy"
+      );
+      // Quitter le champ ensuite ne réapplique pas la même valeur.
+      fireEvent.focusOut(input, { relatedTarget: screen.getByText("Après") });
+      expect(onChange).toHaveBeenCalledTimes(1);
+    });
+
+    it("applique le texte en quittant le champ et le retire une fois vidé", async () => {
+      const { input, onChange } = setup({
+        freeText: true,
+        initial: { value: "Loyer", label: "Loyer" },
+      });
+      input.focus();
+      fireEvent.change(input, { target: { value: "cour" } });
+      fireEvent.focusOut(input, { relatedTarget: screen.getByText("Après") });
+      expect(onChange).toHaveBeenLastCalledWith({
+        value: "cour",
+        label: "cour",
+      });
+      input.focus();
+      fireEvent.change(input, { target: { value: "   " } });
+      fireEvent.focusOut(input, { relatedTarget: screen.getByText("Après") });
+      expect(onChange).toHaveBeenLastCalledWith(null);
+      expect(input).toHaveValue("");
+      expect(screen.getByRole("status")).toHaveTextContent("Filtre retiré");
+    });
+
+    it("annule la saisie avec Échap et garde le choix d'une suggestion", async () => {
+      const { input, onChange } = setup({
+        freeText: true,
+        initial: { value: "Loyer", label: "Loyer" },
+      });
+      input.focus();
+      fireEvent.change(input, { target: { value: "Val" } });
+      fireEvent.keyDown(input, { key: "Escape" });
+      expect(input).toHaveValue("Loyer");
+      expect(onChange).not.toHaveBeenCalled();
+      fireEvent.keyDown(input, { key: "ArrowDown" });
+      await flush();
+      fireEvent.keyDown(input, { key: "Enter" });
+      expect(onChange).toHaveBeenLastCalledWith(OPTIONS[0]);
+      expect(input).toHaveValue("Valeur 1");
+    });
+
+    it("applique le texte avec Tab, même si le focus reste sur le bouton d'effacement", async () => {
+      const { input, onChange } = setup({ freeText: true });
+      input.focus();
+      fireEvent.change(input, { target: { value: "loy" } });
+      expect(input).toHaveAttribute("aria-expanded", "true");
+      fireEvent.keyDown(input, { key: "Tab" });
+      const clearButton = screen.getByRole("button", {
+        name: "Effacer le filtre",
+      });
+      fireEvent.focusOut(input, { relatedTarget: clearButton });
+      expect(onChange).toHaveBeenCalledExactlyOnceWith({
+        value: "loy",
+        label: "loy",
+      });
+      expect(input).toHaveAttribute("aria-expanded", "false");
+    });
+
+    it("n'applique qu'une fois au clic extérieur quand le parent met à jour en transition", async () => {
+      const onChange = vi.fn();
+      // Comme le routeur : la valeur parente arrive dans une transition.
+      const Deferred = () => {
+        const [value, setValue] = useState(null);
+        return (
+          <div>
+            <FilterCombobox
+              label="Filtrer par titre"
+              freeText
+              value={value}
+              loadOptions={createArrayOptionSource(OPTIONS)}
+              onChange={(next) => {
+                onChange(next);
+                startTransition(() => setValue(next));
+              }}
+            />
+            <h1>Ailleurs</h1>
+          </div>
+        );
+      };
+      render(<Deferred />);
+      const input = screen.getByRole("combobox");
+      input.focus();
+      fireEvent.change(input, { target: { value: "loy" } });
+      await flush();
+      const outside = screen.getByRole("heading", { name: "Ailleurs" });
+      fireEvent.pointerDown(outside);
+      fireEvent.mouseDown(outside);
+      fireEvent.focusOut(input, { relatedTarget: null });
+      await flush();
+      expect(onChange).toHaveBeenCalledExactlyOnceWith({
+        value: "loy",
+        label: "loy",
+      });
+      expect(input).toHaveValue("loy");
+    });
+
+    it("reste sans effet en choix multiple", async () => {
+      const { input, onChange } = setup({ freeText: true, multiple: true });
+      input.focus();
+      fireEvent.change(input, { target: { value: "libre" } });
+      fireEvent.keyDown(input, { key: "Enter" });
+      fireEvent.focusOut(input, { relatedTarget: screen.getByText("Après") });
+      expect(onChange).not.toHaveBeenCalled();
     });
   });
 });

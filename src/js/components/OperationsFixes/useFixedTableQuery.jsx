@@ -140,6 +140,8 @@ export const useFixedTableQuery = ({
         label="Filtrer par libellé"
         hideLabel={wide}
         placeholder="Libellé…"
+        freeText
+        maxLength={50}
         value={
           filters.title ? { value: filters.title, label: filters.title } : null
         }

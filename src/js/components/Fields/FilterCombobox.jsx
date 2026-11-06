@@ -35,7 +35,8 @@ const Highlighted = ({ label, query }) => {
  *
  * `loadOptions({query, cursor, limit, signal})` returns the API envelope
  * `{data: [{value, label}], meta: {hasNext, nextCursor}}`. Only values from the
- * list are applied: free text only searches. `value` is an option or `null`,
+ * list are applied: free text only searches, unless `freeText` (single choice)
+ * applies the typed text itself (#377). `value` is an option or `null`,
  * or an array of options with `multiple`. See docs/web-filter-combobox.md. */
 export const FilterCombobox = ({
   id,
@@ -46,6 +47,8 @@ export const FilterCombobox = ({
   onChange,
   loadOptions,
   multiple = false,
+  freeText = false,
+  maxLength,
   pageSize = 10,
   debounceMs = 250,
   disabled = false,
@@ -78,10 +81,34 @@ export const FilterCombobox = ({
     setActive(-1);
     cancel();
   };
-  /** Leaving the field or Escape: a single value shows its label again and
-   * the next opening lists the first values; free text is never applied. */
-  const dismiss = () => {
+  // `freeText` (single choice only, #377): the typed text is itself a value.
+  const typesValue = freeText && !multiple;
+  // Last label applied. Synchronised only when the parent's value changes: a
+  // router may deliver it in a transition, after renders such as `hide()`
+  // that would otherwise reset it and let a following blur apply it twice.
+  const committed = useRef(valueLabel);
+  useEffect(() => {
+    committed.current = valueLabel;
+  }, [valueLabel]);
+  /** Applies the typed text as `{ value, label }`, or `null` once emptied. */
+  const commitText = () => {
+    const typed = text.trim();
+    if (typed !== text) setText(typed);
+    if (typed === committed.current) return;
+    committed.current = typed;
+    onChange(typed ? { value: typed, label: typed } : null);
+    setAnnouncement(typed ? `Filtre appliqué : ${typed}` : "Filtre retiré");
+    reset("");
+  };
+  /** Leaving the field: a single value shows its label again and the next
+   * opening lists the first values. With `freeText`, the typed text is
+   * applied instead. Escape (`cancel`) always restores the label. */
+  const dismiss = ({ cancel = false } = {}) => {
     hide();
+    if (typesValue && !cancel) {
+      commitText();
+      return;
+    }
     if (!multiple && text !== valueLabel) {
       setText(valueLabel);
       reset("");
@@ -191,8 +218,12 @@ export const FilterCombobox = ({
   };
   const clear = () => {
     clearText();
+    committed.current = "";
     if (multiple && selected.length) onChange([]);
-    if (!multiple && value) onChange(null);
+    if (!multiple && value) {
+      onChange(null);
+      setAnnouncement("Filtre retiré");
+    }
     input.current?.focus();
   };
 
@@ -220,16 +251,23 @@ export const FilterCombobox = ({
       if (open && activeOption) {
         e.preventDefault();
         choose(activeOption, active);
+      } else if (typesValue) {
+        e.preventDefault();
+        hide();
+        commitText();
       }
     } else if (e.key === "Escape") {
       const clears = !open && (text || (!multiple && value));
       if (!open && !clears) return;
       e.preventDefault();
       e.stopPropagation();
-      if (open) dismiss();
+      if (open) dismiss({ cancel: true });
       else if (multiple) clearText();
       else clear();
-    } else if (e.key === "Tab" && open) dismiss();
+    } else if (e.key === "Tab" && (open || typesValue)) {
+      // With `freeText`, Tab may stay inside (on the clear button): apply now.
+      dismiss();
+    }
   };
   const onScroll = (e) => {
     const element = e.currentTarget;
@@ -281,6 +319,7 @@ export const FilterCombobox = ({
           aria-describedby={summary ? summaryId : undefined}
           autoComplete="off"
           spellCheck={false}
+          maxLength={maxLength}
           placeholder={placeholder}
           value={text}
           disabled={disabled}
