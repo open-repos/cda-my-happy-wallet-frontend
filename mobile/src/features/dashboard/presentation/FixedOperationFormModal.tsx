@@ -1,7 +1,8 @@
 import { ActionButton } from "@/src/design/ActionButton";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  AccessibilityInfo,
   ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
@@ -16,21 +17,32 @@ import {
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 import { primitives, semantic, themes } from "@/src/design/tokens";
+import { CategoryChoices } from "@/src/features/categories/presentation/CategoryChoices";
 import {
+  compatibleFixedCategories,
+  fixedCategoryOptions,
   FixedOperation,
   FixedOperationDraft,
   FixedOperationDraftErrors,
   FixedOperationType,
   validateFixedOperationDraft,
 } from "@/src/features/dashboard/domain/fixedBudget";
+import { FixedCategoriesStatus } from "@/src/features/dashboard/presentation/useFixedCategories";
+import { OperationCategory } from "@/src/features/operations/domain/oneOffOperation";
 
 interface FixedOperationFormModalProps {
+  categories: OperationCategory[];
+  categoriesStatus: FixedCategoriesStatus;
+  /** Refus serveur de la catégorie choisie (`INVALID_FIXED_CATEGORY`). */
+  categoryError: string | null;
   initialType: FixedOperationType;
   isSaving: boolean;
   operation: FixedOperation | null;
   visible: boolean;
   onCancel(): void;
+  onCategoryChange(): void;
   onDelete(): void;
+  onRetryCategories(): void;
   onSave(draft: FixedOperationDraft): void;
 }
 
@@ -44,15 +56,21 @@ const createDraft = (
   title: operation?.title ?? "",
   amount: operation?.amount ?? "",
   type: operation?.type ?? initialType,
+  categoryId: operation?.categoryId ?? null,
 });
 
 export const FixedOperationFormModal = ({
+  categories,
+  categoriesStatus,
+  categoryError,
   initialType,
   isSaving,
   operation,
   visible,
   onCancel,
+  onCategoryChange,
   onDelete,
+  onRetryCategories,
   onSave,
 }: FixedOperationFormModalProps) => {
   const initialDraft = useMemo(
@@ -68,11 +86,52 @@ export const FixedOperationFormModal = ({
     setDraft((current) => ({ ...current, [key]: value }));
     setErrors((current) => ({ ...current, [key]: undefined }));
   };
-  const submit = () => {
-    const validationErrors = validateFixedOperationDraft(draft);
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length === 0) onSave(draft);
+  const categoryOptions = useMemo(
+    () => fixedCategoryOptions(categories, draft.type, operation),
+    [categories, draft.type, operation],
+  );
+  const changeType = (type: FixedOperationType) => {
+    // Une catégorie réservée à l'autre type n'est pas conservée.
+    const keepsCategory = compatibleFixedCategories(categories, type).some(
+      ({ id }) => id === draft.categoryId,
+    );
+    setDraft((current) => ({
+      ...current,
+      type,
+      categoryId: keepsCategory ? current.categoryId : null,
+    }));
+    setErrors((current) => ({ ...current, categoryId: undefined }));
   };
+  const changeCategory = (categoryId: number | null) => {
+    update("categoryId", categoryId);
+    onCategoryChange();
+  };
+  const submit = () => {
+    const validationErrors = validateFixedOperationDraft(draft, {
+      available:
+        categoriesStatus === "success"
+          ? compatibleFixedCategories(categories, draft.type)
+          : null,
+      current: operation,
+    });
+    setErrors(validationErrors);
+    const firstError =
+      validationErrors.title ??
+      validationErrors.amount ??
+      validationErrors.categoryId;
+    if (firstError != null) {
+      // Les zones live ne sont lues que sur Android : annonce explicite.
+      AccessibilityInfo.announceForAccessibility(firstError);
+      return;
+    }
+    onSave(draft);
+  };
+  useEffect(() => {
+    if (categoryError != null) {
+      AccessibilityInfo.announceForAccessibility(categoryError);
+    }
+  }, [categoryError]);
+  const shownCategoryError = errors.categoryId ?? categoryError ?? undefined;
 
   return (
     <Modal animationType="slide" onRequestClose={onCancel} visible={visible}>
@@ -116,7 +175,7 @@ export const FixedOperationFormModal = ({
                       // L'état désactivé vient de la prop `disabled`.
                       aria-checked={selected}
                       disabled={isSaving || operation != null}
-                      onPress={() => update("type", type)}
+                      onPress={() => changeType(type)}
                       style={[
                         styles.segment,
                         selected && styles.segmentSelected,
@@ -167,6 +226,48 @@ export const FixedOperationFormModal = ({
               {errors.amount ? (
                 <Text style={styles.error}>{errors.amount}</Text>
               ) : null}
+
+              <Text style={styles.label}>Catégorie (facultative)</Text>
+              {categoriesStatus === "loading" ? (
+                <View style={styles.notice}>
+                  <ActivityIndicator color={colors.textSecondary} />
+                  <Text style={styles.noticeText}>
+                    Chargement des catégories…
+                  </Text>
+                </View>
+              ) : null}
+              {categoriesStatus === "error" ? (
+                <View style={styles.notice}>
+                  <Text style={styles.noticeText}>
+                    Catégories indisponibles. Votre choix est conservé.
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    disabled={isSaving}
+                    onPress={onRetryCategories}
+                    style={[styles.button, styles.secondaryButton]}
+                  >
+                    <Text style={styles.secondaryLabel}>
+                      Réessayer les catégories
+                    </Text>
+                  </Pressable>
+                </View>
+              ) : null}
+              {draft.categoryId != null &&
+              !categoryOptions.some(({ id }) => id === draft.categoryId) ? (
+                <Text style={styles.noticeText}>
+                  Catégorie indisponible : l’affectation actuelle est conservée
+                  tant que vous n’en choisissez pas une autre.
+                </Text>
+              ) : null}
+              <CategoryChoices
+                categories={categoryOptions}
+                value={draft.categoryId}
+                disabled={isSaving || categoriesStatus !== "success"}
+                error={shownCategoryError}
+                noneLabel="Non catégorisé"
+                onChange={changeCategory}
+              />
 
               <View style={styles.actions}>
                 {operation != null ? (
@@ -285,6 +386,15 @@ const styles = StyleSheet.create({
   invalid: {
     borderColor: colors.statusErrorText,
     borderWidth: semantic.borderWidth.focus,
+  },
+  notice: {
+    alignItems: "flex-start",
+    gap: primitives.space["2"],
+    marginBottom: primitives.space["2"],
+  },
+  noticeText: {
+    color: colors.textSecondary,
+    fontSize: primitives.fontSize.sm,
   },
   error: {
     color: colors.statusErrorText,

@@ -22,12 +22,32 @@ export interface FixedBudgetGateway {
 export const FIXED_BUDGET_PAGE_LIMIT = 20;
 const DASHBOARD_PAGE_LIMIT = 100;
 
+export type FixedBudgetErrorCode = "INVALID_FIXED_CATEGORY";
+
 export class FixedBudgetRequestError extends Error {
-  public constructor(public readonly status: number) {
+  public constructor(
+    public readonly status: number,
+    public readonly code: FixedBudgetErrorCode | null = null,
+  ) {
     super("Fixed budget request failed");
     this.name = "FixedBudgetRequestError";
   }
 }
+
+/** Lit `error.details.code` sans exiger un corps JSON lisible. */
+const requestError = async (
+  response: Response,
+): Promise<FixedBudgetRequestError> => {
+  const body: unknown = await response.json().catch(() => null);
+  const code =
+    typeof body === "object" &&
+    body !== null &&
+    (body as { error?: { details?: { code?: unknown } } }).error?.details
+      ?.code === "INVALID_FIXED_CATEGORY"
+      ? "INVALID_FIXED_CATEGORY"
+      : null;
+  return new FixedBudgetRequestError(response.status, code);
+};
 
 const resourceFor = (type: FixedOperationType): string =>
   type === "REVENU" ? "revenus" : "charges";
@@ -77,7 +97,7 @@ export class HttpFixedBudgetGateway implements FixedBudgetGateway {
     return this.save(
       `/operations-fixes/${resourceFor(draft.type)}`,
       "POST",
-      draft,
+      toFixedOperationPayload(draft),
     );
   }
 
@@ -88,7 +108,7 @@ export class HttpFixedBudgetGateway implements FixedBudgetGateway {
     return this.save(
       `/operations-fixes/${resourceFor(operation.type)}/${operation.id}`,
       "PUT",
-      draft,
+      toFixedOperationPayload(draft, operation),
     );
   }
 
@@ -103,13 +123,13 @@ export class HttpFixedBudgetGateway implements FixedBudgetGateway {
   private async save(
     path: string,
     method: "POST" | "PUT",
-    draft: FixedOperationDraft,
+    payload: ReturnType<typeof toFixedOperationPayload>,
   ): Promise<void> {
     const response = await this.httpClient.request(path, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(toFixedOperationPayload(draft)),
+      body: JSON.stringify(payload),
     });
-    if (!response.ok) throw new FixedBudgetRequestError(response.status);
+    if (!response.ok) throw await requestError(response);
   }
 }

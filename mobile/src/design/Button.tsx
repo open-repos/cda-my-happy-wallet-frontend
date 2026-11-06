@@ -15,6 +15,8 @@ interface Props extends Omit<PressableProps, "children" | "style"> {
   variant?: "primary" | "secondary" | "danger";
   icon?: keyof typeof Ionicons.glyphMap;
   busy?: boolean;
+  /** Masque le texte (le libellé reste le nom accessible) ; exige `icon`. */
+  iconOnly?: boolean;
   style?: PressableProps["style"];
 }
 /** Generic themed button: no domain command or confirmation logic. */
@@ -24,6 +26,7 @@ export const Button = forwardRef<View, Props>(function Button(
     variant = "secondary",
     icon,
     busy = false,
+    iconOnly = false,
     disabled = false,
     style,
     accessibilityState,
@@ -78,7 +81,9 @@ export const Button = forwardRef<View, Props>(function Button(
           color={foreground}
         />
       ) : null}
-      <Text style={[styles.label, { color: foreground }]}>{label}</Text>
+      {iconOnly && icon ? null : (
+        <Text style={[styles.label, { color: foreground }]}>{label}</Text>
+      )}
     </Pressable>
   );
 });

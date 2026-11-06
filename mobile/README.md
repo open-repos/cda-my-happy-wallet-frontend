@@ -103,4 +103,6 @@ Graphiques du tableau de bord : [décision, dépendances et recette Android #122
 
 Catégories d'opérations : [parcours, formulaire et recette Android #134](docs/mobile-categories.md).
 
+Catégories du budget fixe : [contrat, erreurs et vérification #385](docs/fixed-categories.md).
+
 Liens email et deep links : [routage, sécurité et recette Android #30](docs/deep-links.md).
