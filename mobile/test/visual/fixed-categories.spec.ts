@@ -98,13 +98,17 @@ const radio = (page: Page, name: string) =>
 
 test("shows fixed categories and keeps a Web category when editing", async ({
   page,
-}) => {
+}, testInfo) => {
   const { writes } = await mockFixedBudget(page);
   await openFixedBudget(page);
 
   await expect(page.getByText("Logement", { exact: true })).toBeVisible();
   await expect(page.getByText("Non catégorisé", { exact: true })).toBeVisible();
-  await expect(page).toHaveScreenshot("fixed-categories-list.png", {
+  await page.screenshot({
+    path: testInfo.outputPath("fixed-categories-list-current.png"),
+    fullPage: true,
+  });
+  await expect.soft(page).toHaveScreenshot("fixed-categories-list.png", {
     fullPage: true,
   });
 

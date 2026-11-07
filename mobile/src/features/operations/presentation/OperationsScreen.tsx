@@ -29,6 +29,12 @@ import { OperationCard } from "@/src/features/operations/presentation/OperationC
 import { OperationFormModal } from "@/src/features/operations/presentation/OperationFormModal";
 import { useOneOffOperations } from "@/src/features/operations/presentation/useOneOffOperations";
 
+import {
+  emptyOperationQuery,
+  countQueryFilters,
+} from "../domain/operationQuery";
+import { OperationQueryControls } from "./ListQueryControls";
+
 const colors = themes.light.color;
 const semibold = `${primitives.fontWeight.semibold}` as "600";
 
@@ -39,7 +45,9 @@ export const OperationsScreen = () => {
     () => new HttpOneOffOperationsGateway(httpClient),
     [httpClient],
   );
-  const state = useOneOffOperations(gateway);
+  const [query, setQuery] = useState(emptyOperationQuery);
+  const state = useOneOffOperations(gateway, query);
+  const hasFilters = countQueryFilters(query) > 0;
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editedOperation, setEditedOperation] =
     useState<OneOffOperation | null>(null);
@@ -122,6 +130,7 @@ export const OperationsScreen = () => {
   return (
     <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
       <FlatList
+        accessibilityState={{ busy: state.refreshStatus === "loading" }}
         contentContainerStyle={[
           styles.content,
           state.operations.length === 0 && styles.emptyContent,
@@ -136,8 +145,8 @@ export const OperationsScreen = () => {
               Vos opérations ponctuelles
             </Text>
             <Text style={styles.subtitle}>
-              Retrouvez vos entrées et dépenses, des plus récentes aux plus
-              anciennes.
+              Retrouvez vos entrées et dépenses. Adaptez leur tri et leurs
+              filtres à votre recherche.
             </Text>
             <ActionButton
               action="add"
@@ -167,11 +176,33 @@ export const OperationsScreen = () => {
               />
               <Text style={styles.categoriesLabel}>Gérer les catégories</Text>
             </Pressable>
+            <OperationQueryControls
+              query={query}
+              onChange={setQuery}
+              categories={state.categories}
+              gateway={gateway}
+              disabled={isFormOpen || state.mutationStatus === "loading"}
+            />
+            {state.refreshStatus === "loading" ? (
+              <Text style={styles.subtitle}>Actualisation des opérations…</Text>
+            ) : null}
+            {state.refreshStatus === "error" ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => void state.retry()}
+                style={styles.loadMoreButton}
+              >
+                <Text style={styles.loadMoreLabel}>
+                  Réessayer l’actualisation
+                </Text>
+              </Pressable>
+            ) : null}
             {state.message ? (
               <FeedbackBanner
                 kind={
                   state.mutationStatus === "error" ||
-                  state.pageStatus === "error"
+                  state.pageStatus === "error" ||
+                  state.refreshStatus === "error"
                     ? "error"
                     : "success"
                 }
@@ -184,13 +215,23 @@ export const OperationsScreen = () => {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <FeedbackState
-              actions={[
-                { label: "Ajouter une opération", onPress: openCreate },
-              ]}
-              description="Ajoutez votre première entrée ou dépense pour commencer à suivre votre budget."
+              actions={
+                hasFilters
+                  ? undefined
+                  : [{ label: "Ajouter une opération", onPress: openCreate }]
+              }
+              description={
+                hasFilters
+                  ? "Modifiez ou effacez les filtres pour retrouver vos opérations."
+                  : "Ajoutez votre première entrée ou dépense pour commencer à suivre votre budget."
+              }
               icon="receipt-outline"
               kind="empty"
-              title="Pas encore d’opération"
+              title={
+                hasFilters
+                  ? "Aucune opération ne correspond à ces filtres."
+                  : "Pas encore d’opération"
+              }
             />
           </View>
         }
@@ -210,7 +251,8 @@ export const OperationsScreen = () => {
                   <ActivityIndicator color={colors.actionSecondaryText} />
                 ) : (
                   <Text style={styles.loadMoreLabel}>
-                    {state.pageStatus === "error"
+                    {state.pageStatus === "error" ||
+                    state.refreshStatus === "error"
                       ? "Réessayer de charger la suite"
                       : "Afficher la suite"}
                   </Text>

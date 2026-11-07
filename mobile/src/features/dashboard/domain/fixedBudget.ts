@@ -4,6 +4,7 @@ import {
   PaginationMeta,
   parseCategory,
 } from "@/src/features/operations/domain/oneOffOperation";
+import { FIXED_PERIOD_CHOICES, FixedPeriod } from "./fixedOperationQuery";
 
 export type FixedOperationType = "CHARGE" | "REVENU";
 
@@ -17,6 +18,10 @@ export interface FixedOperation {
   categoryId: number | null;
   /** Objet relu du backend ; `null` si absent malgré `categoryId`. */
   category: OperationCategory | null;
+  period?: FixedPeriod;
+  share?: string;
+  personalAmount?: string | null;
+  monthlyPersonalAmount?: string | null;
 }
 
 export type FixedCategoryAssignment = Pick<
@@ -83,6 +88,24 @@ export const parseFixedOperation = (value: unknown): FixedOperation => {
     throw new Error("Invalid fixed operation response");
   }
 
+  const decimal = (entry: unknown): string | null =>
+    (typeof entry === "string" || typeof entry === "number") &&
+    /^\d+(?:\.\d+)?$/.test(String(entry))
+      ? String(entry)
+      : null;
+  if (
+    (value.periodicite != null &&
+      !FIXED_PERIOD_CHOICES.some(
+        (choice) => choice.value === value.periodicite,
+      )) ||
+    [
+      value.pourcentagePersonnel,
+      value.montantPersonnel,
+      value.montantMensuelPersonnel,
+    ].some((entry) => entry != null && decimal(entry) === null)
+  ) {
+    throw new Error("Invalid fixed operation response");
+  }
   return {
     id: Number(value.idOperationFixe),
     title: value.titre,
@@ -90,6 +113,18 @@ export const parseFixedOperation = (value: unknown): FixedOperation => {
     currency: value.devise,
     type: value.typeOperation,
     ...parseCategoryAssignment(value),
+    ...(value.periodicite != null
+      ? { period: value.periodicite as FixedPeriod }
+      : {}),
+    ...(value.pourcentagePersonnel != null
+      ? { share: decimal(value.pourcentagePersonnel)! }
+      : {}),
+    ...("montantPersonnel" in value
+      ? { personalAmount: decimal(value.montantPersonnel) }
+      : {}),
+    ...("montantMensuelPersonnel" in value
+      ? { monthlyPersonalAmount: decimal(value.montantMensuelPersonnel) }
+      : {}),
   };
 };
 

@@ -8,6 +8,10 @@ import {
   FixedOperation,
   fixedCategoryLabel,
 } from "@/src/features/dashboard/domain/fixedBudget";
+import {
+  fixedPeriod,
+  FIXED_PERIOD_CHOICES,
+} from "../domain/fixedOperationQuery";
 
 interface FixedOperationCardProps {
   operation: FixedOperation;
@@ -64,7 +68,9 @@ export const FixedOperationCard = ({
           <Text style={styles.category}>{fixedCategoryLabel(operation)}</Text>
         </View>
         <Text style={styles.caption}>
-          {isIncome ? "Revenu mensuel" : "Charge mensuelle"}
+          {isIncome
+            ? "Revenu mensuel"
+            : `Charge · ${FIXED_PERIOD_CHOICES.find((choice) => choice.value === fixedPeriod(operation))?.label}`}
         </Text>
       </View>
       {compact ? null : amount}
