@@ -130,7 +130,16 @@ export const useEnvelopeAssignment = (
     state,
     choose: (id: number | null) => setChoice({ touched: true, id }),
     retry: () => {
+      // Relance visible : bouton désactivé jusqu'aux nouvelles réponses.
       setOptions({ key: "", status: "idle", data: [] });
+      if (operationId !== null) {
+        setLink({
+          status: "loading",
+          occurrenceId: null,
+          occurrence: null,
+          forId: operationId,
+        });
+      }
       setAttempt((value) => value + 1);
     },
   };

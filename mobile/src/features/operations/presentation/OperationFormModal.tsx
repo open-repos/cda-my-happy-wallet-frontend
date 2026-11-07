@@ -104,8 +104,10 @@ export const OperationFormModal = ({
   );
   const assignment = useEnvelopeAssignment(envelopes, operation, draft);
   const [assignmentError, setAssignmentError] = useState<string | null>(null);
+  // Visible tant qu'un choix existe, même après passage en entrée : un
+  // blocage n'est jamais caché (comme le Web).
   const showAssignment =
-    draft.kind === "DEPENSE" || assignment.state.link.occurrenceId !== null;
+    draft.kind === "DEPENSE" || assignment.state.selectedId !== null;
   const submit = () => {
     const validationErrors = validateOperationDraft(draft, categoryIds);
     setErrors(validationErrors);

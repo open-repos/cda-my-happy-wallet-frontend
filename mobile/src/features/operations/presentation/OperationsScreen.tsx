@@ -274,6 +274,8 @@ export const OperationsScreen = () => {
           key={editedOperation?.id ?? "new"}
           categories={state.categories}
           isSaving={state.mutationStatus === "loading"}
+          // Erreur serveur visible dans la fenêtre, pas sous elle (#389).
+          errorMessage={state.mutationStatus === "error" ? state.message : null}
           operation={editedOperation}
           visible
           onCancel={closeForm}

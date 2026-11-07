@@ -122,8 +122,14 @@ export const useOneOffOperations = (
     return invalidate;
   }, [reload, queryKey, invalidate]);
 
+  // Révision émise par notre propre écriture : déjà relue par `mutate`.
+  const ownRevision = useRef(false);
   useQuietRefresh(
     useCallback(() => {
+      if (ownRevision.current) {
+        ownRevision.current = false;
+        return () => undefined;
+      }
       void reload(loadedPages.current);
       return () => {
         generation.current++;
@@ -170,8 +176,11 @@ export const useOneOffOperations = (
       setMessage(null);
       try {
         await action();
-        refreshViews();
         const reloaded = await reload();
+        // Les autres lectures (accueil, enveloppes, calendrier) relisent ;
+        // cette liste vient d'être relue et ignore cette révision.
+        ownRevision.current = true;
+        refreshViews();
         setMutationStatus("idle");
         setMessage(
           reloaded

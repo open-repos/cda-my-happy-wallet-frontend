@@ -131,6 +131,32 @@ test("links a new expense to an envelope in the same write", async ({
     categoryId: 4,
     reconciliation: { occurrenceId: 41, expectedOccurrenceId: null },
   });
+  // Une seule relecture locale : le succès n'est pas remplacé (#389).
+  await expect(page.getByText("Opération ajoutée.")).toBeVisible();
+});
+
+test("keeps a blocked link visible after switching to an income", async ({
+  page,
+}) => {
+  const posts: Request[] = [];
+  await page.route(/\/v1\/operations$/, (route) => {
+    if (route.request().method() !== "POST") return route.fallback();
+    posts.push(route.request());
+    return route.fulfill({ status: 201, json: {} });
+  });
+  await signIn(page);
+  await openNewExpense(page);
+  await page.getByRole("button", { name: "Choisir Alimentation" }).click();
+  await page.getByRole("radio", { name: "Entrée", exact: true }).click();
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(
+    page.getByText(/^La date, la devise ou le type ne correspond plus/),
+  ).toBeVisible();
+  await page.getByRole("radio", { name: "Aucun rattachement" }).click();
+  await expect(
+    page.getByText(/^La date, la devise ou le type ne correspond plus/),
+  ).toHaveCount(0);
+  expect(posts).toHaveLength(0);
 });
 
 test("shows the Web message when the server refuses the link", async ({
@@ -150,10 +176,13 @@ test("shows the Web message when the server refuses the link", async ({
   await openNewExpense(page);
   await page.getByRole("radio", { name: /^Loisirs · / }).click();
   await page.getByRole("button", { name: "Enregistrer" }).click();
+  // Message affiché dans la fenêtre du formulaire, pas sous elle.
   await expect(
-    page.getByText(
-      "Ce mois est clôturé : ses rattachements ne sont plus modifiables.",
-    ),
+    page
+      .getByRole("dialog")
+      .getByText(
+        "Ce mois est clôturé : ses rattachements ne sont plus modifiables.",
+      ),
   ).toBeVisible();
   // Le brouillon reste affiché avec l'erreur.
   await expect(page.getByLabel("Titre")).toHaveValue("Marché");

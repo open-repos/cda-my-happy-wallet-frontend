@@ -100,7 +100,7 @@ export const EnvelopeAssignmentField = ({
           </Text>
           <Pressable
             accessibilityRole="button"
-            disabled={disabled}
+            disabled={disabled || link.status === "loading"}
             onPress={onRetry}
             style={styles.button}
           >
