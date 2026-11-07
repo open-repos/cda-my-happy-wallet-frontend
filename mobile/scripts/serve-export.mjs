@@ -240,6 +240,7 @@ const testApiResponse = (pathname, searchParams) => {
             plannedExpense: "0.00",
             plannedCount: 0,
             forecastRemaining: "1337.50",
+            dailyRemaining: "17.25",
           },
           {
             date: `${summary[1]}-20`,
@@ -250,6 +251,7 @@ const testApiResponse = (pathname, searchParams) => {
             plannedExpense: "300.00",
             plannedCount: 1,
             forecastRemaining: "1037.50",
+            dailyRemaining: "-4.17",
           },
         ],
       },
