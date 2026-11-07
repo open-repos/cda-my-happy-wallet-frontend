@@ -500,3 +500,56 @@ test("title suggestions paginate without duplicates, retry errors and discard ob
     page.getByRole("button", { name: "Effacer les filtres", exact: true }),
   ).toHaveCount(0);
 });
+
+test("only server queries limit category selection to twenty", async ({
+  page,
+}) => {
+  const categories = Array.from({ length: 23 }, (_, index) => ({
+    id: index + 1,
+    name: `Catégorie ${index + 1}`,
+    color: null,
+  }));
+  await page.route("**/v1/operation-categories?*", (route) =>
+    route.fulfill({ json: { data: categories, meta: meta() } }),
+  );
+  await page.route("**/v1/operations-fixes?*", (route) =>
+    route.fulfill({
+      json: {
+        data: categories.map((category) =>
+          fixedRow(category.id, `Charge ${category.id}`, {
+            categoryId: category.id,
+            category,
+          }),
+        ),
+        meta: meta(),
+      },
+    }),
+  );
+  await openOperations(page);
+  await openFilters(page);
+  await page.getByRole("button", { name: /^Catégories :/ }).click();
+  for (let id = 1; id <= 20; id++)
+    await page
+      .getByRole("checkbox", { name: `Catégorie ${id}`, exact: true })
+      .click();
+  await expect(
+    page.getByRole("checkbox", { name: "Catégorie 21", exact: true }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "Annuler", exact: true }).click();
+  await page.getByRole("tab", { name: "Tableau de bord", exact: true }).click();
+  await page.getByRole("button", { name: /Budget fixe/ }).click();
+  await openFilters(page);
+  await page.getByRole("button", { name: /^Catégories :/ }).click();
+  for (let id = 1; id <= 21; id++)
+    await page
+      .getByRole("checkbox", { name: `Catégorie ${id}`, exact: true })
+      .click();
+  await expect(
+    page.getByRole("checkbox", { name: "Catégorie 21", exact: true }),
+  ).toBeChecked();
+  await apply(page);
+  await openFilters(page);
+  await expect(
+    page.getByRole("button", { name: "Catégories : 21 choisies", exact: true }),
+  ).toBeVisible();
+});

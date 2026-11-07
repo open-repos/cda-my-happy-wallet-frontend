@@ -44,10 +44,12 @@ valeurs indisponibles restent à la fin dans les deux directions.
 
 Le libellé ignore casse et accents ; catégorie (y compris « Non catégorisé »),
 type et périodicité se combinent avec lui. Les montants personnels et mensuels
-reçus du serveur restent autoritaires. Les revenus sont mensuels et utilisent
-leur montant, comme le Web. Les anciennes charges sans périodicité ni part
-utilisent seulement le repli historique mensuel à 100 %, sans nouveau calcul.
-Aucune mensualisation, répartition ou conversion de devise n’est ajoutée.
+reçus du serveur restent autoritaires. Le choix local de catégories n’a pas la
+limite de 20 imposée aux requêtes d’opérations ponctuelles. Les revenus sont
+mensuels et utilisent leur montant, comme le Web. Les anciennes charges sans
+périodicité ni part utilisent seulement le repli historique mensuel à 100 %, sans
+nouveau calcul. Aucune mensualisation, répartition ou conversion de devise
+n’est ajoutée.
 
 Les critères restent dans l’état de l’écran natif, sans modifier les URL Web.
 Les formulaires d’écriture et les résumés financiers ne sont pas modifiés.

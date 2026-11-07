@@ -214,6 +214,7 @@ export const OperationQueryControls = ({
           defaultSortLabel="Par défaut (date décroissante)"
           sortChoices={OPERATION_SORT_CHOICES}
           categories={categoryChoices}
+          categoryLimit={20}
           typeChoices={[
             { value: "DEPENSE", label: "Dépenses" },
             { value: "ENTREE", label: "Entrées" },

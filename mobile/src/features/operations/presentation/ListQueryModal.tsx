@@ -43,6 +43,7 @@ interface Props {
   sortChoices: readonly QueryOption[];
   defaultSortLabel: string;
   categories: readonly QueryOption[];
+  categoryLimit?: number;
   typeChoices: readonly QueryOption[];
   periods?: readonly QueryOption[];
   localTitles?: readonly string[];
@@ -343,6 +344,7 @@ export const ListQueryModal = ({
   sortChoices,
   defaultSortLabel,
   categories,
+  categoryLimit,
   typeChoices,
   periods,
   localTitles,
@@ -484,7 +486,9 @@ export const ListQueryModal = ({
                           option.value,
                         );
                         const disabled =
-                          !checked && draft.categoryIds.length >= 20;
+                          !checked &&
+                          categoryLimit != null &&
+                          draft.categoryIds.length >= categoryLimit;
                         return (
                           <Pressable
                             key={option.value}
@@ -512,8 +516,11 @@ export const ListQueryModal = ({
                           </Pressable>
                         );
                       })}
-                    {draft.categoryIds.length >= 20 ? (
-                      <Text style={styles.text}>20 catégories maximum.</Text>
+                    {categoryLimit != null &&
+                    draft.categoryIds.length >= categoryLimit ? (
+                      <Text style={styles.text}>
+                        {categoryLimit} catégories maximum.
+                      </Text>
                     ) : null}
                   </View>
                 )}
