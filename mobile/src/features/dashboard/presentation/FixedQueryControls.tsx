@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
-import { FixedOperation } from "../domain/fixedBudget";
+import { FixedOperation, fixedCategoryLabel } from "../domain/fixedBudget";
 import {
   emptyFixedQuery,
-  fixedCategoryLabel,
   FixedQuery,
   FIXED_PERIOD_CHOICES,
   FIXED_SORT_CHOICES,

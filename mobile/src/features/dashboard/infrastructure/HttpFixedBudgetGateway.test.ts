@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   FIXED_BUDGET_PAGE_LIMIT,
+  FixedBudgetRequestError,
   HttpFixedBudgetGateway,
 } from "@/src/features/dashboard/infrastructure/HttpFixedBudgetGateway";
 
@@ -93,11 +94,14 @@ describe("HttpFixedBudgetGateway", () => {
       amount: "2000.00",
       currency: "EUR",
       type: "REVENU",
+      categoryId: null,
+      category: null,
     } as const;
     const draft = {
       title: "Salaire net",
       amount: "2100,5",
       type: "REVENU",
+      categoryId: null,
     } as const;
 
     await gateway.create(draft);
@@ -125,5 +129,89 @@ describe("HttpFixedBudgetGateway", () => {
     expect(request).toHaveBeenNthCalledWith(3, "/operations-fixes/revenus/7", {
       method: "DELETE",
     });
+  });
+
+  it("sends the category chosen at creation and a changed category on update", async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValue(new Response(null, { status: 200 }));
+    const gateway = new HttpFixedBudgetGateway({ request });
+    const operation = {
+      id: 3,
+      title: "Loyer",
+      amount: "900.00",
+      currency: "EUR",
+      type: "CHARGE",
+      categoryId: 21,
+      category: null,
+    } as const;
+
+    await gateway.create({
+      title: "Loyer",
+      amount: "900",
+      type: "CHARGE",
+      categoryId: 21,
+    });
+    await gateway.update(operation, {
+      title: "Loyer",
+      amount: "900",
+      type: "CHARGE",
+      categoryId: null,
+    });
+
+    expect(JSON.parse(request.mock.calls[0][1].body)).toEqual({
+      titre: "Loyer",
+      montant: "900.00",
+      devise: "EUR",
+      categoryId: 21,
+    });
+    expect(request.mock.calls[1][0]).toBe("/operations-fixes/charges/3");
+    expect(JSON.parse(request.mock.calls[1][1].body)).toEqual({
+      titre: "Loyer",
+      montant: "900.00",
+      devise: "EUR",
+      categoryId: null,
+    });
+  });
+
+  it("reports a refused category with its backend code", async () => {
+    const request = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          response: "error",
+          error: {
+            statusCode: 422,
+            message: "Category unavailable for this fixed operation",
+            details: { code: "INVALID_FIXED_CATEGORY" },
+          },
+        }),
+        { status: 422, headers: { "Content-Type": "application/json" } },
+      ),
+    );
+
+    const error = await new HttpFixedBudgetGateway({ request })
+      .create({ title: "Loyer", amount: "900", type: "CHARGE", categoryId: 9 })
+      .catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(FixedBudgetRequestError);
+    expect(error).toMatchObject({
+      status: 422,
+      code: "INVALID_FIXED_CATEGORY",
+    });
+  });
+
+  it("does not require a readable body for other failures", async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValue(new Response("<html>", { status: 502 }));
+
+    await expect(
+      new HttpFixedBudgetGateway({ request }).create({
+        title: "Loyer",
+        amount: "900",
+        type: "CHARGE",
+        categoryId: null,
+      }),
+    ).rejects.toMatchObject({ status: 502, code: null });
   });
 });

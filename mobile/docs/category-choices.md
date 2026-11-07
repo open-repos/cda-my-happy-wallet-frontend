@@ -11,8 +11,9 @@ Les états cochés utilisent aria-checked selon les règles du dépôt ; les opt
 désactivées et les erreurs sont accessibles. Cibles 48 dp, textes multilignes et
 icônes non réductibles. Le thème système pilote les formulaires concernés et les
 couleurs de repli de CategoryMark. La sélection conserve le brouillon et n'écrit
-rien. Les formulaires d'événement et du budget fixe natif n'exposent actuellement
-aucune catégorie ; aucun champ/API n'est inventé dans ce correctif.
+rien. Le formulaire d'événement n'expose actuellement aucune catégorie ; le budget
+fixe la propose depuis #385 ([fixed-categories.md](fixed-categories.md)), avec
+un choix « Non catégorisé » (`noneLabel`).
 
 Validation : type-check, format, lint, 233 tests, Expo Doctor 20/20 et export Web.
 Parcours export des radios, icône/fallback, état choisi et ajout rapide ; fixtures

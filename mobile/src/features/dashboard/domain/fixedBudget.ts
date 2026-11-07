@@ -1,8 +1,9 @@
 import {
   CollectionPage,
+  OperationCategory,
   PaginationMeta,
+  parseCategory,
 } from "@/src/features/operations/domain/oneOffOperation";
-import type { OperationCategory } from "@/src/features/operations/domain/oneOffOperation";
 import { FIXED_PERIOD_CHOICES, FixedPeriod } from "./fixedOperationQuery";
 
 export type FixedOperationType = "CHARGE" | "REVENU";
@@ -13,18 +14,26 @@ export interface FixedOperation {
   amount: string;
   currency: string;
   type: FixedOperationType;
-  categoryId?: number | null;
-  category?: OperationCategory | null;
+  /** Catégorie principale facultative (#385, contrat Web #266). */
+  categoryId: number | null;
+  /** Objet relu du backend ; `null` si absent malgré `categoryId`. */
+  category: OperationCategory | null;
   period?: FixedPeriod;
   share?: string;
   personalAmount?: string | null;
   monthlyPersonalAmount?: string | null;
 }
 
+export type FixedCategoryAssignment = Pick<
+  FixedOperation,
+  "categoryId" | "category"
+>;
+
 export interface FixedOperationDraft {
   title: string;
   amount: string;
   type: FixedOperationType;
+  categoryId: number | null;
 }
 
 export type FixedOperationDraftErrors = Partial<
@@ -39,6 +48,28 @@ export interface BudgetSummary {
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
+
+export const FIXED_CATEGORY_UNAVAILABLE_MESSAGE =
+  "Cette catégorie n’est plus disponible. Choisissez-en une autre.";
+
+const isCategoryId = (value: unknown): value is number =>
+  Number.isSafeInteger(value) && Number(value) > 0;
+
+const parseCategoryAssignment = (
+  value: Record<string, unknown>,
+): FixedCategoryAssignment => {
+  if (value.categoryId != null && !isCategoryId(value.categoryId)) {
+    throw new Error("Invalid fixed operation response");
+  }
+  const category =
+    value.category == null ? null : parseCategory(value.category);
+  return {
+    categoryId: isCategoryId(value.categoryId)
+      ? value.categoryId
+      : (category?.id ?? null),
+    category,
+  };
+};
 
 export const parseFixedOperation = (value: unknown): FixedOperation => {
   if (
@@ -63,12 +94,6 @@ export const parseFixedOperation = (value: unknown): FixedOperation => {
       ? String(entry)
       : null;
   if (
-    (value.categoryId != null &&
-      (!Number.isInteger(value.categoryId) || Number(value.categoryId) < 1)) ||
-    (value.category != null &&
-      (!isRecord(value.category) ||
-        !Number.isInteger(value.category.id) ||
-        typeof value.category.name !== "string")) ||
     (value.periodicite != null &&
       !FIXED_PERIOD_CHOICES.some(
         (choice) => choice.value === value.periodicite,
@@ -81,39 +106,13 @@ export const parseFixedOperation = (value: unknown): FixedOperation => {
   ) {
     throw new Error("Invalid fixed operation response");
   }
-
   return {
     id: Number(value.idOperationFixe),
     title: value.titre,
     amount: value.montant,
     currency: value.devise,
     type: value.typeOperation,
-    ...("categoryId" in value
-      ? {
-          categoryId:
-            value.categoryId == null ? null : Number(value.categoryId),
-        }
-      : {}),
-    ...("category" in value
-      ? {
-          category:
-            value.category == null
-              ? null
-              : {
-                  id: Number((value.category as Record<string, unknown>).id),
-                  name: String(
-                    (value.category as Record<string, unknown>).name,
-                  ),
-                  color:
-                    typeof (value.category as Record<string, unknown>).color ===
-                    "string"
-                      ? String(
-                          (value.category as Record<string, unknown>).color,
-                        )
-                      : null,
-                },
-        }
-      : {}),
+    ...parseCategoryAssignment(value),
     ...(value.periodicite != null
       ? { period: value.periodicite as FixedPeriod }
       : {}),
@@ -129,8 +128,46 @@ export const parseFixedOperation = (value: unknown): FixedOperation => {
   };
 };
 
+/** Libellé affiché, identique au Web (`fixedCategory`). */
+export const fixedCategoryLabel = ({
+  categoryId,
+  category,
+}: FixedCategoryAssignment): string =>
+  category?.name ??
+  (categoryId == null ? "Non catégorisé" : "Catégorie indisponible");
+
+/** `fixedKind` restreint au type ; son absence convient aux deux types. */
+export const compatibleFixedCategories = <T extends OperationCategory>(
+  categories: readonly T[],
+  type: FixedOperationType,
+): T[] =>
+  categories.filter(({ fixedKind }) => fixedKind == null || fixedKind === type);
+
+/**
+ * Choix proposés au formulaire : la catégorie actuelle reste visible et
+ * sélectionnée même si le catalogue ne la propose plus.
+ */
+export const fixedCategoryOptions = (
+  categories: readonly OperationCategory[],
+  type: FixedOperationType,
+  current: FixedCategoryAssignment | null,
+): OperationCategory[] => {
+  const options = compatibleFixedCategories(categories, type);
+  const kept = current?.category;
+  return kept != null && !options.some(({ id }) => id === kept.id)
+    ? [kept, ...options]
+    : options;
+};
+
+interface CategoryCatalog {
+  /** Catégories compatibles chargées ; `null` si le catalogue est indisponible. */
+  available: readonly OperationCategory[] | null;
+  current: Pick<FixedCategoryAssignment, "categoryId"> | null;
+}
+
 export const validateFixedOperationDraft = (
   draft: FixedOperationDraft,
+  catalog?: CategoryCatalog,
 ): FixedOperationDraftErrors => {
   const errors: FixedOperationDraftErrors = {};
   const title = draft.title.trim();
@@ -146,14 +183,38 @@ export const validateFixedOperationDraft = (
     errors.amount =
       "Saisissez un montant d’au moins 1 € avec deux décimales maximum.";
   }
+
+  // Seul un nouveau choix est contrôlé : l'affectation existante reste
+  // conservée, même si le catalogue ne la propose plus.
+  const changed = draft.categoryId !== (catalog?.current?.categoryId ?? null);
+  if (
+    changed &&
+    draft.categoryId != null &&
+    catalog?.available != null &&
+    !catalog.available.some(({ id }) => id === draft.categoryId)
+  ) {
+    errors.categoryId = FIXED_CATEGORY_UNAVAILABLE_MESSAGE;
+  }
   return errors;
 };
 
-export const toFixedOperationPayload = (draft: FixedOperationDraft) => ({
-  titre: draft.title.trim(),
-  montant: Number(draft.amount.replace(",", ".")).toFixed(2),
-  devise: "EUR",
-});
+/**
+ * Corps POST/PUT. Le PUT backend est partiel : `categoryId` n'est envoyé que
+ * s'il change (`null` retire l'affectation), ce qui conserve aussi la
+ * périodicité et la part personnelle saisies sur le Web.
+ */
+export const toFixedOperationPayload = (
+  draft: FixedOperationDraft,
+  current?: Pick<FixedCategoryAssignment, "categoryId">,
+) => {
+  const previous = current?.categoryId ?? null;
+  return {
+    titre: draft.title.trim(),
+    montant: Number(draft.amount.replace(",", ".")).toFixed(2),
+    devise: "EUR",
+    ...(draft.categoryId === previous ? {} : { categoryId: draft.categoryId }),
+  };
+};
 
 export const parseFixedOperationPage = (
   value: unknown,

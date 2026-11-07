@@ -64,6 +64,7 @@ export default function RegisterScreen() {
       {isComplete ? (
         <>
           <AuthSuccess
+            emailSent
             message="Consultez votre boîte email pour confirmer votre compte avant de vous connecter."
             title="Merci pour votre inscription !"
           />

@@ -38,9 +38,6 @@ export const emptyFixedQuery = (): FixedQuery => ({
   kind: "",
   period: "",
 });
-export const fixedCategoryLabel = (row: FixedOperation): string =>
-  row.category?.name ??
-  (row.categoryId == null ? "Non catégorisé" : "Catégorie indisponible");
 export const fixedPeriod = (row: FixedOperation): FixedPeriod =>
   row.type === "REVENU" ? "MENSUELLE" : (row.period ?? "MENSUELLE");
 const legacy = (row: FixedOperation) => row.period == null && row.share == null;

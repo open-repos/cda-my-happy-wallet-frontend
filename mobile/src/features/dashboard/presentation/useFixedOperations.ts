@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FixedOperation, FixedOperationDraft } from "../domain/fixedBudget";
-import { FixedBudgetGateway } from "../infrastructure/HttpFixedBudgetGateway";
+import {
+  FixedOperation,
+  FixedOperationDraft,
+  FIXED_CATEGORY_UNAVAILABLE_MESSAGE,
+} from "../domain/fixedBudget";
+import {
+  FixedBudgetGateway,
+  FixedBudgetRequestError,
+} from "../infrastructure/HttpFixedBudgetGateway";
 
 type LoadStatus = "loading" | "success" | "error";
 type AsyncStatus = "idle" | "loading" | "error";
@@ -11,6 +18,7 @@ export const useFixedOperations = (gateway: FixedBudgetGateway) => {
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [mutationStatus, setMutationStatus] = useState<AsyncStatus>("idle");
   const [message, setMessage] = useState<string | null>(null);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
   const generation = useRef(0);
   const loadInitial = useCallback(async (): Promise<boolean> => {
     const version = ++generation.current;
@@ -48,6 +56,7 @@ export const useFixedOperations = (gateway: FixedBudgetGateway) => {
     async (action: () => Promise<void>, successMessage: string) => {
       setMutationStatus("loading");
       setMessage(null);
+      setCategoryError(null);
       try {
         await action();
         const reloaded = await loadInitial();
@@ -58,9 +67,17 @@ export const useFixedOperations = (gateway: FixedBudgetGateway) => {
             : "La modification est enregistrée, mais la liste n’a pas pu être actualisée.",
         );
         return true;
-      } catch {
+      } catch (error) {
         setMutationStatus("error");
-        setMessage("La modification n’a pas pu être enregistrée. Réessayez.");
+        if (
+          error instanceof FixedBudgetRequestError &&
+          error.code === "INVALID_FIXED_CATEGORY"
+        ) {
+          setCategoryError(FIXED_CATEGORY_UNAVAILABLE_MESSAGE);
+          setMessage(FIXED_CATEGORY_UNAVAILABLE_MESSAGE);
+        } else {
+          setMessage("La modification n’a pas pu être enregistrée. Réessayez.");
+        }
         return false;
       }
     },
@@ -71,6 +88,8 @@ export const useFixedOperations = (gateway: FixedBudgetGateway) => {
     status,
     mutationStatus,
     message,
+    categoryError,
+    clearCategoryError: () => setCategoryError(null),
     retry: loadInitial,
     create: (draft: FixedOperationDraft) =>
       mutate(() => gateway.create(draft), "Élément ajouté au budget fixe."),

@@ -16,6 +16,11 @@ export interface OperationCategory {
   color: string | null;
   /** Icône Font Awesome `style:nom` (#84), `null` sans icône. */
   icon?: string | null;
+  /**
+   * Restriction aux charges ou aux entrées fixes (backend #127) ; absente ou
+   * `null`, la catégorie convient aux deux.
+   */
+  fixedKind?: "CHARGE" | "REVENU" | null;
 }
 
 export interface PaginationMeta {
@@ -102,7 +107,10 @@ export const parseCategory = (value: unknown): OperationCategory => {
         !/^#[0-9A-F]{6}$/i.test(value.color))) ||
     (value.icon != null &&
       (typeof value.icon !== "string" ||
-        !/^(solid|regular):[a-z0-9-]+$/.test(value.icon)))
+        !/^(solid|regular):[a-z0-9-]+$/.test(value.icon))) ||
+    (value.fixedKind != null &&
+      value.fixedKind !== "CHARGE" &&
+      value.fixedKind !== "REVENU")
   ) {
     throw new Error("Invalid category response");
   }
@@ -112,6 +120,9 @@ export const parseCategory = (value: unknown): OperationCategory => {
     name: value.name,
     color: value.color,
     icon: typeof value.icon === "string" ? value.icon : null,
+    ...(value.fixedKind === "CHARGE" || value.fixedKind === "REVENU"
+      ? { fixedKind: value.fixedKind }
+      : {}),
   };
 };
 
