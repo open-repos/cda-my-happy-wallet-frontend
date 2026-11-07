@@ -297,7 +297,9 @@ for (const viewport of viewports) {
     await expect(
       page.getByRole("heading", { name: "Reste à vivre du mois" })
     ).toBeVisible();
-    await expect(page.locator(".home-budget__amount")).toContainText("037,50");
+    await expect(page.locator(".home-budget__amount-current")).toContainText(
+      "767,50"
+    );
     await expect(page.getByText(/^Report d/)).toBeVisible();
     const content = await page
       .locator(".protected-layout__content")
@@ -319,11 +321,15 @@ for (const viewport of viewports) {
       ).toBeLessThan(2);
 
     await page.getByText("Semaine", { exact: true }).click();
-    await expect(page.locator(".home-budget__amount")).toContainText("447,72");
+    await expect(page.locator(".home-budget__amount-current")).toContainText(
+      "447,72"
+    );
     await expect(page.getByText(/63,96\s€ par jour × 7 jours/)).toBeVisible();
 
     await page.getByText("Jour", { exact: true }).click();
-    await expect(page.locator(".home-budget__amount")).toContainText("63,96");
+    await expect(page.locator(".home-budget__amount-current")).toContainText(
+      "63,96"
+    );
 
     await expect(
       page.getByRole("list", { name: "Dépenses par catégorie" })

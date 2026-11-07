@@ -27,6 +27,13 @@ const month = new Intl.DateTimeFormat("en-CA", {
   year: "numeric",
   month: "2-digit",
 }).format(new Date());
+// The fixture month follows the clock: theoretical expectations are derived
+// from its length with the server rule (base ÷ days, truncated to the cent).
+const monthDays = new Date(
+  Date.UTC(...month.split("-").map(Number), 0)
+).getUTCDate();
+const euros = (cents) => (cents / 100).toFixed(2).replace(".", ",");
+const dailyShare = Math.trunc(120000 / monthDays);
 const previousMonth = (() => {
   const date = new Date(`${month}-01T00:00:00.000Z`);
   date.setUTCMonth(date.getUTCMonth() - 1);
@@ -334,7 +341,11 @@ describe("budget calendar page", () => {
     window.localStorage.setItem("mhw.calendar.mode", "forecast");
     render(<Calendrier />);
     const day = screen.getByRole("button", {
-      name: /reste à vivre du jour 17,00/,
+      name: new RegExp(
+        `reste à vivre du jour 17,00\\s*€ sur ${euros(
+          dailyShare * 2
+        )}\\s*€ théorique`
+      ),
     });
     expect(day).toHaveTextContent("17");
     expect(day.getAttribute("aria-label")).not.toMatch(/reste prévisionnel/);
@@ -350,8 +361,70 @@ describe("budget calendar page", () => {
     fireEvent.click(day);
     const explanation = screen.getByText(/^Reste à vivre du jour :/);
     expect(explanation).toHaveTextContent(
-      /Reste à vivre du jour : 17,00 €, soit votre part quotidienne du reste à vivre de base cumulée jusqu’à ce jour, moins les dépenses et plus les entrées saisies ou prévues jusqu’à cette date\./
+      `Reste à vivre du jour : 17,00 € / ${euros(dailyShare * 2)} € théorique`
     );
+    expect(explanation).toHaveTextContent(
+      `Le théorique cumule votre part quotidienne (${euros(
+        dailyShare
+      )} € × 2 jours) ; le reste à vivre du jour en retire les dépenses et y ajoute les entrées saisies ou prévues jusqu’à cette date.`
+    );
+  });
+
+  it("uses the server daily share and the full base on the last day", () => {
+    window.localStorage.setItem("mhw.calendar.mode", "forecast");
+    const lastDate = `${month}-${String(monthDays).padStart(2, "0")}`;
+    // 1000,00 € n'est divisible par aucune longueur de mois : part tronquée.
+    const share = Math.trunc(100000 / monthDays) / 100;
+    useBudgetCalendar.mockReturnValue(
+      state({
+        summary: summary({
+          base: "1000.00",
+          days: [
+            { ...summary().days[0] },
+            {
+              ...summary().days[1],
+              date: lastDate,
+              dailyRemaining: "900.00",
+            },
+          ],
+        }),
+      })
+    );
+    render(<Calendrier />);
+
+    const banner = screen.getByRole("note", {
+      name: "Repère théorique du calendrier",
+    });
+    expect(banner).toHaveTextContent(
+      new RegExp(`part du jour\\s*${share.toFixed(2).replace(".", ",")}\\s*€`)
+    );
+    const second = screen.getByRole("button", {
+      name: new RegExp(
+        `reste à vivre du jour 17,00\\s*€ sur ${(share * 2)
+          .toFixed(2)
+          .replace(".", ",")}\\s*€ théorique`
+      ),
+    });
+    expect(second).toBeVisible();
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /reste à vivre du jour 900,00\s*€ sur 1\s000,00\s*€ théorique/,
+      })
+    );
+    expect(screen.getByText(/^Reste à vivre du jour :/)).toHaveTextContent(
+      /Le théorique vaut votre socle complet du mois ; le reste à vivre/
+    );
+  });
+
+  it("shows the theoretical month and daily share above forecast mode", () => {
+    window.localStorage.setItem("mhw.calendar.mode", "forecast");
+    render(<Calendrier />);
+
+    const banner = screen.getByRole("note", {
+      name: "Repère théorique du calendrier",
+    });
+    expect(banner).toHaveTextContent(/Théorique\s*1\s200,00\s*€/);
+    expect(banner).toHaveTextContent(`part du jour ${euros(dailyShare)} €`);
   });
 
   it("labels each operation with its category and icon", async () => {

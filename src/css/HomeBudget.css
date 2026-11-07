@@ -64,9 +64,79 @@
   font-variant-numeric: tabular-nums;
 }
 
+.home-budget__amount-theoretical {
+  color: var(--ds-color-text-secondary);
+  font-size: var(--ds-primitive-font-size-lg);
+  font-weight: var(--ds-primitive-font-weight-semibold);
+}
+
+.home-budget__progress {
+  width: min(100%, 24rem);
+  accent-color: var(--ds-color-data-forecast);
+}
+
+.home-budget__difference {
+  margin: 0;
+  color: var(--ds-color-text-secondary);
+  font-size: var(--ds-primitive-font-size-sm);
+}
+
 .home-budget__explanation {
   width: 100%;
   text-align: left;
+}
+
+.home-budget__month-comparison {
+  width: 100%;
+  padding: var(--ds-primitive-space-3);
+  border: var(--ds-border-width-default) solid var(--ds-color-border-subtle);
+  border-radius: var(--ds-radius-control);
+  text-align: left;
+}
+
+.home-budget__month-comparison h3,
+.home-budget__month-comparison p {
+  margin: 0;
+}
+
+.home-budget__month-comparison dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ds-primitive-space-3);
+  margin: var(--ds-primitive-space-2) 0;
+}
+
+.home-budget__month-comparison dl div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-primitive-space-1);
+}
+
+.home-budget__month-comparison dd {
+  margin: 0;
+  font-size: var(--ds-primitive-font-size-lg);
+  font-weight: var(--ds-primitive-font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.home-budget__month-comparison p {
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-primitive-font-size-sm);
+}
+
+.home-budget__detail-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-primitive-space-3);
+}
+
+.home-budget__detail-heading h2 {
+  margin: 0;
+}
+
+.home-budget__calculation {
+  margin-top: var(--ds-primitive-space-4);
 }
 
 .home-budget__edit {
