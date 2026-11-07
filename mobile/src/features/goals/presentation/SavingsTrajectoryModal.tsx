@@ -385,6 +385,7 @@ export const SavingsTrajectoryModal = ({
                       <Pressable
                         key={item.key}
                         accessibilityRole="checkbox"
+                        accessibilityLabel={`${item.label} · ${item.pattern}`}
                         aria-checked={checked}
                         onPress={() =>
                           setVisible((old) =>

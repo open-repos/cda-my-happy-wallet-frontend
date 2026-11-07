@@ -107,4 +107,6 @@ Catégories du budget fixe : [contrat, erreurs et vérification #385](docs/fixed
 
 Enveloppes budgétaires : [consultation, contrat et accessibilité #384](docs/mobile-envelopes.md).
 
+Trajectoires d’épargne sous hypothèses : [contrat, écran et accessibilité #285](docs/goal-scenarios.md).
+
 Liens email et deep links : [routage, sécurité et recette Android #30](docs/deep-links.md).
