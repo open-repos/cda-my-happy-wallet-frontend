@@ -1,7 +1,7 @@
 import { ActionButton } from "@/src/design/ActionButton";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -25,6 +25,8 @@ import {
 import { HttpFixedBudgetGateway } from "@/src/features/dashboard/infrastructure/HttpFixedBudgetGateway";
 import { FixedOperationCard } from "@/src/features/dashboard/presentation/FixedOperationCard";
 import { FixedOperationFormModal } from "@/src/features/dashboard/presentation/FixedOperationFormModal";
+import { useFixedCategories } from "@/src/features/dashboard/presentation/useFixedCategories";
+import { HttpOneOffOperationsGateway } from "@/src/features/operations/infrastructure/HttpOneOffOperationsGateway";
 import { useFixedOperations } from "@/src/features/dashboard/presentation/useFixedOperations";
 import { useAuth } from "@/src/features/auth/presentation/AuthProvider";
 
@@ -39,6 +41,11 @@ export const FixedBudgetScreen = () => {
     [httpClient],
   );
   const state = useFixedOperations(gateway);
+  const loadCategories = useCallback(
+    () => new HttpOneOffOperationsGateway(httpClient).listAllCategories(),
+    [httpClient],
+  );
+  const categories = useFixedCategories(loadCategories);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [initialType, setInitialType] = useState<FixedOperationType>("CHARGE");
   const [editedOperation, setEditedOperation] = useState<FixedOperation | null>(
@@ -62,11 +69,13 @@ export const FixedBudgetScreen = () => {
   const openCreate = (type: FixedOperationType) => {
     setInitialType(type);
     setEditedOperation(null);
+    state.clearCategoryError();
     setIsFormOpen(true);
   };
   const openEdit = (operation: FixedOperation) => {
     setInitialType(operation.type);
     setEditedOperation(operation);
+    state.clearCategoryError();
     setIsFormOpen(true);
   };
   const closeForm = () => {
@@ -269,12 +278,17 @@ export const FixedBudgetScreen = () => {
       {isFormOpen ? (
         <FixedOperationFormModal
           key={editedOperation?.id ?? `new-${initialType}`}
+          categories={categories.categories}
+          categoriesStatus={categories.status}
+          categoryError={state.categoryError}
           initialType={initialType}
           isSaving={state.mutationStatus === "loading"}
           operation={editedOperation}
           visible
           onCancel={closeForm}
+          onCategoryChange={state.clearCategoryError}
           onDelete={confirmDelete}
+          onRetryCategories={() => void categories.retry()}
           onSave={(draft) => void save(draft)}
         />
       ) : null}

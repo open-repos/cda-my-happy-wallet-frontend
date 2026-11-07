@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 
 import {
+  FIXED_CATEGORY_UNAVAILABLE_MESSAGE,
   FixedOperation,
   FixedOperationDraft,
 } from "@/src/features/dashboard/domain/fixedBudget";
-import { FixedBudgetGateway } from "@/src/features/dashboard/infrastructure/HttpFixedBudgetGateway";
+import {
+  FixedBudgetGateway,
+  FixedBudgetRequestError,
+} from "@/src/features/dashboard/infrastructure/HttpFixedBudgetGateway";
 import { PaginationMeta } from "@/src/features/operations/domain/oneOffOperation";
 
 type LoadStatus = "loading" | "success" | "error";
@@ -25,6 +29,8 @@ export const useFixedOperations = (gateway: FixedBudgetGateway) => {
   const [pageStatus, setPageStatus] = useState<AsyncStatus>("idle");
   const [mutationStatus, setMutationStatus] = useState<AsyncStatus>("idle");
   const [message, setMessage] = useState<string | null>(null);
+  /** Refus `INVALID_FIXED_CATEGORY`, rattaché au sélecteur du formulaire. */
+  const [categoryError, setCategoryError] = useState<string | null>(null);
 
   const loadInitial = useCallback(async (): Promise<boolean> => {
     setStatus("loading");
@@ -87,6 +93,7 @@ export const useFixedOperations = (gateway: FixedBudgetGateway) => {
     async (action: () => Promise<void>, successMessage: string) => {
       setMutationStatus("loading");
       setMessage(null);
+      setCategoryError(null);
       try {
         await action();
         const reloaded = await loadInitial();
@@ -97,9 +104,17 @@ export const useFixedOperations = (gateway: FixedBudgetGateway) => {
             : "La modification est enregistrée, mais la liste n’a pas pu être actualisée.",
         );
         return true;
-      } catch {
+      } catch (error) {
         setMutationStatus("error");
-        setMessage("La modification n’a pas pu être enregistrée. Réessayez.");
+        if (
+          error instanceof FixedBudgetRequestError &&
+          error.code === "INVALID_FIXED_CATEGORY"
+        ) {
+          setCategoryError(FIXED_CATEGORY_UNAVAILABLE_MESSAGE);
+          setMessage(FIXED_CATEGORY_UNAVAILABLE_MESSAGE);
+        } else {
+          setMessage("La modification n’a pas pu être enregistrée. Réessayez.");
+        }
         return false;
       }
     },
@@ -113,6 +128,8 @@ export const useFixedOperations = (gateway: FixedBudgetGateway) => {
     pageStatus,
     mutationStatus,
     message,
+    categoryError,
+    clearCategoryError: () => setCategoryError(null),
     retry: loadInitial,
     loadMore,
     create: (draft: FixedOperationDraft) =>
