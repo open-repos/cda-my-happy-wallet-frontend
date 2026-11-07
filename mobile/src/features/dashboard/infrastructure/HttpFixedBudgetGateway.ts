@@ -22,7 +22,8 @@ export interface FixedBudgetGateway {
 export const FIXED_BUDGET_PAGE_LIMIT = 20;
 const DASHBOARD_PAGE_LIMIT = 100;
 
-export type FixedBudgetErrorCode = "INVALID_FIXED_CATEGORY";
+/** Code serveur `error.details.code`, par exemple `INVALID_FIXED_CATEGORY`. */
+export type FixedBudgetErrorCode = string;
 
 export class FixedBudgetRequestError extends Error {
   public constructor(
@@ -40,13 +41,14 @@ const requestError = async (
 ): Promise<FixedBudgetRequestError> => {
   const body: unknown = await response.json().catch(() => null);
   const code =
-    typeof body === "object" &&
-    body !== null &&
-    (body as { error?: { details?: { code?: unknown } } }).error?.details
-      ?.code === "INVALID_FIXED_CATEGORY"
-      ? "INVALID_FIXED_CATEGORY"
+    typeof body === "object" && body !== null
+      ? (body as { error?: { details?: { code?: unknown } } }).error?.details
+          ?.code
       : null;
-  return new FixedBudgetRequestError(response.status, code);
+  return new FixedBudgetRequestError(
+    response.status,
+    typeof code === "string" ? code : null,
+  );
 };
 
 const resourceFor = (type: FixedOperationType): string =>

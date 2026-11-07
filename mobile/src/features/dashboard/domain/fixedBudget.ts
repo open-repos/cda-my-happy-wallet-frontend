@@ -4,6 +4,7 @@ import {
   PaginationMeta,
   parseCategory,
 } from "@/src/features/operations/domain/oneOffOperation";
+import { shiftMonth } from "@/src/features/forecast/domain/budgetForecast";
 import { FIXED_PERIOD_CHOICES, FixedPeriod } from "./fixedOperationQuery";
 
 export type FixedOperationType = "CHARGE" | "REVENU";
@@ -22,6 +23,8 @@ export interface FixedOperation {
   share?: string;
   personalAmount?: string | null;
   monthlyPersonalAmount?: string | null;
+  /** Charge mensuelle suivie comme enveloppe (#389, Web #314). */
+  isBudgetEnvelope?: true;
 }
 
 export type FixedCategoryAssignment = Pick<
@@ -34,6 +37,10 @@ export interface FixedOperationDraft {
   amount: string;
   type: FixedOperationType;
   categoryId: number | null;
+  /** Mode enveloppe d'une charge mensuelle (#389). */
+  isBudgetEnvelope?: boolean;
+  /** Mois d'effet d'une modification ; absent = mois courant. */
+  effectiveMonth?: string | null;
 }
 
 export type FixedOperationDraftErrors = Partial<
@@ -102,7 +109,9 @@ export const parseFixedOperation = (value: unknown): FixedOperation => {
       value.pourcentagePersonnel,
       value.montantPersonnel,
       value.montantMensuelPersonnel,
-    ].some((entry) => entry != null && decimal(entry) === null)
+    ].some((entry) => entry != null && decimal(entry) === null) ||
+    (value.isBudgetEnvelope != null &&
+      typeof value.isBudgetEnvelope !== "boolean")
   ) {
     throw new Error("Invalid fixed operation response");
   }
@@ -124,6 +133,9 @@ export const parseFixedOperation = (value: unknown): FixedOperation => {
       : {}),
     ...("montantMensuelPersonnel" in value
       ? { monthlyPersonalAmount: decimal(value.montantMensuelPersonnel) }
+      : {}),
+    ...(value.isBudgetEnvelope === true
+      ? { isBudgetEnvelope: true as const }
       : {}),
   };
 };
@@ -199,20 +211,41 @@ export const validateFixedOperationDraft = (
 };
 
 /**
- * Corps POST/PUT. Le PUT backend est partiel : `categoryId` n'est envoyé que
- * s'il change (`null` retire l'affectation), ce qui conserve aussi la
- * périodicité et la part personnelle saisies sur le Web.
+ * Mode enveloppe proposé aux seules charges mensuelles, comme le Web ; une
+ * charge sans périodicité relue est mensuelle (défaut du backend).
+ */
+export const envelopeAvailable = (
+  type: FixedOperationType,
+  period: FixedPeriod | undefined,
+): boolean => type === "CHARGE" && (period ?? "MENSUELLE") === "MENSUELLE";
+
+/** « Appliquer la modification à partir de » : mois courant et 23 suivants. */
+export const effectiveMonthOptions = (currentMonth: string): string[] =>
+  Array.from({ length: 24 }, (_, index) => shiftMonth(currentMonth, index));
+
+/**
+ * Corps POST/PUT. Le PUT backend est partiel : `categoryId` et
+ * `isBudgetEnvelope` ne sont envoyés que s'ils changent (`null` retire la
+ * catégorie), ce qui conserve aussi la périodicité et la part personnelle
+ * saisies sur le Web. `effectiveMonth` n'est envoyé que pour un mois choisi
+ * après le mois courant ; une entrée n'accepte jamais le drapeau d'enveloppe.
  */
 export const toFixedOperationPayload = (
   draft: FixedOperationDraft,
-  current?: Pick<FixedCategoryAssignment, "categoryId">,
+  current?: Pick<FixedOperation, "categoryId" | "isBudgetEnvelope">,
 ) => {
   const previous = current?.categoryId ?? null;
+  const envelope = draft.isBudgetEnvelope ?? false;
   return {
     titre: draft.title.trim(),
     montant: Number(draft.amount.replace(",", ".")).toFixed(2),
     devise: "EUR",
     ...(draft.categoryId === previous ? {} : { categoryId: draft.categoryId }),
+    ...(draft.type === "CHARGE" &&
+    envelope !== (current?.isBudgetEnvelope ?? false)
+      ? { isBudgetEnvelope: envelope }
+      : {}),
+    ...(draft.effectiveMonth ? { effectiveMonth: draft.effectiveMonth } : {}),
   };
 };
 

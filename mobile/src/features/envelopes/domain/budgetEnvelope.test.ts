@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  envelopeErrorMessage,
   envelopeStatusLabel,
   meterValue,
   parseEnvelopeOccurrence,
@@ -114,5 +115,18 @@ describe("budget envelope labels", () => {
     expect(statisticsSampleLabel(envelopeStatistics)).toBe(
       "6 mois analysés ; 0 mois sans suivi complet et 0 mois courant ou futurs exclus. Les mois historiques absents ne sont pas assimilés à zéro.",
     );
+  });
+});
+
+describe("envelope API errors (#389)", () => {
+  it("reuses the Web messages and falls back otherwise", () => {
+    expect(envelopeErrorMessage("PERIOD_CLOSED", "x")).toBe(
+      "Ce mois est clôturé : ses rattachements ne sont plus modifiables.",
+    );
+    expect(envelopeErrorMessage("INVALID_BUDGET_ENVELOPE", "x")).toBe(
+      "Une enveloppe doit être une charge mensuelle.",
+    );
+    expect(envelopeErrorMessage("OTHER", "Réessayez.")).toBe("Réessayez.");
+    expect(envelopeErrorMessage(null, "Réessayez.")).toBe("Réessayez.");
   });
 });

@@ -1,3 +1,5 @@
+import { envelopeErrorMessage } from "@/src/features/envelopes/domain/budgetEnvelope";
+import { monthLabel } from "@/src/features/envelopes/presentation/envelopeFormat";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   FixedOperation,
@@ -76,7 +78,13 @@ export const useFixedOperations = (gateway: FixedBudgetGateway) => {
           setCategoryError(FIXED_CATEGORY_UNAVAILABLE_MESSAGE);
           setMessage(FIXED_CATEGORY_UNAVAILABLE_MESSAGE);
         } else {
-          setMessage("La modification n’a pas pu être enregistrée. Réessayez.");
+          // Erreurs d'enveloppe et de mois d'effet : messages du Web (#389).
+          setMessage(
+            envelopeErrorMessage(
+              error instanceof FixedBudgetRequestError ? error.code : null,
+              "La modification n’a pas pu être enregistrée. Réessayez.",
+            ),
+          );
         }
         return false;
       }
@@ -96,7 +104,9 @@ export const useFixedOperations = (gateway: FixedBudgetGateway) => {
     update: (operation: FixedOperation, draft: FixedOperationDraft) =>
       mutate(
         () => gateway.update(operation, draft),
-        "Élément du budget fixe modifié.",
+        draft.effectiveMonth
+          ? `Élément du budget fixe : modification enregistrée à partir de ${monthLabel(draft.effectiveMonth)}.`
+          : "Élément du budget fixe modifié.",
       ),
     delete: (operation: FixedOperation) =>
       mutate(

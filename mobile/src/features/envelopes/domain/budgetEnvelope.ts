@@ -303,3 +303,27 @@ export const statisticsSampleLabel = (s: EnvelopeStatistics) =>
   `${s.unreconciledMonthsExcluded} mois sans suivi complet et ` +
   `${s.incompleteMonthsExcluded} mois courant ou futurs exclus. ` +
   "Les mois historiques absents ne sont pas assimilés à zéro.";
+
+/** Messages des erreurs d'enveloppe, identiques au Web (`envelopesService`). */
+const ENVELOPE_ERRORS: Record<string, string> = {
+  PERIOD_CLOSED:
+    "Ce mois est clôturé : ses rattachements ne sont plus modifiables.",
+  ASSOCIATION_CONFLICT:
+    "Le rattachement a changé entre-temps. Actualisez avant de réessayer.",
+  CURRENCY_MISMATCH: "La dépense et l’enveloppe doivent avoir la même devise.",
+  TYPE_MISMATCH: "Seule une dépense peut être rattachée à une enveloppe.",
+  PERIOD_MISMATCH: "Choisissez une enveloppe du même mois que la dépense.",
+  LINKED_OPERATION_INCOMPATIBLE:
+    "Le rattachement est incompatible : dissociez ou choisissez une enveloppe de la nouvelle période.",
+  NOT_BUDGET_ENVELOPE: "Cette charge n’est pas une enveloppe budgétaire.",
+  INVALID_BUDGET_ENVELOPE: "Une enveloppe doit être une charge mensuelle.",
+  ENVELOPE_IN_USE:
+    "Cette enveloppe contient des dépenses liées. Préparez sa modification pour un mois sans rattachement incompatible.",
+  INVALID_EFFECTIVE_MONTH:
+    "Choisissez le mois courant ou l’un des 23 mois suivants.",
+};
+
+export const envelopeErrorMessage = (
+  code: string | null | undefined,
+  fallback: string,
+): string => (code != null && ENVELOPE_ERRORS[code]) || fallback;
