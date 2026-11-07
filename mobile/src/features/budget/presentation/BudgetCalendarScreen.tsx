@@ -1,4 +1,5 @@
 import { ActionButton } from "@/src/design/ActionButton";
+import { useFabClearance } from "@/src/features/quick-add/presentation/useFabClearance";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -66,6 +67,8 @@ import { useQuickAdd } from "@/src/features/quick-add/presentation/QuickAddProvi
 
 /** Calendrier budgétaire du mois : grille, modes, détail du jour, opérations. */
 export const BudgetCalendarScreen = () => {
+  // Fin de page dégagée du bouton flottant d’ajout (#407).
+  const fabSpace = useFabClearance(40);
   const { width, fontScale } = useWindowDimensions();
   const compact = width < 768;
   const [gridViewportWidth, setGridViewportWidth] = useState(0);
@@ -232,7 +235,7 @@ export const BudgetCalendarScreen = () => {
     <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
       <ScrollView
         testID="calendar-scroll-content"
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, fabSpace]}
       >
         {Platform.OS === "web" && (
           <Text

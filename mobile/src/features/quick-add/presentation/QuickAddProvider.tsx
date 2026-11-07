@@ -53,6 +53,11 @@ import {
   writeQuickAdd,
 } from "@/src/features/quick-add/application/QuickAddWriter";
 import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
+import {
+  FAB_MAX_WIDTH,
+  FAB_OFFSET,
+  FAB_SIZE,
+} from "@/src/features/quick-add/presentation/fabLayout";
 import { potentialMinStartDate } from "@/src/features/simulation/domain/potential";
 
 type Panel = { kind: QuickAddKind | "menu"; date: string };
@@ -195,7 +200,9 @@ export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
       <View style={styles.root}>
         {children}
         {success && !panel ? (
-          <View style={[styles.feedback, { bottom: 80 + insets.bottom }]}>
+          <View
+            style={[styles.feedback, { bottom: FAB_OFFSET + insets.bottom }]}
+          >
             <FeedbackBanner kind="success">{success}</FeedbackBanner>
             <Pressable
               accessibilityRole="button"
@@ -206,7 +213,7 @@ export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
             </Pressable>
           </View>
         ) : null}
-        {width < 768 && !keyboard ? (
+        {width < FAB_MAX_WIDTH && !keyboard ? (
           <Pressable
             ref={fab}
             accessibilityLabel="Ajouter une opération ou un événement"
@@ -219,7 +226,10 @@ export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
                 backgroundColor: fabColors.actionPrimaryBackground,
                 borderColor: fabColors.actionPrimaryText,
               },
-              { bottom: 80 + insets.bottom, display: panel ? "none" : "flex" },
+              {
+                bottom: FAB_OFFSET + insets.bottom,
+                display: panel ? "none" : "flex",
+              },
             ]}
           >
             <Ionicons
@@ -345,9 +355,9 @@ const styles = StyleSheet.create({
   fab: {
     position: "absolute",
     right: 16,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: FAB_SIZE,
+    height: FAB_SIZE,
+    borderRadius: FAB_SIZE / 2,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.actionPrimaryBackground,
