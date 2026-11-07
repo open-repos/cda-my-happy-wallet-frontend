@@ -1,4 +1,4 @@
-# Liens email et deep links (#30, #219)
+# Liens email et deep links (#30, #219, #388)
 
 ## Liens reçus
 
@@ -12,6 +12,21 @@ Les emails du backend pointent vers le site Web, jamais vers l'application :
 Le lien de vérification d'inscription reste traité par l'API dans le
 navigateur ; seule la page `/login` de destination concerne l'application.
 Application non installée : les deux liens ouvrent les pages Web habituelles.
+
+### Email en attente (#388)
+
+Après une inscription ou une demande de mot de passe oublié réussie, l'écran de
+succès ajoute le conseil du Web (`EmailDeliveryHint`, #362) : « L’email
+n’arrive pas ? Attendez quelques minutes, puis vérifiez votre dossier spam ou
+courrier indésirable. » Le texte vit dans
+`src/features/auth/account/emailDeliveryHint.ts` ; un test unitaire le compare
+au composant Web pour garder la même formulation. Le message de confirmation
+reste inchangé et ne dit rien de l'existence du compte.
+
+`AuthSuccess` annonce titre, message et conseil à son affichage avec
+`announceForAccessibility`, car iOS n'a pas de région live ; le nouveau mot de
+passe (#219) en profite aussi. À la recette Android, vérifier que TalkBack ne
+lit pas l'annonce deux fois (région live `polite` de `FeedbackState`).
 
 ## Entrées dans l'application
 
