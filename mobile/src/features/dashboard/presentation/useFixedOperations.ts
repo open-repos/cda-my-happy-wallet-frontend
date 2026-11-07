@@ -1,4 +1,7 @@
+import { envelopeErrorMessage } from "@/src/features/envelopes/domain/budgetEnvelope";
+import { monthLabel } from "@/src/features/envelopes/presentation/envelopeFormat";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
 import {
   FixedOperation,
   FixedOperationDraft,
@@ -52,6 +55,8 @@ export const useFixedOperations = (gateway: FixedBudgetGateway) => {
     };
   }, [loadInitial, invalidate]);
 
+  // Accueil, enveloppes et calendrier relisent après une écriture (#389).
+  const { invalidate: refreshViews } = useSimulation();
   const mutate = useCallback(
     async (action: () => Promise<void>, successMessage: string) => {
       setMutationStatus("loading");
@@ -59,6 +64,7 @@ export const useFixedOperations = (gateway: FixedBudgetGateway) => {
       setCategoryError(null);
       try {
         await action();
+        refreshViews();
         const reloaded = await loadInitial();
         setMutationStatus("idle");
         setMessage(
@@ -76,12 +82,18 @@ export const useFixedOperations = (gateway: FixedBudgetGateway) => {
           setCategoryError(FIXED_CATEGORY_UNAVAILABLE_MESSAGE);
           setMessage(FIXED_CATEGORY_UNAVAILABLE_MESSAGE);
         } else {
-          setMessage("La modification n’a pas pu être enregistrée. Réessayez.");
+          // Erreurs d'enveloppe et de mois d'effet : messages du Web (#389).
+          setMessage(
+            envelopeErrorMessage(
+              error instanceof FixedBudgetRequestError ? error.code : null,
+              "La modification n’a pas pu être enregistrée. Réessayez.",
+            ),
+          );
         }
         return false;
       }
     },
-    [loadInitial],
+    [loadInitial, refreshViews],
   );
   return {
     operations,
@@ -96,7 +108,9 @@ export const useFixedOperations = (gateway: FixedBudgetGateway) => {
     update: (operation: FixedOperation, draft: FixedOperationDraft) =>
       mutate(
         () => gateway.update(operation, draft),
-        "Élément du budget fixe modifié.",
+        draft.effectiveMonth
+          ? `Élément du budget fixe : modification enregistrée à partir de ${monthLabel(draft.effectiveMonth)}.`
+          : "Élément du budget fixe modifié.",
       ),
     delete: (operation: FixedOperation) =>
       mutate(

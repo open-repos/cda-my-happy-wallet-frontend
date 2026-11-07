@@ -149,6 +149,24 @@ const envelopeResponse = (pathname, searchParams) => {
       meta: noNext,
     };
   }
+  // Formulaire d'opération (#389) : enveloppes du mois et lien actuel.
+  const monthMatch =
+    /\/reconciliation\/months\/(\d{4}-\d{2})\/occurrences$/.exec(pathname);
+  if (monthMatch) {
+    return {
+      data: ENVELOPES.map((envelope) => occurrenceOf(envelope, monthMatch[1])),
+      integration: {
+        globalBudgetAdjusted: true,
+        mode: "INTEGRATED",
+        policy: "OPEN_RESERVED_CLOSED_MATCHED_ACTUAL",
+      },
+      meta: { hasNext: false, limit: 100, nextCursor: null },
+    };
+  }
+  const linkMatch = /\/operations\/(\d+)\/reconciliation$/.exec(pathname);
+  if (linkMatch) {
+    return { data: { occurrenceId: null, operationId: Number(linkMatch[1]) } };
+  }
   const match = /\/reconciliation\/occurrences\/(\d+)(\/operations)?$/.exec(
     pathname,
   );
@@ -159,24 +177,24 @@ const envelopeResponse = (pathname, searchParams) => {
   if (match[2]) {
     return { data: envelopePayments(envelope, thisMonth), meta: noNext };
   }
-  return {
-    data: {
-      categoryId: envelope.category?.id ?? null,
-      closed: false,
-      currency: "EUR",
-      id: envelope.occurrenceId,
-      kind: "DEPENSE",
-      metrics: envelope.metrics,
-      month: thisMonth,
-      operationCount: envelope.payments.length,
-      personalShare: envelope.metrics.planned,
-      referenceTotal: envelope.metrics.planned,
-      sourceId: envelope.id,
-      sourceType: "ENVELOPE",
-      title: envelope.title,
-    },
-  };
+  return { data: occurrenceOf(envelope, thisMonth) };
 };
+
+const occurrenceOf = (envelope, month) => ({
+  categoryId: envelope.category?.id ?? null,
+  closed: false,
+  currency: "EUR",
+  id: envelope.occurrenceId,
+  kind: "DEPENSE",
+  metrics: envelope.metrics,
+  month,
+  operationCount: envelope.payments.length,
+  personalShare: envelope.metrics.planned,
+  referenceTotal: envelope.metrics.planned,
+  sourceId: envelope.id,
+  sourceType: "ENVELOPE",
+  title: envelope.title,
+});
 
 const testApiResponse = (pathname, searchParams) => {
   const envelopes = envelopeResponse(pathname, searchParams);

@@ -11,8 +11,13 @@ import {
   emptyOperationQuery,
   operationRequestFilter,
 } from "../domain/operationQuery";
-import { OneOffOperationsGateway } from "../infrastructure/HttpOneOffOperationsGateway";
+import {
+  OneOffOperationsGateway,
+  OperationRequestError,
+} from "../infrastructure/HttpOneOffOperationsGateway";
 import { useQuietRefresh } from "@/src/features/simulation/presentation/useQuietRefresh";
+import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
+import { envelopeErrorMessage } from "@/src/features/envelopes/domain/budgetEnvelope";
 
 type LoadStatus = "loading" | "success" | "error";
 type AsyncStatus = "idle" | "loading" | "error";
@@ -117,8 +122,14 @@ export const useOneOffOperations = (
     return invalidate;
   }, [reload, queryKey, invalidate]);
 
+  // Révision émise par notre propre écriture : déjà relue par `mutate`.
+  const ownRevision = useRef(false);
   useQuietRefresh(
     useCallback(() => {
+      if (ownRevision.current) {
+        ownRevision.current = false;
+        return () => undefined;
+      }
       void reload(loadedPages.current);
       return () => {
         generation.current++;
@@ -157,6 +168,8 @@ export const useOneOffOperations = (
     }
   }, [gateway, meta, refreshStatus]);
 
+  // Accueil, enveloppes et calendrier relisent après une écriture (#389).
+  const { invalidate: refreshViews } = useSimulation();
   const mutate = useCallback(
     async (action: () => Promise<unknown>, successMessage: string) => {
       setMutationStatus("loading");
@@ -164,6 +177,10 @@ export const useOneOffOperations = (
       try {
         await action();
         const reloaded = await reload();
+        // Les autres lectures (accueil, enveloppes, calendrier) relisent ;
+        // cette liste vient d'être relue et ignore cette révision.
+        ownRevision.current = true;
+        refreshViews();
         setMutationStatus("idle");
         setMessage(
           reloaded
@@ -171,13 +188,19 @@ export const useOneOffOperations = (
             : "La modification est enregistrée, mais la liste n’a pas pu être actualisée.",
         );
         return true;
-      } catch {
+      } catch (error) {
         setMutationStatus("error");
-        setMessage("L’opération n’a pas pu être enregistrée. Réessayez.");
+        // Erreurs de rattachement : messages du Web (#389).
+        setMessage(
+          envelopeErrorMessage(
+            error instanceof OperationRequestError ? error.code : null,
+            "L’opération n’a pas pu être enregistrée. Réessayez.",
+          ),
+        );
         return false;
       }
     },
-    [reload],
+    [refreshViews, reload],
   );
 
   return {

@@ -9,6 +9,7 @@ import {
   isRepeatedCursor,
 } from "@/src/features/envelopes/domain/pagination";
 import { CollectionPage } from "@/src/features/operations/domain/oneOffOperation";
+import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
 
 export type PagedStatus = "loading" | "success" | "error";
 
@@ -75,6 +76,15 @@ export const usePagedCollection = <T extends { id: number }>(
       return undefined;
     }, [readFirstPage]),
   );
+
+  // Une écriture ailleurs (opération, budget fixe, #389) relit sans bruit.
+  const { revision } = useSimulation();
+  const seenRevision = useRef(revision);
+  useEffect(() => {
+    if (seenRevision.current === revision) return;
+    seenRevision.current = revision;
+    readFirstPage(true);
+  }, [readFirstPage, revision]);
 
   const current = settled?.load === load ? settled : null;
   const success = current?.status === "success" ? current : null;

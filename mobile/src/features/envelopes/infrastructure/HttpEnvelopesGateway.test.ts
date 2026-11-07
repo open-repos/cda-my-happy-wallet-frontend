@@ -83,3 +83,44 @@ describe("HttpEnvelopesGateway (#384)", () => {
     expect(await gateway.yearStatistics(7, "2026")).toBeNull();
   });
 });
+
+describe("HttpEnvelopesGateway writes support (#389)", () => {
+  const integration = {
+    mode: "INTEGRATED",
+    globalBudgetAdjusted: true,
+    policy: "OPEN_RESERVED_CLOSED_MATCHED_ACTUAL",
+  };
+
+  it("reads every page of a month's envelopes in the integrated mode", async () => {
+    const http = client(
+      json({ ...page([envelopeOccurrence()], "n"), integration }),
+      json({ ...page([{ ...envelopeOccurrence(), id: 42 }]), integration }),
+    );
+    const rows = await new HttpEnvelopesGateway(http).monthOccurrences(
+      "2026-10",
+    );
+    expect(rows.map((row) => row.id)).toEqual([41, 42]);
+    expect(http.request).toHaveBeenNthCalledWith(
+      1,
+      "/reconciliation/months/2026-10/occurrences?currency=EUR&limit=100",
+    );
+    await expect(
+      new HttpEnvelopesGateway(
+        client(json(page([envelopeOccurrence()]))),
+      ).monthOccurrences("2026-10"),
+    ).rejects.toThrow();
+  });
+
+  it("reads the current link of an operation", async () => {
+    const gateway = new HttpEnvelopesGateway(
+      client(
+        json({ data: { operationId: 7, occurrenceId: 41 } }),
+        json({ data: { operationId: 8, occurrenceId: null } }),
+        json({ data: { operationId: 1, occurrenceId: 41 } }),
+      ),
+    );
+    expect(await gateway.currentLink(7)).toBe(41);
+    expect(await gateway.currentLink(8)).toBeNull();
+    await expect(gateway.currentLink(9)).rejects.toThrow();
+  });
+});

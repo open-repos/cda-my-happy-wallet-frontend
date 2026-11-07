@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   compatibleFixedCategories,
+  effectiveMonthOptions,
+  envelopeAvailable,
   FIXED_CATEGORY_UNAVAILABLE_MESSAGE,
   fixedCategoryLabel,
   fixedCategoryOptions,
@@ -254,5 +256,79 @@ describe("fixed budget", () => {
         ),
       ).toEqual({});
     });
+  });
+});
+
+describe("fixed budget envelopes (#389, Web #314)", () => {
+  const charge = {
+    title: "Courses",
+    amount: "300",
+    type: "CHARGE" as const,
+    categoryId: null,
+  };
+
+  it("reads the envelope flag and rejects a malformed one", () => {
+    const row = {
+      idOperationFixe: 3,
+      titre: "Courses",
+      montant: "300.00",
+      devise: "EUR",
+      typeOperation: "CHARGE",
+      periodicite: "MENSUELLE",
+    };
+    expect(
+      parseFixedOperation({ ...row, isBudgetEnvelope: true }),
+    ).toMatchObject({ isBudgetEnvelope: true });
+    expect(
+      parseFixedOperation({ ...row, isBudgetEnvelope: false }),
+    ).not.toHaveProperty("isBudgetEnvelope");
+    expect(() =>
+      parseFixedOperation({ ...row, isBudgetEnvelope: "yes" }),
+    ).toThrow();
+  });
+
+  it("offers the envelope mode to monthly charges only", () => {
+    expect(envelopeAvailable("CHARGE", undefined)).toBe(true);
+    expect(envelopeAvailable("CHARGE", "MENSUELLE")).toBe(true);
+    expect(envelopeAvailable("CHARGE", "ANNUELLE")).toBe(false);
+    expect(envelopeAvailable("REVENU", "MENSUELLE")).toBe(false);
+  });
+
+  it("sends the flag and the effective month only when they change", () => {
+    expect(
+      toFixedOperationPayload({ ...charge, isBudgetEnvelope: true }),
+    ).toMatchObject({ isBudgetEnvelope: true });
+    expect(
+      toFixedOperationPayload({ ...charge, isBudgetEnvelope: false }),
+    ).not.toHaveProperty("isBudgetEnvelope");
+    const current = { categoryId: null, isBudgetEnvelope: true as const };
+    expect(
+      toFixedOperationPayload({ ...charge, isBudgetEnvelope: true }, current),
+    ).not.toHaveProperty("isBudgetEnvelope");
+    expect(
+      toFixedOperationPayload({ ...charge, isBudgetEnvelope: false }, current),
+    ).toMatchObject({ isBudgetEnvelope: false });
+    expect(
+      toFixedOperationPayload(
+        { ...charge, effectiveMonth: "2026-12" },
+        { categoryId: null },
+      ),
+    ).toMatchObject({ effectiveMonth: "2026-12" });
+    // Une entrée n'accepte pas le drapeau (backend : `forbidden`).
+    expect(
+      toFixedOperationPayload({
+        ...charge,
+        type: "REVENU",
+        isBudgetEnvelope: true,
+      }),
+    ).not.toHaveProperty("isBudgetEnvelope");
+  });
+
+  it("lists the current month and the 23 next ones", () => {
+    const months = effectiveMonthOptions("2026-11");
+    expect(months).toHaveLength(24);
+    expect(months[0]).toBe("2026-11");
+    expect(months[1]).toBe("2026-12");
+    expect(months[23]).toBe("2028-10");
   });
 });

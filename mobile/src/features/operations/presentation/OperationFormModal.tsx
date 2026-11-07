@@ -3,6 +3,7 @@ import { CategoryChoices } from "@/src/features/categories/presentation/Category
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useMemo, useState } from "react";
 import {
+  AccessibilityInfo,
   ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
@@ -28,6 +29,14 @@ import {
 } from "@/src/features/operations/domain/oneOffOperation";
 import { formatCalendarDate } from "@/src/features/operations/presentation/calendarDate";
 import { OperationDatePicker } from "@/src/features/operations/presentation/OperationDatePicker";
+import { useAuth } from "@/src/features/auth/presentation/AuthProvider";
+import {
+  assignmentProblem,
+  reconciliationBody,
+} from "@/src/features/envelopes/domain/envelopeAssignment";
+import { HttpEnvelopesGateway } from "@/src/features/envelopes/infrastructure/HttpEnvelopesGateway";
+import { EnvelopeAssignmentField } from "@/src/features/envelopes/presentation/EnvelopeAssignmentField";
+import { useEnvelopeAssignment } from "@/src/features/envelopes/presentation/useEnvelopeAssignment";
 
 interface OperationFormModalProps {
   categories: OperationCategory[];
@@ -87,10 +96,29 @@ export const OperationFormModal = ({
     setDraft((current) => ({ ...current, [key]: value }));
     setErrors((current) => ({ ...current, [key]: undefined }));
   };
+  // Rattachement à une enveloppe (#389), dans la même écriture.
+  const { httpClient } = useAuth();
+  const envelopes = useMemo(
+    () => new HttpEnvelopesGateway(httpClient),
+    [httpClient],
+  );
+  const assignment = useEnvelopeAssignment(envelopes, operation, draft);
+  const [assignmentError, setAssignmentError] = useState<string | null>(null);
+  // Visible tant qu'un choix existe, même après passage en entrée : un
+  // blocage n'est jamais caché (comme le Web).
+  const showAssignment =
+    draft.kind === "DEPENSE" || assignment.state.selectedId !== null;
   const submit = () => {
     const validationErrors = validateOperationDraft(draft, categoryIds);
     setErrors(validationErrors);
-    if (Object.keys(validationErrors).length === 0) onSave(draft);
+    if (Object.keys(validationErrors).length > 0) return;
+    const problem = assignmentProblem(assignment.state);
+    setAssignmentError(problem);
+    if (problem !== null) {
+      AccessibilityInfo.announceForAccessibility(problem);
+      return;
+    }
+    onSave({ ...draft, reconciliation: reconciliationBody(assignment.state) });
   };
 
   return (
@@ -202,6 +230,20 @@ export const OperationFormModal = ({
                 error={errors.categoryId}
                 onChange={(value) => update("categoryId", value)}
               />
+
+              {showAssignment ? (
+                <EnvelopeAssignmentField
+                  state={assignment.state}
+                  categoryId={draft.categoryId}
+                  disabled={isSaving}
+                  error={assignmentError}
+                  onChoose={(id) => {
+                    setAssignmentError(null);
+                    assignment.choose(id);
+                  }}
+                  onRetry={assignment.retry}
+                />
+              ) : null}
 
               <View style={styles.actions}>
                 {operation != null ? (
