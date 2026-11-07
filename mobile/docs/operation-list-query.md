@@ -66,3 +66,6 @@ Les références visuelles sont adoptées depuis le rendu CI après inspection,
 sans assouplir le seuil de comparaison. La recette sur development build
 Android Pixel 5 avec grandes polices, TalkBack vocal et iOS reste regroupée
 avec la recette de fin de parité #213. Expo Web ne remplace pas cette recette.
+
+La [revue visuelle](operation-list-query-visual-review.md) conserve la provenance
+CI et les empreintes des références adoptées.
