@@ -40,7 +40,15 @@ moins les dépenses et plus les entrées saisies ou prévues jusqu'à cette date
 garde son signe moins en plus de la couleur; le libellé accessible la nomme
 « reste à vivre du jour » et le détail d'un jour sélectionné l'explique en une
 phrase. Le résumé du mois garde le reste prévisionnel de fin de mois. Un
-backend sans ce champ laisse la case vide. Les repères
+backend sans ce champ laisse la case vide.
+Le mode affiche aussi le socle théorique et sa part quotidienne. Le libellé
+accessible de chaque case compare `dailyRemaining` au socle théorique acquis à
+la date, calculé comme le serveur : part quotidienne tronquée × jour, puis le
+socle entier le dernier jour. Le détail du jour explicite ce prorata, puis ce
+que le reste à vivre du jour en retire et y ajoute.
+Le bouton « Prévisionnel » conserve son libellé entier jusque 320 px.
+
+Les repères
 distinguent opération réelle (point plein), événement prévu (cercle pointillé)
 et événement en retard (pictogramme `!`), avec une légende et un libellé
 accessible complet par jour. Un clic filtre la liste sur le jour; un second
