@@ -8,16 +8,22 @@ import {
   parseOperation,
   toOperationPayload,
 } from "@/src/features/operations/domain/oneOffOperation";
+import { OperationRequestFilter } from "../domain/operationQuery";
 
 export interface OperationsHttpClient {
   request(path: string, init?: RequestInit): Promise<Response>;
 }
 
 /** Filtre facultatif de `GET /operations` : dates incluses et devise. */
-export interface OperationFilter {
-  from: string;
-  to: string;
-  currency: string;
+export type OperationFilter = OperationRequestFilter;
+export interface TitleSuggestion {
+  value: string;
+  label: string;
+}
+export interface TitleSuggestionsRequest {
+  query?: string;
+  cursor?: string | null;
+  signal?: AbortSignal;
 }
 
 export interface OneOffOperationsGateway {
@@ -26,6 +32,9 @@ export interface OneOffOperationsGateway {
     filter?: OperationFilter,
   ): Promise<CollectionPage<OneOffOperation>>;
   listAllCategories(): Promise<OperationCategory[]>;
+  listTitleSuggestions(
+    request?: TitleSuggestionsRequest,
+  ): Promise<CollectionPage<TitleSuggestion>>;
   createOperation(draft: OperationDraft): Promise<OneOffOperation>;
   updateOperation(id: number, draft: OperationDraft): Promise<OneOffOperation>;
   deleteOperation(id: number): Promise<void>;
@@ -54,9 +63,21 @@ const buildCollectionPath = (
 ): string => {
   const params = new URLSearchParams({ limit: `${limit}` });
   if (filter != null) {
-    params.set("from", filter.from);
-    params.set("to", filter.to);
-    params.set("currency", filter.currency);
+    for (const key of [
+      "from",
+      "to",
+      "currency",
+      "sort",
+      "order",
+      "title",
+      "type",
+      "minAmount",
+      "maxAmount",
+    ] as const) {
+      if (filter[key]) params.set(key, filter[key]);
+    }
+    for (const id of filter.categoryId ?? [])
+      params.append("categoryId", String(id));
   }
   if (cursor != null) params.set("cursor", cursor);
   return `/${resource}?${params.toString()}`;
@@ -98,6 +119,32 @@ export class HttpOneOffOperationsGateway implements OneOffOperationsGateway {
     } while (cursor != null);
 
     return categories;
+  }
+
+  public async listTitleSuggestions({
+    query = "",
+    cursor = null,
+    signal,
+  }: TitleSuggestionsRequest = {}): Promise<CollectionPage<TitleSuggestion>> {
+    const params = new URLSearchParams({ limit: "10" });
+    if (query.trim()) params.set("q", query.trim().slice(0, 50));
+    if (cursor != null) params.set("cursor", cursor);
+    const response = await this.httpClient.request(
+      `/operations/suggestions/titles?${params}`,
+      { signal },
+    );
+    return parseCollectionPage(await readJson(response), (item) => {
+      if (
+        typeof item !== "object" ||
+        item === null ||
+        !("title" in item) ||
+        typeof item.title !== "string" ||
+        item.title.length === 0 ||
+        item.title.length > 50
+      )
+        throw new Error("Invalid title suggestion response");
+      return { value: item.title, label: item.title };
+    });
   }
 
   public async createOperation(

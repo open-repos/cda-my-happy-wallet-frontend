@@ -1,87 +1,48 @@
-import { useCallback, useEffect, useState } from "react";
-
-import {
-  FixedOperation,
-  FixedOperationDraft,
-} from "@/src/features/dashboard/domain/fixedBudget";
-import { FixedBudgetGateway } from "@/src/features/dashboard/infrastructure/HttpFixedBudgetGateway";
-import { PaginationMeta } from "@/src/features/operations/domain/oneOffOperation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { FixedOperation, FixedOperationDraft } from "../domain/fixedBudget";
+import { FixedBudgetGateway } from "../infrastructure/HttpFixedBudgetGateway";
 
 type LoadStatus = "loading" | "success" | "error";
 type AsyncStatus = "idle" | "loading" | "error";
 
-const mergeUnique = (
-  current: FixedOperation[],
-  incoming: FixedOperation[],
-): FixedOperation[] => {
-  const knownIds = new Set(current.map(({ id }) => id));
-  return [...current, ...incoming.filter(({ id }) => !knownIds.has(id))];
-};
-
+/** Local sorting/filtering requires the complete collection, never just its first page. */
 export const useFixedOperations = (gateway: FixedBudgetGateway) => {
   const [operations, setOperations] = useState<FixedOperation[]>([]);
-  const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [status, setStatus] = useState<LoadStatus>("loading");
-  const [pageStatus, setPageStatus] = useState<AsyncStatus>("idle");
   const [mutationStatus, setMutationStatus] = useState<AsyncStatus>("idle");
   const [message, setMessage] = useState<string | null>(null);
-
+  const generation = useRef(0);
   const loadInitial = useCallback(async (): Promise<boolean> => {
+    const version = ++generation.current;
+    await Promise.resolve();
+    if (version !== generation.current) return false;
     setStatus("loading");
     setMessage(null);
     try {
-      const page = await gateway.list();
-      setOperations(page.data);
-      setMeta(page.meta);
+      const rows = await gateway.listAll();
+      if (version !== generation.current) return false;
+      setOperations(rows);
       setStatus("success");
       return true;
     } catch {
+      if (version !== generation.current) return false;
       setStatus("error");
       setMessage("Votre budget fixe est momentanément indisponible.");
       return false;
     }
   }, [gateway]);
-
+  const invalidate = useCallback(() => {
+    generation.current++;
+  }, []);
   useEffect(() => {
-    let isActive = true;
-    void gateway
-      .list()
-      .then((page) => {
-        if (!isActive) return;
-        setOperations(page.data);
-        setMeta(page.meta);
-        setStatus("success");
-      })
-      .catch(() => {
-        if (!isActive) return;
-        setStatus("error");
-        setMessage("Votre budget fixe est momentanément indisponible.");
-      });
+    const timer = setTimeout(() => {
+      void loadInitial();
+    }, 0);
     return () => {
-      isActive = false;
+      clearTimeout(timer);
+      invalidate();
     };
-  }, [gateway]);
-
-  const loadMore = useCallback(async () => {
-    if (
-      meta?.hasNext !== true ||
-      meta.nextCursor == null ||
-      pageStatus === "loading"
-    ) {
-      return;
-    }
-    setPageStatus("loading");
-    setMessage(null);
-    try {
-      const page = await gateway.list(meta.nextCursor);
-      setOperations((current) => mergeUnique(current, page.data));
-      setMeta(page.meta);
-      setPageStatus("idle");
-    } catch {
-      setPageStatus("error");
-      setMessage("La suite du budget fixe n’a pas pu être chargée.");
-    }
-  }, [gateway, meta, pageStatus]);
+  }, [loadInitial, invalidate]);
 
   const mutate = useCallback(
     async (action: () => Promise<void>, successMessage: string) => {
@@ -105,16 +66,12 @@ export const useFixedOperations = (gateway: FixedBudgetGateway) => {
     },
     [loadInitial],
   );
-
   return {
     operations,
-    meta,
     status,
-    pageStatus,
     mutationStatus,
     message,
     retry: loadInitial,
-    loadMore,
     create: (draft: FixedOperationDraft) =>
       mutate(() => gateway.create(draft), "Élément ajouté au budget fixe."),
     update: (operation: FixedOperation, draft: FixedOperationDraft) =>

@@ -2,6 +2,8 @@ import {
   CollectionPage,
   PaginationMeta,
 } from "@/src/features/operations/domain/oneOffOperation";
+import type { OperationCategory } from "@/src/features/operations/domain/oneOffOperation";
+import { FIXED_PERIOD_CHOICES, FixedPeriod } from "./fixedOperationQuery";
 
 export type FixedOperationType = "CHARGE" | "REVENU";
 
@@ -11,6 +13,12 @@ export interface FixedOperation {
   amount: string;
   currency: string;
   type: FixedOperationType;
+  categoryId?: number | null;
+  category?: OperationCategory | null;
+  period?: FixedPeriod;
+  share?: string;
+  personalAmount?: string | null;
+  monthlyPersonalAmount?: string | null;
 }
 
 export interface FixedOperationDraft {
@@ -49,12 +57,75 @@ export const parseFixedOperation = (value: unknown): FixedOperation => {
     throw new Error("Invalid fixed operation response");
   }
 
+  const decimal = (entry: unknown): string | null =>
+    (typeof entry === "string" || typeof entry === "number") &&
+    /^\d+(?:\.\d+)?$/.test(String(entry))
+      ? String(entry)
+      : null;
+  if (
+    (value.categoryId != null &&
+      (!Number.isInteger(value.categoryId) || Number(value.categoryId) < 1)) ||
+    (value.category != null &&
+      (!isRecord(value.category) ||
+        !Number.isInteger(value.category.id) ||
+        typeof value.category.name !== "string")) ||
+    (value.periodicite != null &&
+      !FIXED_PERIOD_CHOICES.some(
+        (choice) => choice.value === value.periodicite,
+      )) ||
+    [
+      value.pourcentagePersonnel,
+      value.montantPersonnel,
+      value.montantMensuelPersonnel,
+    ].some((entry) => entry != null && decimal(entry) === null)
+  ) {
+    throw new Error("Invalid fixed operation response");
+  }
+
   return {
     id: Number(value.idOperationFixe),
     title: value.titre,
     amount: value.montant,
     currency: value.devise,
     type: value.typeOperation,
+    ...("categoryId" in value
+      ? {
+          categoryId:
+            value.categoryId == null ? null : Number(value.categoryId),
+        }
+      : {}),
+    ...("category" in value
+      ? {
+          category:
+            value.category == null
+              ? null
+              : {
+                  id: Number((value.category as Record<string, unknown>).id),
+                  name: String(
+                    (value.category as Record<string, unknown>).name,
+                  ),
+                  color:
+                    typeof (value.category as Record<string, unknown>).color ===
+                    "string"
+                      ? String(
+                          (value.category as Record<string, unknown>).color,
+                        )
+                      : null,
+                },
+        }
+      : {}),
+    ...(value.periodicite != null
+      ? { period: value.periodicite as FixedPeriod }
+      : {}),
+    ...(value.pourcentagePersonnel != null
+      ? { share: decimal(value.pourcentagePersonnel)! }
+      : {}),
+    ...("montantPersonnel" in value
+      ? { personalAmount: decimal(value.montantPersonnel) }
+      : {}),
+    ...("montantMensuelPersonnel" in value
+      ? { monthlyPersonalAmount: decimal(value.montantMensuelPersonnel) }
+      : {}),
   };
 };
 

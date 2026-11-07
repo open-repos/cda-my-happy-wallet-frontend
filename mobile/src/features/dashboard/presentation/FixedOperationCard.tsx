@@ -4,6 +4,10 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { primitives, semantic, themes } from "@/src/design/tokens";
 import { FixedOperation } from "@/src/features/dashboard/domain/fixedBudget";
+import {
+  fixedPeriod,
+  FIXED_PERIOD_CHOICES,
+} from "../domain/fixedOperationQuery";
 
 interface FixedOperationCardProps {
   operation: FixedOperation;
@@ -43,7 +47,9 @@ export const FixedOperationCard = ({
           {operation.title}
         </Text>
         <Text style={styles.caption}>
-          {isIncome ? "Revenu mensuel" : "Charge mensuelle"}
+          {isIncome
+            ? "Revenu mensuel"
+            : `Charge · ${FIXED_PERIOD_CHOICES.find((choice) => choice.value === fixedPeriod(operation))?.label}`}
         </Text>
       </View>
       <Text

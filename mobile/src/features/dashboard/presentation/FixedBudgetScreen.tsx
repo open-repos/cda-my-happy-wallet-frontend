@@ -3,10 +3,9 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
-  SectionList,
+  FlatList,
   StyleSheet,
   Text,
   View,
@@ -28,6 +27,13 @@ import { FixedOperationFormModal } from "@/src/features/dashboard/presentation/F
 import { useFixedOperations } from "@/src/features/dashboard/presentation/useFixedOperations";
 import { useAuth } from "@/src/features/auth/presentation/AuthProvider";
 
+import {
+  emptyFixedQuery,
+  queryFixedOperations,
+} from "../domain/fixedOperationQuery";
+import { countQueryFilters } from "@/src/features/operations/domain/operationQuery";
+import { FixedQueryControls } from "./FixedQueryControls";
+
 const colors = themes.light.color;
 const semibold = `${primitives.fontWeight.semibold}` as "600";
 
@@ -44,20 +50,12 @@ export const FixedBudgetScreen = () => {
   const [editedOperation, setEditedOperation] = useState<FixedOperation | null>(
     null,
   );
-  const sections = useMemo(
-    () =>
-      [
-        {
-          title: "Revenus fixes",
-          data: state.operations.filter(({ type }) => type === "REVENU"),
-        },
-        {
-          title: "Charges fixes",
-          data: state.operations.filter(({ type }) => type === "CHARGE"),
-        },
-      ].filter(({ data }) => data.length > 0),
-    [state.operations],
+  const [query, setQuery] = useState(emptyFixedQuery);
+  const shownOperations = useMemo(
+    () => queryFixedOperations(state.operations, query),
+    [state.operations, query],
   );
+  const hasFilters = countQueryFilters(query) > 0;
 
   const openCreate = (type: FixedOperationType) => {
     setInitialType(type);
@@ -139,17 +137,14 @@ export const FixedBudgetScreen = () => {
 
   return (
     <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
-      <SectionList
+      <FlatList
         contentContainerStyle={[
           styles.content,
-          state.operations.length === 0 && styles.emptyContent,
+          shownOperations.length === 0 && styles.emptyContent,
         ]}
-        sections={sections}
-        keyExtractor={({ id }) => `${id}`}
+        data={shownOperations}
+        keyExtractor={({ id, type }) => `${type}:${id}`}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
-        SectionSeparatorComponent={() => (
-          <View style={styles.sectionSeparator} />
-        )}
         ListHeaderComponent={
           <View>
             <Pressable
@@ -197,14 +192,15 @@ export const FixedBudgetScreen = () => {
                 ]}
               ></ActionButton>
             </View>
+            <FixedQueryControls
+              query={query}
+              onChange={setQuery}
+              operations={state.operations}
+              disabled={isFormOpen || state.mutationStatus === "loading"}
+            />
             {state.message != null ? (
               <FeedbackBanner
-                kind={
-                  state.mutationStatus === "error" ||
-                  state.pageStatus === "error"
-                    ? "error"
-                    : "success"
-                }
+                kind={state.mutationStatus === "error" ? "error" : "success"}
               >
                 {state.message}
               </FeedbackBanner>
@@ -214,54 +210,36 @@ export const FixedBudgetScreen = () => {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <FeedbackState
-              actions={[
-                {
-                  label: "Ajouter un revenu",
-                  onPress: () => openCreate("REVENU"),
-                },
-                {
-                  label: "Ajouter une charge",
-                  onPress: () => openCreate("CHARGE"),
-                  variant: "secondary",
-                },
-              ]}
-              description="Ajoutez au moins un revenu et une charge pour obtenir un reste à vivre utile."
+              actions={
+                hasFilters
+                  ? undefined
+                  : [
+                      {
+                        label: "Ajouter un revenu",
+                        onPress: () => openCreate("REVENU"),
+                      },
+                      {
+                        label: "Ajouter une charge",
+                        onPress: () => openCreate("CHARGE"),
+                        variant: "secondary",
+                      },
+                    ]
+              }
+              description={
+                hasFilters
+                  ? "Modifiez ou effacez les filtres pour retrouver votre budget fixe."
+                  : "Ajoutez au moins un revenu et une charge pour obtenir un reste à vivre utile."
+              }
               icon="calculator-outline"
               kind="empty"
-              title="Votre budget fixe est vide"
+              title={
+                hasFilters
+                  ? "Aucun élément ne correspond à ces filtres."
+                  : "Votre budget fixe est vide"
+              }
             />
           </View>
         }
-        ListFooterComponent={
-          state.meta?.hasNext ? (
-            <View style={styles.footer}>
-              <Pressable
-                accessibilityRole="button"
-                disabled={state.pageStatus === "loading"}
-                onPress={() => void state.loadMore()}
-                style={[
-                  styles.loadMoreButton,
-                  state.pageStatus === "loading" && styles.disabled,
-                ]}
-              >
-                {state.pageStatus === "loading" ? (
-                  <ActivityIndicator color={colors.actionSecondaryText} />
-                ) : (
-                  <Text style={styles.loadMoreLabel}>
-                    {state.pageStatus === "error"
-                      ? "Réessayer de charger la suite"
-                      : "Afficher la suite"}
-                  </Text>
-                )}
-              </Pressable>
-            </View>
-          ) : null
-        }
-        renderSectionHeader={({ section }) => (
-          <Text accessibilityRole="header" style={styles.sectionTitle}>
-            {section.title}
-          </Text>
-        )}
         renderItem={({ item }) => (
           <FixedOperationCard operation={item} onEdit={openEdit} />
         )}
