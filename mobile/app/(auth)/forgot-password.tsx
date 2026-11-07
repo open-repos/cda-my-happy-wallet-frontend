@@ -51,6 +51,7 @@ export default function ForgotPasswordScreen() {
       {isComplete ? (
         <>
           <AuthSuccess
+            emailSent
             message="Si un compte correspond à cette adresse, un lien de changement de mot de passe vient d’être envoyé."
             title="Votre demande a été prise en compte"
           />
