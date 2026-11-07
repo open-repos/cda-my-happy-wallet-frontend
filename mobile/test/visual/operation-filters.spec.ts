@@ -132,9 +132,18 @@ test("server filters restart pagination, suggestions allow free text and clear p
   expect(suggestions.some((url) => url.searchParams.get("q") === "Caf")).toBe(
     true,
   );
-  await expect(page.getByTestId("list-query-announcement")).toContainText(
-    "Tri et filtres appliqués",
+  // L'annonce cite le tri et chaque filtre appliqué (recette Android #387).
+  const announcement = page.getByTestId("list-query-announcement");
+  await expect(announcement).toContainText("Tri et filtres appliqués");
+  await expect(announcement).toContainText(
+    "7 filtres : Libellé : Café du coin",
   );
+  await expect(announcement).toContainText(
+    "Catégories : Alimentation, Transport",
+  );
+  await expect(
+    page.getByRole("button", { name: "Trier et filtrer (7 filtres)" }),
+  ).toBeVisible();
   await openFilters(page);
   await page
     .getByLabel("Filtrer par libellé", { exact: true })
@@ -314,6 +323,9 @@ test("fixed budget loads every page before applying local filters and all sort c
   await expect(page.getByText("Électricité", { exact: true })).toBeVisible();
   await expect(page.getByText("Téléphone", { exact: true })).toHaveCount(0);
   expect(requests).toHaveLength(count);
+  await expect(page.getByTestId("list-query-announcement")).toContainText(
+    "Tri et filtres du budget fixe appliqués : Libellé, décroissant. 2 filtres : Libellé : electricite ; Périodicité : Annuelle.",
+  );
   await page
     .getByRole("button", { name: "Effacer les filtres", exact: true })
     .click();

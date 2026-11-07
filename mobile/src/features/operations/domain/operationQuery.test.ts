@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  appliedQueryMessage,
+  countLabel,
   emptyOperationQuery,
   normalizeQueryAmount,
   operationRequestFilter,
@@ -86,5 +88,33 @@ describe("operation list query matches the Web contract", () => {
         title: "é".repeat(51),
       }),
     ).toThrow();
+  });
+});
+
+describe("list query wording (#387 recette)", () => {
+  it("agrees in number", () => {
+    expect(countLabel(0, "filtre")).toBe("0 filtre");
+    expect(countLabel(1, "choisie")).toBe("1 choisie");
+    expect(countLabel(2, "filtre")).toBe("2 filtres");
+  });
+
+  it("announces the sort and every active filter", () => {
+    expect(
+      appliedQueryMessage("Tri et filtres appliqués", "Montant, croissant", [
+        "Catégories : Courses",
+        "Dépenses",
+      ]),
+    ).toBe(
+      "Tri et filtres appliqués : Montant, croissant. 2 filtres : Catégories : Courses ; Dépenses.",
+    );
+    expect(
+      appliedQueryMessage(
+        "Tri et filtres appliqués",
+        "date, plus récentes d’abord (par défaut)",
+        [],
+      ),
+    ).toBe(
+      "Tri et filtres appliqués : date, plus récentes d’abord (par défaut). Aucun filtre.",
+    );
   });
 });

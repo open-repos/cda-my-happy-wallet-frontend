@@ -116,3 +116,19 @@ export const countQueryFilters = (filters: object): number =>
       key !== "sort" &&
       (Array.isArray(value) ? value.length > 0 : Boolean(value)),
   ).length;
+
+/** « 1 filtre », « 2 filtres » : accord du nom ou du participe. */
+export const countLabel = (count: number, word: string): string =>
+  `${count} ${word}${count > 1 ? "s" : ""}`;
+
+/** Annonce d'application : tri puis chaque filtre actif, ou leur absence. */
+export const appliedQueryMessage = (
+  subject: string,
+  sortText: string,
+  filterLabels: readonly string[],
+): string =>
+  `${subject} : ${sortText}. ${
+    filterLabels.length
+      ? `${countLabel(filterLabels.length, "filtre")} : ${filterLabels.join(" ; ")}.`
+      : "Aucun filtre."
+  }`;

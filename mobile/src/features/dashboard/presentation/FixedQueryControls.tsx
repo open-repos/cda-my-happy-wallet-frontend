@@ -6,6 +6,7 @@ import {
   FIXED_PERIOD_CHOICES,
   FIXED_SORT_CHOICES,
 } from "../domain/fixedOperationQuery";
+import { appliedQueryMessage } from "@/src/features/operations/domain/operationQuery";
 import {
   ListQueryToolbar,
   FilterChip,
@@ -59,36 +60,44 @@ export const FixedQueryControls = ({
       announce(message);
     }
   };
-  const sortText = query.sort
-    ? `${FIXED_SORT_CHOICES.find((choice) => choice.value === query.sort?.field)?.label}, ${query.sort.order === "asc" ? "croissant" : "décroissant"}`
-    : "personnel / mois, décroissant (par défaut)";
-  const chips: FilterChip[] = [];
-  if (query.title)
-    chips.push({
-      key: "title",
-      label: `Libellé : ${query.title}`,
-      remove: () => apply({ ...query, title: "" }, "Filtre de libellé retiré."),
-    });
-  if (query.categoryIds.length)
-    chips.push({
-      key: "categories",
-      label: `Catégories : ${query.categoryIds.map((id) => categoryChoices.find((choice) => choice.value === id)?.label ?? "Catégorie indisponible").join(", ")}`,
-      remove: () =>
-        apply({ ...query, categoryIds: [] }, "Filtre de catégories retiré."),
-    });
-  if (query.kind)
-    chips.push({
-      key: "kind",
-      label: query.kind === "income" ? "Entrées" : "Charges",
-      remove: () => apply({ ...query, kind: "" }, "Filtre de type retiré."),
-    });
-  if (query.period)
-    chips.push({
-      key: "period",
-      label: `Périodicité : ${FIXED_PERIOD_CHOICES.find((choice) => choice.value === query.period)?.label}`,
-      remove: () =>
-        apply({ ...query, period: "" }, "Filtre de périodicité retiré."),
-    });
+  const sortTextOf = (q: FixedQuery) =>
+    q.sort
+      ? `${FIXED_SORT_CHOICES.find((choice) => choice.value === q.sort?.field)?.label}, ${q.sort.order === "asc" ? "croissant" : "décroissant"}`
+      : "personnel / mois, décroissant (par défaut)";
+  const sortText = sortTextOf(query);
+  // Puces d'une requête : affichées pour la requête courante, lues pour
+  // annoncer celle qui vient d'être appliquée.
+  const chipsOf = (q: FixedQuery): FilterChip[] => {
+    const chips: FilterChip[] = [];
+    if (q.title)
+      chips.push({
+        key: "title",
+        label: `Libellé : ${q.title}`,
+        remove: () => apply({ ...q, title: "" }, "Filtre de libellé retiré."),
+      });
+    if (q.categoryIds.length)
+      chips.push({
+        key: "categories",
+        label: `Catégories : ${q.categoryIds.map((id) => categoryChoices.find((choice) => choice.value === id)?.label ?? "Catégorie indisponible").join(", ")}`,
+        remove: () =>
+          apply({ ...q, categoryIds: [] }, "Filtre de catégories retiré."),
+      });
+    if (q.kind)
+      chips.push({
+        key: "kind",
+        label: q.kind === "income" ? "Entrées" : "Charges",
+        remove: () => apply({ ...q, kind: "" }, "Filtre de type retiré."),
+      });
+    if (q.period)
+      chips.push({
+        key: "period",
+        label: `Périodicité : ${FIXED_PERIOD_CHOICES.find((choice) => choice.value === q.period)?.label}`,
+        remove: () =>
+          apply({ ...q, period: "" }, "Filtre de périodicité retiré."),
+      });
+    return chips;
+  };
+  const chips = chipsOf(query);
   const initial: QueryFormState = {
     sortField: query.sort?.field ?? "",
     order: query.sort?.order ?? "desc",
@@ -135,21 +144,26 @@ export const FixedQueryControls = ({
             const field = FIXED_SORT_CHOICES.find(
               (choice) => choice.value === draft.sortField,
             )?.value;
+            const next: FixedQuery = {
+              sort: field ? { field, order: draft.order } : null,
+              title: draft.title,
+              categoryIds: draft.categoryIds,
+              kind:
+                draft.kind === "charge" || draft.kind === "income"
+                  ? draft.kind
+                  : "",
+              period:
+                FIXED_PERIOD_CHOICES.find(
+                  (choice) => choice.value === draft.period,
+                )?.value ?? "",
+            };
             apply(
-              {
-                sort: field ? { field, order: draft.order } : null,
-                title: draft.title,
-                categoryIds: draft.categoryIds,
-                kind:
-                  draft.kind === "charge" || draft.kind === "income"
-                    ? draft.kind
-                    : "",
-                period:
-                  FIXED_PERIOD_CHOICES.find(
-                    (choice) => choice.value === draft.period,
-                  )?.value ?? "",
-              },
-              `Tri et filtres du budget fixe appliqués : ${field ? FIXED_SORT_CHOICES.find((choice) => choice.value === field)?.label : "personnel / mois"}, ordre ${draft.sortField ? (draft.order === "asc" ? "croissant" : "décroissant") : "décroissant"}.`,
+              next,
+              appliedQueryMessage(
+                "Tri et filtres du budget fixe appliqués",
+                sortTextOf(next),
+                chipsOf(next).map((chip) => chip.label),
+              ),
             );
             setOpen(false);
             return [];

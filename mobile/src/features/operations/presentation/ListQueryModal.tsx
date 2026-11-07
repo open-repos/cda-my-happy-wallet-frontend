@@ -16,7 +16,7 @@ import { ChoiceList } from "@/src/design/ChoiceList";
 import { FeedbackState } from "@/src/design/FeedbackState";
 import { primitives, semantic, themes } from "@/src/design/tokens";
 import { CollectionPage } from "../domain/oneOffOperation";
-import { foldQueryText, SortOrder } from "../domain/operationQuery";
+import { countLabel, foldQueryText, SortOrder } from "../domain/operationQuery";
 import {
   TitleSuggestion,
   TitleSuggestionsRequest,
@@ -451,14 +451,14 @@ export const ListQueryModal = ({
                 <Pressable
                   accessibilityRole="button"
                   accessibilityState={{ expanded: categoriesOpen }}
-                  accessibilityLabel={`Catégories : ${draft.categoryIds.length ? `${draft.categoryIds.length} choisies` : "Toutes"}`}
+                  accessibilityLabel={`Catégories : ${draft.categoryIds.length ? countLabel(draft.categoryIds.length, "choisie") : "Toutes"}`}
                   style={styles.control}
                   onPress={() => setCategoriesOpen((current) => !current)}
                 >
                   <Text style={styles.text}>
                     Catégories :{" "}
                     {draft.categoryIds.length
-                      ? `${draft.categoryIds.length} choisies`
+                      ? countLabel(draft.categoryIds.length, "choisie")
                       : "Toutes"}
                   </Text>
                   <Text accessible={false} style={styles.text}>

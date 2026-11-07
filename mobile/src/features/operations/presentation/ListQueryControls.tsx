@@ -11,6 +11,8 @@ import {
 import { primitives, semantic, themes } from "@/src/design/tokens";
 import { OperationCategory } from "../domain/oneOffOperation";
 import {
+  appliedQueryMessage,
+  countLabel,
   emptyOperationQuery,
   OperationQuery,
   OPERATION_SORT_CHOICES,
@@ -78,7 +80,7 @@ export const ListQueryToolbar = ({
         accessibilityRole="button"
         accessibilityState={{ disabled }}
         disabled={disabled}
-        accessibilityLabel={`Trier et filtrer (${chips.length} filtres)`}
+        accessibilityLabel={`Trier et filtrer (${countLabel(chips.length, "filtre")})`}
         onPress={onOpen}
         style={styles.button}
       >
@@ -133,42 +135,50 @@ export const OperationQueryControls = ({
   const loadTitles = useCallback<
     OneOffOperationsGateway["listTitleSuggestions"]
   >((request) => gateway.listTitleSuggestions(request), [gateway]);
-  const sortText = query.sort
-    ? `${OPERATION_SORT_CHOICES.find((choice) => choice.value === query.sort?.field)?.label}, ${query.sort.order === "asc" ? "croissant" : "décroissant"}`
-    : "date, plus récentes d’abord (par défaut)";
+  const sortTextOf = (q: OperationQuery) =>
+    q.sort
+      ? `${OPERATION_SORT_CHOICES.find((choice) => choice.value === q.sort?.field)?.label}, ${q.sort.order === "asc" ? "croissant" : "décroissant"}`
+      : "date, plus récentes d’abord (par défaut)";
+  const sortText = sortTextOf(query);
   const apply = (next: OperationQuery, message?: string) => {
     if (JSON.stringify(next) === JSON.stringify(query)) return;
     onChange(next);
     announce(message ?? "Tri et filtres des opérations mis à jour.");
   };
-  const chips: FilterChip[] = [];
-  for (const [key, label] of [
-    ["title", "Libellé"],
-    ["from", "Du"],
-    ["to", "Au"],
-    ["minAmount", "Minimum"],
-    ["maxAmount", "Maximum"],
-  ] as const) {
-    if (query[key])
+  // Puces d'une requête : affichées pour la requête courante, lues pour
+  // annoncer celle qui vient d'être appliquée.
+  const chipsOf = (q: OperationQuery): FilterChip[] => {
+    const chips: FilterChip[] = [];
+    for (const [key, label] of [
+      ["title", "Libellé"],
+      ["from", "Du"],
+      ["to", "Au"],
+      ["minAmount", "Minimum"],
+      ["maxAmount", "Maximum"],
+    ] as const) {
+      if (q[key])
+        chips.push({
+          key,
+          label: `${label} : ${q[key]}`,
+          remove: () => apply({ ...q, [key]: "" }, `Filtre ${label} retiré.`),
+        });
+    }
+    if (q.type)
       chips.push({
-        key,
-        label: `${label} : ${query[key]}`,
-        remove: () => apply({ ...query, [key]: "" }, `Filtre ${label} retiré.`),
+        key: "type",
+        label: q.type === "ENTREE" ? "Entrées" : "Dépenses",
+        remove: () => apply({ ...q, type: "" }, "Filtre de type retiré."),
       });
-  }
-  if (query.type)
-    chips.push({
-      key: "type",
-      label: query.type === "ENTREE" ? "Entrées" : "Dépenses",
-      remove: () => apply({ ...query, type: "" }, "Filtre de type retiré."),
-    });
-  if (query.categoryIds.length)
-    chips.push({
-      key: "categories",
-      label: `Catégories : ${query.categoryIds.map((id) => categories.find((category) => category.id === id)?.name ?? `Catégorie ${id}`).join(", ")}`,
-      remove: () =>
-        apply({ ...query, categoryIds: [] }, "Filtre de catégories retiré."),
-    });
+    if (q.categoryIds.length)
+      chips.push({
+        key: "categories",
+        label: `Catégories : ${q.categoryIds.map((id) => categories.find((category) => category.id === id)?.name ?? `Catégorie ${id}`).join(", ")}`,
+        remove: () =>
+          apply({ ...q, categoryIds: [] }, "Filtre de catégories retiré."),
+      });
+    return chips;
+  };
+  const chips = chipsOf(query);
   const initial: QueryFormState = {
     sortField: query.sort?.field ?? "",
     order: query.sort?.order ?? "desc",
@@ -242,7 +252,11 @@ export const OperationQueryControls = ({
             if (!errors.length) {
               apply(
                 next,
-                `Tri et filtres appliqués : ${next.sort ? `${OPERATION_SORT_CHOICES.find((choice) => choice.value === next.sort?.field)?.label}, ordre ${next.sort.order === "asc" ? "croissant" : "décroissant"}` : "date décroissante"}.`,
+                appliedQueryMessage(
+                  "Tri et filtres appliqués",
+                  sortTextOf(next),
+                  chipsOf(next).map((chip) => chip.label),
+                ),
               );
               setOpen(false);
             }
