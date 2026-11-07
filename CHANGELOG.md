@@ -7,6 +7,28 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-11-07
+
+### Added
+
+- Added mobile handling of registration confirmation links, which now open the sign-in screen with the same outcome message as the Web (#30).
+- Added a mobile screen to choose a new password from the reset link received by email, with the same password rules as the Web and an explanation for expired or used links (#219).
+- Added the savings trajectory comparison to the mobile goals. Each goal opens a reversible simulation with three assumptions and a 12 or 24 month window, showing the planned, maximum and reasonable trajectories and dates computed by the server, with a chart, a month table and the current month explanation (#285).
+- Added read-only budget envelopes to the mobile app. The home screen lists the month's envelopes with planned, spent, remaining or overrun amounts from the server, and each envelope opens its linked expenses and yearly statistics (#384).
+- Added an optional category to mobile fixed charges and incomes. The app offers only the categories compatible with each type, shows the category on each card, and keeps categories set on the Web when an item is edited (#385).
+- Added sorting and filters to native operation lists, with title suggestions, clearable criteria and accessible announcements (#387).
+- Added the Web spam folder reminder to the mobile success screens after registering and after requesting a password reset. Screen readers announce the success message together with the reminder (#388).
+- Added budget envelope writes to the mobile app. A monthly fixed charge can be declared as an envelope from a chosen month, and an expense can be linked to or unlinked from an envelope of its month, with the same protections and error messages as the Web (#389).
+- Added updated and theoretical remaining-to-live comparisons with an accessible calculation detail (#392).
+
+### Changed
+
+- Displayed each day's remaining living budget in the native forecast calendar, with seven visible columns, signed compact amounts capped at 1.3× system font scaling, and exact accessible day details at full font size (#386).
+
+### Fixed
+
+- Fixed the mobile floating add button hiding the end of tab screens on phones: each screen now reserves enough space at the bottom so its last text and actions stay visible and usable (#407).
+
 ## [1.16.0] - 2026-11-06
 
 ### Changed
@@ -296,7 +318,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Replaced dynamic SSH host discovery with a pre-verified `known_hosts` file.
 - Isolated SSH credentials from validation and build jobs.
 
-[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.16.0...develop
+[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.17.0...develop
+[1.17.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.16.0...v1.17.0
 [1.16.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.15.0...v1.16.0
 [1.15.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.14.0...v1.15.0
 [1.14.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.13.0...v1.14.0
