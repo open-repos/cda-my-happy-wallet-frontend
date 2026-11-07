@@ -44,11 +44,28 @@ export const OPERATIONS_PAGE_LIMIT = 20;
 const CATEGORIES_PAGE_LIMIT = 100;
 
 export class OperationRequestError extends Error {
-  public constructor(public readonly status: number) {
+  public constructor(
+    public readonly status: number,
+    /** `error.details.code` du serveur, par exemple `PERIOD_CLOSED` (#389). */
+    public readonly code: string | null = null,
+  ) {
     super("Operation request failed");
     this.name = "OperationRequestError";
   }
 }
+
+const requestError = async (response: Response) => {
+  const body: unknown = await response.json().catch(() => null);
+  const code =
+    typeof body === "object" && body !== null
+      ? (body as { error?: { details?: { code?: unknown } } }).error?.details
+          ?.code
+      : null;
+  return new OperationRequestError(
+    response.status,
+    typeof code === "string" ? code : null,
+  );
+};
 
 const readJson = async (response: Response): Promise<unknown> => {
   if (!response.ok) throw new OperationRequestError(response.status);
@@ -177,6 +194,7 @@ export class HttpOneOffOperationsGateway implements OneOffOperationsGateway {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(toOperationPayload(draft)),
     });
+    if (!response.ok) throw await requestError(response);
     const payload = await readJson(response);
     if (
       typeof payload !== "object" ||

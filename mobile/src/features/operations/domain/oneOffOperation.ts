@@ -40,6 +40,14 @@ export interface OperationDraft {
   operationDate: string;
   categoryId: number | null;
   kind: OperationType;
+  /**
+   * Choix explicite d'enveloppe (#389) ; absent, le lien actuel est conservé.
+   * Envoyé dans la même écriture que l'opération, comme le Web.
+   */
+  reconciliation?: {
+    occurrenceId: number | null;
+    expectedOccurrenceId: number | null;
+  };
 }
 
 export type OperationDraftErrors = Partial<
@@ -185,4 +193,5 @@ export const toOperationPayload = (draft: OperationDraft) => ({
   kind: draft.kind,
   operationDate: draft.operationDate,
   categoryId: draft.categoryId as number,
+  ...(draft.reconciliation ? { reconciliation: draft.reconciliation } : {}),
 });

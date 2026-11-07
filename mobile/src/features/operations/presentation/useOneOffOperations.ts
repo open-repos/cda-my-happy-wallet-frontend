@@ -11,8 +11,13 @@ import {
   emptyOperationQuery,
   operationRequestFilter,
 } from "../domain/operationQuery";
-import { OneOffOperationsGateway } from "../infrastructure/HttpOneOffOperationsGateway";
+import {
+  OneOffOperationsGateway,
+  OperationRequestError,
+} from "../infrastructure/HttpOneOffOperationsGateway";
 import { useQuietRefresh } from "@/src/features/simulation/presentation/useQuietRefresh";
+import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
+import { envelopeErrorMessage } from "@/src/features/envelopes/domain/budgetEnvelope";
 
 type LoadStatus = "loading" | "success" | "error";
 type AsyncStatus = "idle" | "loading" | "error";
@@ -157,12 +162,15 @@ export const useOneOffOperations = (
     }
   }, [gateway, meta, refreshStatus]);
 
+  // Accueil, enveloppes et calendrier relisent après une écriture (#389).
+  const { invalidate: refreshViews } = useSimulation();
   const mutate = useCallback(
     async (action: () => Promise<unknown>, successMessage: string) => {
       setMutationStatus("loading");
       setMessage(null);
       try {
         await action();
+        refreshViews();
         const reloaded = await reload();
         setMutationStatus("idle");
         setMessage(
@@ -171,13 +179,19 @@ export const useOneOffOperations = (
             : "La modification est enregistrée, mais la liste n’a pas pu être actualisée.",
         );
         return true;
-      } catch {
+      } catch (error) {
         setMutationStatus("error");
-        setMessage("L’opération n’a pas pu être enregistrée. Réessayez.");
+        // Erreurs de rattachement : messages du Web (#389).
+        setMessage(
+          envelopeErrorMessage(
+            error instanceof OperationRequestError ? error.code : null,
+            "L’opération n’a pas pu être enregistrée. Réessayez.",
+          ),
+        );
         return false;
       }
     },
-    [reload],
+    [refreshViews, reload],
   );
 
   return {

@@ -1,6 +1,7 @@
 import { envelopeErrorMessage } from "@/src/features/envelopes/domain/budgetEnvelope";
 import { monthLabel } from "@/src/features/envelopes/presentation/envelopeFormat";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
 import {
   FixedOperation,
   FixedOperationDraft,
@@ -54,6 +55,8 @@ export const useFixedOperations = (gateway: FixedBudgetGateway) => {
     };
   }, [loadInitial, invalidate]);
 
+  // Accueil, enveloppes et calendrier relisent après une écriture (#389).
+  const { invalidate: refreshViews } = useSimulation();
   const mutate = useCallback(
     async (action: () => Promise<void>, successMessage: string) => {
       setMutationStatus("loading");
@@ -61,6 +64,7 @@ export const useFixedOperations = (gateway: FixedBudgetGateway) => {
       setCategoryError(null);
       try {
         await action();
+        refreshViews();
         const reloaded = await loadInitial();
         setMutationStatus("idle");
         setMessage(
@@ -89,7 +93,7 @@ export const useFixedOperations = (gateway: FixedBudgetGateway) => {
         return false;
       }
     },
-    [loadInitial],
+    [loadInitial, refreshViews],
   );
   return {
     operations,

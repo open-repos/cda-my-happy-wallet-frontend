@@ -42,7 +42,11 @@ import {
   OperationCategory,
   OperationDraft,
 } from "@/src/features/operations/domain/oneOffOperation";
-import { HttpOneOffOperationsGateway } from "@/src/features/operations/infrastructure/HttpOneOffOperationsGateway";
+import {
+  HttpOneOffOperationsGateway,
+  OperationRequestError,
+} from "@/src/features/operations/infrastructure/HttpOneOffOperationsGateway";
+import { envelopeErrorMessage } from "@/src/features/envelopes/domain/budgetEnvelope";
 import { OperationFormModal } from "@/src/features/operations/presentation/OperationFormModal";
 import {
   QuickAddKind,
@@ -152,8 +156,16 @@ export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
     busy.current = true;
     setError(null);
     const kind = panel.kind;
+    // Code serveur conservé pour les erreurs de rattachement (#389).
+    let failureCode: string | null = null;
     const ok = await simulation.mutate(
-      () => writeQuickAdd(httpClient, kind, draft),
+      () =>
+        writeQuickAdd(httpClient, kind, draft).catch((reason: unknown) => {
+          if (reason instanceof OperationRequestError) {
+            failureCode = reason.code;
+          }
+          throw reason;
+        }),
       kind === "potential"
         ? "Événement à confirmer ajouté à la Simulation. Le réel reste inchangé."
         : "Ajout enregistré.",
@@ -170,7 +182,10 @@ export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
       restore();
     } else
       setError(
-        "L’ajout n’a pas pu être enregistré. Vérifiez les champs puis réessayez.",
+        envelopeErrorMessage(
+          failureCode,
+          "L’ajout n’a pas pu être enregistré. Vérifiez les champs puis réessayez.",
+        ),
       );
   };
   const saving = simulation.mutationStatus === "loading";

@@ -30,6 +30,10 @@ export interface EnvelopesGateway {
     envelopeId: number,
     year: string,
   ): Promise<EnvelopeStatistics | null>;
+  /** Enveloppes d'un mois, toutes pages lues (formulaire, #389). */
+  monthOccurrences(month: string): Promise<EnvelopeOccurrence[]>;
+  /** Lien actuel d'une opération (`null` sans rattachement). */
+  currentLink(operationId: number): Promise<number | null>;
 }
 
 export class EnvelopesRequestError extends Error {
@@ -107,6 +111,65 @@ export class HttpEnvelopesGateway implements EnvelopesGateway {
       if (cursor !== null) seen.add(cursor);
     } while (cursor !== null);
     return null;
+  }
+
+  public async monthOccurrences(month: string) {
+    const rows: EnvelopeOccurrence[] = [];
+    const seen = new Set<string>();
+    let cursor: string | null = null;
+    do {
+      const params = new URLSearchParams({
+        currency: CURRENCY,
+        limit: "100",
+        ...(cursor ? { cursor } : {}),
+      });
+      const payload = await this.get(
+        `/reconciliation/months/${month}/occurrences?${params.toString()}`,
+      );
+      const integration =
+        typeof payload === "object" && payload !== null
+          ? (payload as { integration?: Record<string, unknown> }).integration
+          : undefined;
+      // Comme le Web : seul le mode intégré au budget est accepté.
+      if (
+        integration?.mode !== "INTEGRATED" ||
+        integration?.globalBudgetAdjusted !== true
+      ) {
+        throw new Error("Invalid envelope response");
+      }
+      const page: CollectionPage<EnvelopeOccurrence> = parseCollectionPage(
+        payload,
+        parseEnvelopeOccurrence,
+      );
+      rows.push(...page.data);
+      cursor = page.meta.hasNext ? page.meta.nextCursor : null;
+      if (cursor !== null && seen.has(cursor)) {
+        throw new Error("Repeated envelope cursor");
+      }
+      if (cursor !== null) seen.add(cursor);
+    } while (cursor !== null);
+    return rows;
+  }
+
+  public async currentLink(operationId: number) {
+    const payload = await this.get(`/operations/${operationId}/reconciliation`);
+    const data =
+      typeof payload === "object" && payload !== null && "data" in payload
+        ? (payload.data as Record<string, unknown> | null)
+        : null;
+    const occurrenceId = data?.occurrenceId;
+    if (
+      data?.operationId !== operationId ||
+      !(
+        occurrenceId === null ||
+        (typeof occurrenceId === "number" &&
+          Number.isSafeInteger(occurrenceId) &&
+          occurrenceId > 0)
+      )
+    ) {
+      throw new Error("Invalid envelope response");
+    }
+    return occurrenceId;
   }
 
   private async get(path: string): Promise<unknown> {
