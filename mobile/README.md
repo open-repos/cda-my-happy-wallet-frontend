@@ -105,4 +105,6 @@ Catégories d'opérations : [parcours, formulaire et recette Android #134](docs/
 
 Catégories du budget fixe : [contrat, erreurs et vérification #385](docs/fixed-categories.md).
 
+Enveloppes budgétaires : [consultation, contrat et accessibilité #384](docs/mobile-envelopes.md).
+
 Liens email et deep links : [routage, sécurité et recette Android #30](docs/deep-links.md).
