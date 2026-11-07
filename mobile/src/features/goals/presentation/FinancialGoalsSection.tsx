@@ -10,6 +10,8 @@ import {
   GoalDraft,
 } from "@/src/features/goals/domain/financialGoal";
 import { HttpFinancialGoalsGateway } from "@/src/features/goals/infrastructure/HttpFinancialGoalsGateway";
+import { HttpSavingsTrajectoryGateway } from "@/src/features/goals/infrastructure/HttpSavingsTrajectoryGateway";
+import { SavingsTrajectoryModal } from "@/src/features/goals/presentation/SavingsTrajectoryModal";
 import { FinancialGoalCard } from "@/src/features/goals/presentation/FinancialGoalCard";
 import { FinancialGoalFormModal } from "@/src/features/goals/presentation/FinancialGoalFormModal";
 import {
@@ -40,6 +42,14 @@ export const FinancialGoalsSection = ({
     [httpClient],
   );
   const state = useFinancialGoals(gateway);
+  const trajectoryGateway = useMemo(
+    () => new HttpSavingsTrajectoryGateway(httpClient),
+    [httpClient],
+  );
+  // Objectif simulé (#285), relu dans la liste pour suivre ses mises à jour.
+  const [simulatedId, setSimulatedId] = useState<number | null>(null);
+  const simulatedGoal =
+    state.goals.find((goal) => goal.id === simulatedId) ?? null;
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editedGoal, setEditedGoal] = useState<FinancialGoal | null>(null);
   // Objectif demandé par `adjustRequest`, ouvert une seule fois dès qu'il est
@@ -140,7 +150,12 @@ export const FinancialGoalsSection = ({
 
       <View style={styles.list}>
         {state.goals.map((goal) => (
-          <FinancialGoalCard key={goal.id} goal={goal} onEdit={open} />
+          <FinancialGoalCard
+            key={goal.id}
+            goal={goal}
+            onEdit={open}
+            onSimulate={(item) => setSimulatedId(item.id)}
+          />
         ))}
       </View>
 
@@ -156,6 +171,14 @@ export const FinancialGoalsSection = ({
         />
       ) : null}
 
+      {simulatedGoal ? (
+        <SavingsTrajectoryModal
+          gateway={trajectoryGateway}
+          goal={simulatedGoal}
+          onClose={() => setSimulatedId(null)}
+          onRefreshGoals={() => void state.retry()}
+        />
+      ) : null}
       {isFormVisible ? (
         <FinancialGoalFormModal
           key={formGoal?.id ?? "new"}

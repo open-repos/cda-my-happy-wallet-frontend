@@ -1,11 +1,20 @@
 import SvgChart, { SVGRenderer } from "@wuba/react-native-echarts/svgChart";
-import { BarChart, GaugeChart, PieChart } from "echarts/charts";
-import { GridComponent } from "echarts/components";
+import { BarChart, GaugeChart, LineChart, PieChart } from "echarts/charts";
+import { GridComponent, MarkLineComponent } from "echarts/components";
 import * as echarts from "echarts/core";
 import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 
-echarts.use([SVGRenderer, BarChart, GaugeChart, PieChart, GridComponent]);
+// Courbes et repères des trajectoires d’épargne (#285).
+echarts.use([
+  SVGRenderer,
+  BarChart,
+  GaugeChart,
+  LineChart,
+  PieChart,
+  GridComponent,
+  MarkLineComponent,
+]);
 
 /** SVG uniquement : l'entrée globale chargerait également Skia. */
 export const NativeChart = ({
