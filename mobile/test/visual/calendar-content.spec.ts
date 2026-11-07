@@ -138,14 +138,19 @@ for (const width of [320, 390, 768, 1440])
           exact: true,
         });
         await expect(fab).toBeVisible();
-        const scroll = await page
-          .getByTestId("calendar-scroll-content")
-          .boundingBox();
+        // Fin de page dégagée du bouton (marge partagée #407) : en bas du
+        // défilement, la dernière action finit 16 px au-dessus du bouton.
+        const scroll = page.getByTestId("calendar-scroll-content");
+        await scroll.evaluate((element) => {
+          element.scrollTop = element.scrollHeight;
+        });
+        await page.waitForTimeout(300);
+        const last = await scroll.getByRole("button").last().boundingBox();
         const bounds = await fab.boundingBox();
-        expect(scroll!.y + scroll!.height).toBeLessThanOrEqual(bounds!.y);
-        await expect(
-          page.getByTestId("calendar-quick-add-space"),
-        ).toBeVisible();
+        expect(last!.y + last!.height + 16).toBeLessThanOrEqual(bounds!.y);
+        await scroll.evaluate((element) => {
+          element.scrollTop = 0;
+        });
       }
       const day = page.getByRole("button", {
         name: /^25 octobre 2026.*122 opérations réelles.*1 événement prévu.*1 élément potentiel.*1 événement en retard/,

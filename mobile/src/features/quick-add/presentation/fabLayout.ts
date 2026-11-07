@@ -3,7 +3,7 @@
  * `QuickAddProvider` et la marge basse des écrans d'onglets (#407).
  */
 export const FAB_SIZE = 56;
-/** Distance du bas de la zone des onglets, avant la marge système. */
+/** Distance depuis le bas de l’écran (barre d’onglets incluse), hors marge système. */
 export const FAB_OFFSET = 80;
 /** Le bouton n'est affiché que sous cette largeur. */
 export const FAB_MAX_WIDTH = 768;
