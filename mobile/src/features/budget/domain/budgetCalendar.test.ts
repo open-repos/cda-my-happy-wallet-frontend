@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   abbreviateAmount,
   dayCell,
+  dailyRemainingDetail,
   longDate,
   monthGrid,
   monthTitle,
@@ -19,6 +20,7 @@ const day = (overrides: Partial<BudgetDay> = {}): BudgetDay => ({
   plannedExpense: "120.00",
   plannedCount: 1,
   forecastRemaining: "887.50",
+  dailyRemaining: "17.25",
   ...overrides,
 });
 
@@ -103,7 +105,7 @@ describe("dayCell", () => {
 
   it("shows the abbreviated expenses or forecast", () => {
     expect(dayCell("2026-10-14", day(), "expenses", "EUR").value).toBe("-43");
-    expect(dayCell("2026-10-14", day(), "forecast", "EUR").value).toBe("888");
+    expect(dayCell("2026-10-14", day(), "forecast", "EUR").value).toBe("17");
     expect(
       dayCell(
         "2026-10-14",
@@ -112,7 +114,7 @@ describe("dayCell", () => {
         "EUR",
       ).accessibilityLabel.replace(/\s/g, " "),
     ).toBe(
-      "14 octobre 2026. Dépenses 42,50 €. 1 événement prévu. Reste prévisionnel 887,50 €.",
+      "14 octobre 2026. Dépenses 42,50 €. 1 événement prévu. Reste à vivre du jour 17,25 €.",
     );
   });
 
@@ -120,6 +122,7 @@ describe("dayCell", () => {
     const empty = dayCell("2026-10-02", undefined, "forecast", "EUR");
     expect(empty).toEqual({
       value: null,
+      tone: "neutral",
       markers: { operation: false, planned: false },
       accessibilityLabel: "2 octobre 2026. Aucune opération.",
     });
@@ -132,6 +135,7 @@ describe("dayCell", () => {
           income: "15.00",
           plannedCount: null,
           forecastRemaining: null,
+          dailyRemaining: null,
         }),
         "forecast",
         "EUR",
@@ -142,8 +146,72 @@ describe("dayCell", () => {
   it("does not claim anything while the month is loading", () => {
     expect(dayCell("2026-10-14", undefined, "markers", "EUR", true)).toEqual({
       value: null,
+      tone: "neutral",
       markers: { operation: false, planned: false },
       accessibilityLabel: "14 octobre 2026. Chargement.",
     });
+  });
+});
+
+describe("daily remaining (#386)", () => {
+  it("uses distinct server daily values without changing expenses", () => {
+    const first = dayCell("2026-10-14", day(), "forecast", "EUR");
+    const second = dayCell(
+      "2026-10-15",
+      day({ dailyRemaining: "-4.00" }),
+      "forecast",
+      "EUR",
+    );
+    expect(first).toMatchObject({ value: "17", tone: "positive" });
+    expect(second).toMatchObject({ value: "-4", tone: "negative" });
+    expect(second.accessibilityLabel.replace(/\s/g, " ")).toContain(
+      "Reste à vivre du jour -4,00 €.",
+    );
+    expect(
+      dayCell("2026-10-14", day({ expense: "0.40" }), "expenses", "EUR").value,
+    ).toBe("0");
+  });
+
+  it.each([undefined, null])(
+    "never substitutes forecastRemaining for %s",
+    (dailyRemaining) => {
+      const cell = dayCell(
+        "2026-10-14",
+        day({ dailyRemaining }),
+        "forecast",
+        "EUR",
+      );
+      expect(cell.value).toBeNull();
+      expect(cell.tone).toBe("neutral");
+      expect(cell.accessibilityLabel).not.toContain("887");
+      expect(dailyRemainingDetail(day({ dailyRemaining }), "EUR")).toBeNull();
+    },
+  );
+
+  it.each(["-0.01", "-0.40", "-0.49"])(
+    "keeps the minus on %s",
+    (dailyRemaining) => {
+      expect(
+        dayCell("2026-10-14", day({ dailyRemaining }), "forecast", "EUR"),
+      ).toMatchObject({
+        value: dailyRemaining.replace(".", ","),
+        tone: "negative",
+      });
+    },
+  );
+
+  it("shows zero and gives the exact amount with the Web explanation", () => {
+    expect(
+      dayCell("2026-10-14", day({ dailyRemaining: "0.00" }), "forecast", "EUR"),
+    ).toMatchObject({ value: "0", tone: "neutral" });
+    expect(
+      dailyRemainingDetail(day({ dailyRemaining: "-4.17" }), "EUR")?.replace(
+        /\s/g,
+        " ",
+      ),
+    ).toBe(
+      "Reste à vivre du jour : -4,17 €, soit votre part quotidienne du reste à vivre de base cumulée jusqu’à ce jour, moins les dépenses et plus les entrées saisies ou prévues jusqu’à cette date.",
+    );
+    expect(dailyRemainingDetail(undefined, "EUR")).toBeNull();
   });
 });

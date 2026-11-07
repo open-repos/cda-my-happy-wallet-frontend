@@ -1,5 +1,5 @@
-import { BarChart, GaugeChart, PieChart } from "echarts/charts";
-import { GridComponent } from "echarts/components";
+import { BarChart, GaugeChart, LineChart, PieChart } from "echarts/charts";
+import { GridComponent, MarkLineComponent } from "echarts/components";
 import * as echarts from "echarts/core";
 import { SVGRenderer } from "echarts/renderers";
 import { useEffect, useRef, useState } from "react";
@@ -7,7 +7,16 @@ import { View } from "react-native";
 
 // Un élément HTML utilise le moteur ECharts standard. Le moteur Wuba natif
 // attend getChartSize/patch sur son hôte et ne fonctionne pas sur un div.
-echarts.use([SVGRenderer, BarChart, GaugeChart, PieChart, GridComponent]);
+// Courbes et repères des trajectoires d’épargne (#285).
+echarts.use([
+  SVGRenderer,
+  BarChart,
+  GaugeChart,
+  LineChart,
+  PieChart,
+  GridComponent,
+  MarkLineComponent,
+]);
 
 export const NativeChart = ({
   option,

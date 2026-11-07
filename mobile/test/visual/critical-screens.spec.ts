@@ -84,7 +84,7 @@ test("captures both populated chart cards", async ({ page }) => {
   }
 });
 
-test("captures the populated operations screen", async ({ page }) => {
+test("captures the populated operations screen", async ({ page }, testInfo) => {
   await signIn(page);
   await page.getByRole("tab", { name: "Opérations ponctuelles" }).click();
   await expect(
@@ -92,6 +92,12 @@ test("captures the populated operations screen", async ({ page }) => {
   ).toBeVisible();
   await expect(page.getByText("Courses")).toBeVisible();
   await expectNoHorizontalOverflow(page);
+  // Retain the current CI rendering even when the existing reference passes
+  // within the pixel tolerance, so every affected viewport can be reviewed.
+  await page.screenshot({
+    path: testInfo.outputPath("operations-current.png"),
+    fullPage: true,
+  });
   await expect(page).toHaveScreenshot("operations.png", { fullPage: true });
 });
 
@@ -312,7 +318,9 @@ test("captures the budget calendar and its day filter", async ({ page }) => {
   await page
     .getByRole("button", { name: /^3 octobre 2026.*1 opération réelle/ })
     .click();
-  await expect(page.getByText(/^Éléments du 3 /)).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /^Éléments du 3 / }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Tout le mois" }),
   ).toBeVisible();

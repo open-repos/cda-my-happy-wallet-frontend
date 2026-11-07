@@ -54,6 +54,8 @@ const SessionNavigator = () => {
       <Stack.Protected guard={isAuthenticated}>
         <Stack.Screen name="(app)" />
       </Stack.Protected>
+      {/* Lien email de réinitialisation : ouvert avec ou sans session (#219). */}
+      <Stack.Screen name="new-password" />
     </Stack>
   );
 };

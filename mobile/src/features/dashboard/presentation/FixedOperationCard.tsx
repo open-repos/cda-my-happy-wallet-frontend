@@ -1,9 +1,17 @@
 import { ActionButton } from "@/src/design/ActionButton";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { primitives, semantic, themes } from "@/src/design/tokens";
-import { FixedOperation } from "@/src/features/dashboard/domain/fixedBudget";
+import { CategoryMark } from "@/src/features/categories/presentation/CategoryMark";
+import {
+  FixedOperation,
+  fixedCategoryLabel,
+} from "@/src/features/dashboard/domain/fixedBudget";
+import {
+  fixedPeriod,
+  FIXED_PERIOD_CHOICES,
+} from "../domain/fixedOperationQuery";
 
 interface FixedOperationCardProps {
   operation: FixedOperation;
@@ -12,6 +20,10 @@ interface FixedOperationCardProps {
 
 const colors = themes.light.color;
 const semibold = `${primitives.fontWeight.semibold}` as "600";
+/** En dessous, téléphone : montant sous le libellé et « Modifier » en icône. */
+const COMPACT_MAX_WIDTH = 600;
+/** Étiquette du Web pour une ligne sans catégorie lisible (#266). */
+const TAG_MARK = { color: null, icon: "solid:tag" };
 
 const formatAmount = (operation: FixedOperation): string =>
   new Intl.NumberFormat("fr-FR", {
@@ -24,6 +36,14 @@ export const FixedOperationCard = ({
   onEdit,
 }: FixedOperationCardProps) => {
   const isIncome = operation.type === "REVENU";
+  const compact = useWindowDimensions().width < COMPACT_MAX_WIDTH;
+  const amount = (
+    <Text
+      style={[styles.amount, isIncome ? styles.incomeText : styles.expenseText]}
+    >
+      {isIncome ? "+" : "−"} {formatAmount(operation)}
+    </Text>
+  );
   return (
     <View style={styles.card}>
       <View
@@ -42,23 +62,24 @@ export const FixedOperationCard = ({
         <Text numberOfLines={2} style={styles.title}>
           {operation.title}
         </Text>
+        {compact ? amount : null}
+        <View style={styles.categoryRow}>
+          <CategoryMark category={operation.category ?? TAG_MARK} size={14} />
+          <Text style={styles.category}>{fixedCategoryLabel(operation)}</Text>
+        </View>
         <Text style={styles.caption}>
-          {isIncome ? "Revenu mensuel" : "Charge mensuelle"}
+          {isIncome
+            ? "Revenu mensuel"
+            : `Charge · ${FIXED_PERIOD_CHOICES.find((choice) => choice.value === fixedPeriod(operation))?.label}`}
         </Text>
       </View>
-      <Text
-        style={[
-          styles.amount,
-          isIncome ? styles.incomeText : styles.expenseText,
-        ]}
-      >
-        {isIncome ? "+" : "−"} {formatAmount(operation)}
-      </Text>
+      {compact ? null : amount}
       <ActionButton
         action="edit"
         accessibilityLabel={`Modifier ${operation.title}`}
         accessibilityRole="button"
         hitSlop={primitives.space["2"]}
+        iconOnly={compact}
         onPress={() => onEdit(operation)}
         style={({ pressed }) => [styles.edit, pressed && styles.pressed]}
       ></ActionButton>
@@ -91,6 +112,17 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontSize: primitives.fontSize.md,
     fontWeight: semibold,
+  },
+  categoryRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: primitives.space["1"],
+    marginTop: primitives.space["1"],
+  },
+  category: {
+    color: colors.textSecondary,
+    flexShrink: 1,
+    fontSize: primitives.fontSize.sm,
   },
   caption: {
     color: colors.textMuted,

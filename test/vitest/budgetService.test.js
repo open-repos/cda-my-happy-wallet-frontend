@@ -69,6 +69,31 @@ describe("budgetService", () => {
     expect(summary.forecast.goalSavings).toBe("150.00");
   });
 
+  it("keeps the optional server adjustments required by the calculation detail", () => {
+    const parsed = parseBudgetSummary(
+      summaryFixture({
+        reconciliationAdjustment: "12.50",
+        forecast: {
+          ...summaryFixture().forecast,
+          envelopeReserve: "35.00",
+        },
+      })
+    );
+
+    expect(parsed.reconciliationAdjustment).toBe("12.50");
+    expect(parsed.forecast.envelopeReserve).toBe("35.00");
+    expect(() =>
+      parseBudgetSummary(
+        summaryFixture({
+          forecast: {
+            ...summaryFixture().forecast,
+            envelopeReserve: 35,
+          },
+        })
+      )
+    ).toThrow("Invalid budget forecast response");
+  });
+
   it("accepts a closed month without forecast and rejects malformed data", () => {
     expect(
       parseBudgetSummary(

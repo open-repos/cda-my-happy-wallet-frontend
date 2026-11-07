@@ -21,28 +21,161 @@ const toAmount = (cents) => {
   ).padStart(2, "0")}`;
 };
 
+const daysInMonth = (month) => {
+  const [year, monthNumber] = month.split("-").map(Number);
+  return new Date(Date.UTC(year, monthNumber, 0)).getUTCDate();
+};
+
+const periodDays = (summary, period) =>
+  period === "semaine"
+    ? Math.min(WEEK_DAYS, summary.remainingDays)
+    : period === "jour"
+    ? Math.min(1, summary.remainingDays)
+    : null;
+
 const floorPercent = (part, total) =>
   total > 0 ? Math.min(100, Math.floor((part * 100) / total)) : 0;
 
 /**
- * Montant affiché pour la période choisie : le reste réel pour le mois, la
- * part du disponible prudent pour la semaine (au plus 7 jours, bornée aux
- * jours restants du mois) et pour le jour. Sans prévisionnel, le disponible
- * réel par jour sert de base.
+ * Montant affiché pour la période choisie : le reste prévisionnel fourni par
+ * le serveur pour le mois, puis la part du disponible prudent pour la semaine
+ * (au plus 7 jours, bornée aux jours restants du mois) et pour le jour. Sans
+ * prévisionnel, le disponible réel sert de base.
  */
 export const periodRemaining = (summary, period) => {
   if (period === "mois") {
-    return { amount: summary.realRemaining, basis: "real", days: null };
+    return summary.forecast
+      ? {
+          amount: summary.forecast.forecastRemaining,
+          basis: "prudent",
+          days: null,
+        }
+      : { amount: summary.realRemaining, basis: "real", days: null };
   }
   const prudent = summary.forecast?.prudentDailyAllowance ?? null;
   const daily = prudent ?? summary.realDailyAllowance;
   const basis = prudent === null ? "real" : "prudent";
-  const days =
-    period === "semaine"
-      ? Math.min(WEEK_DAYS, summary.remainingDays)
-      : Math.min(1, summary.remainingDays);
+  const days = periodDays(summary, period);
   if (daily === null || days === 0) return { amount: null, basis, days };
   return { amount: toAmount(toCents(daily) * days), basis, days };
+};
+
+/**
+ * Part quotidienne du socle, selon la règle du serveur pour `dailyRemaining`
+ * (BudgetForecast, backend) : `base ÷ jours du mois` tronqué au centime.
+ */
+const dailyShareCents = (summary) =>
+  Math.trunc(toCents(summary.base) / daysInMonth(summary.month));
+
+export const theoreticalPeriod = (summary, period) => {
+  if (period === "mois") return { amount: summary.base, days: null };
+  const days = periodDays(summary, period);
+  if (days === 0) return { amount: null, days };
+  return { amount: toAmount(dailyShareCents(summary) * days), days };
+};
+
+export const theoreticalDailyShare = (summary) =>
+  toAmount(dailyShareCents(summary));
+
+/**
+ * Socle théorique acquis du premier jour à la date incluse, identique à la
+ * part retenue par le serveur : part quotidienne × jour, puis le socle entier
+ * le dernier jour du mois (le reliquat de troncature y est rattrapé).
+ */
+export const theoreticalToDate = (summary, date) => {
+  const day = Number(date.slice(8, 10));
+  const lastDay = day === daysInMonth(summary.month);
+  return {
+    amount: lastDay ? summary.base : toAmount(dailyShareCents(summary) * day),
+    day,
+    lastDay,
+  };
+};
+
+/** Valeurs de comparaison affichées sans reconstruire le budget serveur. */
+export const budgetComparison = (summary, period) => {
+  const actual = periodRemaining(summary, period);
+  const theoretical = theoreticalPeriod(summary, period);
+  if (actual.amount === null || theoretical.amount === null)
+    return { actual, theoretical, difference: null, progress: null };
+  const actualCents = toCents(actual.amount);
+  const theoreticalCents = toCents(theoretical.amount);
+  return {
+    actual,
+    theoretical,
+    difference: toAmount(actualCents - theoreticalCents),
+    progress:
+      theoreticalCents > 0
+        ? Math.max(
+            0,
+            Math.min(100, Math.round((actualCents * 100) / theoreticalCents))
+          )
+        : 0,
+  };
+};
+
+const signedExpense = (amount) => toAmount(-Math.abs(toCents(amount)));
+
+/** Cascade composée exclusivement des montants fournis par le résumé serveur. */
+export const calculationBreakdown = (summary) => {
+  const rows = [
+    { key: "base", label: "Reste à vivre théorique", amount: summary.base },
+    {
+      key: "actualIncome",
+      label: "Entrées déjà reçues",
+      amount: summary.actualIncome,
+    },
+    {
+      key: "actualExpense",
+      label: "Dépenses déjà faites",
+      amount: signedExpense(summary.actualExpense),
+    },
+    ...(summary.reconciliationAdjustment === undefined
+      ? []
+      : [
+          {
+            key: "reconciliationAdjustment",
+            label: "Rapprochement des enveloppes",
+            amount: summary.reconciliationAdjustment,
+          },
+        ]),
+    {
+      key: "carryIn",
+      label: "Report du mois précédent",
+      amount: summary.carryIn,
+    },
+  ];
+  if (summary.forecast) {
+    rows.push(
+      {
+        key: "plannedIncome",
+        label: "Entrées prévues",
+        amount: summary.forecast.plannedIncome,
+      },
+      {
+        key: "plannedExpense",
+        label: "Dépenses prévues",
+        amount: signedExpense(summary.forecast.plannedExpense),
+      },
+      {
+        key: "goalSavings",
+        label: "Épargne des objectifs",
+        amount: signedExpense(summary.forecast.goalSavings),
+      }
+    );
+    if (summary.forecast.envelopeReserve !== undefined)
+      rows.push({
+        key: "envelopeReserve",
+        label: "Réserve des enveloppes",
+        amount: signedExpense(summary.forecast.envelopeReserve),
+      });
+  }
+  rows.push({
+    key: "actualized",
+    label: "Reste à vivre actualisé",
+    amount: summary.forecast?.forecastRemaining ?? summary.realRemaining,
+  });
+  return rows;
 };
 
 /** Dépenses réelles du mois regroupées par catégorie, la plus forte d'abord. */

@@ -32,6 +32,8 @@ const parseForecast = (forecast) => {
       forecast?.forecastRemaining,
     ].every(isAmount) ||
     !isOptionalAmount(forecast?.prudentDailyAllowance) ||
+    (forecast?.envelopeReserve !== undefined &&
+      !isAmount(forecast.envelopeReserve)) ||
     !isCount(forecast?.unresolvedCount) ||
     !isCount(forecast?.overdueCount)
   ) {
@@ -41,6 +43,9 @@ const parseForecast = (forecast) => {
     plannedIncome: forecast.plannedIncome,
     plannedExpense: forecast.plannedExpense,
     goalSavings: forecast.goalSavings,
+    ...(forecast.envelopeReserve === undefined
+      ? {}
+      : { envelopeReserve: forecast.envelopeReserve }),
     forecastRemaining: forecast.forecastRemaining,
     prudentDailyAllowance: forecast.prudentDailyAllowance,
     unresolvedCount: forecast.unresolvedCount,

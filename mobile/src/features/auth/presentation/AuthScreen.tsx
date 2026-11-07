@@ -1,6 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { PropsWithChildren, ReactNode, useState } from "react";
+import { PropsWithChildren, ReactNode, useEffect, useState } from "react";
 import {
+  AccessibilityInfo,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -16,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { primitives, semantic, themes } from "@/src/design/tokens";
 import { FeedbackBanner, FeedbackState } from "@/src/design/FeedbackState";
+import { withEmailDeliveryHint } from "@/src/features/auth/account/emailDeliveryHint";
 
 const colors = themes.light.color;
 const semibold = primitives.fontWeight.semibold.toString() as "600";
@@ -203,18 +205,34 @@ export const AuthLinkRow = ({
 interface AuthSuccessProps {
   message: string;
   title: string;
+  /** Ajoute l'invitation à vérifier les spams après un envoi d'email (#388). */
+  emailSent?: boolean;
 }
 
-export const AuthSuccess = ({ message, title }: AuthSuccessProps) => (
-  <View style={styles.successCard}>
-    <FeedbackState
-      description={message}
-      icon="mail-open"
-      kind="success"
-      title={title}
-    />
-  </View>
-);
+export const AuthSuccess = ({
+  emailSent,
+  message,
+  title,
+}: AuthSuccessProps) => {
+  const description = emailSent ? withEmailDeliveryHint(message) : message;
+
+  // iOS n'a pas de région live et Android ne lit pas toujours celle qui
+  // apparaît : le succès est annoncé explicitement à son affichage.
+  useEffect(() => {
+    AccessibilityInfo.announceForAccessibility(`${title}. ${description}`);
+  }, [description, title]);
+
+  return (
+    <View style={styles.successCard}>
+      <FeedbackState
+        description={description}
+        icon="mail-open"
+        kind="success"
+        title={title}
+      />
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   safeArea: { backgroundColor: colors.backgroundCanvas, flex: 1 },

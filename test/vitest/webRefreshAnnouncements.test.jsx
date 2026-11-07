@@ -95,6 +95,9 @@ const page = { data: [operation], meta: { hasNext: false } };
 const summary = (month = "2026-10") => ({
   month,
   currency: "EUR",
+  base: "1000.00",
+  actualIncome: "0.00",
+  actualExpense: "0.00",
   realRemaining: "1000.00",
   monthResult: "1000.00",
   carryIn: "0.00",

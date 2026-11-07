@@ -1,4 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useFabClearance } from "@/src/features/quick-add/presentation/useFabClearance";
 import { ReactNode } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 // Barre d'état Android comme encoche iOS (#147).
@@ -24,20 +25,24 @@ export const DestinationScreen = ({
   description,
   icon,
   title,
-}: DestinationScreenProps) => (
-  <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
-    <ScrollView contentContainerStyle={styles.content}>
-      <View style={styles.iconContainer}>
-        <Ionicons color={colors.navigationText} name={icon} size={24} />
-      </View>
-      <Text accessibilityRole="header" style={styles.title}>
-        {title}
-      </Text>
-      <Text style={styles.description}>{description}</Text>
-      {children}
-    </ScrollView>
-  </SafeAreaView>
-);
+}: DestinationScreenProps) => {
+  // Fin de page dégagée du bouton flottant d’ajout (#407).
+  const fabSpace = useFabClearance(semantic.space.section);
+  return (
+    <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
+      <ScrollView contentContainerStyle={[styles.content, fabSpace]}>
+        <View style={styles.iconContainer}>
+          <Ionicons color={colors.navigationText} name={icon} size={24} />
+        </View>
+        <Text accessibilityRole="header" style={styles.title}>
+          {title}
+        </Text>
+        <Text style={styles.description}>{description}</Text>
+        {children}
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
   safeArea: {

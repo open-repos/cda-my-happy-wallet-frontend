@@ -1,4 +1,5 @@
 import { ChartGateway } from "@/src/features/charts/ChartGateway";
+import { useFabClearance } from "@/src/features/quick-add/presentation/useFabClearance";
 import { DashboardCharts } from "@/src/features/charts/DashboardCharts";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
@@ -23,6 +24,7 @@ import { useFixedBudget } from "@/src/features/dashboard/presentation/useFixedBu
 import { HttpBudgetSummaryGateway } from "@/src/features/budget/infrastructure/HttpBudgetSummaryGateway";
 import { BudgetSummaryCards } from "@/src/features/budget/presentation/BudgetSummaryCards";
 import { SavingsCapacitySection } from "@/src/features/savings/presentation/SavingsCapacitySection";
+import { EnvelopeSection } from "@/src/features/envelopes/presentation/EnvelopeSection";
 
 const colors = themes.light.color;
 
@@ -52,6 +54,8 @@ const ActionCard = ({ description, icon, label, onPress }: ActionCardProps) => (
 );
 
 export const DashboardScreen = () => {
+  // Fin de page dégagée du bouton flottant d’ajout (#407).
+  const fabSpace = useFabClearance(40);
   const router = useRouter();
   const { httpClient, signOut, state } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -84,7 +88,7 @@ export const DashboardScreen = () => {
 
   return (
     <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={[styles.content, fabSpace]}>
         <View style={styles.header}>
           <View style={styles.brand}>
             <View style={styles.brandIcon}>
@@ -161,6 +165,8 @@ export const DashboardScreen = () => {
         ) : null}
 
         <DashboardCharts gateway={chartGateway} />
+
+        <EnvelopeSection />
 
         {/* « Ajuster le versement » ouvre l'objectif dans l'onglet Objectifs. */}
         <SavingsCapacitySection />
