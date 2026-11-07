@@ -60,25 +60,36 @@ export const periodRemaining = (summary, period) => {
   return { amount: toAmount(toCents(daily) * days), basis, days };
 };
 
-/** Part théorique issue du socle serveur, proratisée pour la présentation. */
+/**
+ * Part quotidienne du socle, selon la règle du serveur pour `dailyRemaining`
+ * (BudgetForecast, backend) : `base ÷ jours du mois` tronqué au centime.
+ */
+const dailyShareCents = (summary) =>
+  Math.trunc(toCents(summary.base) / daysInMonth(summary.month));
+
 export const theoreticalPeriod = (summary, period) => {
   if (period === "mois") return { amount: summary.base, days: null };
   const days = periodDays(summary, period);
   if (days === 0) return { amount: null, days };
-  const daily = Math.round(toCents(summary.base) / daysInMonth(summary.month));
-  return { amount: toAmount(daily * days), days };
+  return { amount: toAmount(dailyShareCents(summary) * days), days };
 };
 
 export const theoreticalDailyShare = (summary) =>
-  toAmount(Math.round(toCents(summary.base) / daysInMonth(summary.month)));
+  toAmount(dailyShareCents(summary));
 
-/** Socle théorique acquis du premier jour à la date incluse. */
+/**
+ * Socle théorique acquis du premier jour à la date incluse, identique à la
+ * part retenue par le serveur : part quotidienne × jour, puis le socle entier
+ * le dernier jour du mois (le reliquat de troncature y est rattrapé).
+ */
 export const theoreticalToDate = (summary, date) => {
   const day = Number(date.slice(8, 10));
-  const accrued = Math.round(
-    (toCents(summary.base) * day) / daysInMonth(summary.month)
-  );
-  return { amount: toAmount(accrued), day };
+  const lastDay = day === daysInMonth(summary.month);
+  return {
+    amount: lastDay ? summary.base : toAmount(dailyShareCents(summary) * day),
+    day,
+    lastDay,
+  };
 };
 
 /** Valeurs de comparaison affichées sans reconstruire le budget serveur. */

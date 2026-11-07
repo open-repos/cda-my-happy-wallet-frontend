@@ -332,7 +332,7 @@ function Calendrier() {
           {mode === "forecast" && budget.summary && (
             <p
               className="budget-calendar__theoretical"
-              role="status"
+              role="note"
               aria-label="Repère théorique du calendrier"
             >
               Théorique {formatMoney(budget.summary.base, currency)} · part du
@@ -438,11 +438,17 @@ function Calendrier() {
                   <strong>
                     {formatMoney(selectedTheoretical.amount, currency)}
                   </strong>{" "}
-                  théorique, soit{" "}
-                  {formatMoney(theoreticalDailyShare(budget.summary), currency)}{" "}
-                  × {selectedTheoretical.day} jour
-                  {selectedTheoretical.day > 1 ? "s" : ""}, moins les dépenses
-                  et plus les entrées saisies ou prévues jusqu’à cette date.
+                  théorique.{" "}
+                  {selectedTheoretical.lastDay
+                    ? "Le théorique vaut votre socle complet du mois"
+                    : `Le théorique cumule votre part quotidienne (${formatMoney(
+                        theoreticalDailyShare(budget.summary),
+                        currency
+                      )} × ${selectedTheoretical.day} jour${
+                        selectedTheoretical.day > 1 ? "s" : ""
+                      })`}{" "}
+                  ; le reste à vivre du jour en retire les dépenses et y ajoute
+                  les entrées saisies ou prévues jusqu’à cette date.
                 </>
               )}
             </p>

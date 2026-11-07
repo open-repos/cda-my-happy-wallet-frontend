@@ -6,6 +6,7 @@ import {
   goalsProgress,
   periodRemaining,
   theoreticalDailyShare,
+  theoreticalToDate,
 } from "../../src/js/utils/homeBudget";
 
 const summary = (overrides = {}) => ({
@@ -87,30 +88,37 @@ describe("periodRemaining", () => {
 });
 
 describe("budgetComparison", () => {
-  it("compares the updated day with the rounded theoretical daily share", () => {
+  it("compares the updated day with the server truncated daily share", () => {
     expect(budgetComparison(summary(), "jour")).toEqual({
       actual: { amount: "63.96", basis: "prudent", days: 1 },
-      theoretical: { amount: "30.17", days: 1 },
-      difference: "33.79",
+      theoretical: { amount: "30.16", days: 1 },
+      difference: "33.80",
       progress: 100,
     });
   });
 
   it.each([
     ["2025-02", "32.32"],
-    ["2024-02", "31.21"],
-  ])("rounds the theoretical daily share for %s", (month, expected) => {
-    expect(theoreticalDailyShare(summary({ month }))).toBe(expected);
-  });
+    ["2024-02", "31.20"],
+  ])(
+    "truncates the theoretical daily share for %s like the server",
+    (month, expected) => {
+      expect(theoreticalDailyShare(summary({ month }))).toBe(expected);
+    }
+  );
 
   it("uses the same remaining-day bound for the weekly values", () => {
     expect(
       budgetComparison(summary({ remainingDays: 3 }), "semaine")
     ).toMatchObject({
       actual: { amount: "191.88", days: 3 },
-      theoretical: { amount: "90.51", days: 3 },
-      difference: "101.37",
+      theoretical: { amount: "90.48", days: 3 },
+      difference: "101.40",
     });
+  });
+
+  it("keeps a negative base truncated toward zero", () => {
+    expect(theoreticalDailyShare(summary({ base: "-100.00" }))).toBe("-3.33");
   });
 
   it("keeps the theoretical month visible without a forecast", () => {
@@ -126,6 +134,28 @@ describe("budgetComparison", () => {
     ).toMatchObject({
       actual: { amount: "1037.50", basis: "real" },
       theoretical: { amount: "905.00" },
+    });
+  });
+});
+
+describe("theoreticalToDate", () => {
+  const october = summary({ month: "2026-10", base: "1200.00" });
+
+  it("accrues the server daily share for each elapsed day", () => {
+    expect(theoreticalDailyShare(october)).toBe("38.70");
+    expect(theoreticalToDate(october, "2026-10-20")).toEqual({
+      amount: "774.00",
+      day: 20,
+      lastDay: false,
+    });
+  });
+
+  it("reaches the full base on the last day, as the server does", () => {
+    expect(theoreticalToDate(october, "2026-10-30").amount).toBe("1161.00");
+    expect(theoreticalToDate(october, "2026-10-31")).toEqual({
+      amount: "1200.00",
+      day: 31,
+      lastDay: true,
     });
   });
 });

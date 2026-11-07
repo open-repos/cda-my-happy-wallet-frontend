@@ -25,11 +25,16 @@ et le reste réel pour un mois clôturé. Le théorique reprend le socle `base`
 proratas Jour et Semaine, en centimes entiers ; aucune opération ni règle de
 budget n'est recalculée dans le navigateur.
 
-| Période | Actualisé                                                             | Théorique                        |
-| ------- | --------------------------------------------------------------------- | -------------------------------- |
-| Mois    | `forecastRemaining`, ou `realRemaining` sans prévision                | `base`                           |
-| Semaine | disponible prudent/jour × min(7, jours restants du mois)              | part de `base` × la même borne   |
-| Jour    | disponible prudent/jour (jour courant inclus dans les jours restants) | `base` ÷ nombre de jours du mois |
+| Période | Actualisé                                                             | Théorique                       |
+| ------- | --------------------------------------------------------------------- | ------------------------------- |
+| Mois    | `forecastRemaining`, ou `realRemaining` sans prévision                | `base`                          |
+| Semaine | disponible prudent/jour × min(7, jours restants du mois)              | part de `base` × la même borne  |
+| Jour    | disponible prudent/jour (jour courant inclus dans les jours restants) | `base` ÷ jours du mois, tronqué |
+
+La part quotidienne du socle suit la règle serveur de `dailyRemaining` :
+`base ÷ jours du mois` tronqué au centime (vers zéro). L'onglet Mois relie le
+reste réel détaillé au montant actualisé affiché ; un écart nul s'écrit « Égal
+à votre part théorique ».
 
 Sans prévisionnel (`forecast: null`), le disponible réel par jour sert de
 base et l'explication le dit. Un montant négatif est conservé et expliqué

@@ -44,15 +44,15 @@ for (const theme of ["light", "dark"]) {
       await expect(forecastLabel).toBeVisible();
       expect((await forecastLabel.boundingBox()).width).toBeGreaterThan(70);
       await expect(
-        page.getByRole("status", { name: "Repère théorique du calendrier" })
-      ).toContainText(/Théorique\s*1\s*200,00\s*€.*part du jour\s*38,71\s*€/);
+        page.getByRole("note", { name: "Repère théorique du calendrier" })
+      ).toContainText(/Théorique\s*1\s*200,00\s*€.*part du jour\s*38,70\s*€/);
       const twentieth = page.getByRole("button", {
-        name: /^20 octobre 2026, .*reste à vivre du jour 611,50\s*€ sur 774,19\s*€ théorique/,
+        name: /^20 octobre 2026, .*reste à vivre du jour 611,50\s*€ sur 774,00\s*€ théorique/,
       });
       await expect(twentieth).toBeVisible();
       await twentieth.click();
       await expect(page.getByText(/^Reste à vivre du jour :/)).toContainText(
-        /611,50\s*€ \/ 774,19\s*€ théorique/
+        /611,50\s*€ \/ 774,00\s*€ théorique/
       );
 
       expect(

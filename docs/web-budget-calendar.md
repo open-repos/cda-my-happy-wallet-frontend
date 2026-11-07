@@ -43,7 +43,9 @@ phrase. Le résumé du mois garde le reste prévisionnel de fin de mois. Un
 backend sans ce champ laisse la case vide.
 Le mode affiche aussi le socle théorique et sa part quotidienne. Le libellé
 accessible de chaque case compare `dailyRemaining` au socle théorique acquis à
-la date ; le détail du jour explicite ce prorata avant les dépenses et entrées.
+la date, calculé comme le serveur : part quotidienne tronquée × jour, puis le
+socle entier le dernier jour. Le détail du jour explicite ce prorata, puis ce
+que le reste à vivre du jour en retire et y ajoute.
 Le bouton « Prévisionnel » conserve son libellé entier jusque 320 px.
 
 Les repères

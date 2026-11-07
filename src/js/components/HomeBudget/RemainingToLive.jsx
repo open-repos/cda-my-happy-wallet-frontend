@@ -96,7 +96,12 @@ const TEXTS = {
 
 const periodDifference = (difference, period, days) => {
   const amount = difference.startsWith("-") ? difference.slice(1) : difference;
-  const direction = Number(difference) < 0 ? "de moins" : "de plus";
+  const direction =
+    Number(difference) < 0
+      ? "de moins"
+      : Number(difference) > 0
+      ? "de plus"
+      : null;
   const suffix =
     period === "jour"
       ? "par jour"
@@ -105,6 +110,21 @@ const periodDifference = (difference, period, days) => {
       : "ce mois-ci";
   return { amount, direction, suffix };
 };
+
+/** Relie le reste réel détaillé au montant actualisé affiché pour le mois. */
+const ForecastBridge = ({ summary }) =>
+  summary.forecast ? (
+    <p className="budget-help">
+      Le reste à vivre actualisé (
+      {formatMoney(summary.forecast.forecastRemaining, summary.currency)}) part
+      de ce reste réel, ajoute les entrées prévues et retire les dépenses
+      prévues
+      {summary.forecast.envelopeReserve !== undefined
+        ? ", la réserve des enveloppes"
+        : ""}{" "}
+      et l’épargne des objectifs. Le détail du calcul donne chaque montant.
+    </p>
+  ) : null;
 
 const CalculationDetail = ({ summary, onClose }) => (
   <FormDialog
@@ -224,8 +244,11 @@ export const RemainingToLive = ({ section, period }) => {
         )}
         {difference && (
           <p className="home-budget__difference">
-            {formatMoney(difference.amount, summary.currency)}{" "}
-            {difference.direction} {difference.suffix} que votre part théorique.
+            {difference.direction === null
+              ? `Égal à votre part théorique ${difference.suffix}.`
+              : `${formatMoney(difference.amount, summary.currency)} ${
+                  difference.direction
+                } ${difference.suffix} que votre part théorique.`}
           </p>
         )}
         <div className="home-budget__explanation">
@@ -233,6 +256,7 @@ export const RemainingToLive = ({ section, period }) => {
             <>
               <RealBreakdown summary={summary} />
               <CarryHelp summary={summary} />
+              <ForecastBridge summary={summary} />
             </>
           ) : (
             <ShareHelp summary={summary} share={share} period={period} />

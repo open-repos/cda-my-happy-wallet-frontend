@@ -117,6 +117,25 @@ describe("Home reste à vivre", () => {
     expect(
       screen.getByText(/Le déficit de septembre est déduit de ce mois/)
     ).toBeInTheDocument();
+    // The real breakdown ends on the real remaining: a sentence links it to
+    // the actualized amount displayed above (#392 review).
+    expect(
+      normalize(screen.getByText(/part de ce reste réel/).textContent)
+    ).toContain(
+      "Le reste à vivre actualisé (767,50 €) part de ce reste réel, ajoute les entrées prévues et retire les dépenses prévues et l’épargne des objectifs."
+    );
+  });
+
+  it("states an actualized amount equal to the theoretical", () => {
+    useHomeBudget.mockReturnValue(
+      state({ summary: section(summary({ base: "767.50" })) })
+    );
+    renderHome();
+
+    expect(
+      screen.getByText("Égal à votre part théorique ce mois-ci.")
+    ).toBeVisible();
+    expect(screen.queryByText(/0,00 € de plus/)).not.toBeInTheDocument();
   });
 
   it("shows the weekly prudent share with its explanation", () => {
@@ -130,7 +149,7 @@ describe("Home reste à vivre", () => {
     expect(mainAmount()).toBe("447,72 €");
     expect(
       document.querySelector(".home-budget__amount-theoretical")
-    ).toHaveTextContent(/270,97\s€/);
+    ).toHaveTextContent(/270,90\s€/);
     const help = normalize(screen.getByText(/par jour × 7 jours/).textContent);
     expect(help).toContain("63,96 € par jour × 7 jours");
     expect(help).toContain("reste prévisionnel (767,50 €)");
@@ -160,7 +179,7 @@ describe("Home reste à vivre", () => {
       screen.getByRole("heading", { name: "Reste à vivre aujourd’hui" })
     ).toBeInTheDocument();
     expect(mainAmount()).toBe("-20,00 €");
-    expect(screen.getByText(/58,71\s*€ de moins par jour/)).toBeVisible();
+    expect(screen.getByText(/58,70\s*€ de moins par jour/)).toBeVisible();
     expect(
       screen.getByText(/effort nécessaire pour finir le mois à l’équilibre/)
     ).toBeInTheDocument();
