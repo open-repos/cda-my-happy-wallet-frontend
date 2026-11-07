@@ -1,4 +1,5 @@
 import { ActionButton } from "@/src/design/ActionButton";
+import { useFabClearance } from "@/src/features/quick-add/presentation/useFabClearance";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -39,6 +40,8 @@ const colors = themes.light.color;
 const semibold = `${primitives.fontWeight.semibold}` as "600";
 
 export const OperationsScreen = () => {
+  // Fin de page dégagée du bouton flottant d’ajout (#407).
+  const fabSpace = useFabClearance(primitives.space["16"]);
   const router = useRouter();
   const { httpClient } = useAuth();
   const gateway = useMemo(
@@ -134,6 +137,7 @@ export const OperationsScreen = () => {
         contentContainerStyle={[
           styles.content,
           state.operations.length === 0 && styles.emptyContent,
+          fabSpace,
         ]}
         data={state.operations}
         keyExtractor={({ id }) => `${id}`}

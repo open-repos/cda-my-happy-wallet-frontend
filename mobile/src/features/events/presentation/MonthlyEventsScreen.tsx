@@ -1,4 +1,5 @@
 import { ActionButton } from "@/src/design/ActionButton";
+import { useFabClearance } from "@/src/features/quick-add/presentation/useFabClearance";
 import { useMemo, useState } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { FlatList, StyleSheet, Text, View } from "react-native";
@@ -28,6 +29,8 @@ const semibold = `${primitives.fontWeight.semibold}` as "600";
  * événements mensuels (#225). `ajuster` ouvre un objectif en modification.
  */
 export const MonthlyEventsScreen = () => {
+  // Fin de page dégagée du bouton flottant d’ajout (#407).
+  const fabSpace = useFabClearance(primitives.space["16"]);
   const { ajuster, demande } = useLocalSearchParams<{
     ajuster?: string;
     demande?: string;
@@ -80,6 +83,7 @@ export const MonthlyEventsScreen = () => {
         contentContainerStyle={[
           styles.content,
           state.events.length === 0 && styles.emptyContent,
+          fabSpace,
         ]}
         data={state.events}
         keyExtractor={({ id }) => `${id}`}

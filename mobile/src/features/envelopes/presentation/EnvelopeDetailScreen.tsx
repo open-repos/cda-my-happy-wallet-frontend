@@ -1,4 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useFabClearance } from "@/src/features/quick-add/presentation/useFabClearance";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo } from "react";
 import {
@@ -50,6 +51,8 @@ const loadedMessage = (count: number) =>
  * dépenses rattachées et statistiques de l'année, en lecture seule.
  */
 export const EnvelopeDetailScreen = () => {
+  // Fin de page dégagée du bouton flottant d’ajout (#407).
+  const fabSpace = useFabClearance(primitives.space["16"]);
   const router = useRouter();
   const params = useLocalSearchParams<{
     enveloppe?: string;
@@ -106,7 +109,7 @@ export const EnvelopeDetailScreen = () => {
 
   return (
     <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={[styles.content, fabSpace]}>
         <Pressable
           accessibilityRole="link"
           onPress={back}

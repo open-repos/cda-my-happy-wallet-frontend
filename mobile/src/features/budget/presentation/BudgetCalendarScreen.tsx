@@ -1,4 +1,5 @@
 import { ActionButton } from "@/src/design/ActionButton";
+import { useFabClearance } from "@/src/features/quick-add/presentation/useFabClearance";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -66,8 +67,9 @@ import { useQuickAdd } from "@/src/features/quick-add/presentation/QuickAddProvi
 
 /** Calendrier budgétaire du mois : grille, modes, détail du jour, opérations. */
 export const BudgetCalendarScreen = () => {
-  const { width, fontScale } = useWindowDimensions();
-  const compact = width < 768;
+  // Fin de page dégagée du bouton flottant d’ajout (#407).
+  const fabSpace = useFabClearance(40);
+  const { fontScale } = useWindowDimensions();
   const [gridViewportWidth, setGridViewportWidth] = useState(0);
   const colors = themes[useColorScheme() === "dark" ? "dark" : "light"].color;
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -232,7 +234,7 @@ export const BudgetCalendarScreen = () => {
     <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
       <ScrollView
         testID="calendar-scroll-content"
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, fabSpace]}
       >
         {Platform.OS === "web" && (
           <Text
@@ -575,9 +577,6 @@ export const BudgetCalendarScreen = () => {
         )}
         <SimulationPanel />
       </ScrollView>
-      {compact && (
-        <View testID="calendar-quick-add-space" style={styles.quickAddSpace} />
-      )}
       <RealizeOccurrenceModal
         key={
           realizing
@@ -614,9 +613,6 @@ const makeStyles = (
 ) =>
   StyleSheet.create({
     safeArea: { backgroundColor: colors.backgroundCanvas, flex: 1 },
-    // FAB 56 px, plus its 16 px clearance and a 16 px content gap. The tabs
-    // already own the bottom safe area, so it must not be added a second time.
-    quickAddSpace: { height: 88, flexShrink: 0 },
     content: {
       gap: 20,
       paddingBottom: 40,

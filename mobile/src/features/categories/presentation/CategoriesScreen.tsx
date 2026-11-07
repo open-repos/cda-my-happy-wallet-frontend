@@ -1,4 +1,5 @@
 import { ActionButton } from "@/src/design/ActionButton";
+import { useFabClearance } from "@/src/features/quick-add/presentation/useFabClearance";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -27,6 +28,8 @@ const semibold = `${primitives.fontWeight.semibold}` as "600";
 
 /** Liste et gestion des catégories d'opérations (#134). */
 export const CategoriesScreen = () => {
+  // Fin de page dégagée du bouton flottant d’ajout (#407).
+  const fabSpace = useFabClearance(primitives.space["16"]);
   const router = useRouter();
   const { httpClient } = useAuth();
   const gateway = useMemo(
@@ -103,6 +106,7 @@ export const CategoriesScreen = () => {
         contentContainerStyle={[
           styles.content,
           state.categories.length === 0 && styles.emptyContent,
+          fabSpace,
         ]}
         data={state.categories}
         keyExtractor={({ id }) => `${id}`}
