@@ -31,6 +31,9 @@ vi.mock("../../src/js/components/charts/EChart", () => ({
 const summary = (overrides = {}) => ({
   month: "2026-10",
   currency: "EUR",
+  base: "1200.00",
+  actualIncome: "0.00",
+  actualExpense: "42.50",
   realRemaining: "1037.50",
   carryIn: "-120.00",
   carryFromMonth: "2026-09",
@@ -38,6 +41,9 @@ const summary = (overrides = {}) => ({
   remainingDays: 12,
   realDailyAllowance: "86.46",
   forecast: {
+    plannedIncome: "0.00",
+    plannedExpense: "120.00",
+    goalSavings: "150.00",
     forecastRemaining: "767.50",
     prudentDailyAllowance: "63.96",
   },
@@ -83,7 +89,7 @@ const renderHome = () =>
 
 const normalize = (text) => text.replace(/\s/g, " ");
 const mainAmount = () =>
-  normalize(document.querySelector(".home-budget__amount").textContent);
+  normalize(document.querySelector(".home-budget__amount-current").textContent);
 
 beforeEach(() => useHomeBudget.mockReturnValue(state()));
 afterEach(() => {
@@ -92,13 +98,20 @@ afterEach(() => {
 });
 
 describe("Home reste à vivre", () => {
-  it("shows the month real remaining with a distinct carry line", () => {
+  it("shows the updated and theoretical month values with a distinct carry line", () => {
     renderHome();
 
     expect(
       screen.getByRole("heading", { name: "Reste à vivre du mois" })
     ).toBeInTheDocument();
-    expect(mainAmount()).toBe("1 037,50 €");
+    expect(mainAmount()).toBe("767,50 €");
+    expect(
+      document.querySelector(".home-budget__amount-theoretical")
+    ).toHaveTextContent(/1\s200,00\s€/);
+    expect(screen.getByText(/432,50 € de moins ce mois-ci/)).toBeVisible();
+    expect(screen.getByRole("progressbar")).toHaveAccessibleName(
+      /reste à vivre actualisé 767,50\s*€ sur 1\s*200,00\s*€ théorique/i
+    );
     const carry = screen.getByText("Report de septembre").closest("div");
     expect(normalize(carry.textContent)).toContain("-120,00 €");
     expect(
@@ -115,6 +128,9 @@ describe("Home reste à vivre", () => {
       screen.getByRole("heading", { name: "Reste à vivre sur 7 jours" })
     ).toBeInTheDocument();
     expect(mainAmount()).toBe("447,72 €");
+    expect(
+      document.querySelector(".home-budget__amount-theoretical")
+    ).toHaveTextContent(/270,97\s€/);
     const help = normalize(screen.getByText(/par jour × 7 jours/).textContent);
     expect(help).toContain("63,96 € par jour × 7 jours");
     expect(help).toContain("reste prévisionnel (767,50 €)");
@@ -144,9 +160,53 @@ describe("Home reste à vivre", () => {
       screen.getByRole("heading", { name: "Reste à vivre aujourd’hui" })
     ).toBeInTheDocument();
     expect(mainAmount()).toBe("-20,00 €");
+    expect(screen.getByText(/58,71\s*€ de moins par jour/)).toBeVisible();
     expect(
       screen.getByText(/effort nécessaire pour finir le mois à l’équilibre/)
     ).toBeInTheDocument();
+  });
+
+  it("describes an actualized amount above the theoretical without relying on color", () => {
+    useHomeBudget.mockReturnValue(
+      state({
+        summary: section(
+          summary({
+            base: "500.00",
+            forecast: {
+              plannedIncome: "0.00",
+              plannedExpense: "120.00",
+              goalSavings: "150.00",
+              forecastRemaining: "767.50",
+              prudentDailyAllowance: "63.96",
+            },
+          })
+        ),
+      })
+    );
+    renderHome();
+
+    expect(screen.getByText(/267,50\s*€ de plus ce mois-ci/)).toBeVisible();
+  });
+
+  it("shows this month's side-by-side values and opens an exact calculation detail", () => {
+    renderHome();
+
+    const monthCard = screen.getByRole("group", { name: "Ce mois-ci" });
+    expect(within(monthCard).getByText("Actualisé")).toBeVisible();
+    expect(within(monthCard).getByText(/767,50\s€/)).toBeVisible();
+    expect(within(monthCard).getByText("Théorique")).toBeVisible();
+    expect(within(monthCard).getByText(/1\s200,00\s€/)).toBeVisible();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Voir le détail du calcul" })
+    );
+    const detail = screen.getByRole("dialog", { name: "Détail du calcul" });
+    expect(within(detail).getByText("Reste à vivre théorique")).toBeVisible();
+    expect(within(detail).getByText("Dépenses déjà faites")).toBeVisible();
+    expect(within(detail).getByText("Dépenses prévues")).toBeVisible();
+    expect(within(detail).getByText("Épargne des objectifs")).toBeVisible();
+    expect(within(detail).getByText("Reste à vivre actualisé")).toBeVisible();
+    expect(within(detail).getByText(/767,50\s€/)).toBeVisible();
   });
 
   it("renders the expense chart with a textual equivalent per category", () => {

@@ -1,23 +1,31 @@
 import { describe, expect, it } from "vitest";
 import {
+  budgetComparison,
+  calculationBreakdown,
   expensesByCategory,
   goalsProgress,
   periodRemaining,
+  theoreticalDailyShare,
 } from "../../src/js/utils/homeBudget";
 
 const summary = (overrides = {}) => ({
+  month: "2026-11",
+  base: "905.00",
   realRemaining: "1037.50",
   remainingDays: 12,
   realDailyAllowance: "86.46",
-  forecast: { prudentDailyAllowance: "63.96" },
+  forecast: {
+    forecastRemaining: "767.50",
+    prudentDailyAllowance: "63.96",
+  },
   ...overrides,
 });
 
 describe("periodRemaining", () => {
-  it("uses the real remaining for the month", () => {
+  it("uses the updated forecast remaining for the month", () => {
     expect(periodRemaining(summary(), "mois")).toEqual({
-      amount: "1037.50",
-      basis: "real",
+      amount: "767.50",
+      basis: "prudent",
       days: null,
     });
   });
@@ -75,6 +83,83 @@ describe("periodRemaining", () => {
         "semaine"
       )
     ).toEqual({ amount: null, basis: "real", days: 0 });
+  });
+});
+
+describe("budgetComparison", () => {
+  it("compares the updated day with the rounded theoretical daily share", () => {
+    expect(budgetComparison(summary(), "jour")).toEqual({
+      actual: { amount: "63.96", basis: "prudent", days: 1 },
+      theoretical: { amount: "30.17", days: 1 },
+      difference: "33.79",
+      progress: 100,
+    });
+  });
+
+  it.each([
+    ["2025-02", "32.32"],
+    ["2024-02", "31.21"],
+  ])("rounds the theoretical daily share for %s", (month, expected) => {
+    expect(theoreticalDailyShare(summary({ month }))).toBe(expected);
+  });
+
+  it("uses the same remaining-day bound for the weekly values", () => {
+    expect(
+      budgetComparison(summary({ remainingDays: 3 }), "semaine")
+    ).toMatchObject({
+      actual: { amount: "191.88", days: 3 },
+      theoretical: { amount: "90.51", days: 3 },
+      difference: "101.37",
+    });
+  });
+
+  it("keeps the theoretical month visible without a forecast", () => {
+    expect(
+      budgetComparison(
+        summary({
+          forecast: null,
+          remainingDays: 0,
+          realDailyAllowance: null,
+        }),
+        "mois"
+      )
+    ).toMatchObject({
+      actual: { amount: "1037.50", basis: "real" },
+      theoretical: { amount: "905.00" },
+    });
+  });
+});
+
+describe("calculationBreakdown", () => {
+  it("uses every server component required to reach the displayed updated amount", () => {
+    const rows = calculationBreakdown({
+      ...summary(),
+      carryIn: "-120.00",
+      actualIncome: "20.00",
+      actualExpense: "42.50",
+      reconciliationAdjustment: "12.50",
+      forecast: {
+        plannedIncome: "10.00",
+        plannedExpense: "100.00",
+        goalSavings: "25.00",
+        envelopeReserve: "10.00",
+        forecastRemaining: "650.00",
+        prudentDailyAllowance: "54.17",
+      },
+    });
+
+    expect(rows.map(({ key, amount }) => [key, amount])).toEqual([
+      ["base", "905.00"],
+      ["actualIncome", "20.00"],
+      ["actualExpense", "-42.50"],
+      ["reconciliationAdjustment", "12.50"],
+      ["carryIn", "-120.00"],
+      ["plannedIncome", "10.00"],
+      ["plannedExpense", "-100.00"],
+      ["goalSavings", "-25.00"],
+      ["envelopeReserve", "-10.00"],
+      ["actualized", "650.00"],
+    ]);
   });
 });
 

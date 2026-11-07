@@ -334,7 +334,7 @@ describe("budget calendar page", () => {
     window.localStorage.setItem("mhw.calendar.mode", "forecast");
     render(<Calendrier />);
     const day = screen.getByRole("button", {
-      name: /reste à vivre du jour 17,00/,
+      name: /reste à vivre du jour 17,00\s*€ sur 80,00\s*€ théorique/,
     });
     expect(day).toHaveTextContent("17");
     expect(day.getAttribute("aria-label")).not.toMatch(/reste prévisionnel/);
@@ -350,8 +350,22 @@ describe("budget calendar page", () => {
     fireEvent.click(day);
     const explanation = screen.getByText(/^Reste à vivre du jour :/);
     expect(explanation).toHaveTextContent(
-      /Reste à vivre du jour : 17,00 €, soit votre part quotidienne du reste à vivre de base cumulée jusqu’à ce jour, moins les dépenses et plus les entrées saisies ou prévues jusqu’à cette date\./
+      /Reste à vivre du jour : 17,00 € \/ 80,00 € théorique/
     );
+    expect(explanation).toHaveTextContent(
+      /40,00 € × 2 jours, moins les dépenses et plus les entrées saisies ou prévues jusqu’à cette date/
+    );
+  });
+
+  it("shows the theoretical month and daily share above forecast mode", () => {
+    window.localStorage.setItem("mhw.calendar.mode", "forecast");
+    render(<Calendrier />);
+
+    const banner = screen.getByRole("status", {
+      name: "Repère théorique du calendrier",
+    });
+    expect(banner).toHaveTextContent(/Théorique\s*1\s200,00\s*€/);
+    expect(banner).toHaveTextContent(/part du jour\s*40,00\s*€/);
   });
 
   it("labels each operation with its category and icon", async () => {

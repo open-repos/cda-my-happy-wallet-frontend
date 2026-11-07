@@ -148,7 +148,7 @@ for (const viewport of [
   });
 }
 
-test("simulation affects savings capacity while the real monthly balance stays unchanged", async ({
+test("simulation updates the home actualized amount while the theoretical stays fixed", async ({
   page,
 }) => {
   await page.clock.setFixedTime(new Date("2026-10-18T10:00:00Z"));
@@ -167,8 +167,11 @@ test("simulation affects savings capacity while the real monthly balance stays u
   await expect(money("Disponible par mois après objectifs")).toContainText(
     "467,50"
   );
-  await expect(page.locator(".home-budget__amount")).toHaveText(
-    /1\s*037,50\s*€/
+  await expect(page.locator(".home-budget__amount-current")).toHaveText(
+    /467,50\s*€/
+  );
+  await expect(page.locator(".home-budget__amount-theoretical")).toHaveText(
+    /1\s*200,00\s*€/
   );
   await page.getByRole("switch", { name: "Simulation" }).uncheck();
   await expect(money("Disponible par mois après objectifs")).toContainText(

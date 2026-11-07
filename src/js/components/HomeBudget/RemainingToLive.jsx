@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
@@ -8,7 +8,8 @@ import {
   toneOf,
 } from "../BudgetCalendar/BudgetSummary";
 import { formatMoney } from "../BudgetCalendar/budgetFormat";
-import { periodRemaining } from "../../utils/homeBudget";
+import { budgetComparison, calculationBreakdown } from "../../utils/homeBudget";
+import { FormDialog } from "../Forms/FormDialog";
 import { SectionAnnouncement, SectionState } from "./SectionState";
 
 export const HOME_PERIODS = [
@@ -93,8 +94,58 @@ const TEXTS = {
   errorText: "Le reste à vivre n’a pas pu être chargé.",
 };
 
+const periodDifference = (difference, period, days) => {
+  const amount = difference.startsWith("-") ? difference.slice(1) : difference;
+  const direction = Number(difference) < 0 ? "de moins" : "de plus";
+  const suffix =
+    period === "jour"
+      ? "par jour"
+      : period === "semaine"
+      ? `sur ${dayCount(days)}`
+      : "ce mois-ci";
+  return { amount, direction, suffix };
+};
+
+const CalculationDetail = ({ summary, onClose }) => (
+  <FormDialog
+    label="Détail du calcul"
+    onClose={onClose}
+    closeLabel="Fermer le détail du calcul"
+    restoreFocus
+    surfaceClassName="home-budget__detail"
+  >
+    <div className="home-budget__detail-heading">
+      <h2>Détail du calcul</h2>
+      <button type="button" className="budget-link-button" onClick={onClose}>
+        Fermer
+      </button>
+    </div>
+    <p className="budget-help">
+      Chaque ligne reprend une valeur du résumé calculé par le serveur.
+    </p>
+    <dl className="budget-breakdown home-budget__calculation">
+      {calculationBreakdown(summary).map((row, index, rows) => (
+        <div
+          key={row.key}
+          className={`budget-breakdown__row${
+            index === rows.length - 1 ? " budget-breakdown__row--total" : ""
+          }`}
+        >
+          <dt>{row.label}</dt>
+          <dd className={`budget-amount--${toneOf(row.amount)}`}>
+            {formatMoney(row.amount, summary.currency, {
+              signed: index > 0 && index < rows.length - 1,
+            })}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  </FormDialog>
+);
+
 /** Montant principal de l'accueil et explication du calcul pour la période. */
 export const RemainingToLive = ({ section, period }) => {
+  const [showsDetail, setShowsDetail] = useState(false);
   // Premier enfant identique dans chaque rendu : React garde ces régions
   // live montées d'un état à l'autre (#164).
   const announcement = (
@@ -117,12 +168,18 @@ export const RemainingToLive = ({ section, period }) => {
     );
   }
   const summary = section.data;
-  const share = periodRemaining(summary, period);
+  const comparison = budgetComparison(summary, period);
+  const share = comparison.actual;
   const option = HOME_PERIODS.find((item) => item.value === period);
   const caption =
     option.cappedCaption && share.days > 0 && share.days < 7
       ? option.cappedCaption(share.days)
       : option.caption;
+  const difference =
+    comparison.difference === null
+      ? null
+      : periodDifference(comparison.difference, period, share.days);
+  const currentMonth = budgetComparison(summary, "mois");
   return (
     <>
       {announcement}
@@ -133,16 +190,44 @@ export const RemainingToLive = ({ section, period }) => {
         <h2 id="home-rav-title" className="home-budget__caption">
           {caption}
         </h2>
-        <p
+        <div
           className={`home-budget__amount budget-amount--${
             share.amount === null ? "neutral" : toneOf(share.amount)
           }`}
           aria-live="polite"
         >
-          {share.amount === null
-            ? "—"
-            : formatMoney(share.amount, summary.currency)}
-        </p>
+          <span className="home-budget__amount-current">
+            {share.amount === null
+              ? "—"
+              : formatMoney(share.amount, summary.currency)}
+          </span>
+          <span className="home-budget__amount-theoretical">
+            {" / "}
+            {comparison.theoretical.amount === null
+              ? "—"
+              : formatMoney(comparison.theoretical.amount, summary.currency)}
+          </span>
+        </div>
+        {comparison.progress !== null && (
+          <progress
+            className="home-budget__progress"
+            max="100"
+            value={comparison.progress}
+            aria-label={`Reste à vivre actualisé ${formatMoney(
+              share.amount,
+              summary.currency
+            )} sur ${formatMoney(
+              comparison.theoretical.amount,
+              summary.currency
+            )} théorique`}
+          />
+        )}
+        {difference && (
+          <p className="home-budget__difference">
+            {formatMoney(difference.amount, summary.currency)}{" "}
+            {difference.direction} {difference.suffix} que votre part théorique.
+          </p>
+        )}
         <div className="home-budget__explanation">
           {period === "mois" ? (
             <>
@@ -153,11 +238,46 @@ export const RemainingToLive = ({ section, period }) => {
             <ShareHelp summary={summary} share={share} period={period} />
           )}
         </div>
+        <div
+          className="home-budget__month-comparison"
+          role="group"
+          aria-label="Ce mois-ci"
+        >
+          <h3>Ce mois-ci</h3>
+          <dl>
+            <div>
+              <dt>Actualisé</dt>
+              <dd>
+                {formatMoney(currentMonth.actual.amount, summary.currency)}
+              </dd>
+            </div>
+            <div>
+              <dt>Théorique</dt>
+              <dd>{formatMoney(summary.base, summary.currency)}</dd>
+            </div>
+          </dl>
+          <p>
+            Le théorique correspond aux revenus fixes moins les charges fixes.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="budget-link-button"
+          onClick={() => setShowsDetail(true)}
+        >
+          Voir le détail du calcul
+        </button>
         <Link className="home-budget__edit" to="/home/operations-fixes">
           Modifier vos charges et revenus{" "}
           <FontAwesomeIcon icon={faEdit} aria-hidden="true" />
         </Link>
       </section>
+      {showsDetail && (
+        <CalculationDetail
+          summary={summary}
+          onClose={() => setShowsDetail(false)}
+        />
+      )}
     </>
   );
 };

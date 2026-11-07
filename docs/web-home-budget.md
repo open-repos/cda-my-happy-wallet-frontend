@@ -19,18 +19,28 @@ succès : un échec des objectifs n'empêche pas d'afficher le reste à vivre.
 
 ## Montant selon la période
 
-Tous les calculs se font en centimes entiers.
+L'actualisé reprend le reste prévisionnel fourni par le résumé lorsqu'il existe,
+et le reste réel pour un mois clôturé. Le théorique reprend le socle `base`
+(revenus fixes moins charges fixes). Les seuls calculs de présentation sont les
+proratas Jour et Semaine, en centimes entiers ; aucune opération ni règle de
+budget n'est recalculée dans le navigateur.
 
-| Période | Montant                                                               |
-| ------- | --------------------------------------------------------------------- |
-| Mois    | `realRemaining`, avec la ligne « Report de <mois> » distincte         |
-| Semaine | disponible prudent/jour × min(7, jours restants du mois)              |
-| Jour    | disponible prudent/jour (jour courant inclus dans les jours restants) |
+| Période | Actualisé                                                             | Théorique                        |
+| ------- | --------------------------------------------------------------------- | -------------------------------- |
+| Mois    | `forecastRemaining`, ou `realRemaining` sans prévision                | `base`                           |
+| Semaine | disponible prudent/jour × min(7, jours restants du mois)              | part de `base` × la même borne   |
+| Jour    | disponible prudent/jour (jour courant inclus dans les jours restants) | `base` ÷ nombre de jours du mois |
 
 Sans prévisionnel (`forecast: null`), le disponible réel par jour sert de
 base et l'explication le dit. Un montant négatif est conservé et expliqué
 comme l'effort nécessaire pour finir le mois à l'équilibre. Sans jour
 restant, aucun montant n'est affiché.
+
+La barre est accompagnée de sa comparaison textuelle. L'encadré « Ce mois-ci »
+garde l'actualisé et le théorique côte à côte. « Voir le détail du calcul »
+ouvre une cascade composée uniquement des champs serveur : socle, opérations
+réelles, rapprochement d'enveloppes, report, prévus, objectifs, réserve
+d'enveloppes et total actualisé.
 
 ## Graphiques
 

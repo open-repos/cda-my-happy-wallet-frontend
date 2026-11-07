@@ -32,6 +32,7 @@ import {
   calendarCountLabel,
   CALENDAR_TYPES,
 } from "../utils/calendarContent";
+import { theoreticalDailyShare, theoreticalToDate } from "../utils/homeBudget";
 import { useBudgetCalendar } from "../hooks/useBudgetCalendar";
 import { useMonthlyEvents } from "../hooks/useMonthlyEvents";
 import { useSimulation } from "../components/Simulation/SimulationContext";
@@ -98,7 +99,8 @@ const cellLabel = (
   pendingCount,
   overdueCount,
   currency,
-  potentialCount = 0
+  potentialCount = 0,
+  theoretical = null
 ) => {
   const parts = [longDate(date)];
   if (day && Number(day.expense) > 0)
@@ -120,7 +122,11 @@ const cellLabel = (
     );
   if (day && day.dailyRemaining !== null)
     parts.push(
-      `reste à vivre du jour ${formatMoney(day.dailyRemaining, currency)}`
+      `reste à vivre du jour ${formatMoney(day.dailyRemaining, currency)}${
+        theoretical
+          ? ` sur ${formatMoney(theoretical, currency)} théorique`
+          : ""
+      }`
     );
   return parts.join(", ");
 };
@@ -181,6 +187,10 @@ function Calendrier() {
   );
   const currency = budget.summary?.currency || "EUR";
   const selectedDay = selectedDate ? summaryDays.get(selectedDate) : null;
+  const selectedTheoretical =
+    selectedDate && budget.summary
+      ? theoreticalToDate(budget.summary, selectedDate)
+      : null;
   const isSaving =
     budget.mutationStatus === "loading" ||
     events.mutationStatus === "loading" ||
@@ -319,6 +329,17 @@ function Calendrier() {
             </div>
           </div>
           <CalendarModeToggle mode={mode} onChange={setMode} />
+          {mode === "forecast" && budget.summary && (
+            <p
+              className="budget-calendar__theoretical"
+              role="status"
+              aria-label="Repère théorique du calendrier"
+            >
+              Théorique {formatMoney(budget.summary.base, currency)} · part du
+              jour{" "}
+              {formatMoney(theoreticalDailyShare(budget.summary), currency)}
+            </p>
+          )}
           <div className="monthly-calendar__weekdays" aria-hidden="true">
             {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((day) => (
               <span key={day}>{day}</span>
@@ -355,7 +376,11 @@ function Calendrier() {
                     inMonth ? day : null,
                     0,
                     0,
-                    currency
+                    currency,
+                    0,
+                    inMonth && day && budget.summary
+                      ? theoreticalToDate(budget.summary, date).amount
+                      : null
                   )}${
                     ready
                       ? CALENDAR_TYPES.filter((t) => counts[t.key] > 0)
@@ -407,9 +432,19 @@ function Calendrier() {
               <strong>
                 {formatMoney(selectedDay.dailyRemaining, currency)}
               </strong>
-              , soit votre part quotidienne du reste à vivre de base cumulée
-              jusqu’à ce jour, moins les dépenses et plus les entrées saisies ou
-              prévues jusqu’à cette date.
+              {selectedTheoretical && (
+                <>
+                  {" / "}
+                  <strong>
+                    {formatMoney(selectedTheoretical.amount, currency)}
+                  </strong>{" "}
+                  théorique, soit{" "}
+                  {formatMoney(theoreticalDailyShare(budget.summary), currency)}{" "}
+                  × {selectedTheoretical.day} jour
+                  {selectedTheoretical.day > 1 ? "s" : ""}, moins les dépenses
+                  et plus les entrées saisies ou prévues jusqu’à cette date.
+                </>
+              )}
             </p>
           )}
           <PlanningActions
