@@ -143,6 +143,21 @@ export default function Coffre() {
   const [currency, setCurrency] = useState("EUR");
   const [dialog, setDialog] = useState(null);
   const heading = useRef(null);
+  const dialogTrigger = useRef(null),
+    wasDialogOpen = useRef(false);
+  useEffect(() => {
+    const closed = wasDialogOpen.current && !dialog;
+    wasDialogOpen.current = Boolean(dialog);
+    if (!closed) return;
+    // Restore after React commits the close and FormDialog removes root inertness.
+    // Archiving can remove the original control before this commit.
+    const trigger = dialogTrigger.current;
+    const target =
+      trigger?.isConnected && !trigger.disabled
+        ? trigger
+        : document.querySelector(".savings-detail-head h2") ?? heading.current;
+    target?.focus({ preventScroll: true });
+  }, [dialog]);
   const accounts = useSavingsPage("accounts", {});
   const overview = useSavingsRead(async () => {
     const [current, goals] = await Promise.all([
@@ -157,22 +172,11 @@ export default function Coffre() {
   const current = overview.data?.current;
   const announce = useAnnouncesLoading(accounts.status, accounts.loadingKey);
   const open = (mode, account) => {
+    dialogTrigger.current = document.activeElement;
     mutation.clear();
     setDialog({ mode, account });
   };
-  const close = () => {
-    setDialog(null);
-    requestAnimationFrame(() => {
-      if (
-        document.activeElement === document.body ||
-        document.activeElement?.closest("[inert]")
-      ) {
-        (
-          document.querySelector(".savings-detail-head h2") ?? heading.current
-        )?.focus({ preventScroll: true });
-      }
-    });
-  };
+  const close = () => setDialog(null);
   const back = () => {
     setParams({});
     requestAnimationFrame(() => heading.current?.focus());
