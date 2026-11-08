@@ -9,6 +9,7 @@ import Calendrier from "./pages/Calendrier";
 import UpcomingMonths from "./pages/UpcomingMonths";
 import ListeOperations from "./pages/ListeOperations";
 import Objectifs from "./pages/Objectifs";
+import Coffre from "./pages/Coffre";
 import Profil from "./pages/Profil";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
@@ -62,6 +63,14 @@ function App() {
                 }
               />
               <Route path="/" element={<Navigate replace to="/home" />} />
+              <Route
+                path="/coffre"
+                element={
+                  <ProtectedLayout>
+                    <Coffre />
+                  </ProtectedLayout>
+                }
+              />
               <Route
                 path="/prochains-mois"
                 element={

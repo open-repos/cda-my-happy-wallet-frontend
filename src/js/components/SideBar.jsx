@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faWallet,
+  faVault,
   faHome,
   faExchangeAlt,
   faRepeat,
@@ -31,6 +32,7 @@ const destinations = [
   ["/calendrier", "Calendrier", faCalendarAlt],
   ["/prochains-mois", "Prochains mois", faChartLine],
   ["/objectifs-evenements", "Objectifs et événements", faBullseye],
+  ["/coffre", "Coffre", faVault],
   ["/analyses", "Analyses", faChartColumn],
   ["/categories", "Catégories", faTags],
 ];

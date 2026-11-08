@@ -1,0 +1,233 @@
+.savings-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-primitive-space-5);
+}
+.savings-page h1,
+.savings-page h2,
+.savings-page h3,
+.savings-dialog h2 {
+  margin: 0;
+  color: var(--ds-color-text-primary);
+}
+.savings-page h2 {
+  font-size: var(--ds-primitive-font-size-xl);
+}
+.savings-page h3 {
+  font-size: var(--ds-primitive-font-size-lg);
+}
+.savings-page p {
+  margin-block: var(--ds-primitive-space-2);
+}
+.savings-page .action-button,
+.savings-dialog .action-button {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.savings-filters,
+.savings-actions,
+.savings-form__actions,
+.savings-section-head,
+.savings-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-primitive-space-3);
+  align-items: center;
+}
+.savings-section-head {
+  justify-content: space-between;
+  margin-block: var(--ds-primitive-space-5);
+}
+.savings-tabs [aria-pressed="true"] {
+  background: var(--ds-color-action-primary-background);
+  color: var(--ds-color-action-primary-text);
+}
+.savings-filters label,
+.savings-form label {
+  display: grid;
+  gap: var(--ds-primitive-space-2);
+  min-inline-size: 0;
+  font-weight: var(--ds-primitive-font-weight-semibold);
+}
+.savings-filters input,
+.savings-filters select,
+.savings-form input,
+.savings-form select {
+  min-block-size: var(--ds-size-control-min-height);
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  inline-size: 100%;
+  padding: var(--ds-primitive-space-2) var(--ds-primitive-space-3);
+  border: 1px solid var(--ds-color-field-border);
+  border-radius: var(--ds-primitive-radius-md);
+  background: var(--ds-color-field-background);
+  color: var(--ds-color-field-text);
+  font: inherit;
+}
+.savings-current {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ds-primitive-space-5);
+  padding: var(--ds-primitive-space-5);
+  border: 1px solid var(--ds-color-border-strong);
+  border-radius: var(--ds-primitive-radius-lg);
+  background: var(--ds-color-action-primary-background);
+  color: var(--ds-color-action-primary-text);
+}
+.savings-current > div {
+  flex: 1 1 20rem;
+}
+.savings-current h2 {
+  color: inherit;
+}
+.savings-current > strong,
+.savings-detail-head > strong {
+  font-size: var(--ds-primitive-font-size-2xl);
+}
+.savings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ds-primitive-space-4);
+  margin-block-end: var(--ds-primitive-space-4);
+}
+.savings-account,
+.savings-panel {
+  min-inline-size: 0;
+  padding: var(--ds-primitive-space-5);
+  background: var(--ds-color-background-surface);
+  border: 1px solid var(--ds-color-border-subtle);
+  border-radius: var(--ds-primitive-radius-lg);
+}
+.savings-account {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-primitive-space-4);
+}
+.savings-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: start;
+  gap: var(--ds-primitive-space-3);
+}
+.savings-row h3,
+.savings-detail-head h2 {
+  overflow-wrap: anywhere;
+}
+.savings-row > strong {
+  font-size: var(--ds-primitive-font-size-xl);
+}
+.savings-row span,
+.savings-goal p {
+  color: var(--ds-color-text-secondary);
+}
+.savings-goal {
+  padding: var(--ds-primitive-space-3);
+  border: 1px solid var(--ds-color-border-subtle);
+  border-radius: var(--ds-primitive-radius-md);
+}
+.savings-goal progress {
+  width: 100%;
+  block-size: var(--ds-primitive-space-2);
+  accent-color: var(--ds-color-action-primary-background);
+}
+.savings-goal progress::-webkit-progress-bar {
+  background: var(--ds-color-border-subtle);
+  border-radius: var(--ds-primitive-radius-md);
+}
+.savings-goal progress::-webkit-progress-value {
+  background: var(--ds-color-action-primary-background);
+  border-radius: var(--ds-primitive-radius-md);
+}
+.savings-card-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ds-primitive-space-2);
+  margin-block-start: auto;
+}
+.savings-card-actions > :last-child {
+  grid-column: 1 / -1;
+}
+.savings-notice {
+  padding: var(--ds-primitive-space-3);
+  border-inline-start: var(--ds-primitive-space-1) solid var(--ds-color-accent);
+  background: var(--ds-color-background-surface);
+  color: var(--ds-color-text-secondary);
+}
+.savings-detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--ds-primitive-space-4);
+}
+.savings-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: var(--ds-primitive-space-4);
+}
+.savings-movements {
+  list-style: none;
+  padding: 0;
+  margin-block: var(--ds-primitive-space-3);
+}
+.savings-movements li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--ds-primitive-space-3);
+  padding-block: var(--ds-primitive-space-4);
+  border-block-end: 1px solid var(--ds-color-border-subtle);
+}
+.savings-movements li > div {
+  flex: 1 1 12rem;
+  overflow-wrap: anywhere;
+}
+.savings-movements li span {
+  display: block;
+  color: var(--ds-color-text-secondary);
+}
+.savings-budget {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-primitive-space-5);
+}
+.savings-page dd {
+  margin-inline-start: 0;
+  font-weight: var(--ds-primitive-font-weight-semibold);
+}
+.savings-form {
+  display: grid;
+  gap: var(--ds-primitive-space-4);
+}
+.savings-dialog {
+  color: var(--ds-color-text-primary);
+}
+.savings-dialog h2 {
+  font-size: var(--ds-primitive-font-size-xl);
+}
+.savings-dialog p {
+  overflow-wrap: anywhere;
+}
+.savings-form__actions {
+  justify-content: end;
+}
+.savings-page :is(button, a, input, select):focus-visible,
+.savings-dialog :is(button, a, input, select):focus-visible {
+  outline: var(--ds-border-width-focus) solid var(--ds-color-focus-ring);
+  outline-offset: 2px;
+}
+@media (max-width: 767px) {
+  .savings-grid,
+  .savings-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .savings-filters > label {
+    flex: 1 1 12rem;
+  }
+  .savings-account,
+  .savings-panel,
+  .savings-current {
+    padding: var(--ds-primitive-space-4);
+  }
+}
