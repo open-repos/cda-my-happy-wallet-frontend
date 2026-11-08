@@ -13,6 +13,7 @@ const titles = {
   "/calendrier": "Calendrier",
   "/prochains-mois": "Prochains mois",
   "/objectifs-evenements": "Objectifs et événements",
+  "/coffre": "Coffre",
   "/categories": "Catégories",
   "/analyses": "Analyses",
   "/profil": "Profil",

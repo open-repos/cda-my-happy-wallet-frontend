@@ -67,7 +67,10 @@ for (const width of [320, 375, 390, 768, 1440]) {
           element.style.fontSize = value;
         }, zoom);
         const links = navigation.locator("ul > li > a");
-        await expect(links).toHaveCount(8);
+        await expect(links).toHaveCount(9);
+        await expect(
+          navigation.getByRole("link", { name: "Coffre", exact: true })
+        ).toHaveAttribute("href", "/coffre");
         // Wait for the drawer width transition before measuring the text itself.
         await expect
           .poll(() =>
