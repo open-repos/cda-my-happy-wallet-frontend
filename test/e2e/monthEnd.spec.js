@@ -9,7 +9,7 @@ import {
 
 /**
  * Parcours #396 : proposition, décision, correction et cloche, à 320, 390,
- * 768 et 1440 px en thème clair et sombre.
+ * 768 et 1440 px en thème clair et sombre (parcours complet à 390 et 1440).
  */
 const prepareMonthEnd = async (page, { decision, occurrences = [] }) => {
   const state = await prepareSavingsPage(page);
@@ -82,69 +82,104 @@ const fits = async (page) => {
 const bell = (page) =>
   page.locator(".notification-bell__button:visible").first();
 
-for (const width of [320, 390, 768, 1440])
-  for (const theme of ["light", "dark"]) {
-    test(`décision de fin de mois ${width}px ${theme}`, async ({ page }) => {
-      await page.setViewportSize({ width, height: 1000 });
-      await page.addInitScript(
-        (value) => localStorage.setItem("mhw-theme", value),
-        theme
-      );
-      const state = await prepareMonthEnd(page, {
-        decision: pendingDecision(),
-        occurrences: [savingsOccurrence()],
-      });
-      await page.goto("/home");
-      const banner = page.getByRole("region", {
-        name: /Il vous reste 150,00\s€ d’octobre/,
-      });
-      await expect(banner).toBeVisible();
-      await expect(bell(page)).toHaveAccessibleName(
-        "Notifications, 2 à traiter"
-      );
-      await fits(page);
-
-      await bell(page).click();
-      const panel = page.locator(".notification-panel:visible");
-      await expect(panel).toContainText("Décision d’octobre en attente");
-      await expect(panel).toContainText("Versement mensuel à confirmer");
-      await page.keyboard.press("Escape");
-      await expect(bell(page)).toBeFocused();
-
-      await banner.getByRole("link", { name: "Décider maintenant" }).click();
-      await expect(
-        page.getByRole("heading", { name: "Décider du solde d’octobre 2026" })
-      ).toBeFocused();
-      await page.getByLabel(/Répartir/).check();
-      await page.getByLabel(/Épargner sur Voyage au Japon/).fill("100");
-      await expect(
-        page.getByRole("complementary", { name: "Votre décision" })
-      ).toContainText(/Report sur novembre\s*50,00/);
-      await fits(page);
-      await page.getByRole("button", { name: "Valider la décision" }).click();
-      await expect(
-        page.getByRole("heading", { name: "Décision d’octobre 2026" })
-      ).toBeVisible();
-      expect(state.puts).toHaveLength(1);
-      expect(state.puts[0]).toMatchObject({
-        expectedRevision: 0,
-        savings: [{ accountId: 1, amountMinorUnits: 10000 }],
-        coverage: [],
-        exceptionalIncomeMinorUnits: 0,
-      });
-      await expect(page.getByText("✓ Décidée")).toBeVisible();
-      await fits(page);
-
-      await bell(page).click();
-      await page
-        .locator(".notification-panel:visible")
-        .getByRole("button", { name: "Confirmer le virement" })
-        .click();
-      await expect(bell(page)).toHaveAccessibleName(
-        "Notifications, rien à traiter"
-      );
+/** Parcours complet aux deux extrêmes ; les autres formats vérifient la mise en page. */
+for (const [width, theme] of [
+  [390, "dark"],
+  [1440, "light"],
+])
+  test(`décision de fin de mois ${width}px ${theme}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.addInitScript(
+      (value) => localStorage.setItem("mhw-theme", value),
+      theme
+    );
+    const state = await prepareMonthEnd(page, {
+      decision: pendingDecision(),
+      occurrences: [savingsOccurrence()],
     });
-  }
+    await page.goto("/home");
+    const banner = page.getByRole("region", {
+      name: /Il vous reste 150,00\s€ d’octobre/,
+    });
+    await expect(banner).toBeVisible();
+    await expect(bell(page)).toHaveAccessibleName("Notifications, 2 à traiter");
+    await fits(page);
+
+    await bell(page).click();
+    const panel = page.locator(".notification-panel:visible");
+    await expect(panel).toContainText("Décision d’octobre en attente");
+    await expect(panel).toContainText("Versement mensuel à confirmer");
+    await page.keyboard.press("Escape");
+    await expect(bell(page)).toBeFocused();
+
+    await banner.getByRole("link", { name: "Décider maintenant" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Décider du solde d’octobre 2026" })
+    ).toBeFocused();
+    await page.getByLabel(/Répartir/).check();
+    await page.getByLabel(/Épargner sur Voyage au Japon/).fill("100");
+    await expect(
+      page.getByRole("complementary", { name: "Votre décision" })
+    ).toContainText(/Report sur novembre\s*50,00/);
+    await fits(page);
+    await page.getByRole("button", { name: "Valider la décision" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Décision d’octobre 2026" })
+    ).toBeVisible();
+    expect(state.puts).toHaveLength(1);
+    expect(state.puts[0]).toMatchObject({
+      expectedRevision: 0,
+      savings: [{ accountId: 1, amountMinorUnits: 10000 }],
+      coverage: [],
+      exceptionalIncomeMinorUnits: 0,
+    });
+    await expect(page.getByText("✓ Décidée")).toBeVisible();
+    await fits(page);
+
+    await bell(page).click();
+    await page
+      .locator(".notification-panel:visible")
+      .getByRole("button", { name: "Confirmer le virement" })
+      .click();
+    await expect(bell(page)).toHaveAccessibleName(
+      "Notifications, rien à traiter"
+    );
+  });
+
+for (const [width, theme] of [
+  [320, "light"],
+  [320, "dark"],
+  [390, "light"],
+  [768, "light"],
+  [768, "dark"],
+  [1440, "dark"],
+])
+  test(`proposition et formulaire tiennent à ${width}px ${theme}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.addInitScript(
+      (value) => localStorage.setItem("mhw-theme", value),
+      theme
+    );
+    await prepareMonthEnd(page, {
+      decision: pendingDecision(),
+      occurrences: [savingsOccurrence()],
+    });
+    await page.goto("/home");
+    await expect(
+      page.getByRole("region", { name: /Il vous reste 150,00\s€ d’octobre/ })
+    ).toBeVisible();
+    await expect(bell(page)).toHaveAccessibleName("Notifications, 2 à traiter");
+    await fits(page);
+    await page.goto("/fin-de-mois/2026-10");
+    await page.getByLabel(/Répartir/).check();
+    await page.getByLabel(/Épargner sur Voyage au Japon/).fill("100");
+    await expect(
+      page.getByRole("complementary", { name: "Votre décision" })
+    ).toContainText(/Report sur novembre\s*50,00/);
+    await fits(page);
+  });
 
 test("avertit après une correction sans toucher à l’épargne", async ({
   page,

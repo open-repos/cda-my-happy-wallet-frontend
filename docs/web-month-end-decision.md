@@ -49,7 +49,9 @@ saisie. Après validation, les montants affichés sont ceux relus sur le serveur
   décaler le contenu ni la navigation), sous 1200 px dans l’en-tête. Elle liste
   la décision en attente, la décision à revoir et les versements à confirmer.
   Aucune nouvelle API, ni push, ni état « lu » : le centre complet est suivi dans
-  le parent #414.
+  le parent #414. Ses lectures sont rafraîchies après chaque écriture, mais en
+  arrière-plan (`{ background: true }`) : leur échec n’affiche jamais « Les
+  données n’ont pas pu être actualisées » sur l’écran qui vient d’enregistrer.
 
 ## Écritures et erreurs
 

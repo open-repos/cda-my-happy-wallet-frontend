@@ -38,12 +38,15 @@ export const MonthEndProvider = ({ children }) => {
   const decision = useSavingsRead(
     () => monthEndService.get(month, MONTH_END_CURRENCY),
     `month-end:${month}`,
-    monthEndErrorMessage
+    monthEndErrorMessage,
+    { background: true }
   );
-  const occurrences = useSavingsPage("pendingOccurrences", {
-    month: current,
-    currency: MONTH_END_CURRENCY,
-  });
+  const occurrences = useSavingsPage(
+    "pendingOccurrences",
+    { month: current, currency: MONTH_END_CURRENCY },
+    true,
+    { background: true }
+  );
   const resolution = useSavingsMutation();
   const [later, setLater] = useState(() => readLater(month));
   const value = {

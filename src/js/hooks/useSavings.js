@@ -10,8 +10,25 @@ import {
 } from "./useMutationFeedback";
 import { useSimulation } from "../components/Simulation/SimulationContext";
 
+/**
+ * A background read (shell badges) still refreshes after a write, but its
+ * failure must not mark the written view as stale.
+ */
+const refreshResult = (reload, background) =>
+  background
+    ? async () => {
+        await reload();
+        return true;
+      }
+    : reload;
+
 /** A request generation prevents old filters or pages replacing a fresh read. */
-export const useSavingsPage = (resource, params, enabled = true) => {
+export const useSavingsPage = (
+  resource,
+  params,
+  enabled = true,
+  { background = false } = {}
+) => {
   const key = JSON.stringify(params);
   const { revision } = useSimulation();
   const generation = useRef(0),
@@ -61,7 +78,7 @@ export const useSavingsPage = (resource, params, enabled = true) => {
       return false;
     }
   }, [key, resource, enabled, revision]);
-  useRefreshViews(reload);
+  useRefreshViews(refreshResult(reload, background));
   useEffect(() => {
     reload();
     return () => {
@@ -131,7 +148,12 @@ export const useSavingsPage = (resource, params, enabled = true) => {
 };
 
 /** Single resources use the same stale-response and refresh registry rules. */
-export const useSavingsRead = (read, key, describe = savingsErrorMessage) => {
+export const useSavingsRead = (
+  read,
+  key,
+  describe = savingsErrorMessage,
+  { background = false } = {}
+) => {
   const latestRead = useRef(read);
   latestRead.current = read;
   const { revision } = useSimulation();
@@ -166,7 +188,7 @@ export const useSavingsRead = (read, key, describe = savingsErrorMessage) => {
       return false;
     }
   }, [key, revision]);
-  useRefreshViews(reload);
+  useRefreshViews(refreshResult(reload, background));
   useEffect(() => {
     reload();
     return () => {
