@@ -1,5 +1,6 @@
 import { apiPrivate } from "../../utils/axiosHelper";
 import { scenarioParams } from "../utils/budgetSimulation";
+import { parseMonthEndDecision } from "./monthEndService";
 
 export const PENDING_PAGE_LIMIT = 100;
 
@@ -134,6 +135,10 @@ export const parseBudgetSummary = (summary) => {
     unresolvedEvents: summary.unresolvedEvents,
     forecast: parseForecast(summary.forecast),
     days: summary.days.map(parseDay),
+    // Mois clos décidé uniquement (#184) ; absent sans décision.
+    ...(summary.monthEndDecision === undefined
+      ? {}
+      : { monthEndDecision: parseMonthEndDecision(summary.monthEndDecision) }),
   };
 };
 

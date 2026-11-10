@@ -229,6 +229,37 @@ export const prepareProtectedPage = async (
       },
     });
   });
+  // #396 : rien à décider ni à confirmer par défaut ; la cloche reste vide.
+  await page.route(/\/v1\/budget-periods\/(\d{4}-\d{2})\/decision/, (route) => {
+    const month = /budget-periods\/(\d{4}-\d{2})/.exec(
+      route.request().url()
+    )[1];
+    return route.fulfill({
+      json: {
+        data: {
+          month,
+          currency: "EUR",
+          status: "PENDING",
+          revision: 0,
+          savings: [],
+          coverage: [],
+          exceptionalIncomeMinorUnits: 0,
+          savingsMinorUnits: 0,
+          coverageMinorUnits: 0,
+          resultBeforeDecisionMinorUnits: 0,
+          referenceResultMinorUnits: 0,
+          carryMinorUnits: 0,
+          requiresReview: false,
+          correctionDeltaMinorUnits: 0,
+        },
+      },
+    });
+  });
+  await page.route(/\/v1\/savings-occurrences\/pending(?:\?.*)?$/, (route) =>
+    route.fulfill({
+      json: { data: [], meta: { limit: 20, hasNext: false, nextCursor: null } },
+    })
+  );
   await page.route(/\/v1\/budget-periods\/(\d{4}-\d{2})\/summary/, (route) => {
     const month = route
       .request()

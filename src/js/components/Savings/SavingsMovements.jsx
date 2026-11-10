@@ -9,9 +9,28 @@ import { longDate } from "../BudgetCalendar/budgetFormat";
 const reasons = {
   MANUAL: "Virement manuel",
   GOAL: "Versement mensuel",
-  MONTH_END: "Versement de fin de mois",
-  NEGATIVE_COVERAGE: "Couverture du budget",
+  MONTH_END: "Épargne de fin de mois",
+  NEGATIVE_COVERAGE: "Couverture d’un déficit",
 };
+const currentKinds = {
+  VIREMENT: "Virement",
+  ENTREE: "Entrée",
+  DEPENSE: "Dépense",
+};
+/** Mouvement d'une décision de fin de mois (#184) : révision et compensation. */
+const MonthEndTags = ({ row }) =>
+  row.monthEndRevision ? (
+    <span className="savings-movement-tags">
+      <span className="savings-movement-tag">
+        Décision de fin de mois · révision {row.monthEndRevision}
+      </span>
+      {row.isCompensation && (
+        <span className="savings-movement-tag savings-movement-tag--info">
+          <span aria-hidden="true">⇄ </span>Compensation
+        </span>
+      )}
+    </span>
+  ) : null;
 export const SavingsMovements = ({
   accountId,
   month,
@@ -68,15 +87,17 @@ export const SavingsMovements = ({
                   <li key={`${row.source || ""}:${row.id}`}>
                     <div>
                       <strong>
-                        {current ? row.title : reasons[row.reason]}
+                        {current
+                          ? row.title
+                          : row.isCompensation
+                          ? `Correction : ${reasons[row.reason].toLowerCase()}`
+                          : reasons[row.reason]}
                       </strong>
                       <span>
                         {current
-                          ? row.kind === "VIREMENT"
-                            ? "Virement"
-                            : row.kind === "ENTREE"
-                            ? "Entrée"
-                            : "Dépense"
+                          ? row.source === "EXCEPTIONAL_INCOME"
+                            ? "Entrée exceptionnelle de fin de mois"
+                            : currentKinds[row.kind]
                           : row.direction === "TO_SAVINGS"
                           ? "Dépôt"
                           : "Retrait"}{" "}
@@ -85,6 +106,7 @@ export const SavingsMovements = ({
                           {longDate(row.operationDate)}
                         </time>
                       </span>
+                      {!current && <MonthEndTags row={row} />}
                     </div>
                     <strong>{savingsMoney(signed, row.currency, true)}</strong>
                   </li>

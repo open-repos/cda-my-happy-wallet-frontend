@@ -131,7 +131,7 @@ export const useSavingsPage = (resource, params, enabled = true) => {
 };
 
 /** Single resources use the same stale-response and refresh registry rules. */
-export const useSavingsRead = (read, key) => {
+export const useSavingsRead = (read, key, describe = savingsErrorMessage) => {
   const latestRead = useRef(read);
   latestRead.current = read;
   const { revision } = useSimulation();
@@ -160,7 +160,8 @@ export const useSavingsRead = (read, key) => {
           key,
           status: "error",
           data: null,
-          message: savingsErrorMessage(error),
+          message: describe(error),
+          error,
         });
       return false;
     }
@@ -180,7 +181,7 @@ export const useSavingsRead = (read, key) => {
   };
 };
 
-export const useSavingsMutation = (reload) => {
+export const useSavingsMutation = (reload, describe = savingsErrorMessage) => {
   const refreshViews = useRefreshViews(reload);
   const feedback = useMutationFeedback(refreshViews);
   const writing = useRef(false);
@@ -218,12 +219,12 @@ export const useSavingsMutation = (reload) => {
         error: true,
         message: uncertain
           ? "Le résultat de l’enregistrement est incertain. Vérifiez les données avant de réessayer. Pour un virement, reprenez la même tentative afin d’éviter un doublon."
-          : savingsErrorMessage(
+          : describe(
               error,
               "L’enregistrement a échoué. Vérifiez les valeurs puis réessayez."
             ),
       });
-      return { ok: false, uncertain };
+      return { ok: false, uncertain, error };
     } finally {
       writing.current = false;
     }

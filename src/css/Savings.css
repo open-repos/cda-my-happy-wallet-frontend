@@ -231,3 +231,23 @@
     padding: var(--ds-primitive-space-4);
   }
 }
+/* Mouvements d'une décision de fin de mois (#396). */
+.savings-movement-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-primitive-space-1);
+  margin-top: var(--ds-primitive-space-1);
+}
+.savings-movement-tag {
+  display: inline-flex;
+  padding: 0 var(--ds-primitive-space-2);
+  border: var(--ds-border-width-default) solid currentColor;
+  border-radius: var(--ds-primitive-radius-pill);
+  color: var(--ds-color-text-secondary);
+  font-size: var(--ds-primitive-font-size-xs);
+  font-weight: var(--ds-primitive-font-weight-semibold);
+}
+.savings-movement-tag--info {
+  background: var(--ds-color-status-info-surface);
+  color: var(--ds-color-status-info-text);
+}

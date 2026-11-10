@@ -1,6 +1,7 @@
 import { apiPrivate } from "../../utils/axiosHelper";
 import { isForecastMonth, shiftForecastMonth } from "../utils/budgetForecast";
 import { scenarioParams } from "../utils/budgetSimulation";
+import { parseMonthEndDecision } from "./monthEndService";
 
 const amountFields = [
   "fixedIncome",
@@ -65,6 +66,10 @@ export const parseBudgetForecast = (data) => {
     referenceDate: data.referenceDate,
     currentRealRemaining: data.currentRealRemaining,
     months,
+    // Décision du mois précédant le mois courant (#184), absente sinon.
+    ...(data.carryDecision === undefined
+      ? {}
+      : { carryDecision: parseMonthEndDecision(data.carryDecision) }),
   };
 };
 
