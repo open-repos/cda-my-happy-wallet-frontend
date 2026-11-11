@@ -42,8 +42,22 @@ npx playwright install --with-deps chromium
 npm run test:visual
 ```
 
-La CI utilise Node 22 et le Chromium associé au Playwright verrouillé par le
-lockfile. Le serveur sert un build Vite dédié (`dist-visual`) avec API relative,
+La CI utilise Node 22 et exécute ce contrôle dans l'image officielle
+`mcr.microsoft.com/playwright:v<version>-noble`, qui contient déjà Chromium et
+ses paquets système : le job ne télécharge ni navigateur ni paquet apt, et ne
+dépend donc plus des miroirs Ubuntu des runners. Les jobs mobile et PWA font de
+même. En local, le conteneur `agent-playwright` du workspace parent utilise la
+même image ; la commande `playwright install` ci-dessus ne sert que hors
+conteneur.
+
+La version de l'image doit rester celle de `@playwright/test` dans
+`package.json` et `mobile/package.json`. Pour monter Playwright de version,
+modifier ensemble les deux manifestes, leurs lockfiles et le champ `image` de
+`web-visual.yml`, `pwa-policy.yml` et `mobile-quality.yml`.
+`npm run test:release` échoue si ces versions divergent ou si un de ces
+workflows réinstalle un navigateur.
+
+Le serveur sert un build Vite dédié (`dist-visual`) avec API relative,
 indépendant du build livré. Les références PNG sont sous
 `test/visual/snapshots/{mobile,tablet,desktop}/`. Le contrôle normal ne crée ni ne
 réécrit une référence manquante : il échoue. Aucun retry ne masque un écart.
@@ -60,8 +74,8 @@ les contrôles géométriques restent indépendants de cette tolérance.
 ## Examiner et mettre à jour les références
 
 Une modification visuelle voulue demande une comparaison des anciennes et
-nouvelles images à chaque largeur. Utiliser le même environnement Linux/Chromium
-que la CI, puis :
+nouvelles images à chaque largeur. Utiliser l'image Playwright de la CI
+(conteneur `agent-playwright` en local), puis :
 
 ```bash
 npm run test:visual:update
