@@ -207,12 +207,22 @@ utilisent directement `npm run test:visual`, sans configuration temporaire.
 La CI conserve les traces et images de ses échecs pendant trois jours pour
 rendre les différences vérifiables.
 
-Les références suivent le rendu de la CI (`ubuntu-latest` et Chromium installé
-par `npx playwright install --with-deps`), où les 15 scénarios passent. Dans
-le conteneur local `agent-playwright` (image `mcr.microsoft.com/playwright`),
-la capture tablette du tableau de bord dépasse le seuil de 1 % (8 292 pixels) :
-environ un quart de l'écart vient des polices de la barre d'onglets, le reste
-de la zone du graphique, car cette référence précède la hauteur de ligne
-explicite des axes. Elle passe en CI avec peu de marge : la rafraîchir depuis
-un artefact de rendu CI si elle échoue. Ne pas régénérer de référence depuis
-ce conteneur.
+Les références suivent le rendu de l'image `mcr.microsoft.com/playwright`
+dont la version est celle de `@playwright/test`. La CI exécute ces tests dans
+cette image depuis l'issue #416, sans installer de navigateur à l'exécution ;
+le conteneur local `agent-playwright` du workspace parent utilise la même
+image. Une référence peut donc être régénérée depuis ce conteneur, à version
+identique, puis relue avant d'être versionnée.
+
+Avant #416, la CI utilisait `ubuntu-latest` et
+`npx playwright install --with-deps`, dont le rendu du texte différait
+légèrement de celui de l'image. Trois références ont été reprises depuis
+l'image lors de ce changement : `calendar-daily-remaining-light` (téléphone)
+et `envelope-detail` (téléphone et tablette). Les autres passaient déjà dans
+les deux environnements.
+
+La capture `envelope-assignment` dépendait en plus de la position de défilement
+du formulaire : le clic retire le bloc de suggestion, le formulaire raccourcit
+et la position restante dépend de celle d'avant le clic. Le test aligne
+maintenant le bas du formulaire avant la capture ; ses références téléphone et
+bureau ont été reprises avec ce cadrage.
