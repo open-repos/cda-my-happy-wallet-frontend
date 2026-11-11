@@ -383,9 +383,7 @@ export const BudgetCalendarScreen = () => {
                   ))}
                 </View>
                 <View
-                  accessibilityState={{
-                    busy: state.summaryStatus === "loading",
-                  }}
+                  aria-busy={state.summaryStatus === "loading"}
                   style={styles.grid}
                 >
                   {weeks.map((week) => (
