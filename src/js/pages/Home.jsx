@@ -8,6 +8,7 @@ import { useOperationsFixes } from "../hooks/useOperationsFixes";
 import { SavingsCapacitySection } from "../components/FinancialGoals/SavingsCapacitySection";
 import { SimulationControls } from "../components/Simulation/SimulationControls";
 import { EnvelopeSection } from "../components/Envelopes/EnvelopeSection";
+import { MonthEndPrompt } from "../components/MonthEnd/MonthEndPrompt";
 import "../../css/BudgetForecast.css";
 function Home() {
   const { isEmptyOpFixe } = useOperationsFixes();
@@ -17,6 +18,7 @@ function Home() {
       <PageHeader eyebrow="Mon budget" title="Accueil">
         Votre budget, vos enveloppes et votre épargne au même endroit.
       </PageHeader>
+      <MonthEndPrompt />
       <SimulationControls />
       {isEmptyOpFixe ? (
         <>

@@ -6,6 +6,7 @@ import {
 } from "./useMutationFeedback";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { goalsService } from "../services/goalsService";
+import { savingsErrorMessage } from "../services/savingsService";
 
 const loadError =
   "Impossible de charger vos objectifs. Vérifiez votre connexion puis réessayez.";
@@ -64,8 +65,11 @@ export const useFinancialGoals = () => {
           error,
           error?.response?.status === 422
             ? "Certaines valeurs sont refusées : vérifiez les montants et la date."
-            : failureMessage ??
-                "L’objectif n’a pas pu être enregistré. Réessayez."
+            : savingsErrorMessage(
+                error,
+                failureMessage ??
+                  "L’objectif n’a pas pu être enregistré. Réessayez."
+              )
         )
       );
       return false;

@@ -60,7 +60,10 @@ export const parseGoal = (goal) => {
     !isAmount(goal?.savedAmount) ||
     !isAmount(goal?.monthlyContribution) ||
     !/^[A-Z]{3}$/.test(goal?.currency || "") ||
-    !(goal?.targetDate === null || isDate(goal?.targetDate))
+    !(goal?.targetDate === null || isDate(goal?.targetDate)) ||
+    (goal.savingsAccountId !== undefined &&
+      (!Number.isSafeInteger(goal.savingsAccountId) ||
+        goal.savingsAccountId <= 0))
   ) {
     throw new Error("Invalid goal response");
   }
@@ -73,6 +76,9 @@ export const parseGoal = (goal) => {
     currency: goal.currency,
     targetDate: goal.targetDate,
     forecast: parseForecast(goal.forecast),
+    ...(goal.savingsAccountId === undefined
+      ? {}
+      : { savingsAccountId: goal.savingsAccountId }),
   };
 };
 

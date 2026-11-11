@@ -70,8 +70,9 @@ export const FinancialGoalCard = ({ goal, onEdit, onRefresh }) => {
             </p>
           </div>
           <p className="goal-card__help">
-            Montant déclaré ; les versements prévus n’augmentent pas cette
-            jauge.
+            {goal.savingsAccountId
+              ? "Solde du compte rattaché ; seuls les virements réels modifient cette jauge."
+              : "Montant déclaré ; les versements prévus n’augmentent pas cette jauge."}
           </p>
           <div className="goal-card__arrival">
             <span>Atteinte estimée au rythme prévu</span>

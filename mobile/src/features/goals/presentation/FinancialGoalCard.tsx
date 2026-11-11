@@ -8,6 +8,7 @@ import {
 } from "react-native";
 
 import { ActionButton } from "@/src/design/ActionButton";
+import { Button } from "@/src/design/Button";
 
 import { primitives, semantic, themes } from "@/src/design/tokens";
 import type { ThemeTokens } from "@/src/design/tokens";
@@ -24,6 +25,8 @@ import {
 interface FinancialGoalCardProps {
   goal: FinancialGoal;
   onEdit(goal: FinancialGoal): void;
+  /** Ouvre la comparaison sous hypothèses (#285). */
+  onSimulate?(goal: FinancialGoal): void;
 }
 
 const semibold = `${primitives.fontWeight.semibold}` as "600";
@@ -37,7 +40,11 @@ const formatDate = (value: string): string =>
   }).format(new Date(`${value}T00:00:00.000Z`));
 
 /** Carte d'un objectif : progression lisible, montants et prévision. */
-export const FinancialGoalCard = ({ goal, onEdit }: FinancialGoalCardProps) => {
+export const FinancialGoalCard = ({
+  goal,
+  onEdit,
+  onSimulate,
+}: FinancialGoalCardProps) => {
   const scheme = useColorScheme();
   const { fontScale } = useWindowDimensions();
   const colors = themes[scheme === "dark" ? "dark" : "light"].color;
@@ -117,6 +124,18 @@ export const FinancialGoalCard = ({ goal, onEdit }: FinancialGoalCardProps) => {
         ))}
       </View>
       <Text style={styles.forecast}>{forecastMessage(goal)}</Text>
+      {onSimulate ? (
+        <Button
+          icon="analytics-outline"
+          label="Simuler avec mon budget"
+          accessibilityLabel={`Simuler avec mon budget : ${goal.title}`}
+          onPress={() => onSimulate(goal)}
+          style={({ pressed }) => [
+            styles.editButton,
+            pressed && styles.pressed,
+          ]}
+        />
+      ) : null}
       <ActionButton
         action="edit"
         label="Modifier"

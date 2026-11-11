@@ -33,7 +33,9 @@ test("exposes the selected operation date as a toggle button", async ({
 }) => {
   await signIn(page);
   await page.getByRole("tab", { name: "Opérations ponctuelles" }).click();
-  await page.getByRole("button", { name: "Ajouter une opération" }).click();
+  await page
+    .getByRole("button", { name: "Ajouter une opération", exact: true })
+    .click();
   const dateField = page.getByRole("button", { name: /^Date :/ });
   await dateField.click();
   const today = page.getByRole("button", {
@@ -84,7 +86,7 @@ test("exposes conversion saving and recovery with aria-busy", async ({
   await signIn(page);
   await page.getByRole("tab", { name: "Calendrier" }).click();
   await page
-    .getByRole("button", { name: /^Convertir Loyer du 5 octobre/ })
+    .getByRole("button", { name: /^Convertir Loyer en opération/ })
     .click();
   await page.getByRole("radio", { name: "Alimentation" }).click();
   const save = page.getByRole("button", { name: "Enregistrer l’opération" });

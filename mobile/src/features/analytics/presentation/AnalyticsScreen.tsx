@@ -1,4 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useFabClearance } from "@/src/features/quick-add/presentation/useFabClearance";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -47,6 +48,8 @@ const BUSINESS_ERRORS = {
  * prédéfinie, graphique décoratif et liste textuelle équivalente.
  */
 export const AnalyticsScreen = () => {
+  // Fin de page dégagée du bouton flottant d’ajout (#407).
+  const fabSpace = useFabClearance(primitives.space["16"]);
   const router = useRouter();
   const { httpClient } = useAuth();
   const gateway = useMemo(
@@ -103,7 +106,7 @@ export const AnalyticsScreen = () => {
 
   return (
     <SafeAreaView edges={TAB_SCREEN_EDGES} style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={[styles.content, fabSpace]}>
         <Pressable
           accessibilityRole="link"
           onPress={() =>

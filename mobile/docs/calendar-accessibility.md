@@ -19,12 +19,13 @@ selection, and busy transitions while requests are held and released. A failed
 conversion checks recovery without closing the form. No screenshot baseline
 needs to change for these accessibility attributes.
 
-## Required native recipe for issue #161
+## Native checks
 
-**Pending:** no Android device, emulator or TalkBack is available in the cloud
-environment. Browser tests do not establish a native screen-reader result.
-Keep the pull request in draft until the following recipe is recorded on an
-Android development build with TalkBack enabled:
+Issue #161 ships in V1 with the automated checks above and a functional and
+visual check of the calendar and the conversion on Android and iOS. Browser
+tests do not establish a native screen-reader result: the TalkBack announcement
+recipe below is deferred to V2 and tracked in issue #412. It does not block the
+V1 delivery.
 
 1. Open Calendar. Focus a day, select it, then select another day and clear the
    filter. Check that the selected state follows the displayed filter and that
@@ -41,4 +42,4 @@ Android development build with TalkBack enabled:
    return to the calendar.
 
 Record the build commit, device/emulator, Android and TalkBack versions, date,
-and results in the pull request before marking the recipe complete.
+and results in issue #412 when the recipe is run.

@@ -6,6 +6,7 @@ import {
   parseBudgetSummary,
 } from "../../src/js/services/budgetService";
 import { oneOffOperationsService } from "../../src/js/services/oneOffOperationsService";
+import { decidedDecision } from "../fixtures/monthEnd.mjs";
 
 vi.mock("../../src/utils/axiosHelper", () => ({
   apiPrivate: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
@@ -67,6 +68,31 @@ describe("budgetService", () => {
     );
     expect(summary.carryIn).toBe("-120.00");
     expect(summary.forecast.goalSavings).toBe("150.00");
+  });
+
+  it("keeps the optional server adjustments required by the calculation detail", () => {
+    const parsed = parseBudgetSummary(
+      summaryFixture({
+        reconciliationAdjustment: "12.50",
+        forecast: {
+          ...summaryFixture().forecast,
+          envelopeReserve: "35.00",
+        },
+      })
+    );
+
+    expect(parsed.reconciliationAdjustment).toBe("12.50");
+    expect(parsed.forecast.envelopeReserve).toBe("35.00");
+    expect(() =>
+      parseBudgetSummary(
+        summaryFixture({
+          forecast: {
+            ...summaryFixture().forecast,
+            envelopeReserve: 35,
+          },
+        })
+      )
+    ).toThrow("Invalid budget forecast response");
   });
 
   it("accepts a closed month without forecast and rejects malformed data", () => {
@@ -186,5 +212,27 @@ describe("budgetService", () => {
       currency: "EUR",
       limit: 20,
     });
+  });
+});
+
+describe("month-end decision in the summary (#396)", () => {
+  it("keeps a decided closed month and rejects an invalid decision", () => {
+    const closed = summaryFixture({
+      status: "CLOSED",
+      forecast: null,
+      monthEndDecision: { ...decidedDecision(), userId: 3 },
+    });
+    expect(parseBudgetSummary(closed).monthEndDecision).toEqual(
+      decidedDecision()
+    );
+    expect(parseBudgetSummary(summaryFixture())).not.toHaveProperty(
+      "monthEndDecision"
+    );
+    expect(() =>
+      parseBudgetSummary({
+        ...closed,
+        monthEndDecision: { ...decidedDecision(), status: "?" },
+      })
+    ).toThrow();
   });
 });

@@ -51,3 +51,18 @@ et carte d’objectif téléphone sur laquelle le bouton flottant est visible.
 Les autres références et les seuils de comparaison restent inchangés.
 La synthèse d’accueil, ses graphiques et les analyses écoutent l’invalidation
 partagée ; la relecture conserve l’affichage et ne rejoue aucune écriture.
+
+## Fin des écrans (#407)
+
+Sur téléphone (largeur < 768), le bouton flottant est placé à
+`FAB_OFFSET + insets.bottom` du bas et mesure `FAB_SIZE`
+(`src/features/quick-add/presentation/fabLayout.ts`). Chaque écran d'onglet
+(accueil, calendrier, opérations, objectifs, profil, budget fixe, détail
+d'enveloppe, prochains mois, analyses, catégories) applique
+`useFabClearance(marge)` à son contenu défilant : la marge basse devient au
+moins la hauteur du bouton au-dessus de la barre d'onglets plus 16 dp, de
+sorte que le dernier texte et la dernière action restent visibles en fin de
+défilement. Tablette et bureau gardent leur marge. Pendant le défilement, le
+bouton passe normalement au-dessus du contenu. `useBottomTabBarHeight` vient
+de `expo-router/js-tabs` (SDK 56 interdit l'import direct de
+`@react-navigation`).

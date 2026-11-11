@@ -183,6 +183,7 @@
 
 .budget-mode__group {
   display: inline-flex;
+  max-width: 100%;
   margin: 0;
   padding: var(--ds-primitive-space-1);
   border: var(--ds-border-width-default) solid var(--ds-color-border-strong);
@@ -194,11 +195,23 @@
   display: inline-flex;
   min-height: 44px;
   align-items: center;
-  padding: 0 var(--ds-space-control-inline);
+  padding: 0
+    clamp(var(--ds-primitive-space-2), 2vw, var(--ds-space-control-inline));
   border-radius: var(--ds-radius-control);
   color: var(--ds-color-text-primary);
   cursor: pointer;
   font-weight: var(--ds-typography-action-weight);
+  white-space: nowrap;
+}
+
+.budget-calendar__theoretical {
+  margin: calc(-1 * var(--ds-primitive-space-2)) 0 var(--ds-primitive-space-4);
+  padding: var(--ds-primitive-space-2) var(--ds-primitive-space-3);
+  border-radius: var(--ds-radius-control);
+  background: var(--ds-color-status-info-surface);
+  color: var(--ds-color-status-info-text);
+  font-size: var(--ds-primitive-font-size-sm);
+  font-weight: var(--ds-primitive-font-weight-semibold);
 }
 
 /* The native radio stays inside its label, which draws the segment. */

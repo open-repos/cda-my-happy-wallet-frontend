@@ -42,13 +42,22 @@ import {
   OperationCategory,
   OperationDraft,
 } from "@/src/features/operations/domain/oneOffOperation";
-import { HttpOneOffOperationsGateway } from "@/src/features/operations/infrastructure/HttpOneOffOperationsGateway";
+import {
+  HttpOneOffOperationsGateway,
+  OperationRequestError,
+} from "@/src/features/operations/infrastructure/HttpOneOffOperationsGateway";
+import { envelopeErrorMessage } from "@/src/features/envelopes/domain/budgetEnvelope";
 import { OperationFormModal } from "@/src/features/operations/presentation/OperationFormModal";
 import {
   QuickAddKind,
   writeQuickAdd,
 } from "@/src/features/quick-add/application/QuickAddWriter";
 import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
+import {
+  FAB_MAX_WIDTH,
+  FAB_OFFSET,
+  FAB_SIZE,
+} from "@/src/features/quick-add/presentation/fabLayout";
 import { potentialMinStartDate } from "@/src/features/simulation/domain/potential";
 
 type Panel = { kind: QuickAddKind | "menu"; date: string };
@@ -152,8 +161,16 @@ export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
     busy.current = true;
     setError(null);
     const kind = panel.kind;
+    // Code serveur conservé pour les erreurs de rattachement (#389).
+    let failureCode: string | null = null;
     const ok = await simulation.mutate(
-      () => writeQuickAdd(httpClient, kind, draft),
+      () =>
+        writeQuickAdd(httpClient, kind, draft).catch((reason: unknown) => {
+          if (reason instanceof OperationRequestError) {
+            failureCode = reason.code;
+          }
+          throw reason;
+        }),
       kind === "potential"
         ? "Événement à confirmer ajouté à la Simulation. Le réel reste inchangé."
         : "Ajout enregistré.",
@@ -170,7 +187,10 @@ export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
       restore();
     } else
       setError(
-        "L’ajout n’a pas pu être enregistré. Vérifiez les champs puis réessayez.",
+        envelopeErrorMessage(
+          failureCode,
+          "L’ajout n’a pas pu être enregistré. Vérifiez les champs puis réessayez.",
+        ),
       );
   };
   const saving = simulation.mutationStatus === "loading";
@@ -180,7 +200,9 @@ export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
       <View style={styles.root}>
         {children}
         {success && !panel ? (
-          <View style={[styles.feedback, { bottom: 80 + insets.bottom }]}>
+          <View
+            style={[styles.feedback, { bottom: FAB_OFFSET + insets.bottom }]}
+          >
             <FeedbackBanner kind="success">{success}</FeedbackBanner>
             <Pressable
               accessibilityRole="button"
@@ -191,7 +213,7 @@ export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
             </Pressable>
           </View>
         ) : null}
-        {width < 768 && !keyboard ? (
+        {width < FAB_MAX_WIDTH && !keyboard ? (
           <Pressable
             ref={fab}
             accessibilityLabel="Ajouter une opération ou un événement"
@@ -204,7 +226,10 @@ export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
                 backgroundColor: fabColors.actionPrimaryBackground,
                 borderColor: fabColors.actionPrimaryText,
               },
-              { bottom: 80 + insets.bottom, display: panel ? "none" : "flex" },
+              {
+                bottom: FAB_OFFSET + insets.bottom,
+                display: panel ? "none" : "flex",
+              },
             ]}
           >
             <Ionicons
@@ -330,9 +355,9 @@ const styles = StyleSheet.create({
   fab: {
     position: "absolute",
     right: 16,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: FAB_SIZE,
+    height: FAB_SIZE,
+    borderRadius: FAB_SIZE / 2,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.actionPrimaryBackground,

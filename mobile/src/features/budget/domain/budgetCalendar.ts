@@ -1,4 +1,5 @@
 import {
+  AmountTone,
   BudgetDay,
   money,
   toCents,
@@ -22,6 +23,7 @@ export interface CalendarCell {
 
 export interface DayCell {
   value: string | null;
+  tone: AmountTone;
   markers: { operation: boolean; planned: boolean };
   accessibilityLabel: string;
 }
@@ -114,6 +116,7 @@ export const dayCell = (
     // Données en cours de chargement : ne rien affirmer sur le jour.
     return {
       value: null,
+      tone: "neutral",
       markers: { operation: false, planned: false },
       accessibilityLabel: `${longDate(date)}. Chargement.`,
     };
@@ -121,8 +124,8 @@ export const dayCell = (
   const expense = day ? toCents(day.expense) : 0;
   const income = day ? toCents(day.income) : 0;
   const planned = day?.plannedCount ?? 0;
-  const forecast =
-    day?.forecastRemaining == null ? null : toCents(day.forecastRemaining);
+  const remaining =
+    day?.dailyRemaining == null ? null : toCents(day.dailyRemaining);
 
   const parts = [`${longDate(date)}.`];
   if (expense > 0) parts.push(`Dépenses ${money(expense, currency)}.`);
@@ -132,18 +135,39 @@ export const dayCell = (
     parts.push(
       `${plural(planned, "événement")} prévu${planned > 1 ? "s" : ""}.`,
     );
-  if (mode === "forecast" && forecast !== null) {
-    parts.push(`Reste prévisionnel ${money(forecast, currency)}.`);
+  if (mode === "forecast" && remaining !== null) {
+    parts.push(`Reste à vivre du jour ${money(remaining, currency)}.`);
   }
 
   let value: string | null = null;
   if (mode === "expenses" && expense > 0) value = abbreviateAmount(-expense);
-  if (mode === "forecast" && forecast !== null)
-    value = abbreviateAmount(forecast);
+  if (mode === "forecast" && remaining !== null)
+    // Keep the sign and cents of small deficits, without changing Expenses.
+    value =
+      remaining < 0 && remaining > -50
+        ? `-${(Math.abs(remaining) / 100).toFixed(2).replace(".", ",")}`
+        : abbreviateAmount(remaining);
 
   return {
     value,
+    tone:
+      mode === "forecast" && remaining !== null
+        ? remaining < 0
+          ? "negative"
+          : remaining > 0
+            ? "positive"
+            : "neutral"
+        : "neutral",
     markers: { operation: expense > 0 || income > 0, planned: planned > 0 },
     accessibilityLabel: parts.join(" "),
   };
 };
+
+/** Exact server value and the explanation used by the Web calendar (#379). */
+export const dailyRemainingDetail = (
+  day: BudgetDay | undefined,
+  currency: string,
+): string | null =>
+  day?.dailyRemaining == null
+    ? null
+    : `Reste à vivre du jour : ${money(toCents(day.dailyRemaining), currency)}, soit votre part quotidienne du reste à vivre de base cumulée jusqu’à ce jour, moins les dépenses et plus les entrées saisies ou prévues jusqu’à cette date.`;

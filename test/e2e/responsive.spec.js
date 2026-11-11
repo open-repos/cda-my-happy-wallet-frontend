@@ -67,7 +67,10 @@ for (const width of [320, 375, 390, 768, 1440]) {
           element.style.fontSize = value;
         }, zoom);
         const links = navigation.locator("ul > li > a");
-        await expect(links).toHaveCount(8);
+        await expect(links).toHaveCount(9);
+        await expect(
+          navigation.getByRole("link", { name: "Coffre", exact: true })
+        ).toHaveAttribute("href", "/coffre");
         // Wait for the drawer width transition before measuring the text itself.
         await expect
           .poll(() =>
@@ -297,7 +300,9 @@ for (const viewport of viewports) {
     await expect(
       page.getByRole("heading", { name: "Reste à vivre du mois" })
     ).toBeVisible();
-    await expect(page.locator(".home-budget__amount")).toContainText("037,50");
+    await expect(page.locator(".home-budget__amount-current")).toContainText(
+      "767,50"
+    );
     await expect(page.getByText(/^Report d/)).toBeVisible();
     const content = await page
       .locator(".protected-layout__content")
@@ -319,11 +324,15 @@ for (const viewport of viewports) {
       ).toBeLessThan(2);
 
     await page.getByText("Semaine", { exact: true }).click();
-    await expect(page.locator(".home-budget__amount")).toContainText("447,72");
+    await expect(page.locator(".home-budget__amount-current")).toContainText(
+      "447,72"
+    );
     await expect(page.getByText(/63,96\s€ par jour × 7 jours/)).toBeVisible();
 
     await page.getByText("Jour", { exact: true }).click();
-    await expect(page.locator(".home-budget__amount")).toContainText("63,96");
+    await expect(page.locator(".home-budget__amount-current")).toContainText(
+      "63,96"
+    );
 
     await expect(
       page.getByRole("list", { name: "Dépenses par catégorie" })

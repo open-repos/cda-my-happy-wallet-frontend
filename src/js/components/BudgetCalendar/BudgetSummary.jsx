@@ -5,6 +5,9 @@ import {
   ofMonth,
   timestampDate,
 } from "./budgetFormat";
+import { MonthEndSummary } from "../MonthEnd/MonthEndSummary";
+import { useCarryDecision } from "../MonthEnd/MonthEndContext";
+import { savingsMoney } from "../Savings/savingsFormat";
 
 const balanceLabels = {
   POSITIVE: "Positif",
@@ -50,16 +53,35 @@ export const RealBreakdown = ({ summary }) => (
   </dl>
 );
 
+/** Décision de fin de mois à l'origine du report entrant (#396). */
+const CarryDecisionHelp = ({ summary }) => {
+  const decision = useCarryDecision(summary);
+  if (!decision) return null;
+  const parts = [];
+  if (decision.savingsMinorUnits > 0)
+    parts.push(
+      `${savingsMoney(decision.savingsMinorUnits, decision.currency)} épargnés`
+    );
+  if (decision.coverageMinorUnits + decision.exceptionalIncomeMinorUnits > 0)
+    parts.push(
+      `${savingsMoney(
+        decision.coverageMinorUnits + decision.exceptionalIncomeMinorUnits,
+        decision.currency
+      )} couverts`
+    );
+  return parts.length ? (
+    <> Après votre décision de fin de mois : {parts.join(", ")}.</>
+  ) : null;
+};
+
 export const CarryHelp = ({ summary }) =>
   summary.carryFromMonth ? (
     <p className="budget-help">
       {Number(summary.carryIn) < 0
         ? `Le déficit ${ofMonth(summary.carryFromMonth)} est déduit de ce mois.`
-        : `Le reste ${ofMonth(
-            summary.carryFromMonth
-          )} est ajouté à ce mois.`}{" "}
-      Le résultat du mois correspond à vos revenus et charges fixes, plus vos
-      entrées, moins vos dépenses.
+        : `Le reste ${ofMonth(summary.carryFromMonth)} est ajouté à ce mois.`}
+      <CarryDecisionHelp summary={summary} /> Le résultat du mois correspond à
+      vos revenus et charges fixes, plus vos entrées, moins vos dépenses.
       {summary.reconciliationAdjustment !== undefined &&
         Number(summary.reconciliationAdjustment) !== 0 &&
         " Le rapprochement des enveloppes est déjà inclus dans ce résultat."}
@@ -189,6 +211,9 @@ export const BudgetSummary = ({ summary, status, month, onRetry }) => {
             </p>
             <RealBreakdown summary={summary} />
             <CarryHelp summary={summary} />
+          </article>
+          <article className="budget-card">
+            <MonthEndSummary summary={summary} />
           </article>
         </div>
         <CorrectionNotice summary={summary} />

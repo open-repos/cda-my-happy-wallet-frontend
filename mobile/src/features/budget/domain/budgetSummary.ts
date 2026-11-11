@@ -24,6 +24,8 @@ export interface BudgetDay {
   plannedExpense: string | null;
   plannedCount: number | null;
   forecastRemaining: string | null;
+  /** Server daily accrual; absent on older backends. Never derive it locally. */
+  dailyRemaining?: string | null;
 }
 
 export interface BudgetSummary {
@@ -106,6 +108,7 @@ const parseDay = (value: unknown): BudgetDay => {
     plannedCount:
       value.plannedCount === null ? null : count(value.plannedCount),
     forecastRemaining: optionalAmount(value.forecastRemaining),
+    dailyRemaining: optionalAmount(value.dailyRemaining ?? null),
   };
 };
 

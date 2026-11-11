@@ -23,6 +23,16 @@ describe("one-off operation domain", () => {
     expect(parseOperation({ ...operation, ownerId: 99 })).toEqual(operation);
   });
 
+  it("keeps the fixed operation restriction of a category (#385)", () => {
+    const category = { id: 21, name: "Logement", color: null, icon: null };
+    expect(parseCategory({ ...category, fixedKind: "CHARGE" })).toEqual({
+      ...category,
+      fixedKind: "CHARGE",
+    });
+    expect(parseCategory({ ...category, fixedKind: null })).toEqual(category);
+    expect(() => parseCategory({ ...category, fixedKind: "AUTRE" })).toThrow();
+  });
+
   it("rejects malformed DTOs and pagination metadata", () => {
     expect(() => parseOperation({ ...operation, amount: 42.5 })).toThrow();
     expect(() => parseCategory({ id: 2, name: "X", color: "red" })).toThrow();

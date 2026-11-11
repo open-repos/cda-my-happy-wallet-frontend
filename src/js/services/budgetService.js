@@ -1,5 +1,6 @@
 import { apiPrivate } from "../../utils/axiosHelper";
 import { scenarioParams } from "../utils/budgetSimulation";
+import { parseMonthEndDecision } from "./monthEndService";
 
 export const PENDING_PAGE_LIMIT = 100;
 
@@ -32,6 +33,8 @@ const parseForecast = (forecast) => {
       forecast?.forecastRemaining,
     ].every(isAmount) ||
     !isOptionalAmount(forecast?.prudentDailyAllowance) ||
+    (forecast?.envelopeReserve !== undefined &&
+      !isAmount(forecast.envelopeReserve)) ||
     !isCount(forecast?.unresolvedCount) ||
     !isCount(forecast?.overdueCount)
   ) {
@@ -41,6 +44,9 @@ const parseForecast = (forecast) => {
     plannedIncome: forecast.plannedIncome,
     plannedExpense: forecast.plannedExpense,
     goalSavings: forecast.goalSavings,
+    ...(forecast.envelopeReserve === undefined
+      ? {}
+      : { envelopeReserve: forecast.envelopeReserve }),
     forecastRemaining: forecast.forecastRemaining,
     prudentDailyAllowance: forecast.prudentDailyAllowance,
     unresolvedCount: forecast.unresolvedCount,
@@ -129,6 +135,10 @@ export const parseBudgetSummary = (summary) => {
     unresolvedEvents: summary.unresolvedEvents,
     forecast: parseForecast(summary.forecast),
     days: summary.days.map(parseDay),
+    // Mois clos décidé uniquement (#184) ; absent sans décision.
+    ...(summary.monthEndDecision === undefined
+      ? {}
+      : { monthEndDecision: parseMonthEndDecision(summary.monthEndDecision) }),
   };
 };
 

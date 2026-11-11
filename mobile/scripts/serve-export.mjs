@@ -16,7 +16,189 @@ const contentTypes = {
 };
 const noNextPage = { hasNext: false, limit: 100, nextCursor: null };
 
+/**
+ * Enveloppes budgétaires (#384), contrat du Web #314 : « Alimentation »
+ * disponible et « Loisirs » en dépassement, valeurs fournies par le serveur.
+ */
+const ENVELOPE_STATS_EMPTY = {
+  completedMonthsObserved: 0,
+  exceededMonths: 0,
+  incompleteMonthsExcluded: 1,
+  meanActual: null,
+  meanOverrun: null,
+  meanPlanned: null,
+  meanVariance: null,
+  overrunRate: null,
+  sampleMonths: 0,
+  samplePolicy: "COMPLETED_MONTHS_WITH_LINKED_OPERATIONS",
+  unreconciledMonthsExcluded: 0,
+};
+const ENVELOPES = [
+  {
+    category: {
+      color: "#EA7C69",
+      icon: "solid:utensils",
+      id: 4,
+      name: "Alimentation",
+    },
+    id: 7,
+    metrics: {
+      actual: "223.00",
+      overrun: "0.00",
+      planned: "300.00",
+      progress: 74.33,
+      projected: "300.00",
+      remaining: "77.00",
+      status: "AVAILABLE",
+    },
+    occurrenceId: 41,
+    payments: [
+      ["Intermarché", "96.00", 18],
+      ["Lidl", "42.00", 12],
+      ["Carrefour", "85.00", 5],
+    ],
+    title: "Alimentation",
+    yearStatistics: {
+      completedMonthsObserved: 6,
+      exceededMonths: 4,
+      incompleteMonthsExcluded: 1,
+      meanActual: "325.00",
+      meanOverrun: "30.00",
+      meanPlanned: "300.00",
+      meanVariance: "25.00",
+      overrunRate: 66.67,
+      sampleMonths: 6,
+      samplePolicy: "COMPLETED_MONTHS_WITH_LINKED_OPERATIONS",
+      unreconciledMonthsExcluded: 0,
+    },
+  },
+  {
+    category: null,
+    id: 8,
+    metrics: {
+      actual: "133.00",
+      overrun: "33.00",
+      planned: "100.00",
+      progress: 133,
+      projected: "133.00",
+      remaining: "0.00",
+      status: "EXCEEDED",
+    },
+    occurrenceId: 42,
+    payments: [
+      ["Concert", "88.00", 9],
+      ["Cinéma", "45.00", 3],
+    ],
+    title: "Loisirs",
+    yearStatistics: ENVELOPE_STATS_EMPTY,
+  },
+];
+const envelopePayments = (envelope, month) =>
+  envelope.payments.map(([title, amount, day], index) => ({
+    amount,
+    categoryId: envelope.category?.id ?? 5,
+    currency: "EUR",
+    id: envelope.occurrenceId * 10 + index,
+    occurrenceId: envelope.occurrenceId,
+    operationDate: `${month}-${String(day).padStart(2, "0")}`,
+    title,
+    type: "DEPENSE",
+  }));
+const envelopeResponse = (pathname, searchParams) => {
+  const noNext = { hasNext: false, limit: 20, nextCursor: null };
+  // Détail d'octobre 2026, le mois figé par `envelopes.spec.ts`.
+  const thisMonth = "2026-10";
+  if (pathname.endsWith("/envelope-overview")) {
+    const year = searchParams.get("year");
+    const month = searchParams.get("month") ?? `${year}-10`;
+    return {
+      data: ENVELOPES.map((envelope) => {
+        const payments = envelopePayments(envelope, month);
+        return {
+          category: envelope.category,
+          currency: "EUR",
+          id: envelope.id,
+          months: [
+            {
+              ...envelope.metrics,
+              categoryId: envelope.category?.id ?? null,
+              month,
+              occurrenceId: envelope.occurrenceId,
+              operationCount: payments.length,
+              paymentsPath: `/reconciliation/occurrences/${envelope.occurrenceId}/operations`,
+              paymentsPreview: payments.map(
+                ({ amount, id, operationDate, title }) => ({
+                  amount,
+                  id,
+                  operationDate,
+                  title,
+                }),
+              ),
+            },
+          ],
+          statistics: year ? envelope.yearStatistics : ENVELOPE_STATS_EMPTY,
+          title: envelope.title,
+          totals: {
+            ...envelope.metrics,
+            observedMonths: 1,
+            operationCount: payments.length,
+            sumMonthlyOverrun: envelope.metrics.overrun,
+          },
+        };
+      }),
+      meta: noNext,
+    };
+  }
+  // Formulaire d'opération (#389) : enveloppes du mois et lien actuel.
+  const monthMatch =
+    /\/reconciliation\/months\/(\d{4}-\d{2})\/occurrences$/.exec(pathname);
+  if (monthMatch) {
+    return {
+      data: ENVELOPES.map((envelope) => occurrenceOf(envelope, monthMatch[1])),
+      integration: {
+        globalBudgetAdjusted: true,
+        mode: "INTEGRATED",
+        policy: "OPEN_RESERVED_CLOSED_MATCHED_ACTUAL",
+      },
+      meta: { hasNext: false, limit: 100, nextCursor: null },
+    };
+  }
+  const linkMatch = /\/operations\/(\d+)\/reconciliation$/.exec(pathname);
+  if (linkMatch) {
+    return { data: { occurrenceId: null, operationId: Number(linkMatch[1]) } };
+  }
+  const match = /\/reconciliation\/occurrences\/(\d+)(\/operations)?$/.exec(
+    pathname,
+  );
+  const envelope = ENVELOPES.find(
+    (item) => item.occurrenceId === Number(match?.[1]),
+  );
+  if (envelope == null) return null;
+  if (match[2]) {
+    return { data: envelopePayments(envelope, thisMonth), meta: noNext };
+  }
+  return { data: occurrenceOf(envelope, thisMonth) };
+};
+
+const occurrenceOf = (envelope, month) => ({
+  categoryId: envelope.category?.id ?? null,
+  closed: false,
+  currency: "EUR",
+  id: envelope.occurrenceId,
+  kind: "DEPENSE",
+  metrics: envelope.metrics,
+  month,
+  operationCount: envelope.payments.length,
+  personalShare: envelope.metrics.planned,
+  referenceTotal: envelope.metrics.planned,
+  sourceId: envelope.id,
+  sourceType: "ENVELOPE",
+  title: envelope.title,
+});
+
 const testApiResponse = (pathname, searchParams) => {
+  const envelopes = envelopeResponse(pathname, searchParams);
+  if (envelopes != null) return envelopes;
   if (pathname.endsWith("/auth/native/sessions")) {
     return {
       payload: {
@@ -240,6 +422,7 @@ const testApiResponse = (pathname, searchParams) => {
             plannedExpense: "0.00",
             plannedCount: 0,
             forecastRemaining: "1337.50",
+            dailyRemaining: "17.25",
           },
           {
             date: `${summary[1]}-20`,
@@ -250,6 +433,7 @@ const testApiResponse = (pathname, searchParams) => {
             plannedExpense: "300.00",
             plannedCount: 1,
             forecastRemaining: "1037.50",
+            dailyRemaining: "-4.17",
           },
         ],
       },

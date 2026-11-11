@@ -110,9 +110,11 @@ export const FinancialGoalForm = ({
     await onSave({
       title: values.title.trim(),
       targetAmount: normalizeDecimal(values.targetAmount),
-      savedAmount: normalizeDecimal(values.savedAmount),
+      savedAmount: goal?.savingsAccountId
+        ? goal.savedAmount
+        : normalizeDecimal(values.savedAmount),
       monthlyContribution: normalizeDecimal(values.monthlyContribution),
-      currency: "EUR",
+      currency: goal?.currency ?? "EUR",
       targetDate: values.targetDate || null,
     });
   };
@@ -165,14 +167,33 @@ export const FinancialGoalForm = ({
                 onChange={update}
                 placeholder="0.00"
                 {...field(name)}
+                readOnly={
+                  name === "savedAmount" && Boolean(goal?.savingsAccountId)
+                }
+                aria-describedby={
+                  [
+                    field(name)["aria-describedby"],
+                    name === "savedAmount" && goal?.savingsAccountId
+                      ? "goal-linked-balance"
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" ") || undefined
+                }
               />
-              <span>EUR</span>
+              <span>{goal?.currency ?? "EUR"}</span>
             </span>
             {errors[name] && (
               <span id={`goal-${name}-error`}>{errors[name]}</span>
             )}
           </label>
         ))}
+        {goal?.savingsAccountId && (
+          <p id="goal-linked-balance">
+            L’épargne suit le solde du compte rattaché. Effectuez un dépôt ou un
+            retrait dans le Coffre pour la modifier.
+          </p>
+        )}
         <label htmlFor="goal-targetDate">
           Date souhaitée <span className="sr-only">facultative</span>
           <input

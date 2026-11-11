@@ -5,6 +5,7 @@ import {
   parseBudgetForecast,
 } from "../../src/js/services/budgetForecastService";
 import { budgetForecast, forecastMonth } from "./fixtures/budgetForecast";
+import { reviewDecision } from "../fixtures/monthEnd.mjs";
 
 vi.mock("../../src/utils/axiosHelper", () => ({
   apiPrivate: { get: vi.fn() },
@@ -81,5 +82,18 @@ describe("multi-month forecast API boundary", () => {
     expect(parseBudgetForecast(budgetForecast({ months: [] })).months).toEqual(
       []
     );
+  });
+});
+
+describe("carry decision of the previous month (#396)", () => {
+  it("keeps the optional decision and validates it", () => {
+    const data = { ...budgetForecast(), carryDecision: reviewDecision() };
+    expect(parseBudgetForecast(data).carryDecision).toEqual(reviewDecision());
+    expect(parseBudgetForecast(budgetForecast())).not.toHaveProperty(
+      "carryDecision"
+    );
+    expect(() =>
+      parseBudgetForecast({ ...data, carryDecision: { status: "DECIDED" } })
+    ).toThrow();
   });
 });

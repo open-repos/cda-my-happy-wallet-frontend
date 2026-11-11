@@ -28,6 +28,53 @@ const page = (
   );
 
 describe("HttpOneOffOperationsGateway", () => {
+  it("serializes the server sort and all filters with repeated categoryId", async () => {
+    const request = vi.fn().mockResolvedValue(page([operation]));
+    await new HttpOneOffOperationsGateway({ request }).listOperations(null, {
+      sort: "amount",
+      order: "asc",
+      title: "Café",
+      categoryId: [2, 4],
+      type: "DEPENSE",
+      minAmount: "0.30",
+      maxAmount: "12.50",
+    });
+    const params = new URL(request.mock.calls[0][0], "http://test")
+      .searchParams;
+    expect(Object.fromEntries(params)).toMatchObject({
+      sort: "amount",
+      order: "asc",
+      title: "Café",
+      type: "DEPENSE",
+      minAmount: "0.30",
+      maxAmount: "12.50",
+    });
+    expect(params.getAll("categoryId")).toEqual(["2", "4"]);
+    expect(params.has("cursor")).toBe(false);
+    expect(params.has("from")).toBe(false);
+  });
+  it("loads bounded title suggestions using the opaque cursor and cancellation signal", async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValue(page([{ title: "Café" }], true, "next"));
+    const signal = new AbortController().signal;
+    const result = await new HttpOneOffOperationsGateway({
+      request,
+    }).listTitleSuggestions({ query: "  Caf  ", cursor: "opaque+/=", signal });
+    expect(result.data).toEqual([{ value: "Café", label: "Café" }]);
+    expect(request).toHaveBeenCalledWith(
+      "/operations/suggestions/titles?limit=10&q=Caf&cursor=opaque%2B%2F%3D",
+      { signal },
+    );
+  });
+  it("rejects malformed title suggestions", async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValue(page([{ title: "x".repeat(51) }]));
+    await expect(
+      new HttpOneOffOperationsGateway({ request }).listTitleSuggestions(),
+    ).rejects.toThrow("Invalid title suggestion response");
+  });
   it("uses the opaque cursor and the shared bounded collection contract", async () => {
     const request = vi.fn().mockResolvedValue(page([operation]));
     const gateway = new HttpOneOffOperationsGateway({ request });
