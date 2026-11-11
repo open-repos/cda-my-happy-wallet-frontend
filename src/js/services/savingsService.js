@@ -60,7 +60,16 @@ export const parseSavingsMovement = (value) => {
     !["MANUAL", "GOAL", "MONTH_END", "NEGATIVE_COVERAGE"].includes(
       value.reason
     ) ||
-    typeof value.idempotencyKey !== "string"
+    typeof value.idempotencyKey !== "string" ||
+    !(
+      value.monthEndRevision === undefined ||
+      value.monthEndRevision === null ||
+      id(value.monthEndRevision)
+    ) ||
+    !(
+      value.isCompensation === undefined ||
+      typeof value.isCompensation === "boolean"
+    )
   )
     invalid();
   const {
@@ -84,6 +93,9 @@ export const parseSavingsMovement = (value) => {
     operationDate,
     reason,
     idempotencyKey,
+    // Décision de fin de mois (#184) : révision liée et compensation.
+    monthEndRevision: value.monthEndRevision ?? null,
+    isCompensation: value.isCompensation ?? false,
   };
 };
 export const parseCurrentAccount = (value) => {
@@ -120,7 +132,9 @@ export const parseCurrentAccount = (value) => {
 export const parseCurrentMovement = (value) => {
   if (
     !id(value?.id) ||
-    !["OPERATION", "VIREMENT"].includes(value.source) ||
+    !["OPERATION", "VIREMENT", "EXCEPTIONAL_INCOME"].includes(value.source) ||
+    (value.source === "EXCEPTIONAL_INCOME" &&
+      (value.kind !== "ENTREE" || value.accountId !== null)) ||
     !["DEPENSE", "ENTREE", "VIREMENT"].includes(value.kind) ||
     typeof value.title !== "string" ||
     !Number.isSafeInteger(value.signedAmountMinorUnits) ||
@@ -148,6 +162,42 @@ export const parseCurrentMovement = (value) => {
     operationDate,
     currency: code,
     accountId,
+  };
+};
+export const parseSavingsOccurrence = (value) => {
+  if (
+    !id(value?.accountId) ||
+    !id(value.goalId) ||
+    !/^\d{4}-(0[1-9]|1[0-2])$/.test(value.month || "") ||
+    !isSavingsDate(value.operationDate) ||
+    typeof value.title !== "string" ||
+    !cents(value.amountMinorUnits) ||
+    value.amountMinorUnits === 0 ||
+    !currency(value.currency)
+  )
+    invalid();
+  const { accountId, goalId, month, operationDate, title, amountMinorUnits } =
+    value;
+  return {
+    accountId,
+    goalId,
+    month,
+    operationDate,
+    title,
+    amountMinorUnits,
+    currency: value.currency,
+  };
+};
+const parseOccurrenceResolution = (value) => {
+  if (
+    !["CONFIRMED", "CANCELED"].includes(value?.status) ||
+    (value.status === "CONFIRMED") === (value.movement === null)
+  )
+    invalid();
+  return {
+    status: value.status,
+    movement:
+      value.movement === null ? null : parseSavingsMovement(value.movement),
   };
 };
 export const parseSavingsPage = (value, parse) => {
@@ -226,6 +276,21 @@ export const savingsService = {
       `/savings-accounts/${accountId}/goal`,
       { goalId },
       parseSavingsAccount
+    ),
+  pendingOccurrences: (params, cursor = null) =>
+    page(
+      "/savings-occurrences/pending",
+      params,
+      cursor,
+      parseSavingsOccurrence
+    ),
+  /** Confirme une seule fois ou refuse le versement mensuel prévu. */
+  resolveOccurrence: (accountId, month, status) =>
+    write(
+      "put",
+      `/savings-accounts/${accountId}/occurrences/${month}`,
+      { status },
+      parseOccurrenceResolution
     ),
   transfer: (
     accountId,

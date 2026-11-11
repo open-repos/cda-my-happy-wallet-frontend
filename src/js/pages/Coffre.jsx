@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "../components/Actions/Button";
 import { ConfirmDialog } from "../components/Forms/ConfirmDialog";
+import { SavingsOccurrenceList } from "../components/MonthEnd/SavingsOccurrenceList";
 import { LiveMessage } from "../components/LiveMessage";
 import { SavingsForm } from "../components/Savings/SavingsForm";
 import { SavingsGoal } from "../components/Savings/SavingsGoal";
@@ -288,6 +289,7 @@ export default function Coffre() {
               )}
             </article>
           )}
+          {!isCurrent && <SavingsOccurrenceList />}
           {isCurrent ? (
             <>
               {current && (

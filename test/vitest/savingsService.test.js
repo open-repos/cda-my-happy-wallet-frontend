@@ -5,7 +5,9 @@ import {
   parseSavingsPage,
   parseSavingsMovement,
   parseCurrentMovement,
+  parseSavingsOccurrence,
 } from "../../src/js/services/savingsService";
+import { savingsOccurrence as savingsOccurrenceFixture } from "../fixtures/monthEnd.mjs";
 import { apiPrivate } from "../../src/utils/axiosHelper";
 import {
   savingsAccount,
@@ -110,4 +112,85 @@ it("classifies an unreadable 2xx as committed rather than a failed transfer", as
   await expect(
     savingsService.transfer(1, savingsMovement)
   ).rejects.toMatchObject({ name: "AcknowledgedWriteError" });
+});
+
+it("keeps month-end metadata on savings movements (#396)", () => {
+  const compensation = {
+    ...savingsMovement,
+    direction: "FROM_SAVINGS",
+    reason: "MONTH_END",
+    monthEndRevision: 2,
+    isCompensation: true,
+  };
+  expect(parseSavingsMovement(compensation)).toMatchObject({
+    monthEndRevision: 2,
+    isCompensation: true,
+  });
+  expect(parseSavingsMovement(savingsMovement)).toMatchObject({
+    monthEndRevision: null,
+    isCompensation: false,
+  });
+  expect(() =>
+    parseSavingsMovement({ ...compensation, monthEndRevision: 0 })
+  ).toThrow();
+  expect(() =>
+    parseSavingsMovement({ ...compensation, isCompensation: "yes" })
+  ).toThrow();
+});
+
+it("accepts the exceptional income source of the current account (#396)", () => {
+  const income = {
+    id: 4,
+    source: "EXCEPTIONAL_INCOME",
+    kind: "ENTREE",
+    title: "Entrée exceptionnelle",
+    signedAmountMinorUnits: 7000,
+    operationDate: "2026-10-31",
+    currency: "EUR",
+    accountId: null,
+  };
+  expect(parseCurrentMovement(income)).toEqual(income);
+  expect(() => parseCurrentMovement({ ...income, kind: "DEPENSE" })).toThrow();
+});
+
+it("lists and resolves planned monthly transfers (#396)", async () => {
+  const occurrence = savingsOccurrenceFixture();
+  apiPrivate.get.mockResolvedValue({
+    data: savingsPage([{ ...occurrence, userId: 4 }]),
+  });
+  const page = await savingsService.pendingOccurrences({
+    month: "2026-11",
+    currency: "EUR",
+  });
+  expect(page.data).toEqual([occurrence]);
+  expect(apiPrivate.get).toHaveBeenCalledWith("/savings-occurrences/pending", {
+    params: { month: "2026-11", currency: "EUR", limit: 20 },
+    withCredentials: true,
+  });
+  expect(() =>
+    parseSavingsOccurrence({ ...occurrence, amountMinorUnits: 0 })
+  ).toThrow();
+
+  apiPrivate.put.mockResolvedValue({
+    data: {
+      data: {
+        status: "CONFIRMED",
+        movement: { ...savingsMovement, reason: "GOAL" },
+      },
+    },
+  });
+  await expect(
+    savingsService.resolveOccurrence(1, "2026-11", "CONFIRMED")
+  ).resolves.toMatchObject({ status: "CONFIRMED", movement: { id: 10 } });
+  expect(apiPrivate.put).toHaveBeenCalledWith(
+    "/savings-accounts/1/occurrences/2026-11",
+    { status: "CONFIRMED" },
+    { withCredentials: true }
+  );
+  apiPrivate.put.mockResolvedValue({
+    data: { data: { status: "CANCELED", movement: null } },
+  });
+  await expect(
+    savingsService.resolveOccurrence(1, "2026-11", "CANCELED")
+  ).resolves.toEqual({ status: "CANCELED", movement: null });
 });

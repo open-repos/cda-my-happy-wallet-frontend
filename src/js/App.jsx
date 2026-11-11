@@ -10,6 +10,7 @@ import UpcomingMonths from "./pages/UpcomingMonths";
 import ListeOperations from "./pages/ListeOperations";
 import Objectifs from "./pages/Objectifs";
 import Coffre from "./pages/Coffre";
+import FinDeMois from "./pages/FinDeMois";
 import Profil from "./pages/Profil";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
@@ -68,6 +69,14 @@ function App() {
                 element={
                   <ProtectedLayout>
                     <Coffre />
+                  </ProtectedLayout>
+                }
+              />
+              <Route
+                path="/fin-de-mois/:month"
+                element={
+                  <ProtectedLayout>
+                    <FinDeMois />
                   </ProtectedLayout>
                 }
               />

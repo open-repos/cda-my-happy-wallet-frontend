@@ -3,7 +3,12 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import {
   useSavingsPage,
   useSavingsMutation,
+  useSavingsRead,
 } from "../../src/js/hooks/useSavings";
+import {
+  SimulationProvider,
+  useSimulation,
+} from "../../src/js/components/Simulation/SimulationContext";
 import { savingsService } from "../../src/js/services/savingsService";
 import { savingsAccount, savingsPage } from "../fixtures/savings.mjs";
 import { AcknowledgedWriteError } from "../../src/js/utils/acknowledgedWrite";
@@ -112,3 +117,31 @@ it("blocks double writes and marks lost responses as ambiguous", async () => {
     expect(await pending).toMatchObject({ ok: false, uncertain: true });
   });
 });
+
+it.each([
+  [false, false],
+  [true, true],
+])(
+  "a failed refresh of a background read (%s) reports refreshed=%s",
+  async (background, expected) => {
+    const read = vi
+      .fn()
+      .mockResolvedValueOnce({ id: 1 })
+      .mockRejectedValue(new Error());
+    const { result } = renderHook(
+      () => ({
+        badge: useSavingsRead(read, "badge", undefined, { background }),
+        simulation: useSimulation(),
+      }),
+      { wrapper: SimulationProvider }
+    );
+    await waitFor(() => expect(result.current.badge.status).toBe("success"));
+    let refreshed;
+    await act(async () => {
+      refreshed = await result.current.simulation.refreshViews();
+    });
+    expect(read).toHaveBeenCalledTimes(2);
+    expect(result.current.badge.status).toBe("error");
+    expect(refreshed).toBe(expected);
+  }
+);
