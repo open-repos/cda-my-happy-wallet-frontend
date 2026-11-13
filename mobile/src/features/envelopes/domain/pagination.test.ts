@@ -25,3 +25,24 @@ describe("envelope pagination (#384)", () => {
     expect(isRepeatedCursor(state)).toBe(true);
   });
 });
+
+describe("pagination identity (#419)", () => {
+  it("keeps rows that share an id but not their identity", () => {
+    const row = (source: string, id: number) => ({ id, source });
+    const identity = (item: { id: number; source: string }) =>
+      `${item.source}:${item.id}`;
+    const first = firstPage({
+      data: [row("OPERATION", 7)],
+      meta: { limit: 20, hasNext: true, nextCursor: "p2" },
+    });
+    const next = appendPage(
+      first,
+      {
+        data: [row("VIREMENT", 7), row("OPERATION", 7)],
+        meta: { limit: 20, hasNext: false, nextCursor: null },
+      },
+      identity,
+    );
+    expect(next.rows.map(identity)).toEqual(["OPERATION:7", "VIREMENT:7"]);
+  });
+});

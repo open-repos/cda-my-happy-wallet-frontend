@@ -28,6 +28,8 @@ type Settled<T> =
 export const usePagedCollection = <T extends { id: number }>(
   load: Load<T>,
   loadedMessage: (count: number) => string,
+  /** Identité stable d'une ligne ; à défaut, son `id`. */
+  identity?: (row: T) => string | number,
 ) => {
   const [settled, setSettled] = useState<Settled<T> | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -38,28 +40,30 @@ export const usePagedCollection = <T extends { id: number }>(
   const readFirstPage = useCallback(
     (quiet: boolean) => {
       const request = ++latest.current;
-      load(null).then(
+      const done = load(null).then(
         (page) => {
-          if (request !== latest.current) return;
+          if (request !== latest.current) return true;
           setPagingError(false);
           setSettled({ load, status: "success", ...firstPage(page) });
+          return true;
         },
         () => {
-          if (request !== latest.current) return;
+          if (request !== latest.current) return false;
           setSettled((current) =>
             quiet && current?.load === load && current.status === "success"
               ? current
               : { load, status: "error" },
           );
+          return false;
         },
       );
-      return request;
+      return { request, done };
     },
     [load],
   );
 
   useEffect(() => {
-    const request = readFirstPage(false);
+    const { request } = readFirstPage(false);
     return () => {
       if (request === latest.current) latest.current += 1;
     };
@@ -98,7 +102,7 @@ export const usePagedCollection = <T extends { id: number }>(
       if (isRepeatedCursor(success)) throw new Error("Repeated cursor");
       const page = await load(success.cursor);
       if (request !== latest.current) return;
-      const next = appendPage(success, page);
+      const next = appendPage(success, page, identity);
       setSettled({ ...success, ...next });
       AccessibilityInfo.announceForAccessibility(
         loadedMessage(next.rows.length),
@@ -108,7 +112,7 @@ export const usePagedCollection = <T extends { id: number }>(
     } finally {
       setPaging(false);
     }
-  }, [load, loadedMessage, paging, success]);
+  }, [identity, load, loadedMessage, paging, success]);
 
   const retry = useCallback(() => {
     setSettled(null);
@@ -123,5 +127,7 @@ export const usePagedCollection = <T extends { id: number }>(
     pagingError,
     loadMore: () => void loadMore(),
     retry,
+    /** Relit la première page sans masquer la liste ; `false` si échec. */
+    reload: () => readFirstPage(true).done,
   };
 };

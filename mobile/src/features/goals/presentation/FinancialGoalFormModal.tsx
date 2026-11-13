@@ -74,6 +74,8 @@ export const FinancialGoalFormModal = ({
   onDelete,
   onSave,
 }: FinancialGoalFormModalProps) => {
+  // Objectif rattaché au Coffre (#419) : son épargne est le solde du compte.
+  const linked = goal?.savingsAccountId != null;
   const [draft, setDraft] = useState(() => createDraft(goal));
   const [errors, setErrors] = useState<GoalDraftErrors>({});
   // Confirmation dans le formulaire : `Alert.alert` est sans effet sur le Web.
@@ -143,7 +145,7 @@ export const FinancialGoalFormModal = ({
                   <Text style={styles.label}>{label} en euros</Text>
                   <TextInput
                     accessibilityLabel={`${label} en euros`}
-                    editable={!isSaving}
+                    editable={!isSaving && !(linked && key === "savedAmount")}
                     keyboardType="decimal-pad"
                     onChangeText={(value) => update(key, value)}
                     placeholder={placeholder}
@@ -153,6 +155,12 @@ export const FinancialGoalFormModal = ({
                   {errors[key] ? (
                     <Text accessibilityLiveRegion="polite" style={styles.error}>
                       {errors[key]}
+                    </Text>
+                  ) : null}
+                  {linked && key === "savedAmount" ? (
+                    <Text style={styles.hint}>
+                      Cette épargne suit le solde du compte rattaché dans le
+                      Coffre.
                     </Text>
                   ) : null}
                 </View>
@@ -320,6 +328,11 @@ const styles = StyleSheet.create({
   },
   error: {
     color: colors.statusErrorText,
+    fontSize: primitives.fontSize.sm,
+    marginTop: primitives.space["1"],
+  },
+  hint: {
+    color: colors.textSecondary,
     fontSize: primitives.fontSize.sm,
     marginTop: primitives.space["1"],
   },
