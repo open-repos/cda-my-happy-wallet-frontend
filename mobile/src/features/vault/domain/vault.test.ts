@@ -241,6 +241,7 @@ describe("vault texts", () => {
     expect(savingsMovementLabels(deposit)).toEqual({
       title: "Virement manuel",
       kind: "Dépôt",
+      monthEnd: null,
     });
     expect(signedMovementAmount(deposit)).toBe(25000);
     const correction = parseSavingsMovement({
@@ -253,7 +254,17 @@ describe("vault texts", () => {
     expect(savingsMovementLabels(correction)).toEqual({
       title: "Correction : épargne de fin de mois",
       kind: "Retrait",
+      monthEnd: "Décision de fin de mois · révision 2 · Compensation",
     });
+    expect(
+      savingsMovementLabels(
+        parseSavingsMovement({
+          ...savingsMovement(),
+          reason: "MONTH_END",
+          monthEndRevision: 1,
+        }),
+      ).monthEnd,
+    ).toBe("Décision de fin de mois · révision 1");
     expect(signedMovementAmount(correction)).toBe(-25000);
   });
 

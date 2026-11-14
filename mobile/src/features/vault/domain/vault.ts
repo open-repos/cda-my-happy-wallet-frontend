@@ -358,6 +358,13 @@ export const savingsMovementLabels = (movement: SavingsMovement) => ({
     ? `Correction : ${REASON_LABELS[movement.reason].toLowerCase()}`
     : REASON_LABELS[movement.reason],
   kind: movement.direction === "TO_SAVINGS" ? "Dépôt" : "Retrait",
+  // Mouvement d'une décision de fin de mois (#420) : révision et compensation.
+  monthEnd:
+    movement.monthEndRevision === null
+      ? null
+      : `Décision de fin de mois · révision ${movement.monthEndRevision}${
+          movement.isCompensation ? " · Compensation" : ""
+        }`,
 });
 
 export const signedMovementAmount = (movement: SavingsMovement) =>

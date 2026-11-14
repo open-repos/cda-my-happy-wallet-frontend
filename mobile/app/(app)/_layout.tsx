@@ -117,6 +117,7 @@ export default function AppLayout() {
           <Tabs.Screen name="envelope" options={{ href: null }} />
           <Tabs.Screen name="vault" options={{ href: null }} />
           <Tabs.Screen name="vault-account" options={{ href: null }} />
+          <Tabs.Screen name="month-end" options={{ href: null }} />
         </Tabs>
       </QuickAddProvider>
     </SimulationProvider>

@@ -1,4 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { usePathname } from "expo-router";
 import {
   createContext,
   ReactNode,
@@ -54,9 +55,9 @@ import {
 } from "@/src/features/quick-add/application/QuickAddWriter";
 import { useSimulation } from "@/src/features/simulation/presentation/SimulationContext";
 import {
-  FAB_MAX_WIDTH,
   FAB_OFFSET,
   FAB_SIZE,
+  showsFab,
 } from "@/src/features/quick-add/presentation/fabLayout";
 import { potentialMinStartDate } from "@/src/features/simulation/domain/potential";
 
@@ -90,6 +91,7 @@ export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
   const { httpClient } = useAuth();
   const simulation = useSimulation();
   const { width } = useWindowDimensions();
+  const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const [calendarDate, setCalendarDate] = useState<string | null>(null),
     [panel, setPanel] = useState<Panel | null>(null),
@@ -213,7 +215,7 @@ export const QuickAddProvider = ({ children }: { children: ReactNode }) => {
             </Pressable>
           </View>
         ) : null}
-        {width < FAB_MAX_WIDTH && !keyboard ? (
+        {showsFab({ width, keyboard, pathname }) ? (
           <Pressable
             ref={fab}
             accessibilityLabel="Ajouter une opération ou un événement"

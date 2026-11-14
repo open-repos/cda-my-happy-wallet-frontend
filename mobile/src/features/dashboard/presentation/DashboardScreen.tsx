@@ -25,6 +25,8 @@ import { HttpBudgetSummaryGateway } from "@/src/features/budget/infrastructure/H
 import { BudgetSummaryCards } from "@/src/features/budget/presentation/BudgetSummaryCards";
 import { SavingsCapacitySection } from "@/src/features/savings/presentation/SavingsCapacitySection";
 import { EnvelopeSection } from "@/src/features/envelopes/presentation/EnvelopeSection";
+import { MonthEndHomeSection } from "@/src/features/month-end/presentation/MonthEndHomeSection";
+import { useHomeMonthEnd } from "@/src/features/month-end/presentation/useMonthEnd";
 
 const colors = themes.light.color;
 
@@ -72,6 +74,8 @@ export const DashboardScreen = () => {
     [httpClient],
   );
   const { operationCount, retry, status } = useFixedBudget(gateway);
+  // Décision du dernier mois clos (#420) : bandeau et détail du report.
+  const monthEnd = useHomeMonthEnd();
   const email =
     state.status === "authenticated" || state.status === "refreshing"
       ? state.user.email
@@ -128,6 +132,11 @@ export const DashboardScreen = () => {
           </Text>
         </View>
 
+        <MonthEndHomeSection
+          onPostpone={monthEnd.postpone}
+          state={monthEnd.state}
+        />
+
         {status === "loading" ? (
           <FeedbackState
             description="Vos charges et revenus sont en cours de chargement."
@@ -161,7 +170,10 @@ export const DashboardScreen = () => {
         ) : null}
 
         {status === "success" && operationCount > 0 ? (
-          <BudgetSummaryCards gateway={summaryGateway} />
+          <BudgetSummaryCards
+            carryDecision={monthEnd.decision}
+            gateway={summaryGateway}
+          />
         ) : null}
 
         <DashboardCharts gateway={chartGateway} />
