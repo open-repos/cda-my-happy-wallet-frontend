@@ -198,6 +198,12 @@ export const DashboardScreen = () => {
             onPress={() => router.push("/(app)/analyses")}
           />
           <ActionCard
+            description="Retrouvez votre épargne et votre budget disponible."
+            icon="wallet-outline"
+            label="Coffre"
+            onPress={() => router.push("/(app)/vault")}
+          />
+          <ActionCard
             description="Préparez vos projets et suivez leur avancement."
             icon="radio-button-on-outline"
             label="Objectifs"

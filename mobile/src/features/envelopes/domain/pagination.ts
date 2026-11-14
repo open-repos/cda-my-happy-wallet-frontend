@@ -20,15 +20,20 @@ export const isRepeatedCursor = <T>(state: PagedRows<T>) =>
 /**
  * Ajoute la page lue avec `state.cursor`, comme le Web (#314) : le curseur
  * n'est mémorisé qu'après ce succès, et les lignes déjà présentes (même
- * `id`) ne sont pas dupliquées.
+ * `id`) ne sont pas dupliquées. `identity` distingue des lignes de sources
+ * différentes qui partagent un `id` (compte courant du Coffre, #419).
  */
 export const appendPage = <T extends { id: number }>(
   state: PagedRows<T>,
   page: CollectionPage<T>,
+  identity: (row: T) => string | number = (row) => row.id,
 ): PagedRows<T> => {
-  const known = new Set(state.rows.map((row) => row.id));
+  const known = new Set(state.rows.map(identity));
   return {
-    rows: [...state.rows, ...page.data.filter((row) => !known.has(row.id))],
+    rows: [
+      ...state.rows,
+      ...page.data.filter((row) => !known.has(identity(row))),
+    ],
     cursor: page.meta.hasNext ? page.meta.nextCursor : null,
     seen:
       state.cursor === null

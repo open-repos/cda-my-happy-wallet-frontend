@@ -39,7 +39,10 @@ const draft = (overrides: Partial<GoalDraft> = {}): GoalDraft => ({
 
 describe("financial goal domain (#226)", () => {
   it("keeps only the public goal fields and its backend forecast", () => {
-    expect(parseFinancialGoal({ ...goal, ownerId: 9 })).toEqual(goal);
+    expect(parseFinancialGoal({ ...goal, ownerId: 9 })).toEqual({
+      ...goal,
+      savingsAccountId: null,
+    });
     expect(
       parseFinancialGoal({
         ...goal,
@@ -139,5 +142,17 @@ describe("financial goal domain (#226)", () => {
     expect(toGoalPayload(draft({ targetDate: "2027-06-30" })).targetDate).toBe(
       "2027-06-30",
     );
+  });
+});
+
+describe("goal linked to a savings account (#419)", () => {
+  it("reads the account of a linked goal and null otherwise", () => {
+    expect(parseFinancialGoal(goal).savingsAccountId).toBeNull();
+    expect(
+      parseFinancialGoal({ ...goal, savingsAccountId: 12 }).savingsAccountId,
+    ).toBe(12);
+    expect(() =>
+      parseFinancialGoal({ ...goal, savingsAccountId: "12" }),
+    ).toThrow();
   });
 });

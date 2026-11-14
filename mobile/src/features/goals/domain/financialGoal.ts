@@ -36,6 +36,8 @@ export interface FinancialGoal {
   monthlyContribution: string;
   currency: string;
   targetDate: string | null;
+  /** Compte du Coffre rattaché (#419) : l'épargne suit alors son solde. */
+  savingsAccountId: number | null;
   forecast: GoalForecast;
 }
 
@@ -113,6 +115,11 @@ export const parseFinancialGoal = (value: unknown): FinancialGoal => {
     !(
       value.targetDate === null ||
       (typeof value.targetDate === "string" && isCalendarDate(value.targetDate))
+    ) ||
+    !(
+      value.savingsAccountId == null ||
+      (Number.isSafeInteger(value.savingsAccountId) &&
+        Number(value.savingsAccountId) > 0)
     )
   ) {
     throw new Error("Invalid goal response");
@@ -125,6 +132,8 @@ export const parseFinancialGoal = (value: unknown): FinancialGoal => {
     monthlyContribution: value.monthlyContribution,
     currency: value.currency,
     targetDate: value.targetDate,
+    savingsAccountId:
+      value.savingsAccountId == null ? null : Number(value.savingsAccountId),
     forecast: parseForecast(value.forecast),
   };
 };
