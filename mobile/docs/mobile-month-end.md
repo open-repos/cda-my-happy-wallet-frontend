@@ -1,11 +1,11 @@
-# Décision de fin de mois mobile (#420)
+# Décision de fin de mois mobile (#420, #425)
 
 Équivalent natif du cœur de la décision Web (#396,
 [`docs/web-month-end-decision.md`](../../docs/web-month-end-decision.md)),
 enfant de #397. Contrat : `month-end-decisions.md` du backend (#184). Maquette
 `proposals/397-mobile-vault-month-end/` validée par le propriétaire le
 11 novembre 2026. Les versements mensuels à confirmer, le Calendrier et la
-cloche « À traiter » sont livrés par #425.
+cloche « À traiter » sont livrés par #425 (section dédiée ci-dessous).
 
 ## Formule
 
@@ -82,11 +82,36 @@ exceptionnelle de fin de mois ». Les Analyses nomment la catégorie système
 
 - Unitaires : `src/features/month-end/**/*.test.ts` (contrat, trois exemples,
   saisie, clés, détail du calcul, passerelle HTTP, « Plus tard »).
-- Visuels : `test/visual/month-end.spec.ts` sur téléphone, tablette et
+- Visuels : `test/visual/month-end.spec.ts` et
+  `test/visual/pending-items.spec.ts` (#425) sur téléphone, tablette et
   bureau (bandeau, décider, décision prise, correction, déficit, réponse
   incertaine, conflit de révision, mois courant, texte ×1,3).
 
+## Versements à confirmer, Calendrier et cloche (#425)
+
+- **Versements mensuels** : `GET /savings-occurrences/pending` (mois courant,
+  EUR, toutes les pages, identité compte + mois) liste les versements prévus
+  des objectifs rattachés. « Confirmer le virement » et « Ne pas verser »
+  envoient `PUT /savings-accounts/:id/occurrences/:mois` avec `CONFIRMED` ou
+  `CANCELED` ; le serveur rejoue la même décision en cas de répétition, la
+  reprise d’une réponse incertaine est donc sans doublon. La liste est relue
+  après l’écriture et l’élément traité disparaît ; `OCCURRENCE_ALREADY_RESOLVED`
+  relit aussi la liste. Les textes sont ceux du Web.
+- **Coffre** : carte « À confirmer » sous le budget disponible ; une
+  confirmation relit aussi comptes et budget disponible.
+- **Calendrier** : carte « À traiter » avec les versements du mois courant ;
+  pour un mois clos, carte « Résumé du mois » (résultat, report entrant) et la
+  décision du résumé (`monthEndDecision`, absent tant que rien n’est décidé),
+  avec « Décider » ou « Voir ou modifier la décision ». `?mois=AAAA-MM` ouvre
+  un mois passé ou courant, par exemple depuis « Voir le résumé d’octobre » de
+  l’écran « Décider » ; le paramètre est ensuite retiré de la route.
+- **Cloche** (en-tête de l’Accueil) : nom accessible « À traiter : N
+  éléments », feuille listant la décision en attente ou à revoir puis les
+  versements ; chaque entrée ouvre son écran. Aucune API dédiée, ni push, ni
+  état « lu ». Une lecture en échec n’affiche rien sur l’Accueil ; la feuille
+  indique « Certains éléments n’ont pas pu être vérifiés » avec « Réessayer ».
+
 ## Hors périmètre
 
-Versements à confirmer, Calendrier et cloche (#425) ; centre de notifications
-complet (#414) ; annonces vocales (V2) ; champ de montant avec calcul (#424).
+Centre de notifications complet (#414) ; annonces vocales (V2) ; champ de
+montant avec calcul (#424).

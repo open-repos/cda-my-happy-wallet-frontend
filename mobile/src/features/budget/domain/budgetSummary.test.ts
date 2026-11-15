@@ -48,6 +48,35 @@ describe("parseBudgetSummary", () => {
     expect(summary).not.toHaveProperty("ownerId");
   });
 
+  it("reads the month-end decision of a decided closed month (#425)", () => {
+    const decision = {
+      month: "2026-10",
+      currency: "EUR",
+      status: "DECIDED",
+      revision: 1,
+      savings: [{ accountId: 12, amountMinorUnits: 10000 }],
+      coverage: [],
+      exceptionalIncomeMinorUnits: 0,
+      savingsMinorUnits: 10000,
+      coverageMinorUnits: 0,
+      referenceResultMinorUnits: 15000,
+      resultBeforeDecisionMinorUnits: 15000,
+      carryMinorUnits: 5000,
+      requiresReview: false,
+      correctionDeltaMinorUnits: 0,
+    };
+    expect(parseBudgetSummary(raw()).monthEndDecision).toBeNull();
+    expect(
+      parseBudgetSummary(raw({ status: "CLOSED", monthEndDecision: decision }))
+        .monthEndDecision?.carryMinorUnits,
+    ).toBe(5000);
+    expect(() =>
+      parseBudgetSummary(
+        raw({ monthEndDecision: { ...decision, status: "X" } }),
+      ),
+    ).toThrow();
+  });
+
   it.each([
     raw({ month: "2026-13" }),
     raw({ realRemaining: 1337.5 }),

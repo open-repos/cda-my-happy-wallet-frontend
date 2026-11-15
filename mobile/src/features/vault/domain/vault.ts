@@ -402,6 +402,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   IDEMPOTENCY_CONFLICT:
     "Cette tentative correspond à un autre virement. Vérifiez l’historique avant toute nouvelle opération.",
   BALANCE_LIMIT: "Le solde maximal autorisé serait dépassé.",
+  OCCURRENCE_ALREADY_RESOLVED:
+    "Ce versement a déjà été traité. La liste est actualisée.",
   NOT_FOUND:
     "Ce compte ou cet objectif n’est plus disponible. Actualisez le Coffre.",
   INVALID_DATE: "Choisissez une date valide, au plus tard aujourd’hui.",

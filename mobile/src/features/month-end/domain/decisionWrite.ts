@@ -83,28 +83,35 @@ export const describeDecisionFailure = (
 export const MAX_ACCOUNT_PAGES = 10;
 
 /**
- * Tous les comptes du Coffre (une décision porte au plus 100 allocations) :
- * curseur opaque suivi, lignes dédoublonnées, curseur répété refusé.
+ * Toutes les pages d'une collection bornée : curseur opaque suivi, lignes
+ * dédoublonnées par leur identité, curseur répété refusé, dix pages au plus.
  */
-export const loadAllSavingsAccounts = async <T extends { id: number }>(
+export const loadAllPages = async <T>(
   loadPage: (cursor: string | null) => Promise<CollectionPage<T>>,
+  identity: (row: T) => string | number,
 ): Promise<T[]> => {
   const rows: T[] = [];
-  const ids = new Set<number>();
+  const seen = new Set<string | number>();
   const cursors = new Set<string>();
   let cursor: string | null = null;
   for (let page = 0; page < MAX_ACCOUNT_PAGES; page += 1) {
     const result: CollectionPage<T> = await loadPage(cursor);
     for (const row of result.data) {
-      if (!ids.has(row.id)) {
-        ids.add(row.id);
+      const key = identity(row);
+      if (!seen.has(key)) {
+        seen.add(key);
         rows.push(row);
       }
     }
     cursor = result.meta.hasNext ? result.meta.nextCursor : null;
     if (cursor === null) return rows;
-    if (cursors.has(cursor)) throw new Error("Repeated savings cursor");
+    if (cursors.has(cursor)) throw new Error("Repeated cursor");
     cursors.add(cursor);
   }
-  throw new Error("Too many savings account pages");
+  throw new Error("Too many pages");
 };
+
+/** Tous les comptes du Coffre (une décision porte au plus 100 allocations). */
+export const loadAllSavingsAccounts = <T extends { id: number }>(
+  loadPage: (cursor: string | null) => Promise<CollectionPage<T>>,
+): Promise<T[]> => loadAllPages(loadPage, (row) => row.id);

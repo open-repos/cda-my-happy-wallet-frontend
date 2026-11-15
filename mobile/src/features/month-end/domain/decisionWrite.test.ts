@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   createDecisionKey,
   describeDecisionFailure,
+  loadAllPages,
   loadAllSavingsAccounts,
   nextDecisionAttempt,
   settleDecisionAttempt,
@@ -82,6 +83,33 @@ describe("decision attempts (#420)", () => {
     expect(describeDecisionFailure({ status: "uncertain" })).toBe(
       "Le résultat de l’enregistrement est incertain. Vos montants sont conservés : vérifiez la décision, puis reprenez la même tentative, sans doublon.",
     );
+  });
+});
+
+describe("loadAllPages", () => {
+  it("removes rows already seen with their own identity", async () => {
+    const load = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: [{ accountId: 1, month: "2026-11" }],
+        meta: { limit: 20, hasNext: true, nextCursor: "c1" },
+      })
+      .mockResolvedValueOnce({
+        data: [
+          { accountId: 1, month: "2026-11" },
+          { accountId: 2, month: "2026-11" },
+        ],
+        meta: { limit: 20, hasNext: false, nextCursor: null },
+      });
+    expect(
+      await loadAllPages<{ accountId: number; month: string }>(
+        load,
+        (row) => `${row.accountId}:${row.month}`,
+      ),
+    ).toEqual([
+      { accountId: 1, month: "2026-11" },
+      { accountId: 2, month: "2026-11" },
+    ]);
   });
 });
 

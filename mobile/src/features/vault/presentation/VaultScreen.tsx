@@ -32,6 +32,8 @@ import {
   VaultDialogRequest,
 } from "@/src/features/vault/presentation/VaultDialog";
 import { VaultGoal } from "@/src/features/vault/presentation/VaultGoal";
+import { SavingsOccurrenceList } from "@/src/features/vault/presentation/SavingsOccurrenceList";
+import { useSavingsOccurrences } from "@/src/features/vault/presentation/useSavingsOccurrences";
 import {
   VAULT_TWO_COLUMNS,
   vaultColors as colors,
@@ -89,6 +91,8 @@ export const VaultScreen = () => {
       ).every(Boolean),
     [reloadAccounts, reloadCurrent, reloadGoals],
   );
+  // Versements mensuels à confirmer (#425) : une confirmation relit le Coffre.
+  const occurrences = useSavingsOccurrences(refresh);
 
   const open = (request: VaultDialogRequest) => {
     setNotice(null);
@@ -279,6 +283,8 @@ export const VaultScreen = () => {
             />
           </View>
         ) : null}
+
+        <SavingsOccurrenceList occurrences={occurrences} title="À confirmer" />
 
         <Text accessibilityRole="header" style={styles.sectionTitle}>
           Mes comptes d’épargne

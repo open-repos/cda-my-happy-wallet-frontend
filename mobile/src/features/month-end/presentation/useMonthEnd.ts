@@ -59,6 +59,9 @@ export const useHomeMonthEnd = () => {
     decision,
     state: homeMonthEnd(decision, postponed),
     postpone,
+    /** Lecture en échec : la cloche le signale sans erreur sur l'écran. */
+    failed: read.status === "error",
+    reload: read.retry,
   };
 };
 

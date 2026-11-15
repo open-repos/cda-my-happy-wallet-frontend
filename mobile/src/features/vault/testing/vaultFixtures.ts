@@ -53,3 +53,14 @@ export const vaultPage = (
   data,
   meta: { limit: 20, hasNext: nextCursor !== null, nextCursor },
 });
+
+/** Versement mensuel prévu d'un objectif rattaché (`/savings-occurrences/pending`). */
+export const savingsOccurrence = () => ({
+  accountId: 1,
+  goalId: 3,
+  month: "2026-11",
+  operationDate: "2026-11-01",
+  title: "Voyage au Japon",
+  amountMinorUnits: 12000,
+  currency: "EUR",
+});
