@@ -128,6 +128,13 @@ describe("analytics domain (#215)", () => {
     expect(bucketLabel({ key: "9", label: null }, "category")).toBe(
       "Catégorie supprimée",
     );
+    // Catégorie système 0 du backend #184 : jamais « supprimée ».
+    expect(bucketLabel({ key: "0", label: null }, "category")).toBe(
+      "Entrée exceptionnelle",
+    );
+    expect(
+      bucketLabel({ key: "0", label: "Entrée exceptionnelle" }, "category"),
+    ).toBe("Entrée exceptionnelle");
     expect(metricCents(bucket("1"), "net")).toBe(-4250);
     expect(metricCents(bucket("1"), "expense")).toBe(4250);
   });

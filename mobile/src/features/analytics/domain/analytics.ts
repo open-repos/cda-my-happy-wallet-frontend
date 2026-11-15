@@ -232,6 +232,9 @@ const monthLabel = new Intl.DateTimeFormat("fr-FR", {
   timeZone: "UTC",
 });
 
+/** Identifiant réservé de la catégorie « Entrée exceptionnelle ». */
+export const EXCEPTIONAL_INCOME_CATEGORY = "0";
+
 /** Libellé français d'un seau, identique au Web. */
 export const bucketLabel = (
   { key, label }: Pick<AnalyticsBucket, "key" | "label">,
@@ -245,6 +248,8 @@ export const bucketLabel = (
     case "month":
       return monthLabel.format(new Date(toTime(`${key}-01`)));
     default:
+      // Catégorie système 0 du backend #184, sans couleur propre.
+      if (key === EXCEPTIONAL_INCOME_CATEGORY) return "Entrée exceptionnelle";
       return label ?? "Catégorie supprimée";
   }
 };

@@ -119,7 +119,11 @@ const SavingsMovements = ({
         return {
           key: `${row.id}`,
           title: labels.title,
-          detail: `${labels.kind} · ${longDate(row.operationDate)}`,
+          detail: [
+            labels.kind,
+            longDate(row.operationDate),
+            ...(labels.monthEnd === null ? [] : [labels.monthEnd]),
+          ].join(" · "),
           amount: formatVaultMoney(
             signedMovementAmount(row),
             row.currency,

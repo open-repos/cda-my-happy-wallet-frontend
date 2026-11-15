@@ -30,3 +30,19 @@ export const fabClearance = ({
   const fabTop = FAB_OFFSET + insetBottom + FAB_SIZE - tabBarHeight;
   return Math.max(base, fabTop + FAB_GAP);
 };
+
+/**
+ * Écrans dont les actions sont collées en bas (« Décider », #420) : le
+ * bouton les recouvrirait, il n'y est donc pas affiché.
+ */
+const FAB_HIDDEN_PATHS = new Set(["/month-end"]);
+
+export const showsFab = ({
+  width,
+  keyboard,
+  pathname,
+}: {
+  width: number;
+  keyboard: boolean;
+  pathname: string;
+}) => width < FAB_MAX_WIDTH && !keyboard && !FAB_HIDDEN_PATHS.has(pathname);

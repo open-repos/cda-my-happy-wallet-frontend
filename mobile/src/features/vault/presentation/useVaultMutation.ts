@@ -14,7 +14,11 @@ import {
  * `refresh` relit l'écran courant ; les autres écrans montés (accueil,
  * listes paginées) sont relus par l'invalidation partagée.
  */
-export const useVaultMutation = (refresh: () => Promise<boolean>) => {
+export const useVaultMutation = (
+  refresh: () => Promise<boolean>,
+  // Messages d'échec propres à l'écriture (décision de fin de mois, #420).
+  describeFailure: typeof describeWriteFailure = describeWriteFailure,
+) => {
   const { invalidate } = useSimulation();
   const writing = useRef(false);
   const [busy, setBusy] = useState(false);
@@ -34,7 +38,7 @@ export const useVaultMutation = (refresh: () => Promise<boolean>) => {
         const outcome = await runVaultWrite(write, refresh);
         const message =
           outcome.status !== "saved"
-            ? describeWriteFailure(outcome)
+            ? describeFailure(outcome)
             : outcome.refreshed
               ? success
               : UNREFRESHED_MESSAGE;
@@ -47,7 +51,7 @@ export const useVaultMutation = (refresh: () => Promise<boolean>) => {
         setBusy(false);
       }
     },
-    [invalidate, refresh],
+    [describeFailure, invalidate, refresh],
   );
 
   return { busy, failure, run, clear: () => setFailure(null) };

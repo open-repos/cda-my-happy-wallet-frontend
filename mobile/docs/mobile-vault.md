@@ -5,8 +5,9 @@
 Le mobile consulte le budget disponible du compte courant et gère les comptes
 d'épargne. Il ne calcule aucun solde : tout montant affiché vient du serveur.
 
-La décision de fin de mois, les versements mensuels à confirmer et la cloche
-relèvent de #420.
+La décision de fin de mois relève de #420
+([`mobile-month-end.md`](mobile-month-end.md)) ; les versements mensuels à
+confirmer, le Calendrier et la cloche relèvent de #425.
 
 ## Écrans
 

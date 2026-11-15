@@ -60,7 +60,8 @@ const paged = (params: Record<string, string>, cursor: Cursor) =>
     ...(cursor ? { cursor } : {}),
   }).toString();
 
-const refusal = async (response: Response) => {
+/** Refus d'une réponse non 2xx, partagé par les passerelles du Coffre. */
+export const requestRefusal = async (response: Response) => {
   const body: unknown = await response.json().catch(() => null);
   const code = (body as { error?: { details?: { code?: unknown } } } | null)
     ?.error?.details?.code;
@@ -145,7 +146,7 @@ export class HttpVaultGateway implements VaultGateway {
 
   private async get(path: string): Promise<unknown> {
     const response = await this.httpClient.request(path);
-    if (!response.ok) throw await refusal(response);
+    if (!response.ok) throw await requestRefusal(response);
     return response.json();
   }
 
@@ -166,6 +167,6 @@ export class HttpVaultGateway implements VaultGateway {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    if (!response.ok) throw await refusal(response);
+    if (!response.ok) throw await requestRefusal(response);
   }
 }
