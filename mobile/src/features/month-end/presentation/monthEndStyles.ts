@@ -55,6 +55,10 @@ export const monthEndStyles = StyleSheet.create({
     backgroundColor: colors.statusWarningSurface,
     color: colors.statusWarningText,
   },
+  tagNeutral: {
+    backgroundColor: colors.actionSecondaryBackground,
+    color: colors.textPrimary,
+  },
   tagOk: {
     backgroundColor: colors.statusSuccessSurface,
     color: colors.statusSuccessText,
@@ -174,6 +178,23 @@ export const monthEndStyles = StyleSheet.create({
     padding: primitives.space["5"],
     width: "100%",
   },
+  badge: {
+    alignItems: "center",
+    backgroundColor: colors.actionPrimaryBackground,
+    borderRadius: primitives.radius.pill,
+    minWidth: primitives.space["5"],
+    paddingHorizontal: primitives.space["1"],
+    position: "absolute",
+    right: primitives.space["1"],
+    top: primitives.space["1"],
+  },
+  badgeText: {
+    color: colors.actionPrimaryText,
+    fontSize: primitives.fontSize.xs,
+    fontWeight: semibold,
+  },
+  sheetScroll: { flexShrink: 1 },
+  sheetList: { gap: primitives.space["3"] },
   iconButton: {
     alignItems: "center",
     height: semantic.size.controlMinHeight,

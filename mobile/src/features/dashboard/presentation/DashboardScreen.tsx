@@ -27,6 +27,9 @@ import { SavingsCapacitySection } from "@/src/features/savings/presentation/Savi
 import { EnvelopeSection } from "@/src/features/envelopes/presentation/EnvelopeSection";
 import { MonthEndHomeSection } from "@/src/features/month-end/presentation/MonthEndHomeSection";
 import { useHomeMonthEnd } from "@/src/features/month-end/presentation/useMonthEnd";
+import { attentionItems } from "@/src/features/month-end/domain/pendingItems";
+import { NotificationBell } from "@/src/features/month-end/presentation/NotificationBell";
+import { useSavingsOccurrences } from "@/src/features/vault/presentation/useSavingsOccurrences";
 
 const colors = themes.light.color;
 
@@ -76,6 +79,9 @@ export const DashboardScreen = () => {
   const { operationCount, retry, status } = useFixedBudget(gateway);
   // Décision du dernier mois clos (#420) : bandeau et détail du report.
   const monthEnd = useHomeMonthEnd();
+  // Cloche « À traiter » (#425) : décision et versements à confirmer.
+  const occurrences = useSavingsOccurrences();
+  const pendingItems = attentionItems(monthEnd.decision, occurrences.items);
   const email =
     state.status === "authenticated" || state.status === "refreshing"
       ? state.user.email
@@ -105,6 +111,14 @@ export const DashboardScreen = () => {
               </Text>
             </View>
           </View>
+          <NotificationBell
+            incomplete={monthEnd.failed || occurrences.failed}
+            items={pendingItems}
+            onRetry={() => {
+              monthEnd.reload();
+              void occurrences.reload();
+            }}
+          />
           <Pressable
             accessibilityLabel="Se déconnecter"
             accessibilityRole="button"

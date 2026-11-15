@@ -127,6 +127,7 @@ export const vaultStyles = StyleSheet.create({
     gap: primitives.space["3"],
   },
   column: { flexBasis: 0, flexGrow: 1, gap: primitives.space["3"] },
+  stack: { gap: primitives.space["2"] },
   half: { width: "48.5%" },
   full: { width: "100%" },
   movement: {

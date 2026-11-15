@@ -9,6 +9,7 @@ import {
   currentMovement,
   savingsAccount,
   savingsMovement,
+  savingsOccurrence,
   vaultPage,
 } from "@/src/features/vault/testing/vaultFixtures";
 
@@ -201,6 +202,53 @@ describe("HttpVaultGateway writes (#419)", () => {
     expect(failure).toMatchObject({
       status: 409,
       code: "INSUFFICIENT_SAVINGS",
+    });
+  });
+});
+
+describe("HttpVaultGateway planned payments (#425)", () => {
+  it("pages the planned payments of a month and currency", async () => {
+    const http = client(
+      json(vaultPage([savingsOccurrence()], "p2")),
+      json(vaultPage([])),
+    );
+    const gateway = new HttpVaultGateway(http);
+
+    const first = await gateway.pendingOccurrences("2026-11", "EUR", null);
+    await gateway.pendingOccurrences("2026-11", "EUR", "p2");
+
+    expect(first.data[0].title).toBe("Voyage au Japon");
+    expect(http.request).toHaveBeenNthCalledWith(
+      1,
+      "/savings-occurrences/pending?month=2026-11&currency=EUR&limit=20",
+    );
+    expect(http.request).toHaveBeenNthCalledWith(
+      2,
+      "/savings-occurrences/pending?month=2026-11&currency=EUR&limit=20&cursor=p2",
+    );
+  });
+
+  it("confirms or skips one month of an account", async () => {
+    const http = client(
+      json({ data: { status: "CONFIRMED", movement: savingsMovement() } }),
+      json(
+        { error: { details: { code: "OCCURRENCE_ALREADY_RESOLVED" } } },
+        409,
+      ),
+    );
+    const gateway = new HttpVaultGateway(http);
+
+    await gateway.resolveOccurrence(1, "2026-11", "CONFIRMED");
+    const [path, init] = http.request.mock.calls[0];
+    expect(path).toBe("/savings-accounts/1/occurrences/2026-11");
+    expect(init?.method).toBe("PUT");
+    expect(JSON.parse(String(init?.body))).toEqual({ status: "CONFIRMED" });
+
+    await expect(
+      gateway.resolveOccurrence(1, "2026-11", "CANCELED"),
+    ).rejects.toMatchObject({
+      status: 409,
+      code: "OCCURRENCE_ALREADY_RESOLVED",
     });
   });
 });

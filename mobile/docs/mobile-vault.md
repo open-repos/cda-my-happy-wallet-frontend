@@ -7,7 +7,8 @@ d'épargne. Il ne calcule aucun solde : tout montant affiché vient du serveur.
 
 La décision de fin de mois relève de #420
 ([`mobile-month-end.md`](mobile-month-end.md)) ; les versements mensuels à
-confirmer, le Calendrier et la cloche relèvent de #425.
+confirmer (carte « À confirmer »), le Calendrier et la cloche relèvent de
+#425, documentés au même endroit.
 
 ## Écrans
 

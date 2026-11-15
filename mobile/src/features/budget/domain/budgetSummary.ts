@@ -1,3 +1,8 @@
+import {
+  MonthEndDecision,
+  parseMonthEndDecision,
+} from "@/src/features/month-end/domain/monthEnd";
+
 /**
  * Synthèse budgétaire du mois (`GET /v1/budget-periods/{mois}/summary`,
  * contrat backend `docs/budget-projection-api.md`). Les montants restent des
@@ -40,6 +45,8 @@ export interface BudgetSummary {
   realDailyAllowance: string | null;
   forecast: BudgetForecast | null;
   days: BudgetDay[];
+  /** Décision d'un mois clos décidé (#184) ; `null` sans décision (#425). */
+  monthEndDecision?: MonthEndDecision | null;
 }
 
 export type AmountTone = "positive" | "negative" | "neutral";
@@ -150,6 +157,10 @@ export const parseBudgetSummary = (value: unknown): BudgetSummary => {
     realDailyAllowance: optionalAmount(value.realDailyAllowance),
     forecast: parseForecast(value.forecast),
     days: value.days.map(parseDay),
+    monthEndDecision:
+      value.monthEndDecision === undefined || value.monthEndDecision === null
+        ? null
+        : parseMonthEndDecision(value.monthEndDecision),
   };
 };
 

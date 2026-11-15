@@ -14,6 +14,11 @@ import {
   parseSavingsAccount,
   parseSavingsMovement,
 } from "@/src/features/vault/domain/vault";
+import {
+  OccurrenceStatus,
+  SavingsOccurrence,
+  parseSavingsOccurrence,
+} from "@/src/features/vault/domain/savingsOccurrence";
 
 export interface VaultHttpClient {
   request(path: string, init?: RequestInit): Promise<Response>;
@@ -39,6 +44,17 @@ export interface VaultGateway {
   archive(id: number): Promise<void>;
   linkGoal(id: number, goalId: number): Promise<void>;
   transfer(id: number, attempt: TransferAttempt): Promise<void>;
+  /** Versements mensuels prévus des objectifs rattachés (#425). */
+  pendingOccurrences(
+    month: string,
+    currency: string,
+    cursor: Cursor,
+  ): Promise<CollectionPage<SavingsOccurrence>>;
+  resolveOccurrence(
+    accountId: number,
+    month: string,
+    status: OccurrenceStatus,
+  ): Promise<void>;
 }
 
 /** Refus HTTP ; `code` est le code stable `error.details.code` de l'API. */
@@ -142,6 +158,32 @@ export class HttpVaultGateway implements VaultGateway {
       reason: "MANUAL",
       idempotencyKey: attempt.idempotencyKey,
     });
+  }
+
+  public async pendingOccurrences(
+    month: string,
+    currency: string,
+    cursor: Cursor,
+  ) {
+    return parseCollectionPage(
+      await this.get(
+        `/savings-occurrences/pending?${paged({ month, currency }, cursor)}`,
+      ),
+      parseSavingsOccurrence,
+    );
+  }
+
+  /** Une répétition renvoie la même décision : la reprise est sans doublon. */
+  public resolveOccurrence(
+    accountId: number,
+    month: string,
+    status: OccurrenceStatus,
+  ) {
+    return this.write(
+      "PUT",
+      `/savings-accounts/${accountId}/occurrences/${encodeURIComponent(month)}`,
+      { status },
+    );
   }
 
   private async get(path: string): Promise<unknown> {

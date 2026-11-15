@@ -24,6 +24,7 @@ import {
   isDecidableMonth,
   monthLabel,
   monthName,
+  ofMonth,
   ofMonthLabel,
   planOf,
   previewCarry,
@@ -411,6 +412,16 @@ const DecisionView = ({ month }: { month: string }) => {
               variant="primary"
             />
           )}
+          <Button
+            label={`Voir le résumé ${ofMonth(month)}`}
+            onPress={() =>
+              router.push({
+                pathname: "/(app)/calendar",
+                params: { mois: month },
+              })
+            }
+            style={shared.grow}
+          />
           <Button
             label="Voir le Coffre"
             onPress={() => router.push("/(app)/vault")}

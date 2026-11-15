@@ -1,7 +1,7 @@
 import { ActionButton } from "@/src/design/ActionButton";
 import { useFabClearance } from "@/src/features/quick-add/presentation/useFabClearance";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AccessibilityInfo,
@@ -20,7 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { TAB_SCREEN_EDGES } from "@/src/design/safeArea";
 
-import { semantic, themes } from "@/src/design/tokens";
+import { primitives, semantic, themes } from "@/src/design/tokens";
 import { FeedbackBanner, FeedbackState } from "@/src/design/FeedbackState";
 import { useAuth } from "@/src/features/auth/presentation/AuthProvider";
 import {
@@ -64,12 +64,20 @@ import {
   calendarCountLabel,
 } from "../domain/calendarContent";
 import { useQuickAdd } from "@/src/features/quick-add/presentation/QuickAddProvider";
+import { useClearedRouteParam } from "@/src/navigation/useClearedRouteParam";
+import { closedMonthCard } from "@/src/features/month-end/domain/pendingItems";
+import { ClosedMonthSummary } from "@/src/features/month-end/presentation/ClosedMonthSummary";
+import { SavingsOccurrenceList } from "@/src/features/vault/presentation/SavingsOccurrenceList";
+import { useSavingsOccurrences } from "@/src/features/vault/presentation/useSavingsOccurrences";
+import { VAULT_TWO_COLUMNS } from "@/src/features/vault/presentation/vaultStyles";
 
 /** Calendrier budgétaire du mois : grille, modes, détail du jour, opérations. */
 export const BudgetCalendarScreen = () => {
   // Fin de page dégagée du bouton flottant d’ajout (#407).
   const fabSpace = useFabClearance(40);
-  const { fontScale } = useWindowDimensions();
+  const { fontScale, width } = useWindowDimensions();
+  // Deux colonnes sur tablette, même seuil que le Coffre (#425).
+  const twoColumns = width >= VAULT_TWO_COLUMNS;
   const [gridViewportWidth, setGridViewportWidth] = useState(0);
   const colors = themes[useColorScheme() === "dark" ? "dark" : "light"].color;
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -92,8 +100,32 @@ export const BudgetCalendarScreen = () => {
   const addButton = useRef<View>(null);
   const today = currentParisDate();
   const [month, setMonth] = useState(currentParisMonth());
+  // Versements mensuels à confirmer du mois courant (#425).
+  const occurrences = useSavingsOccurrences();
+  const showsOccurrences =
+    occurrences.items.length > 0 ||
+    occurrences.notice !== null ||
+    occurrences.failure !== null;
   const [mode, setMode] = useState<CalendarMode>("markers");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  // `?mois=AAAA-MM` ouvre un mois passé ou courant, par exemple depuis une
+  // décision de fin de mois (#425) ; jamais un mois futur.
+  const { mois } = useLocalSearchParams<{ mois?: string }>();
+  // Ajusté pendant le rendu (pas d'effet) ; le paramètre est ensuite retiré
+  // pour qu'un même lien rouvre ce mois lors d'une visite suivante.
+  const [seenMois, setSeenMois] = useState<string | undefined>(undefined);
+  if (mois !== seenMois) {
+    setSeenMois(mois);
+    if (
+      typeof mois === "string" &&
+      /^\d{4}-(0[1-9]|1[0-2])$/.test(mois) &&
+      mois <= currentParisMonth()
+    ) {
+      setSelectedDate(null);
+      setMonth(mois);
+    }
+  }
+  useClearedRouteParam("mois", mois);
   const [liveAnnouncement, setLiveAnnouncement] = useState("");
   const announcementRequest = useRef<{ date: string | null } | null>(null);
   const focused = useRef(false);
@@ -127,6 +159,10 @@ export const BudgetCalendarScreen = () => {
     month,
     selectedDate,
   );
+  // Carte du mois clos seulement pour un mois décidable déjà lu (#425).
+  const showsClosedMonth =
+    state.summary?.month === month &&
+    closedMonthCard(month, state.summary.monthEndDecision ?? null) !== null;
 
   const contentGateway = useMemo(
     () => new HttpCalendarContentGateway(httpClient),
@@ -308,6 +344,30 @@ export const BudgetCalendarScreen = () => {
             />
           </Pressable>
         </View>
+
+        {/* Résumé du mois clos et « À traiter » : côte à côte dès 768 px.
+            Rien n'est rendu sans carte, pour ne pas décaler le calendrier. */}
+        {showsClosedMonth || showsOccurrences ? (
+          <View
+            style={twoColumns ? styles.monthEndColumns : styles.monthEndStack}
+            testID="calendar-month-end"
+          >
+            {showsClosedMonth && state.summary ? (
+              <View style={twoColumns ? styles.monthEndColumn : null}>
+                <ClosedMonthSummary summary={state.summary} />
+              </View>
+            ) : null}
+            {showsOccurrences ? (
+              <View style={twoColumns ? styles.monthEndColumn : null}>
+                <SavingsOccurrenceList
+                  intro="Les versements mensuels prévus figurent ici, à côté des événements prévus."
+                  occurrences={occurrences}
+                  title="À traiter"
+                />
+              </View>
+            ) : null}
+          </View>
+        ) : null}
 
         <ActionButton
           action="add"
@@ -620,6 +680,13 @@ const makeStyles = (
     heading: { gap: 6 },
     eyebrow: { color: colors.accent, fontSize: 12, fontWeight: "700" },
     title: { color: colors.textPrimary, fontSize: 30, fontWeight: "700" },
+    monthEndStack: { gap: primitives.space["3"] },
+    monthEndColumns: {
+      alignItems: "flex-start",
+      flexDirection: "row",
+      gap: primitives.space["3"],
+    },
+    monthEndColumn: { flexBasis: 0, flexGrow: 1 },
     upcomingLink: {
       alignItems: "center",
       alignSelf: "flex-start",
