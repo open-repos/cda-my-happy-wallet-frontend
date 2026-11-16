@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { semantic, themes } from "@/src/design/tokens";
 import { FeedbackState } from "@/src/design/FeedbackState";
@@ -8,6 +8,7 @@ import {
   buildSummaryCards,
 } from "@/src/features/budget/domain/budgetSummary";
 import { BudgetSummaryGateway } from "@/src/features/budget/infrastructure/HttpBudgetSummaryGateway";
+import { RemainingComparisonCard } from "@/src/features/budget/presentation/RemainingComparisonCard";
 import { useBudgetSummary } from "@/src/features/budget/presentation/useBudgetSummary";
 import { calculationDetail } from "@/src/features/month-end/domain/calculationDetail";
 import { MonthEndDecision } from "@/src/features/month-end/domain/monthEnd";
@@ -45,7 +46,10 @@ const SummaryCard = ({
   </View>
 );
 
-/** Synthèse du mois : reste réel, prévisionnel et disponible prudent par jour. */
+/**
+ * Synthèse du mois : actualisé comparé au théorique (#393), puis reste réel,
+ * prévisionnel et disponible prudent par jour.
+ */
 export const BudgetSummaryCards = ({
   gateway,
   carryDecision = null,
@@ -89,6 +93,12 @@ export const BudgetSummaryCards = ({
     real.carry && decided ? `${real.carry.label} après décision` : null;
   return (
     <View style={styles.cards}>
+      {summary ? (
+        <RemainingComparisonCard
+          onShowDetail={() => setShowsDetail(true)}
+          summary={summary}
+        />
+      ) : null}
       <SummaryCard
         accessibilityLabel={
           carryLabel && real.carry
@@ -118,19 +128,6 @@ export const BudgetSummaryCards = ({
         </View>
         <Text style={styles.help}>{real.help}</Text>
       </SummaryCard>
-      {summary?.carryFromMonth ? (
-        // Hors de la carte lue d'un bloc : le bouton reste atteignable.
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => setShowsDetail(true)}
-          style={({ pressed }) => [
-            styles.detailLink,
-            pressed && styles.pressed,
-          ]}
-        >
-          <Text style={styles.detailLabel}>Voir le détail du calcul</Text>
-        </Pressable>
-      ) : null}
       {showsDetail && summary ? (
         <CalculationDetailSheet
           decision={carryDecision}
@@ -203,17 +200,5 @@ const styles = StyleSheet.create({
   rowLabel: { color: colors.textMuted, fontSize: 14 },
   rowValue: { color: colors.textPrimary, fontSize: 14, fontWeight: "600" },
   help: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
-  detailLink: {
-    alignSelf: "flex-start",
-    justifyContent: "center",
-    minHeight: semantic.size.controlMinHeight,
-  },
-  detailLabel: {
-    color: colors.actionSecondaryText,
-    fontSize: 16,
-    fontWeight: "600",
-    textDecorationLine: "underline",
-  },
-  pressed: { opacity: 0.7 },
   warning: { color: colors.statusWarningText, fontSize: 14, fontWeight: "600" },
 });

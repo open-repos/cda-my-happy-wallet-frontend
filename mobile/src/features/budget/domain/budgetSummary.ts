@@ -13,6 +13,8 @@ export interface BudgetForecast {
   plannedIncome: string;
   plannedExpense: string;
   goalSavings: string;
+  /** Réserve des enveloppes ; absente des backends antérieurs. */
+  envelopeReserve?: string;
   forecastRemaining: string;
   prudentDailyAllowance: string | null;
   unresolvedCount: number;
@@ -37,8 +39,14 @@ export interface BudgetSummary {
   month: string;
   currency: string;
   status: "OPEN" | "CLOSED";
+  /** Reste à vivre théorique : revenus fixes − charges fixes (#393). */
+  base: string;
   carryIn: string;
   carryFromMonth: string | null;
+  actualIncome: string;
+  actualExpense: string;
+  /** Rapprochement des enveloppes ; absent des backends antérieurs. */
+  reconciliationAdjustment?: string;
   monthResult: string;
   realRemaining: string;
   remainingDays: number;
@@ -126,6 +134,9 @@ const parseForecast = (value: unknown): BudgetForecast | null => {
     plannedIncome: amount(value.plannedIncome),
     plannedExpense: amount(value.plannedExpense),
     goalSavings: amount(value.goalSavings),
+    ...(value.envelopeReserve === undefined
+      ? {}
+      : { envelopeReserve: amount(value.envelopeReserve) }),
     forecastRemaining: amount(value.forecastRemaining),
     prudentDailyAllowance: optionalAmount(value.prudentDailyAllowance),
     unresolvedCount: count(value.unresolvedCount),
@@ -148,9 +159,17 @@ export const parseBudgetSummary = (value: unknown): BudgetSummary => {
     month: month(value.month),
     currency: value.currency,
     status: value.status,
+    base: amount(value.base),
     carryIn: amount(value.carryIn),
     carryFromMonth:
       value.carryFromMonth === null ? null : month(value.carryFromMonth),
+    actualIncome: amount(value.actualIncome),
+    actualExpense: amount(value.actualExpense),
+    ...(value.reconciliationAdjustment === undefined
+      ? {}
+      : {
+          reconciliationAdjustment: amount(value.reconciliationAdjustment),
+        }),
     monthResult: amount(value.monthResult),
     realRemaining: amount(value.realRemaining),
     remainingDays: count(value.remainingDays),

@@ -392,7 +392,10 @@ test("opens a savings account with its movements and its goal", async ({
   await expect(page.getByText("Dépôt · 7 novembre 2026")).toBeVisible();
   await expect(page.getByText(/^\+250,00\s€$/)).toBeVisible();
   await expect(page.getByText(/^-80,00\s€$/)).toBeVisible();
-  await expect(page.getByText(/^1\s500,00\s€$/)).toBeVisible();
+  // L'Accueil resté monté affiche aussi 1 500,00 € (théorique, #393).
+  await expect(
+    page.getByTestId("vault-account-screen").getByText(/^1\s500,00\s€$/),
+  ).toBeVisible();
   await expect(
     page.getByText("La progression suit le solde réel du compte."),
   ).toBeVisible();

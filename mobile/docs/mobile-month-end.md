@@ -34,11 +34,12 @@ serveur.
   mémoire). Une décision à revoir affiche « À revoir » ; une décision à jour
   affiche son épargne et son report. Une lecture en échec n’affiche rien : sans
   réponse, tout le solde reste reporté.
-- **Détail du calcul** : sous la carte « Reste réel », « Voir le détail du
-  calcul » ouvre une feuille : report entrant, lignes « dont » de la décision,
-  résultat du mois et reste réel. Les lignes « dont » ne s’affichent que si la
-  décision explique exactement le report du résumé ; elles ne s’ajoutent pas
-  au total.
+- **Détail du calcul** : « Voir le détail du calcul » ouvre une feuille, du
+  théorique à l’actualisé depuis #393
+  ([`actual-theoretical-remaining.md`](actual-theoretical-remaining.md)). Sous
+  le report entrant, les lignes « dont » de la décision ne s’affichent que si
+  la décision explique exactement le report du résumé ; elles ne s’ajoutent
+  pas au total.
 - **Décider** : route cachée `/month-end?mois=AAAA-MM`. Excédent : tout
   reporter, tout épargner ou répartir sur un ou plusieurs comptes. Déficit :
   tout reporter ou couvrir par prélèvements d’épargne et/ou une entrée

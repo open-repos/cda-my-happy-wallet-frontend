@@ -41,6 +41,28 @@ const raw = (overrides: Record<string, unknown> = {}) => ({
 const normalize = (text: string) => text.replace(/\s/g, " ");
 
 describe("parseBudgetSummary", () => {
+  it("reads the theoretical base and the optional reserve fields (#393)", () => {
+    const plain = parseBudgetSummary(raw());
+    expect(plain.base).toBe("1500.00");
+    expect(plain.actualExpense).toBe("42.50");
+    expect(plain).not.toHaveProperty("reconciliationAdjustment");
+    expect(plain.forecast).not.toHaveProperty("envelopeReserve");
+    const full = parseBudgetSummary(
+      raw({
+        reconciliationAdjustment: "-12.00",
+        forecast: { ...raw().forecast, envelopeReserve: "30.00" },
+      }),
+    );
+    expect(full.reconciliationAdjustment).toBe("-12.00");
+    expect(full.forecast?.envelopeReserve).toBe("30.00");
+    for (const field of ["base", "actualIncome", "actualExpense"]) {
+      expect(() => parseBudgetSummary(raw({ [field]: undefined }))).toThrow();
+    }
+    expect(() =>
+      parseBudgetSummary(raw({ reconciliationAdjustment: 3 })),
+    ).toThrow();
+  });
+
   it("keeps the documented fields only", () => {
     const summary = parseBudgetSummary({ ...raw(), ownerId: 9 });
     expect(summary.realRemaining).toBe("1337.50");
