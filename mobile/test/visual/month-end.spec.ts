@@ -142,8 +142,11 @@ const mockMonthEnd = async (page: Page, options: Options = {}) => {
           month: "2026-11",
           currency: "EUR",
           status: "OPEN",
+          base: "1200.00",
           carryIn: amount(carry),
           carryFromMonth: "2026-10",
+          actualIncome: "20.00",
+          actualExpense: "40.00",
           monthResult: "1180.00",
           realRemaining: amount(carry + 118000),
           remainingDays: 20,
@@ -297,7 +300,9 @@ test("saves 100 € of the 150 € and reads the 50 € carry from the server", 
   await expect(
     detail.getByLabel(/^dont épargné en fin de mois : -100,00\s€$/),
   ).toBeVisible();
-  await expect(detail.getByLabel(/^Reste réel : 1\s230,00\s€$/)).toBeVisible();
+  await expect(
+    detail.getByLabel(/^Reste à vivre actualisé : 1\s230,00\s€$/),
+  ).toBeVisible();
   await detail
     .getByRole("button", { name: "Fermer le détail du calcul" })
     .click();

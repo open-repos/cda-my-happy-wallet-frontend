@@ -195,6 +195,26 @@ export const monthEndStyles = StyleSheet.create({
   },
   sheetScroll: { flexShrink: 1 },
   sheetList: { gap: primitives.space["3"] },
+  // Comparaison par jour du détail du calcul (#393).
+  perDay: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: primitives.space["3"],
+  },
+  perDayValue: {
+    backgroundColor: colors.backgroundCanvas,
+    borderRadius: semantic.radius.control,
+    flexBasis: 140,
+    flexGrow: 1,
+    gap: primitives.space["1"],
+    padding: primitives.space["3"],
+  },
+  perDayActual: { backgroundColor: colors.statusSuccessSurface },
+  perDayAmount: {
+    color: colors.textPrimary,
+    fontSize: primitives.fontSize.xl,
+    fontWeight: semibold,
+  },
   iconButton: {
     alignItems: "center",
     height: semantic.size.controlMinHeight,
