@@ -54,5 +54,8 @@ export const useVaultMutation = (
     [describeFailure, invalidate, refresh],
   );
 
-  return { busy, failure, run, clear: () => setFailure(null) };
+  // Stable : l'écran « Décider » l'appelle quand on le quitte (#430).
+  const clear = useCallback(() => setFailure(null), []);
+
+  return { busy, failure, run, clear };
 };

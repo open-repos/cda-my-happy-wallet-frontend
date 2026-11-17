@@ -71,6 +71,12 @@ d’idempotence par tentative (`decision-AAAA-MM-…`, sans le préfixe réserv�
   la révision attendue et le mois sont identiques, la même clé est renvoyée et
   le serveur rejoue la réponse d’origine sans doublon.
 
+L’écran « Décider » est une route cachée de la barre d’onglets : il reste monté
+quand on le quitte. Comme la page Web, qui se démonte, il efface ses messages
+d’écriture (succès ou échec) en perdant le focus ; au retour par « Revoir la
+décision » ou « Voir la décision », seul l’état relu sur le serveur est affiché
+(#430).
+
 ## Coffre et Analyses
 
 L’historique d’un compte d’épargne précise « Décision de fin de mois ·
