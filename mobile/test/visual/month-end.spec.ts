@@ -364,6 +364,41 @@ test("keeps the decision after a forgotten 30 € expense: 100 € saved, 20 €
   ).toBeVisible();
 });
 
+test("clears the saved notice once the screen is left (#430)", async ({
+  page,
+}) => {
+  const state = await mockMonthEnd(page);
+  await signIn(page);
+  await openDecision(page);
+  await page.getByRole("radio", { name: "Répartir" }).click();
+  await page.getByLabel("Épargner sur Voyage au Japon").fill("100");
+  await page
+    .getByTestId("month-end-footer")
+    .getByRole("button", { name: "Valider la décision" })
+    .click();
+  const saved = page.getByText("Décision d’octobre 2026 enregistrée.");
+  await expect(saved).toBeVisible();
+
+  // Une dépense oubliée de 30 € : « Revoir la décision » depuis l'Accueil.
+  // L'écran caché, resté monté sous les onglets, ne garde pas le message.
+  state.result = 12000;
+  await page.getByRole("link", { name: "Retour à l’accueil" }).click();
+  await page
+    .getByTestId("month-end-review")
+    .getByRole("button", { name: "Revoir la décision d’octobre" })
+    .click();
+  await expect(page.getByText("! À revoir")).toBeVisible();
+  await expect(saved).toHaveCount(0);
+
+  // « Garder ma décision » le pose à nouveau ; « Voir la décision » l'efface.
+  await page.getByRole("button", { name: "Garder ma décision" }).click();
+  await expect(saved).toBeVisible();
+  await page.getByRole("link", { name: "Retour à l’accueil" }).click();
+  await page.getByRole("link", { name: "Voir la décision d’octobre" }).click();
+  await expect(page.getByText("✓ Décidée")).toBeVisible();
+  await expect(saved).toHaveCount(0);
+});
+
 test("covers a 150 € deficit with 50 € of savings and 70 € received: −30 €", async ({
   page,
 }) => {

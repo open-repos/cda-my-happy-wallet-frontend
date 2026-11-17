@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { ReactNode, useState } from "react";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { ReactNode, useCallback, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -177,6 +177,18 @@ const DecisionView = ({ month }: { month: string }) => {
   const { postpone } = usePostponed(month);
   const [editing, setEditing] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  // Écran caché resté monté sous les onglets : comme la page Web (#396), qui
+  // se démonte, il oublie ses messages d'écriture quand on le quitte (#430).
+  const { clear } = mutation;
+  useFocusEffect(
+    useCallback(
+      () => () => {
+        setNotice(null);
+        clear();
+      },
+      [clear],
+    ),
+  );
   const data = decision.value;
   const ready =
     decision.status === "success" && accounts.status === "success" && data;
