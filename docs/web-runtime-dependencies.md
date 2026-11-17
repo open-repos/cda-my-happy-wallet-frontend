@@ -6,7 +6,8 @@ L'audit npm du 18 octobre 2026 signalait huit dépendances runtime vulnérables 
 quatre modérées et quatre élevées. Le nouvel arbre verrouillé n'en signale aucune
 avec `npm audit --omit=dev` à cette date. Ce résultat concerne les avis connus
 par npm, sans prétendre prouver l'absence de toute vulnérabilité du produit.
-Le correctif Vitest associé ramène aussi l’audit complet à zéro avis connu.
+Le correctif Vitest associé ramène aussi l’audit complet à zéro avis connu
+(à cette date ; voir #432 pour `picomatch` en novembre 2026).
 
 | Bibliothèque                | Avant              | Après           | Raison                                                                                      |
 | --------------------------- | ------------------ | --------------- | ------------------------------------------------------------------------------------------- |
@@ -127,6 +128,29 @@ validations Web ; cela réintroduirait le défaut corrigé du serveur de dévelo
 
 Sources du correctif : [changelog Vite 6.4.5](https://github.com/vitejs/vite/blob/v6.4.5/packages/vite/CHANGELOG.md)
 et [contrôle des chemins après retrait de query](https://github.com/vitejs/vite/commit/91e40d7bf9777057bbd31c3eb036a54c9465697e).
+
+## Retrait de styled-components — ticket #432
+
+Le 17/11/2026, `npm run audit:runtime` échoue sur l'avis élevé
+[GHSA-fc5q-39xc-vjpf](https://github.com/advisories/GHSA-fc5q-39xc-vjpf)
+(ReDoS de `picomatch` sur les extglobs répétés). L'avis couvre toutes les
+versions jusqu'à 4.0.7, dernière publiée, sans version corrigée. `picomatch`
+entrait dans l'arbre runtime par `styled-components` 5.3.11 →
+`babel-plugin-styled-components` 2.3.0.
+
+`styled-components` n'est plus importé depuis #328 (dernier usage dans
+`SideBar`) et aucune configuration Babel ne charge son plugin. La dépendance
+est donc retirée de `package.json` ; le lockfile supprime seize paquets
+(dont `react-is`, `@emotion/*`, `css-to-react-native`) sans ajouter de paquet
+ni changer de version. `picomatch` 4.0.7 et la chaîne Babel restent présents
+pour l'outillage de développement (Vite, `@vitejs/plugin-react`) : ils n'entrent
+pas dans le bundle livré, et l'audit runtime (`--omit=dev`) ne les signale plus.
+La règle de #64 est conservée : aucune exception ni exclusion d'avis.
+
+Limite : l'audit complet (avec les dépendances de développement) continue de
+signaler cet avis tant qu'aucune version corrigée de `picomatch` n'est publiée.
+Pour revenir en arrière, révoquer le commit puis refaire `npm ci` ; cela
+réintroduirait l'avis dans l'audit runtime.
 
 ## Sources primaires
 
