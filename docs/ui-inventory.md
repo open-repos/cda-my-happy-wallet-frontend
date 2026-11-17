@@ -39,7 +39,7 @@ sont inclus.
 
 | Zone | Éléments observables | Styles et dépendances |
 | --- | --- | --- |
-| Shell Web | `App`, `ProtectedLayout`, `SideBar`, `RequireAuth` | `App.css`, styled-components dans `SideBar`, React Router |
+| Shell Web | `App`, `ProtectedLayout`, `SideBar`, `RequireAuth` | `App.css`, React Router (styled-components retiré : #328, dépendance supprimée par #432) |
 | Auth Web | login, inscription, oubli et nouveau mot de passe | `Auth.css` plus quatre feuilles presque dupliquées, Formik/Yup, toast, `Spinner` |
 | Budget fixe | formulaires, cartes et listes charges/revenus, calcul RaV | `FormControl.css`, `Operations.css`, tableau HTML (`.table-opfixe`), Font Awesome |
 | Tableau de bord | état initial, RaV, périodes mois/semaine/jour, résumés vides | `Home.css`, `CaseRaV.css`, `SegmentedControl.css` |

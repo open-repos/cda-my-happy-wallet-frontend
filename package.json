@@ -50,7 +50,6 @@
     "react-redux": "7.2.9",
     "react-router-dom": "7.18.4",
     "react-toastify": "^8.2.0",
-    "styled-components": "5.3.11",
     "yup": "^0.32.11"
   },
   "devDependencies": {
