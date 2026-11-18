@@ -43,4 +43,6 @@ runner) reproduit le texte et les montants, mais les polices de repli du canvas
 peuvent encore différer selon la configuration système. Une comparaison locale
 verte ne suffit donc pas à approuver de nouvelles références : utiliser le
 runner CI de référence et relire les images. La tolérance et les assertions de
-géométrie restent inchangées.
+géométrie restent inchangées. Depuis l'issue #416, l'environnement de référence
+est l'image Playwright décrite dans
+[web-visual-regression.md](web-visual-regression.md).

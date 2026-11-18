@@ -45,6 +45,9 @@ jobs:
   proof:
     name: Isolated PWA cache policy and lifecycle
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.61.1-noble
+      options: --user 1001 --ipc=host
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
@@ -55,6 +58,5 @@ jobs:
       - run: npm ci
       - run: npx vitest run test/vitest/pwaCachePolicy.test.js
       - run: npm run test:pwa:builder
-      - run: npx playwright install --with-deps chromium
       - run: npm run test:pwa:proof
       - run: npm run test:pwa:built

@@ -140,7 +140,10 @@ for (const width of [320, 390, 768, 1440])
         await expect(
           page.getByRole("button", { name: "Filtrer par montant : ≥ 600,00" })
         ).toBeVisible();
-        expect(requests.at(-1).get("minAmount")).toBe("600.00");
+        // Le libellé du filtre précède la requête : attendre qu'elle parte.
+        await expect
+          .poll(() => requests.at(-1).get("minAmount"))
+          .toBe("600.00");
         await page.keyboard.press("Escape");
         await expect(min).toBeHidden();
         await expect(

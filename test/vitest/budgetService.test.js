@@ -6,6 +6,7 @@ import {
   parseBudgetSummary,
 } from "../../src/js/services/budgetService";
 import { oneOffOperationsService } from "../../src/js/services/oneOffOperationsService";
+import { decidedDecision } from "../fixtures/monthEnd.mjs";
 
 vi.mock("../../src/utils/axiosHelper", () => ({
   apiPrivate: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
@@ -211,5 +212,27 @@ describe("budgetService", () => {
       currency: "EUR",
       limit: 20,
     });
+  });
+});
+
+describe("month-end decision in the summary (#396)", () => {
+  it("keeps a decided closed month and rejects an invalid decision", () => {
+    const closed = summaryFixture({
+      status: "CLOSED",
+      forecast: null,
+      monthEndDecision: { ...decidedDecision(), userId: 3 },
+    });
+    expect(parseBudgetSummary(closed).monthEndDecision).toEqual(
+      decidedDecision()
+    );
+    expect(parseBudgetSummary(summaryFixture())).not.toHaveProperty(
+      "monthEndDecision"
+    );
+    expect(() =>
+      parseBudgetSummary({
+        ...closed,
+        monthEndDecision: { ...decidedDecision(), status: "?" },
+      })
+    ).toThrow();
   });
 });

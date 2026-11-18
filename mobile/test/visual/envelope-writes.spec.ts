@@ -121,6 +121,12 @@ test("links a new expense to an envelope in the same write", async ({
   await expect(
     page.getByRole("radio", { name: /^Alimentation · 223,00/ }),
   ).toBeChecked();
+  // Le clic retire le bloc de suggestion : le formulaire raccourcit et son
+  // défilement dépend de la position d'avant le clic. La capture part donc
+  // toujours du bas du formulaire.
+  await page
+    .getByRole("button", { name: "Enregistrer" })
+    .evaluate((button) => button.scrollIntoView({ block: "end" }));
   await expect(page).toHaveScreenshot("envelope-assignment.png");
   await page.getByRole("button", { name: "Enregistrer" }).click();
 

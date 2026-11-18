@@ -3,7 +3,7 @@ import { Button } from "../components/Actions/Button";
 import { ActionButton } from "../components/Actions/ActionButton";
 import { useQuickAdd } from "../components/QuickAdd/QuickAddContext";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronLeft,
@@ -39,6 +39,7 @@ import { useSimulation } from "../components/Simulation/SimulationContext";
 import { SimulationPanel } from "../components/Simulation/SimulationPanel";
 import { PlanningActions } from "../components/Simulation/PlanningActions";
 import { monthlyEventsService } from "../services/monthlyEventsService";
+import { SavingsOccurrenceList } from "../components/MonthEnd/SavingsOccurrenceList";
 import "../../css/MonthlyEvents.css";
 import "../../css/Operations.css";
 import "../../css/BudgetCalendar.css";
@@ -134,7 +135,16 @@ function Calendrier() {
   const simulation = useSimulation();
   const quickAdd = useQuickAdd();
   const today = parisToday();
-  const [month, setMonth] = useState(today.slice(0, 7));
+  const [searchParams] = useSearchParams();
+  // `?mois=AAAA-MM` ouvre un mois passé ou courant, par exemple depuis une
+  // décision de fin de mois (#396).
+  const [month, setMonth] = useState(() => {
+    const requested = searchParams.get("mois");
+    return /^\d{4}-(0[1-9]|1[0-2])$/.test(requested || "") &&
+      requested <= today.slice(0, 7)
+      ? requested
+      : today.slice(0, 7);
+  });
   const [selectedDate, setSelectedDate] = useState(null);
   const [mode, setMode] = useState(readMode);
   const [form, setFormValue] = useState(null);
@@ -273,6 +283,7 @@ function Calendrier() {
         month={month}
         onRetry={budget.retry}
       />
+      <SavingsOccurrenceList />
       <SimulationPanel month={month} disabled={isSaving} />
 
       <div className="budget-calendar__layout">

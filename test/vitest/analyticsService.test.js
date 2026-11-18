@@ -77,3 +77,29 @@ describe("analyticsService", () => {
     expect(analyticsErrorCode(new Error("offline"))).toBeNull();
   });
 });
+
+describe("exceptional income category (#396)", () => {
+  it("keeps the reserved system category 0 without colour", () => {
+    const data = parseAnalytics({
+      currency: "EUR",
+      from: "2026-10-01",
+      to: "2026-10-31",
+      groupBy: "category",
+      buckets: [
+        {
+          ...totals("0"),
+          label: "Entrée exceptionnelle",
+          income: "70.00",
+          expense: "0.00",
+          net: "70.00",
+        },
+      ],
+    });
+    expect(data.buckets[0]).toMatchObject({
+      key: "0",
+      label: "Entrée exceptionnelle",
+      color: null,
+      income: "70.00",
+    });
+  });
+});

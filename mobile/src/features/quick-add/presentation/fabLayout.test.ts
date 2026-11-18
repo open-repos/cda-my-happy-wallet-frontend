@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { fabClearance } from "./fabLayout";
+import { fabClearance, showsFab } from "./fabLayout";
 
 describe("floating add button clearance (#407)", () => {
   it("reserves the button height above the tab bar on phones", () => {
@@ -20,5 +20,16 @@ describe("floating add button clearance (#407)", () => {
     expect(
       fabClearance({ base: 40, width: 768, insetBottom: 0, tabBarHeight: 64 }),
     ).toBe(40);
+  });
+
+  it("hides the button where a sticky action bar sits at the bottom (#420)", () => {
+    expect(showsFab({ width: 360, keyboard: false, pathname: "/" })).toBe(true);
+    expect(
+      showsFab({ width: 360, keyboard: false, pathname: "/month-end" }),
+    ).toBe(false);
+    expect(showsFab({ width: 360, keyboard: true, pathname: "/" })).toBe(false);
+    expect(showsFab({ width: 768, keyboard: false, pathname: "/" })).toBe(
+      false,
+    );
   });
 });

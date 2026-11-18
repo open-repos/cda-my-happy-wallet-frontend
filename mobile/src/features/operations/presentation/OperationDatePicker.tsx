@@ -1,6 +1,13 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useMemo, useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { primitives, semantic, themes } from "@/src/design/tokens";
@@ -187,6 +194,9 @@ export const OperationDatePicker = ({
                         selected: isSelected,
                       }}
                       disabled={unavailable}
+                      {...(Platform.OS === "web"
+                        ? { "aria-pressed": isSelected }
+                        : {})}
                       onPress={() => selectDay(day)}
                       style={[
                         styles.dayButton,

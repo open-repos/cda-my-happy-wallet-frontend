@@ -25,6 +25,11 @@ import { HttpBudgetSummaryGateway } from "@/src/features/budget/infrastructure/H
 import { BudgetSummaryCards } from "@/src/features/budget/presentation/BudgetSummaryCards";
 import { SavingsCapacitySection } from "@/src/features/savings/presentation/SavingsCapacitySection";
 import { EnvelopeSection } from "@/src/features/envelopes/presentation/EnvelopeSection";
+import { MonthEndHomeSection } from "@/src/features/month-end/presentation/MonthEndHomeSection";
+import { useHomeMonthEnd } from "@/src/features/month-end/presentation/useMonthEnd";
+import { attentionItems } from "@/src/features/month-end/domain/pendingItems";
+import { NotificationBell } from "@/src/features/month-end/presentation/NotificationBell";
+import { useSavingsOccurrences } from "@/src/features/vault/presentation/useSavingsOccurrences";
 
 const colors = themes.light.color;
 
@@ -72,6 +77,11 @@ export const DashboardScreen = () => {
     [httpClient],
   );
   const { operationCount, retry, status } = useFixedBudget(gateway);
+  // Décision du dernier mois clos (#420) : bandeau et détail du report.
+  const monthEnd = useHomeMonthEnd();
+  // Cloche « À traiter » (#425) : décision et versements à confirmer.
+  const occurrences = useSavingsOccurrences();
+  const pendingItems = attentionItems(monthEnd.decision, occurrences.items);
   const email =
     state.status === "authenticated" || state.status === "refreshing"
       ? state.user.email
@@ -101,6 +111,14 @@ export const DashboardScreen = () => {
               </Text>
             </View>
           </View>
+          <NotificationBell
+            incomplete={monthEnd.failed || occurrences.failed}
+            items={pendingItems}
+            onRetry={() => {
+              monthEnd.reload();
+              void occurrences.reload();
+            }}
+          />
           <Pressable
             accessibilityLabel="Se déconnecter"
             accessibilityRole="button"
@@ -127,6 +145,11 @@ export const DashboardScreen = () => {
             Retrouvez l’essentiel de votre budget mensuel.
           </Text>
         </View>
+
+        <MonthEndHomeSection
+          onPostpone={monthEnd.postpone}
+          state={monthEnd.state}
+        />
 
         {status === "loading" ? (
           <FeedbackState
@@ -161,7 +184,10 @@ export const DashboardScreen = () => {
         ) : null}
 
         {status === "success" && operationCount > 0 ? (
-          <BudgetSummaryCards gateway={summaryGateway} />
+          <BudgetSummaryCards
+            carryDecision={monthEnd.decision}
+            gateway={summaryGateway}
+          />
         ) : null}
 
         <DashboardCharts gateway={chartGateway} />
@@ -196,6 +222,12 @@ export const DashboardScreen = () => {
             icon="bar-chart-outline"
             label="Analyses"
             onPress={() => router.push("/(app)/analyses")}
+          />
+          <ActionCard
+            description="Retrouvez votre épargne et votre budget disponible."
+            icon="wallet-outline"
+            label="Coffre"
+            onPress={() => router.push("/(app)/vault")}
           />
           <ActionCard
             description="Préparez vos projets et suivez leur avancement."

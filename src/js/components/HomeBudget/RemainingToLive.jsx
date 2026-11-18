@@ -11,6 +11,8 @@ import { formatMoney } from "../BudgetCalendar/budgetFormat";
 import { budgetComparison, calculationBreakdown } from "../../utils/homeBudget";
 import { FormDialog } from "../Forms/FormDialog";
 import { SectionAnnouncement, SectionState } from "./SectionState";
+import { useCarryDecision } from "../MonthEnd/MonthEndContext";
+import { carryDecisionDetails } from "../../utils/monthEnd";
 
 export const HOME_PERIODS = [
   { value: "mois", label: "Mois", caption: "Reste à vivre du mois" },
@@ -126,7 +128,7 @@ const ForecastBridge = ({ summary }) =>
     </p>
   ) : null;
 
-const CalculationDetail = ({ summary, onClose }) => (
+const CalculationDetail = ({ summary, onClose, details }) => (
   <FormDialog
     label="Détail du calcul"
     onClose={onClose}
@@ -145,27 +147,51 @@ const CalculationDetail = ({ summary, onClose }) => (
     </p>
     <dl className="budget-breakdown home-budget__calculation">
       {calculationBreakdown(summary).map((row, index, rows) => (
-        <div
-          key={row.key}
-          className={`budget-breakdown__row${
-            index === rows.length - 1 ? " budget-breakdown__row--total" : ""
-          }`}
-        >
-          <dt>{row.label}</dt>
-          <dd className={`budget-amount--${toneOf(row.amount)}`}>
-            {formatMoney(row.amount, summary.currency, {
-              signed: index > 0 && index < rows.length - 1,
-            })}
-          </dd>
-        </div>
+        <React.Fragment key={row.key}>
+          <div
+            className={`budget-breakdown__row${
+              index === rows.length - 1 ? " budget-breakdown__row--total" : ""
+            }`}
+          >
+            <dt>{row.label}</dt>
+            <dd className={`budget-amount--${toneOf(row.amount)}`}>
+              {formatMoney(row.amount, summary.currency, {
+                signed: index > 0 && index < rows.length - 1,
+              })}
+            </dd>
+          </div>
+          {row.key === "carryIn" &&
+            details.map((detail) => (
+              <div
+                key={detail.key}
+                className="budget-breakdown__row budget-breakdown__row--detail"
+              >
+                <dt>{detail.label}</dt>
+                <dd>
+                  {formatMoney(detail.amount, summary.currency, {
+                    signed: true,
+                  })}
+                </dd>
+              </div>
+            ))}
+        </React.Fragment>
       ))}
     </dl>
+    {details.length > 0 && (
+      <p className="budget-help">
+        Les lignes « dont » expliquent le report après votre décision de fin de
+        mois ; elles ne s’ajoutent pas une seconde fois.
+      </p>
+    )}
   </FormDialog>
 );
 
 /** Montant principal de l'accueil et explication du calcul pour la période. */
 export const RemainingToLive = ({ section, period }) => {
   const [showsDetail, setShowsDetail] = useState(false);
+  const carryDecision = useCarryDecision(
+    section.status === "success" ? section.data : null
+  );
   // Premier enfant identique dans chaque rendu : React garde ces régions
   // live montées d'un état à l'autre (#164).
   const announcement = (
@@ -299,6 +325,15 @@ export const RemainingToLive = ({ section, period }) => {
       {showsDetail && (
         <CalculationDetail
           summary={summary}
+          details={
+            // Deux lectures distinctes : les « dont » ne s'affichent que
+            // s'ils retombent exactement sur le report affiché.
+            carryDecision &&
+            Math.round(Number(summary.carryIn) * 100) ===
+              carryDecision.carryMinorUnits
+              ? carryDecisionDetails(carryDecision)
+              : []
+          }
           onClose={() => setShowsDetail(false)}
         />
       )}

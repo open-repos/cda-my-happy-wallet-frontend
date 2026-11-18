@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faWallet,
+  faVault,
   faHome,
   faExchangeAlt,
   faRepeat,
@@ -21,6 +22,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { logout, reset } from "../slices/auth/authSlice";
 import { ThemeToggle } from "./ThemeToggle";
+import { NotificationBell } from "./MonthEnd/NotificationBell";
 import { useNavigationCollapse } from "../hooks/useNavigationCollapse";
 import "../../css/AtelierNavigation.css";
 
@@ -31,6 +33,7 @@ const destinations = [
   ["/calendrier", "Calendrier", faCalendarAlt],
   ["/prochains-mois", "Prochains mois", faChartLine],
   ["/objectifs-evenements", "Objectifs et événements", faBullseye],
+  ["/coffre", "Coffre", faVault],
   ["/analyses", "Analyses", faChartColumn],
   ["/categories", "Catégories", faTags],
 ];
@@ -112,6 +115,7 @@ export default function Sidebar() {
           <FontAwesomeIcon icon={open ? faTimes : faBars} aria-hidden="true" />
         </button>
         <span>MyHappyWallet</span>
+        <NotificationBell className="notification-bell--shell" />
         <ThemeToggle className="theme-toggle atelier-theme-toggle" />
       </div>
       {open && (
@@ -137,6 +141,7 @@ export default function Sidebar() {
         </div>
         <div className="atelier-navigation__caption-row">
           <p className="atelier-navigation__caption">Mon budget</p>
+          <NotificationBell className="notification-bell--shell notification-bell--nav" />
           <button
             type="button"
             className="atelier-collapse-toggle"
