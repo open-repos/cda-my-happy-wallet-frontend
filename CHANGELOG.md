@@ -7,6 +7,26 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [1.18.0] - 2026-11-18
+
+### Added
+
+- Added to the mobile Home the actualized remaining compared with the theoretical one for the month, the week and the day, with the « Ce mois-ci » box and a calculation detail going from the theoretical to the actualized amount (#393).
+- Added the Coffre page with savings accounts, manual transfers, paginated histories and linked goals (#395).
+- Added the month-end decision: carry, save or split a surplus, cover a deficit with savings or exceptional income, review a decision after a correction, confirm planned goal transfers and see pending items in a notification bell (#396).
+- Added the Coffre to the mobile application, with the available budget, savings accounts, manual transfers and linked goals (#419).
+- Added the month-end decision to the mobile application: Home proposal and reminder, decision screen with a carry preview, revision and « À revoir » review, calculation detail, month-end tags in savings movements and the « Entrée exceptionnelle » analytics category (#420).
+- Added to the mobile application the monthly savings payments to confirm (Vault and calendar), the month-end decision in the summary of a closed calendar month, and the « À traiter » bell of the Home (#425).
+
+### Fixed
+
+- Exposed selected calendar dates and pending calendar or conversion requests to assistive technology in the mobile Web export (#161).
+- Cleared the month-end decision screen's save messages when the mobile screen loses focus, so « Revoir la décision » and « Voir la décision » no longer show a stale « Décision … enregistrée. » notice (#430).
+
+### Security
+
+- Removed the unused `styled-components` runtime dependency, which pulled `picomatch` (GHSA-fc5q-39xc-vjpf, no patched release) into the production tree through `babel-plugin-styled-components` (#432).
+
 ## [1.17.0] - 2026-11-07
 
 ### Added
@@ -318,7 +338,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Replaced dynamic SSH host discovery with a pre-verified `known_hosts` file.
 - Isolated SSH credentials from validation and build jobs.
 
-[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.17.0...develop
+[Unreleased]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.18.0...develop
+[1.18.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.17.0...v1.18.0
 [1.17.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.16.0...v1.17.0
 [1.16.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.15.0...v1.16.0
 [1.15.0]: https://gitlab.com/formation-cda1/projet-chef-oeuvre-rapport/projet-00-myhappywallet-frontend/-/compare/v1.14.0...v1.15.0
