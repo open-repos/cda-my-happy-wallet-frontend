@@ -39,3 +39,15 @@ Domaine : `src/features/forecast/domain/budgetForecast.ts`. Passerelle :
 Parcours Playwright `shows upcoming months from the dashboard and the
 calendar (#214)` sur l'export Web, API simulée par `scripts/serve-export.mjs`.
 À valider sur development build Android, grandes polices comprises.
+
+## Comparaison au théorique dans le calendrier
+
+En mode Prévisionnel, un bandeau statique affiche le socle du mois et sa part
+quotidienne. Chaque case conserve un seul montant visible, le reste à vivre
+fourni par le serveur. Son libellé accessible donne aussi le théorique cumulé
+lorsqu’un point journalier est disponible.
+
+Le détail du jour sélectionné compare les deux montants. Il explique que le
+théorique cumule la part quotidienne tronquée au centime jusqu’à la date
+sélectionnée. Le dernier jour reprend le socle complet du mois. Le calcul
+réutilise la part de l’Accueil et ne modifie aucun montant serveur.

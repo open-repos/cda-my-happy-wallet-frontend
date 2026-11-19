@@ -37,7 +37,13 @@ import {
 import {
   currentParisDate,
   currentParisMonth,
+  money,
+  toCents,
 } from "@/src/features/budget/domain/budgetSummary";
+import {
+  theoreticalDailyShare,
+  theoreticalToDate,
+} from "@/src/features/budget/domain/theoreticalRemaining";
 import {
   PendingOccurrence,
   closesRealizeForm,
@@ -210,17 +216,16 @@ export const BudgetCalendarScreen = () => {
   );
   const gridWidth = calendarGridWidth(gridViewportWidth, mode, fontScale);
   const currency = state.summary?.currency ?? "EUR";
-  const detail = selectedDate
-    ? dailyRemainingDetail(days.get(selectedDate), currency)
-    : null;
-  const cellLabel = (date: string, isToday: boolean) => {
-    const label = dayCell(
-      date,
-      days.get(date),
-      mode,
-      currency,
-      state.summaryStatus === "loading",
-    ).accessibilityLabel;
+  const forecastSummary = mode === "forecast" ? state.summary : null;
+  const selectedDay = selectedDate ? days.get(selectedDate) : undefined;
+  const detail = dailyRemainingDetail(
+    selectedDay,
+    currency,
+    forecastSummary && selectedDay
+      ? theoreticalToDate(forecastSummary, selectedDay.date)
+      : undefined,
+  );
+  const cellLabel = (date: string, isToday: boolean, label: string) => {
     const counts = calendarCounts(
       content.items.filter((item) => item.date === date),
     );
@@ -237,7 +242,17 @@ export const BudgetCalendarScreen = () => {
     }`;
   };
   const announcement = selectedDate
-    ? `Éléments du ${longDate(selectedDate)}. ${cellLabel(selectedDate, selectedDate === today)}${detail ? ` ${detail}` : ""}`
+    ? `Éléments du ${longDate(selectedDate)}. ${cellLabel(
+        selectedDate,
+        selectedDate === today,
+        dayCell(
+          selectedDate,
+          selectedDay,
+          detail ? "markers" : mode,
+          currency,
+          state.summaryStatus === "loading",
+        ).accessibilityLabel,
+      )}${detail ? ` ${detail}` : ""}`
     : "Éléments du mois.";
   useEffect(() => {
     // Only a user selection may speak. Quiet refreshes and inactive tabs must
@@ -391,7 +406,11 @@ export const BudgetCalendarScreen = () => {
                 aria-checked={checked}
                 key={option.value}
                 onPress={() => setMode(option.value)}
-                style={[styles.mode, checked && styles.modeActive]}
+                style={[
+                  styles.mode,
+                  option.value === "forecast" && styles.forecastMode,
+                  checked && styles.modeActive,
+                ]}
               >
                 <Text
                   style={[styles.modeText, checked && styles.modeTextActive]}
@@ -424,6 +443,17 @@ export const BudgetCalendarScreen = () => {
                 partir du 1er {monthTitle(month)}.
               </Text>
             ) : null}
+            {forecastSummary !== null && (
+              <Text
+                role="note"
+                testID="calendar-theoretical"
+                style={styles.theoretical}
+              >
+                Théorique {money(toCents(forecastSummary.base), currency)} ·
+                part du jour{" "}
+                {money(theoreticalDailyShare(forecastSummary), currency)}
+              </Text>
+            )}
             <View
               testID="calendar-grid"
               onLayout={(event) =>
@@ -461,12 +491,17 @@ export const BudgetCalendarScreen = () => {
                             </View>
                           );
                         }
+                        const budgetDay = days.get(cell.date);
                         const cellContent = dayCell(
                           cell.date,
-                          days.get(cell.date),
+                          budgetDay,
                           mode,
                           currency,
                           state.summaryStatus === "loading",
+                          forecastSummary && budgetDay
+                            ? theoreticalToDate(forecastSummary, cell.date)
+                                .cents
+                            : null,
                         );
                         const counts = calendarCounts(
                           content.items.filter(
@@ -487,6 +522,7 @@ export const BudgetCalendarScreen = () => {
                             accessibilityLabel={cellLabel(
                               cell.date,
                               cell.isToday,
+                              cellContent.accessibilityLabel,
                             )}
                             accessibilityRole="button"
                             accessibilityState={{ selected }}
@@ -734,6 +770,7 @@ const makeStyles = (
       minWidth: 96,
       padding: 8,
     },
+    forecastMode: { minWidth: 120 },
     modeActive: { backgroundColor: colors.actionPrimaryBackground },
     modeText: { color: colors.textPrimary, fontSize: 14, fontWeight: "600" },
     modeTextActive: { color: colors.actionPrimaryText },
@@ -745,6 +782,14 @@ const makeStyles = (
       gap: 8,
       paddingHorizontal: 4,
       paddingVertical: 12,
+    },
+    theoretical: {
+      backgroundColor: colors.backgroundCanvas,
+      borderRadius: semantic.radius.control,
+      color: colors.textSecondary,
+      fontSize: 14,
+      fontWeight: "600",
+      padding: primitives.space["2"],
     },
     notice: { color: colors.statusInfoText, fontSize: 14, lineHeight: 20 },
     week: { flexDirection: "row" },

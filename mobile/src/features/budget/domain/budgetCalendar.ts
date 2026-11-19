@@ -5,6 +5,8 @@ import {
   toCents,
 } from "@/src/features/budget/domain/budgetSummary";
 
+import type { theoreticalToDate } from "./theoreticalRemaining";
+
 /** Contenu affiché dans chaque jour de la grille. */
 export type CalendarMode = "markers" | "expenses" | "forecast";
 
@@ -111,6 +113,7 @@ export const dayCell = (
   mode: CalendarMode,
   currency: string,
   loading = false,
+  theoreticalCents: number | null = null,
 ): DayCell => {
   if (loading) {
     // Données en cours de chargement : ne rien affirmer sur le jour.
@@ -139,6 +142,10 @@ export const dayCell = (
     parts.push(`Reste à vivre du jour ${money(remaining, currency)}.`);
   }
 
+  if (mode === "forecast" && theoreticalCents !== null) {
+    parts.push(`Théorique ${money(theoreticalCents, currency)}.`);
+  }
+
   let value: string | null = null;
   if (mode === "expenses" && expense > 0) value = abbreviateAmount(-expense);
   if (mode === "forecast" && remaining !== null)
@@ -163,11 +170,20 @@ export const dayCell = (
   };
 };
 
-/** Exact server value and the explanation used by the Web calendar (#379). */
+/** Exact server value and shared calendar comparison wording. */
 export const dailyRemainingDetail = (
   day: BudgetDay | undefined,
   currency: string,
-): string | null =>
-  day?.dailyRemaining == null
-    ? null
-    : `Reste à vivre du jour : ${money(toCents(day.dailyRemaining), currency)}, soit votre part quotidienne du reste à vivre de base cumulée jusqu’à ce jour, moins les dépenses et plus les entrées saisies ou prévues jusqu’à cette date.`;
+  theoretical?: ReturnType<typeof theoreticalToDate>,
+): string | null => {
+  if (day?.dailyRemaining == null) return null;
+  const actual = money(toCents(day.dailyRemaining), currency);
+  if (theoretical === undefined) {
+    return `Reste à vivre du jour : ${actual}, soit votre part quotidienne du reste à vivre de base cumulée jusqu’à ce jour, moins les dépenses et plus les entrées saisies ou prévues jusqu’à cette date.`;
+  }
+  const acquired = money(theoretical.cents, currency);
+  const basis = theoretical.lastDay
+    ? "Le théorique vaut votre socle complet du mois"
+    : `Le théorique cumule votre part quotidienne (${money(theoretical.share, currency)} × ${plural(theoretical.day, "jour")})`;
+  return `Reste à vivre du jour : ${actual} / ${acquired} théorique. ${basis} ; le reste à vivre du jour en retire les dépenses et y ajoute les entrées saisies ou prévues jusqu’à cette date.`;
+};

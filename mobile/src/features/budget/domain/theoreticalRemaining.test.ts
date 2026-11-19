@@ -8,6 +8,7 @@ import {
   REMAINING_PERIODS,
   remainingComparison,
   theoreticalDailyShare,
+  theoreticalToDate,
 } from "@/src/features/budget/domain/theoreticalRemaining";
 
 const spaces = (text: string) => text.replace(/\s/g, " ");
@@ -50,6 +51,35 @@ describe("theoretical daily share (#393, server rule of dailyRemaining)", () => 
   ])("truncates %s base %s to %i cents a day", (month, base, cents) => {
     expect(theoreticalDailyShare(summary({ month, base }))).toBe(cents);
   });
+});
+
+describe("theoretical amount acquired by a calendar date (#428)", () => {
+  it.each([
+    ["2026-02", 28, 4285],
+    ["2028-02", 29, 4137],
+    ["2026-11", 30, 4000],
+    ["2026-10", 31, 3871],
+  ])(
+    "uses the daily share in %s and the exact base on day %i",
+    (month, last, share) => {
+      const budget = summary({ month, base: "1200.01" });
+      expect(theoreticalToDate(budget, `${month}-01`)).toEqual({
+        cents: share,
+        day: 1,
+        lastDay: false,
+        share,
+      });
+      expect(theoreticalToDate(budget, `${month}-${last - 1}`).cents).toBe(
+        share * (last - 1),
+      );
+      expect(theoreticalToDate(budget, `${month}-${last}`)).toEqual({
+        cents: 120001,
+        day: last,
+        lastDay: true,
+        share,
+      });
+    },
+  );
 });
 
 describe("actualized compared with theoretical (#393)", () => {
