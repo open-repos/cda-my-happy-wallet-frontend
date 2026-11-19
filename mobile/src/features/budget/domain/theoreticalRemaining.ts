@@ -34,6 +34,19 @@ const dayCount = (days: number) => `${days} jour${days > 1 ? "s" : ""}`;
 export const theoreticalDailyShare = (summary: BudgetSummary) =>
   Math.trunc(toCents(summary.base) / daysInMonth(summary.month));
 
+/** Socle acquis à la date incluse, avec le reliquat de troncature en fin de mois. */
+export const theoreticalToDate = (summary: BudgetSummary, date: string) => {
+  const day = Number(date.slice(8, 10));
+  const lastDay = day === daysInMonth(summary.month);
+  const share = theoreticalDailyShare(summary);
+  return {
+    cents: lastDay ? toCents(summary.base) : share * day,
+    day,
+    lastDay,
+    share,
+  };
+};
+
 /** Jours couverts par la période : la semaine s'arrête à la fin du mois. */
 const periodDays = (summary: BudgetSummary, period: RemainingPeriod) =>
   period === "week"

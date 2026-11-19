@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { CALENDAR_AMOUNT_TEXT_PROPS } from "../../src/features/budget/presentation/calendarLayout";
 
 const explanation =
-  "soit votre part quotidienne du reste à vivre de base cumulée jusqu’à ce jour, moins les dépenses et plus les entrées saisies ou prévues jusqu’à cette date.";
+  "le reste à vivre du jour en retire les dépenses et y ajoute les entrées saisies ou prévues jusqu’à cette date.";
 
 for (const width of [320, 390, 768, 1440]) {
   for (const theme of ["light", "dark"] as const) {
@@ -25,6 +25,14 @@ for (const width of [320, 390, 768, 1440]) {
         // Every mode must expose all seven equal columns without horizontal panning.
         for (const mode of ["Repères", "Dépenses", "Prévisionnel"]) {
           await page.getByRole("radio", { name: mode, exact: true }).click();
+          const note = page.getByRole("note").filter({ hasText: "Théorique" });
+          if (mode === "Prévisionnel") {
+            await expect(note).toHaveText(
+              /^Théorique 1\s500,00\s€ · part du jour 48,38\s€$/,
+            );
+          } else {
+            await expect(note).toHaveCount(0);
+          }
           const grid = page.getByTestId("calendar-grid");
           await expect(grid).toBeVisible();
           const frame = await grid.boundingBox();
@@ -89,12 +97,32 @@ for (const width of [320, 390, 768, 1440]) {
           );
         };
         await enlargeText();
+        if (textScale <= 1.3) {
+          const titleFits = await page
+            .getByRole("radio", { name: "Prévisionnel" })
+            .getByText("Prévisionnel")
+            .evaluate((el) => {
+              const range = document.createRange();
+              range.selectNodeContents(el);
+              const rects = range.getClientRects();
+              const target = el.parentElement!.getBoundingClientRect();
+              return (
+                rects.length === 1 &&
+                rects[0].left >= target.left &&
+                rects[0].right <= target.right &&
+                target.height >= 48
+              );
+            });
+          expect(titleFits).toBe(true);
+        }
         const first = page.getByRole("button", {
           name: /^3 octobre 2026.*Reste à vivre du jour 17,25/,
         });
         const second = page.getByRole("button", {
           name: /^20 octobre 2026.*Reste à vivre du jour -4,17/,
         });
+        await expect(first).toHaveAccessibleName(/Théorique 145,14\s€\./);
+        await expect(second).toHaveAccessibleName(/Théorique 967,60\s€\./);
         await expect(first.getByTestId("calendar-day-value")).toHaveText("17");
         await expect(second.getByTestId("calendar-day-value")).toHaveText("-4");
         for (const day of [first, second]) {
@@ -144,7 +172,9 @@ for (const width of [320, 390, 768, 1440]) {
         await expect(first).toHaveAttribute("aria-pressed", "true");
         await expect(
           page.getByTestId("calendar-daily-remaining-detail"),
-        ).toHaveText(`Reste à vivre du jour : 17,25 €, ${explanation}`);
+        ).toHaveText(
+          `Reste à vivre du jour : 17,25 € / 145,14 € théorique. Le théorique cumule votre part quotidienne (48,38 € × 3 jours) ; ${explanation}`,
+        );
         await expect(page.getByTestId("calendar-announcement")).toContainText(
           "17,25",
         );
@@ -159,7 +189,9 @@ for (const width of [320, 390, 768, 1440]) {
         await expect(first).toHaveAttribute("aria-pressed", "false");
         await expect(
           page.getByTestId("calendar-daily-remaining-detail"),
-        ).toHaveText(`Reste à vivre du jour : -4,17 €, ${explanation}`);
+        ).toHaveText(
+          `Reste à vivre du jour : -4,17 € / 967,60 € théorique. Le théorique cumule votre part quotidienne (48,38 € × 20 jours) ; ${explanation}`,
+        );
         await expect(page.getByTestId("calendar-announcement")).toContainText(
           "20 octobre 2026",
         );
@@ -255,6 +287,11 @@ test("renders small deficits, zero, extreme values and missing daily values", as
         dailyRemaining,
       }),
     );
+    body.data.days.push({
+      ...point,
+      date: "2026-10-31",
+      dailyRemaining: "1250.40",
+    });
     await route.fulfill({ json: body });
   });
   await page.goto("/sign-in");
@@ -290,6 +327,16 @@ test("renders small deficits, zero, extreme values and missing daily values", as
       ).toBe(true);
     }
   }
+  const lastDay = page.getByRole("button", { name: /^31 octobre 2026\./ });
+  await expect(lastDay).toHaveAccessibleName(/Théorique 1\s500,00\s€\./);
+  await lastDay.click();
+  const monthEndDetail = page.getByTestId("calendar-daily-remaining-detail");
+  await expect(monthEndDetail).toContainText(
+    /1\s250,40\s€ \/ 1\s500,00\s€ théorique/,
+  );
+  await expect(monthEndDetail).toContainText(
+    "Le théorique vaut votre socle complet du mois",
+  );
   await page.getByRole("radio", { name: "Dépenses" }).click();
   await expect(
     page
